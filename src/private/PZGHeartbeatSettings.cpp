@@ -1,0 +1,152 @@
+#include "dataio/SimulatedMulticastDataIO.h"
+#include "dataio/UDPSocketDataIO.h"
+#include "zg/private/PZGHeartbeatSettings.h"
+#include "zg/ZGConstants.h"
+#include "zlib/ZLibUtilityFunctions.h"
+
+namespace zg_private
+{
+
+PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort) 
+   : zg::ZGPeerSettings(peerSettings)
+   , _systemNameHash64(GetSystemName().HashCode64())
+   , _localPeerID(localPeerID)
+   , _dataTCPPort(dataTCPPort)
+   , _dataUDPPort(PER_SYSTEM_PORT_DATA)    // hard-coded, for now (maybe configurable later on?)
+   , _hbUDPPort(PER_SYSTEM_PORT_HEARTBEAT) // hard-coded, for now (maybe configurable later on?)
+   , _birthdate(GetRunTime64()) 
+   , _peerAttributesByteBuffer(GetPeerAttributes()() ? DeflateByteBuffer(GetPeerAttributes()()->FlattenToByteBuffer(),9) : ByteBufferRef())
+{
+   // Catch it if the user starts to get greedy.  Better to find out now than in more subtle ways later!
+   if ((_peerAttributesByteBuffer())&&(_peerAttributesByteBuffer()->GetNumBytes() > 65535))
+   {
+      LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSettings:  Peer Attributes buffer is too large at " UINT32_FORMAT_SPEC " bytes long!  It should be less than 65536 bytes after zlib-compression (and ideally less than ~800 bytes!)\n", _peerAttributesByteBuffer()->GetNumBytes());
+      MCRASH("PZGHeartbeatSettings:  Peer Attributes buffer is too large");
+   }
+}
+
+static IPAddress GetMulticastAddressForSystemNameAndPort(const String & systemName, uint16 udpPort)
+{
+   IPAddress ip = Inet_AtoN("0000:0000:0001::");
+   static const uint64 salt = 531763157;  // arbitrary constant
+   ip.SetLowBits(ip.GetLowBits() + salt + systemName.HashCode64() + udpPort);           // Choose a multicast suffix unique to this system-name+port combo
+   ip.SetHighBits((ip.GetHighBits()&~(((uint64)0xFFFF)<<48))|(((uint64)(0xFF02))<<48)); // Make the address prefix link-local (ff02::)
+   return ip;
+}
+
+// So we can sort our list of network interfaces by interface name.  That makes it easier to scan visually.
+class CompareNetworkInterfacesFunctor
+{
+public:
+   int Compare(const NetworkInterfaceInfo & nii1, const NetworkInterfaceInfo & nii2, void *) const {return muscleCompare(nii1.GetName(), nii2.GetName());}
+};
+
+// Some network interfaces we just shouldn't try to use!
+static bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
+{
+#ifdef __APPLE__
+   if (nii.GetName().StartsWith("utun")) return false;
+#else
+   (void) nii;  // avoid compiler warning
+#endif
+
+   return true;
+}
+
+Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() const
+{
+   Queue<NetworkInterfaceInfo> niis;
+   (void) muscle::GetNetworkInterfaceInfos(niis, GNII_INCLUDE_ENABLED_INTERFACES|GNII_INCLUDE_IPV6_INTERFACES|GNII_INCLUDE_LOOPBACK_INTERFACES|(IsSystemOnLocalhostOnly()?0:(int)GNII_INCLUDE_NONLOOPBACK_INTERFACES));
+
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceAcceptable(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   niis.Sort(CompareNetworkInterfacesFunctor());
+   return niis;
+}
+
+// For Wi-Fi we'll use a separate multicast address, just so we can keep the Wi-Fi simulated-multicast-control-packets 
+// off of the multicast address used by the real-multicast (non-Wi-Fi) packets.  That will keep the real-multicast packet-parsers
+// from complaining about the unexpected traffic every 10 seconds
+static IPAddress MungeMulticastAddress(const IPAddress & origMulticastAddress)
+{
+   IPAddress ret = origMulticastAddress;
+   ret.SetLowBits(ret.GetLowBits()^((uint64)-1));
+   return ret;
+}
+
+static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multicastIAP)
+{
+   ConstSocketRef udpSock = CreateUDPSocket();
+   if (udpSock())
+   {
+      // This must be done before adding the socket to any multicast groups, otherwise Windows gets uncooperative
+      if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true) == B_NO_ERROR)
+      {
+         const uint8 dummyBuf = 0;  // doesn't matter what this is, I just want to make sure I can actually send on this socket
+         if (SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort()) == 0)
+         {
+            if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()) == B_NO_ERROR)
+            {
+               UDPSocketDataIORef ret(newnothrow UDPSocketDataIO(udpSock, false));
+               if (ret()) (void) ret()->SetPacketSendDestination(multicastIAP);
+                     else WARN_OUT_OF_MEMORY;
+               return ret;
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s]\n", multicastIAP.GetIPAddress().ToString()());
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s]\n", multicastIAP.ToString()());
+      }
+      else LogTime(MUSCLE_LOG_ERROR, "Unable to bind multicast socket to UDP port %u!\n", multicastIAP.GetPort());
+   }
+   else LogTime(MUSCLE_LOG_ERROR, "CreateMulticastDataIO:  CreateUDPSocket() failed!\n");
+
+   return UDPSocketDataIORef();
+}
+
+Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isForHeartbeats, bool includeWiFi) const
+{
+   const char * dataDesc = isForHeartbeats ? "heartbeats" : "data";
+   Queue<PacketDataIORef> ret;
+   const uint16 udpPort = isForHeartbeats ? _hbUDPPort : _dataUDPPort;
+   const IPAddress multicastAddress = GetMulticastAddressForSystemNameAndPort(GetSystemName(), udpPort);
+   Queue<NetworkInterfaceInfo> niis = GetNetworkInterfaceInfos();
+   Queue<int> iidxQ;
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--)
+   {
+      const NetworkInterfaceInfo & nii = niis[i];
+
+      IPAddress nextMulticastAddress = multicastAddress;
+      int iidx = nii.GetLocalAddress().GetInterfaceIndex();
+      if ((iidx > 0)&&(iidxQ.Contains(iidx) == false))
+      {
+         nextMulticastAddress.SetInterfaceIndex(iidx);
+         if (nii.GetHardwareType() == NETWORK_INTERFACE_HARDWARE_TYPE_WIFI)
+         {
+            if (includeWiFi)
+            {
+               // We need to handle WiFi networks in a different fashion since vanilla
+               // multicast-over-WiFi works very poorly!
+               SimulatedMulticastDataIORef wifiIO(newnothrow SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
+               if ((wifiIO())&&(ret.AddTail(wifiIO) == B_NO_ERROR)) 
+               {
+                  LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on WiFi interface: %s\n", dataDesc, nii.ToString()());
+                  (void) iidxQ.AddTail(iidx);
+               }
+               else WARN_OUT_OF_MEMORY;
+            }
+         }
+         else
+         {
+            UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, isForHeartbeats ? _hbUDPPort : _dataUDPPort));
+            if ((wiredIO())&&(ret.AddTail(wiredIO) == B_NO_ERROR))
+            {
+               LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on wired interface: %s\n", dataDesc, nii.ToString()());
+               (void) iidxQ.AddTail(iidx);
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Couldn't created multicast data IO %s on wired interface: %s\n", dataDesc, nii.ToString()());
+         }
+      }
+   }
+   return ret;
+}
+
+};  // end namespace zg_private

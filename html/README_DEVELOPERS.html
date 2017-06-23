@@ -1,0 +1,677 @@
+<html><body>
+<h2>Introduction to the ZG Library (v1.00 6/15/2017)</h2>
+<h3>by Jeremy Friesner (jaf@meyersound.com)</h2>
+<p>
+<p>This document describes the ZG library and API for C++ developers.  The ZG library is the distributed computing and state-replication engine that was used to implement the ZGChoir demonstration application.  Unlike ZGChoir, the ZG library is application-agnostic; that is, it can be used to implement any kind of distributed computing or high-availability application.
+<p>
+<p>The ZG library is built as an additional layer of functionality on top of the <a href="https://public.msli.com/lcs/muscle/">MUSCLE messaging library</a>, which means that any ZG-based app will also have direct access to all of the networking, messaging, data-management, and other capabilities that come with the standard MUSCLE software package (which is included in the ZG distribution, in the zg/src/muscle sub-directory).  A description of the MUSCLE library is outside the scope of this document, but having some familiarity with MUSCLE will definitely help you get the most out of ZG.
+
+<h4>I. What ZG does:  The ZG library provides the following useful services to a program that includes it:</h4>
+<ol>
+<li>Automatic continuous detection and heartbeat-monitoring of all other ZG peers in the same system.   Whenever another ZG peer is started (on any LAN that your own ZG peer is also on), your code will be notified about its presence with a second or two.  Similarly, if that peer goes offline again, your peer will be notified about its departure within a second or two.  Your program is also able examine the list of currently-online peers (including some optional user-definable metadata describing each peer) at any time.  Heartbeat emission and monitoring is handled by a dedicated thread, so the peers-roster will remain reliable and timely even when a peer's main thread is under heavy load.</li>
+<li>Automatic ordering of online peers.  The online peers in a ZG system sort themselves into a universally agreed-upon "pecking order" based on seniority, so that in the event of the senior peer going offline, all the other peers already know which peer will step in and take charge of the system so that processing can continue.</li>
+<li>Automatic replication and synchronization of one or more databases.  Whenever a new ZG peer joins the system, the system's current database will be automatically transmitted to the new ZG peer.  Whenever the database's state is changed, that change is automatically and efficiently propagated to all ZG peers.  In the event that a network glitch or other transient error causes a peer to miss (or mis-handle) an update, the system will immediately recognize the problem and automatically take steps to recover from it.</li>
+<li>Well-ordered database updating.  In order to avoid confusion caused by different peers making different changes to the database simultaneously, all requests to update the system's database are forwarded to the senior peer first, and the change is then propagated from there back to the rest of the peers.  This process is handled internally and is largely transparent to the calling code.</li>
+<li>Continuous database verification.  Each database carries a running checksum, and all junior peers use that checksum to verify after every update that their local database still matches the canonical database being held by the senior peer.  If (after an update) the checksums do not match, the junior peer will automatically recover by requesting a retransmission of the canonical database from the senior peer.</li>
+<li>Asynchronous Peer-to-peer direct messaging.  Any peer can send any <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> to any other peer, or to all other peers, via unicast or multicast, via a single method call.   Message sizes up to four gigabytes are supported.</li>
+<li>System-wide clock-synchronization with automatic network-latency compensation.   All peers have access to a common system-wide system clock, which is guaranteed to be approximately the same on all peers (regardless of what their local clock settings are).  Network latency between peers is constantly measured and the returned clock values are correct to adjust for this latency, providing accurate timing synchronization between peers.</li>
+<li>Application-neutral data semantics.  Since all updates are done simply by passing generic <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> objects from peer to peer, with no assumptions about the semantics of the data held in those Messages, there are no restrictions on how the application represents its data or on what kind of data can be passed around.  If your data fits into a Message object (and it will, because any kind of data can be added to a Message object) then it can be used in a ZG system.</li>
+</ol>
+
+<h4>II. Running a very simple example ZG peer:  test_peer</h4>
+
+<p>In the zg/tests folder you will find a very simple command-line only program called test_peer.  This program was written for testing purposes, and as such is about as simple as a ZG program can get.  You can compile it by cd'ing into the zg/tests folder and running "make" (under MacOS/X or Linux/Unix -- the code will work under Windows as well, but I don't currently have a project file to build it there).  You can then run it without any arguments, like this:
+
+<pre>
+   ./test_peer
+</pre>
+
+When it runs, you should see it output something like this:
+
+<pre>
+   new-host-7:tests jaf$ ./test_peer 
+   [I 06/20 15:17:55] Enabling stack-trace printing when a crash occurs.
+   [I 06/20 15:17:55] Starting up as peer [38c98616d18f0001:5aa2d184b237]
+   [I 06/20 15:17:56] Peer [38c98616d18f0001:5aa2d184b237] has come online (1 sources, testing=attributes some_value=5037 pi=3.141590)
+   [I 06/20 15:17:56] Senior peer has been set to [38c98616d18f0001:5aa2d184b237]
+   [I 06/20 15:17:56] I am now the senior peer!
+</pre>
+
+... in that output you see that the test_peer has started up, and seen just one peer (itself) on the network.  Since it is the only peer, it has annointed itself as the senior peer by default, and now it is in charge of the ZG system of test_peers on the local network.
+<p>
+<p>The next thing to to is open a second Terminal window, and run another instance of test_peer inside it, like this:
+
+<pre>
+   new-host-7:tests jaf$ ./test_peer 
+   [I 06/20 15:19:48] Enabling stack-trace printing when a crash occurs.
+   [I 06/20 15:19:48] Starting up as peer [38c98616d18f0001:5aa423dfab65]
+   [I 06/20 15:19:49] Peer [38c98616d18f0001:5aa2d184b237] has come online (2 sources, testing=attributes some_value=5037 pi=3.141590)
+   [I 06/20 15:19:49] Senior peer has been set to [38c98616d18f0001:5aa2d184b237]
+   [I 06/20 15:19:49] Peer [38c98616d18f0001:5aa423dfab65] has come online (1 sources, testing=attributes some_value=9187 pi=3.141590)
+</pre>
+
+Note that this second peer has discovered the first peer (whose ID is 38c98616d18f0001:5aa2d184b237) already running, and so this peer does not make itself the senior peer.  Rather this peer will be the second-in-command, ready to take over as senior peer in the event that the first peer ever dies.  You can test that functionality by pressing control-C in the first Terminal window, to terminate the senior peer.  When you do that, you'll see the following output appear in the second Terminal window:
+
+<pre>
+   [I 06/20 15:23:08] Peer [38c98616d18f0001:5aa2d184b237] has gone offline (testing=attributes some_value=5037 pi=3.141590)
+   [I 06/20 15:23:08] Senior peer has changed from [38c98616d18f0001:5aa2d184b237] to [38c98616d18f0001:5aa423dfab65]
+   [I 06/20 15:23:08] I am now the senior peer!
+</pre>
+
+... then if you re-start test_peer in the first Terminal window again, you'll see it come back on line again (in both windows), but now it is the junior peer (since it only just started, while the test_peer process in the second Terminal window has been running for several minutes already).
+<p>
+<p>You can open as many Terminal windows as you like, and run test_peer in each of them, and see how the other test_peer instances react.  In particular, you can enter the command "print peers" into the stdin of a test_peer process to get it to print out its current list of which peers are online and its place in the pecking order.  For example:
+
+<pre>
+   print peers
+   Peer #1: 38c98616d18f0001:5aa423dfab65 (SENIOR)
+   Peer #2: 38c98616d18f0001:5aa76315fc2d
+   Peer #3: 38c98616d18f0001:5aaf625ab859 <-- THIS PEER
+</pre>
+
+The output generated by the "print peers" command should always be the same regardless of which peer you enter the command to, except of course for the "<-- THIS PEER" annotation which will be different for each peer.
+<p>
+<p>So the above should give you some feel for how the peer-monitoring and peer-seniority-ordering systems work; now let's look at the distributed-database functionality.  Since test_peer is meant to be a testbed, I made its database system the simplest one I could imagine -- its database is a set of key-value pairs, where both the key and the value are an arbitrary string.  In its initial state, the database is empty.  If you want to add a key/value pair to the database, you can do so (from any test_peer) by typing a key=value command into its stdin, like this:
+
+<pre>
+   pi=3.14159
+</pre>
+
+When you press enter, the database will immediately be updated on all peers, and each peer will print out the new state of its local copy of the database.  So after you press enter, you should see this text printed out in all of the Terminal windows running test_peer:
+
+<pre>
+   ----------- DATABASE STATE ------------
+   DB #0:  UpdateLog has 1 items (53/262144 bytes, 0 millis), checksum=394207244, state=1, FirstUnsentID=2
+      [pi] -> [3.14159]
+</pre>
+
+... then if you enter a second key=value pair, e.g.:
+
+<pre>
+   programming=fun
+</pre>
+
+All peers will then print out this:
+
+<pre>
+   ----------- DATABASE STATE ------------
+   DB #0:  UpdateLog has 2 items (110/262144 bytes, 0 millis), checksum=2262393870, state=2, FirstUnsentID=2
+      [pi] -> [3.14159]
+      [programming] -> [fun]
+</pre>
+
+... and so on.  You can add as many key/value pairs as you like, or delete a pair by specifying its key:
+
+<pre>
+   delete programming
+</pre>
+
+... which brings our database state back to:
+
+<pre>
+   ----------- DATABASE STATE ------------
+   DB #0:  UpdateLog has 3 items (163/262144 bytes, 0 millis), checksum=394207244, state=3, FirstUnsentID=3
+      [pi] -> [3.14159]
+</pre>
+
+A fun trick at this point is to control-C any test_peer process and then run it again.  When you do that, you'll see that the new process is automatically brought back up-to-date to the latest/current state of the replicated database, so that within a second or two of launching it, it's as if the process exit and process-restart had never happened -- the only difference is that the restarted process is now at the bottom of online-peers list.
+<p>
+<p>Finally, if you'd like to test the robustness of the database synchronization in the face of a rapid succession of updates, you can tell a particular test_peer to start making random database updates every (so-many) milliseconds.  For example, if you'd like to have a test_peer make an update ever 100 milliseconds, enter this:
+
+<pre>
+   timer 100
+</pre>
+
+When you press enter, you'll see the database updating rapidly on all test_peers.  If you want to stop the automatic updates, you can enter:
+
+<pre>
+   timer 0
+</pre>
+
+You can start timers on many peers at once to verify that the database updates happen correctly and consistently across all peers even when the updates are coming from multiple sources at the same time.
+
+<h4>III. But how do it work?</h4>
+
+The above gives us a good idea of what ZG does; now it's time to look into the actual C++ code behind that behavior.  All of test_peer's code (outside of the ZG library itself) is located in a single 344-line file, test_peer.cpp.  We'll start with the main() entry point, shown here in a slightly abridged/simplified form (some error-checking has been removed for readability):
+
+<pre>
+   int main(int argc, char ** argv)
+   {
+      // This object is required by the MUSCLE library;  
+      // it does various system-specific startup and shutdown tasks
+      CompleteSetupSystem css;
+
+      // Our test_peer business logic is all implemented inside this object
+      TestZGPeerSession zgPeerSession;
+          
+      // This object will read from stdin for us, so we can accept typed text commands from the user
+      ZGStdinSession zgStdinSession(zgPeerSession, true); 
+         
+      // This object implements the standard MUSCLE event loop and network services
+      ReflectServer server;
+            
+      // Add our session objects to the ReflectServer object so that they will be used during program execution
+      server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)); // the (false) argument tells the ReflectServer
+      server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false));   // that it should not try to delete these objects
+
+      // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
+      server.ServerProcessLoop();  // doesn't return until it's time to exit
+
+      // Required in order to ensure an orderly shutdown
+      server.Cleanup();
+
+      return exitCode;
+   }
+</pre>
+
+The above is hopefully not too hard to follow -- the main thing to notice is that we declare a ReflectServer object that will run our process's event loop, and we add two Session objects to it.  The ZGStdinSession's job is to monitor the text entered by the user on stdin and react to it, while the TestZGPeerSession's job is to do pretty much everything else that the program does.  Once these two Session objects have been added, we simply call ServerProcessLoop() on the ReflectServer object, and everything that's going to happen, happens inside that method, until it is time to quit.
+<p>
+<p>The standard ZG functionality is implemented inside the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> class (as declared in <a href="../include/zg/ZGPeerSession.h">ZGPeerSession.h</a>), as well as in the other (private) session objects that ZGPeerSession creates and adds internally.  User code is free to ignore these mechanisms, as they are deliberately hidden from view; all the user code needs to do is override various "hook" methods of the ZGPeerSession class in order to provide its own application-specific responses to various events.  For example, if you want your application to print a message to stdout whenever a new ZG Peer has joined the system, you could override the PeerHasComeOnline() virtual method in your subclass, like this:
+
+<pre>
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+   {
+      ZGPeerSession::PeerHasComeOnline(peerID, peerInfo);  // always pass the call up to the superclass too!  It might need it
+
+      // Your own code here
+      printf("Hey, did you know that peer [%s] is now online?\n", peerID.ToString()());
+   }
+</pre>
+
+<h4>IV. Virtual methods that you are required to implement</h4>
+
+There are a number of these virtual methods defined in <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a>; however only six of them are mandatory.  These six methods are marked as "pure virtual" in the ZGPeerSession class, so you will get a compile error if you forget to implement them in your subclass.  These methods are:
+
+<pre>
+   virtual void ResetLocalDatabaseToDefault(uint32 whichDatabase, uint32 & dbChecksum) = 0;
+
+   virtual ConstMessageRef SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg) = 0;
+
+   virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg) = 0;
+
+   virtual MessageRef SaveLocalDatabaseToMessage(uint32 whichDatabase) const = 0;
+
+   virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg) = 0;
+
+   virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const = 0;
+</pre>
+
+Full descriptions of what these methods are expected to do can be found in the <a href="../include/zg/ZGPeerSession.h">ZGPeerSession.h</a> header file (or the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">DOxygen page</a> for same), but in general they need to do what their name suggests -- for example, <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a976db73389513fb6bc05e0a86add08a6">ResetLocalDatabaseToDefault()</a> should be implemented to set your local copy of the shared database to its default/empty state.  Note that in ZG, "database" is defined very loosely;  a database can be implemented using any data structure or mechanism you care to supply.  ZG doesn't know or care what the database consists of, since that part of the implementation is left entirely up to your own code in the subclass.
+<p>
+<p><a href="autodocs/html/classzg_1_1ZGPeerSession.html#a9ca44672f16711b197fbd9963183b219">SeniorUpdateLocalDatabase()</a> and <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a394ccbcf5bd4049c92e4282b4800b9e6">JuniorUpdateLocalDatabase()</a> are quite similar to each other -- in each case your code needs to examine the contents of the passed-in <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> object and, based on those contents, update the local database via some algorithm that is defined by your own code.  The main difference between the two methods is that <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a9ca44672f16711b197fbd9963183b219">SeniorUpdateLocalDatabase()</a> is called only on the senior peer, and <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a394ccbcf5bd4049c92e4282b4800b9e6">JuniorUpdateLocalDatabase()</a> is called only on non-senior peers.  The reason that the functionality is split up this way (instead of just providing a single UpdateLocalDatabase() method that is called everywhere) is that sometimes the database's state needs to be updated in a way that is not easily reproduced identically across all peers -- and yet it's critical that all peers' databases get updated to the exact same state after each database update.
+<p>
+<p>For example, imagine that we wanted to implement a function that updates a value in the database to a random number.  If we simply called our random-number generator function (i.e. rand() or similar) on both the senior and junior peers, then after the database update was complete, we'd very likely end up with a different random number present in the database of each peer in the system.  This discrepancy would be detected via the checksum-mismatch mechanism, and automatically recovered from by resending the full database to each of the junior peers, but that would incur a lot of unnecessary overhead that we'd like to avoid.  So instead what we would want to do is have <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a9ca44672f16711b197fbd9963183b219">SeniorUpdateLocalDatabase()</a> call rand() to pick a random number, then update its local database to contain that number, then add that chosen number to the <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> object it returns.  That way the Message object later passed to <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a394ccbcf5bd4049c92e4282b4800b9e6">JuniorUpdateLocalDatabase()</a> (called on all the junior peers) will contain that senior-peer-chosen number, and the <a href="autodocs/html/classzg_1_1ZGPeerSession.html#a394ccbcf5bd4049c92e4282b4800b9e6">JuniorUpdateLocalDatabase()</a> method implementation will set the local value to that number rather than to a random number.  Thus all peers' databases remain identical even when not-easily-reproducible behaviors are required from the system.
+<p>
+<p>The <a href="autodocs/html/classzg_1_1ZGPeerSession.html#afad4a07ca1930723c43b700645ea60a0">SaveLocalDatabaseToMessage()</a> and <a href="autodocs/html/classzg_1_1ZGPeerSession.html#ad130ea6dab4586509470f6af052173b5">SetLocalDatabaseFromMessage()</a> methods are largely self-explanatory -- they should be implemented to save the current state of the local database into a <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> object, and replace the current local database with one reconstructed from the data in a Message object, respectively.  They are used primarily when initializing a newly added junior peer, or recovering from a checksum-error on a junior peer -- in both cases, <a href="autodocs/html/classzg_1_1ZGPeerSession.html#afad4a07ca1930723c43b700645ea60a0">SaveLocalDatabaseToMessage()</a> will be called on the senior peer, the resulting Message object will be transferred across the network to the junior peer, and the junior peer will call <a href="autodocs/html/classzg_1_1ZGPeerSession.html#ad130ea6dab4586509470f6af052173b5">SetLocalDatabaseFromMessage()</a> to update his local state to match the senior's local state.
+<p>
+<p><a href="autodocs/html/classzg_1_1ZGPeerSession.html#a0aee136574182c30910742c973bdb0a5">CalculateLocalDatabaseChecksum()</a> should be implemented to examine the local database and calculate a checksum that corresponds to its contents.  This method is not called in normal operation, since normally each database keeps a running-checksum that is updated incrementally during each database update; but for debugging purposes it is useful to also be able to recompute a database's checksum from scratch, in order to compare it with a questional incremental-checksum and see if the incremental-checksum was updated incorrectly, or not.  Because this method is called only during (hopefully) rare error conditions, it is okay if this method is not particularly efficient.
+
+<h4>V. Virtual methods that you don't have to reimplement, but mind find useful at some point</h4>
+
+There are a number of virtual methods whose default functionality is often sufficient, but that you might want to override in order to add some more functionality that is invoked whenever they are called.  When overriding these methods, be sure to always pass the method call up to the base class, so as not to break the functionality built in to the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> class itself.  Some notable methods include:
+
+<pre>
+   virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
+      -- Returns the current local database's state as a human-readable string.  If overridden, debugging messages can be made more useful.
+
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+      -- Called when a new ZG peer has come online
+
+   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+      -- Called when an existing ZG peer has gone offline
+
+   virtual void SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const ZGPeerID & newSeniorPeerID);
+      -- Called when the system's Senior Peer has changed (e.g. because the existing senior peer went offline, or because two smaller systems merged together after a split network was repaired)
+
+   virtual uint64 GetPulseTime(const PulseArgs & args);
+      -- Returns the time (in microseconds, using the timebase provided by muscle::GetRunTime64()) when Pulse() should next be called
+         Useful when you want to take some action at a specified time.
+
+   virtual void Pulse(const PulseArgs & args);
+      -- Called at the time currently returned by GetPulseTime()
+
+   virtual bool TextCommandReceived(const String & text);
+      -- Called when the user has entered a text command on stdin (if you set up a ZGStdinSession object)
+
+   virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames);
+      -- Called when the local computer's network interface settings have changed somehow (e.g. a network interface becoming available or going away)
+
+   virtual void ComputerIsAboutToSleep();
+      -- Called just before the local computer goes into sleep mode
+
+   virtual void ComputerJustWokeUp();
+      -- Called just after the local computer awoke from sleep mode
+
+   virtual void LocalSeniorPeerStatusChanged();
+      -- Called whenever this peer's own status just changed from junior to senior (or from senior to junior).
+         Look at the return value of the IAmTheSeniorPeer() accessor method to see what the new senior/junior status is.
+</pre>
+
+<h4>VI. Non-virtual utility methods</h4>
+
+In addition to the virtual methods described above, the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> class provides a number of non-virtual utility
+methods, that are designed to be called from user code whenever it feels like doing so.  Notable utility methods include 
+the following:
+
+<pre>
+   bool IAmTheSeniorPeer() const;
+      -- Returns true if the local peer is the system's senior peer
+
+   const ZGPeerSettings & GetPeerSettings() const;
+      -- Returns a reference to the ZGPeerSettings object that was passed in to the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> constructor
+
+   bool IAmFullyAttached() const;
+      -- Returns true iff the local peer is fully attached to the system.  (There is a period of several seconds
+         after the peer first starts executing, and also a few seconds after the local computer has woken up from
+         sleep mode, where the peer is not fully attached to the system.  In this mode, the peer will not make
+         any attempt to interfere with the ZG system's operation, but will merely wait and watch to see who else is
+         currently online, etc.  This avoids contention e.g. when several peers are started near-simultaneously)
+ 
+   const ZGPeerID & GetLocalPeerID() const;
+      -- Returns the local peer's ZGPeerID (which is unique to each peer)
+
+   const ZGPeerID & GetSeniorPeerID() const;
+      -- Returns the ZGPeerID of the senior peer of the ZG system
+
+   virtual uint64 GetNetworkTime64() const;
+      -- Returns the current time (in microseconds) of the system-wide shared network clock.
+
+   const Hashtable<ZGPeerID, ConstMessageRef> & GetOnlinePeers() const;
+      -- Returns a reference to a table of PeerID/AttributesMessage pairs, representing all of the
+         ZG peers that are currently on line
+
+   uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
+      -- Returns an estimate (in microseconds) of the time it typically takes a heartbeat packet
+         to travel from this peer to the specified peer (or back).
+
+   status_t RequestResetDatabaseStateToDefault(uint32 whichDatabase);
+      -- Requests that the specified shared database be reset back to its empty/default state.
+
+   status_t RequestReplaceDatabaseState(uint32 whichDatabase, const MessageRef & newDatabaseStateMsg);
+      -- Requests that the specified shared database be entirely replaced by the data contained in the specified Message.
+
+   status_t RequestUpdateDatabaseState(uint32 whichDatabase, const MessageRef & databaseUpdateMsg);
+      -- Requests that the specified shared database be updated using the data contained in the specified Message.
+
+   status_t SendMulticastUserMessageToAllPeers(const MessageRef & msg);
+      -- Sends the specified Message to all currently online peers, via multicast UDP packets.
+         (Messages that don't fit into a single multicast packet will be split up and sent across
+         multiple multicast packets; delivery is not guaranteed)
+
+   status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg);
+      -- Sends the specified Message to all currently online peers, via unicast TCP packets.
+         (The Message will be sent separately (but simultaneously) to each connected peer; delivery
+         is guaranteed to the extent that TCP can guarantee delivery)
+
+   status_t SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
+      -- Sends the specified Message to the specified peer, via unicat TCP packets.
+</pre>
+
+<h4>VII.  Other ZG classes</h4>
+
+In addition to the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> class (which is the primary class a ZG-based program would interact with), there are a few other ZG classes that are exposed to user code.  The purpose of these classes is summarized below.
+
+<pre>
+   - ZGPeerID
+       The ZGPeerID is a 128-bit globally unique identifier (GUID) that is assigned to each ZG peer
+       as part of that peer's startup-sequence.  It is the means by which different ZG peers can identify
+       each other and refer to each other.  It will be different every time a ZGPeerSession is created.
+
+   - ZGPeerSettings
+       The ZGPeerSettings object is a package of system-wide settings (for system name, number-of-databases,
+       heartbeats-per-second, etc) that is passed in to the ZGPeerSession constructor and used as the basis
+       for the system's behavioral parameters.  It is read-only, in the sense that it is specified at peer
+       startup and cannot be changed thereafter.  Furthermore, it should be the set the same on all peers
+       in the system, to avoid incompatibilities between peers.
+
+   - ZGStdinSession
+       The ZGStdinSession class knows how to read text from the process's stdin stream and pass them
+       to the TextCommandReceived() method of the ZGPeerSession object.  If you want your program to
+       respond to commands entered into stdin (e.g. by typing into a Terminal window), and/or respond
+       to the closing of the stdin stream, then you can create a ZGStdinSession object and add it
+       to the ReflectSession object, as shown in the test_peer.cpp example program.
+
+   - ZGDatabasePeerSession
+       This is a convenience subclass of ZGPeerSession.  When writing the ZGChoir application, I noticed
+       I was writing a lot of "glue code" to connect the ZGPeerSession callback methods (e.g.
+       SeniorUpdateLocalDatabase()) to the application-specific C++ objects that I wanted to change the
+       state of.  In order to avoid having to manually rewrite that glue code all the time, I formalized
+       those commands into the ZGDatabasePeerSession class.  This class can be subclassed, such that
+       the ZGDatabasePeerSession::CreateDatabaseObject(uint32 whichDatabase) method is overridden to
+       return a reference to a C++ object that subclasses the IDatabaseObject interface.  From then on,
+       that object will have its methods called at the appropriate times so that it gets updated in
+       response to the ZGPeerSession callback commands.  Check out the ZGChoir demo application source
+       code for an example of how this is done.
+
+    - IDatabaseObject
+       This is the abstract base class that forms the interface that a C++ data object must
+       implement in order to be updated automatically by the ZGDatabasePeerSession object
+
+    - INetworkTimeProvider
+       This is the abstract base class that forms the interface for any C++ object that can
+       be used to find out the current shared-network-time as defined by the ZG system.
+       ZGPeerSession implements this interface.
+</pre>
+
+<h4>VII. How ZGChoir is implemented</h4>
+
+The other ZG-based program included in this distribution is of course ZGChoir.  The main architectural
+difference between test_peer and ZGChoir is that ZGChoir is a Qt-based GUI application, while test_peer
+is a text-based command line application.
+
+<p>Qt has its own event loop system, where the Qt GUI thread spends all of its time inside
+QApplication::exec().  This is similar in concept to ZG/MUSCLE's event loop, where the ZG/MUSCLE
+thread spends all of its time inside ReflectServer::ServerEventLoop(), but of course the same
+thread cannot (easily) run two different event loops at one time.  To get around that problem,
+ZGChoir runs the ZG/MUSCLE event loop inside a separate thread, so that both the Qt event loop
+and the ZG/MUSCLE event loop can run in parallel with each other.  Communication between the
+Qt/GUI code and the ZG/MUSCLE networking code is done entirely by sending <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> objects back
+and forth, with zero shared data.
+
+<p>The ZG/MUSCLE event loop is set up and run inside a ChoirThread object, which is a slightly
+specialized subclass of the MUSCLE <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1QMessageTransceiverThread.html">QMessageTransceiverThread</a> class.  Typically a QMessageTransceiverThread
+object would be used to make it easy for a Qt program to communicate with a MUSCLE server, but in this 
+case we are using it to allow the Qt program to communicate easily with our local ZG peer instead.
+
+<p>Inside the ZG/MUSCLE thread, a ChoirSession object is created; this object is a subclass of the
+ZGDatabasePeerSession class provided by the ZG library, and for the ZGChoir application we have set
+it up to manage three different ZG databases (by passing NUM_CHOIR_DATABASES aka 3 to the ZGPeerSettings
+constructor).  For convenience, each ZG database's current state is maintained by a different 
+<a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a>-derived database-object.  The three ZG databases that ZGChoir's ZG system maintains 
+(as enumerated in ChoirProtocol.h) are:
+
+<pre>
+   CHOIR_DATABASE_SCORE (the notes on the page, as represented by a MusicSheet object)
+   CHOIR_DATABASE_PLAYBACKSTATE (current state of the song's playback, as represented by a PlaybackState object)
+   CHOIR_DATABASE_ROSTER (the assignments of bells to peers, as represented by a NoteAssignmentsMap object)
+</pre>
+
+Note that there's no cast-in-stone reason that all of ZGChoir's data couldn't be maintained together 
+in a single ZG database; or alternatively broken out further into more than three databases; these 
+three databases are just how I chose to organize the data, as it seemed to partition well that way.
+
+The ChoirSession object implements its CreateDatabaseObject() method to create an object
+of the appropriate type for each ZG database:
+
+<pre>
+IDatabaseObjectRef ChoirSession :: CreateDatabaseObject(uint32 whichDatabase)
+{
+   IDatabaseObjectRef ret;
+   switch(whichDatabase)
+   {
+      case CHOIR_DATABASE_SCORE:         ret.SetRef(newnothrow MusicSheet);         break;
+      case CHOIR_DATABASE_PLAYBACKSTATE: ret.SetRef(newnothrow PlaybackState);      break;
+      case CHOIR_DATABASE_ROSTER:        ret.SetRef(newnothrow NoteAssignmentsMap); break;
+      default:                           /* empty */                                break;
+   } 
+   if (ret() == NULL) WARN_OUT_OF_MEMORY;
+   return ret;
+}  
+</pre>
+
+... CreateDatabaseObject() is called once for each ZG database at startup, and from then on
+all of the ZG-style database-management calls are forwarded on to the corresponding <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a>.
+For example, the PlaybackState class (which represents the current state of the song-playback
+mechanism, i.e. whether it is paused or playing, whether looping is enabled, and the song's
+current-playback-position) implements these virtual methods:
+
+<pre>
+class PlaybackState: public MusicDatabaseObject
+{
+public:
+   [...]
+
+   virtual void SetToDefaultState();
+
+   /** Replaces this sheet's current contents with the contents from (archive) */
+   virtual status_t SetFromArchive(const ConstMessageRef & archive);
+
+   /** Saves this sheet's current contents into (archive) */
+   virtual status_t SaveToArchive(const MessageRef & archive) const;
+
+   /** Just calls CalculateChecksum(), since this database is very small and thus CalculateChecksum() is still cheap */
+   virtual uint32 GetCurrentChecksum() const {return CalculateChecksum();}
+
+   /** Calculates and returns a checksum for this object */
+   virtual uint32 CalculateChecksum() const;
+
+   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer.
+     * @param seniorDoMsg A Message containing instructions for how to update our state on the senior peer.
+     * @returns a Message to send to the JuniorUpdate() method on the junior peers on success, or a NULL reference on failure.
+     */
+   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
+
+   /** Updates our state as specified in the (juniorDoMsg).  Will only be called on the instance running on the senior peer.
+     * @param juniorDoMsg A Message containing instructions for how to update our state on a junior peer.
+     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     */
+   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
+
+   [...]
+</pre>
+
+You'll notice a strong resemblance between these methods' names and the similarly-named methods
+in the <a href="autodocs/html/classzg_1_1ZGPeerSession.html">ZGPeerSession</a> class, except that these methods don't take a (whichDatabase) object as an
+argument because the choice of database is already implicitly specified by the choice of which
+<a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a> the methods are called on.
+
+<p>Note that it isn't sufficient to just update the state of the <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a> in the ZG thread when the
+ZG system tells us to do so; that's important, but above and that, we also need to make sure the GUI
+reflects the current state of the databases as well, otherwise the user won't be able to see what is
+going on; since the ZG thread and the Qt thread don't share any data structures (in order to avoid
+race conditions), the <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a> are careful to send a <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> to the GUI thread whenever they
+change their own state.  They call a method named SendMessageToGUI() to do this, and pass it a Message
+object that the GUI, so that the GUI can use that Message to update the state of the <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a>
+it holds to draw its GUI from.  In most cases the Message sent to the GUI is the exact same Message
+that the ZG thread used to update its own <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a>, since there is no reason to define two
+different sets of object-update commands when you can just re-use a single set.
+
+<p>The various commands defined by the ZGChoir app (in ChoirProtocol.h) to update the <a href="autodocs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a> are as follows:
+
+<pre>
+   Commands that update the MusicSheet object (a.k.a the CHOIR_DATABASE_SCORE database):
+
+   CHOIR_COMMAND_TOGGLE_NOTE
+      -- Adds a specified quarter-note at the specified time-position in the score
+         (unless the given note already exists at that time-position, in which case the existing note is removed)
+
+   CHOIR_COMMAND_SET_SONG_FILE_PATH
+      -- Sets the filepath associated with the currently loaded song. 
+         (Used to set the song-title at the top of the score, and when saving a song to disk)
+
+   CHOIR_COMMAND_SET_CHORD
+      -- Specified a new chord-of-notes to be set a the specified time-position in the score
+
+   CHOIR_COMMAND_INSERT_CHORD
+      -- Moves all notes to the right of a specified time-position to the right by one space.
+
+   CHOIR_COMMAND_DELETE_CHORD
+      -- Deletes the note at the specified time-position, and moves all the notes to the right
+         of that time-position left by one space.
+
+   Commands for updating the PlaybackState object (a.k.a. the CHOIR_DATABASE_PLAYBACKSTATE database):
+
+   CHOIR_COMMAND_PLAY
+      -- Starts the music playing, if it isn't already playing
+
+   CHOIR_COMMAND_PAUSE
+      -- Pauses the music playback at its current position, if it is currently playing
+
+   CHOIR_COMMAND_ADJUST_PLAYBACK
+      -- Modifies one or more attributes of the playback mechanism -- the tempo, 
+         the playing/paused state, and/or the looping/not-looping state.
+
+   Commands that update the NoteAssignmentsMap object (a.k.a the CHOIR_DATABASE_ROSTER database):
+
+   CHOIR_COMMAND_TOGGLE_ASSIGNMENT
+      -- Requests that the NoteAssignmentsMap be updated such that the specified ZG peer
+         will now be assigned the specified handbell to ring (unless that peer is already
+         assigned that handbell, in which case that handbell will be taken away from him)
+
+   CHOIR_COMMAND_UNASSIGN_ORPHANS
+      -- Requests that the senior peer examine the NoteAssignmentsMap, and if there are
+         any handbell-assignments in it to peers that are no longer part of the ZG system,
+         that those handbell-assignments be deleted from the map.
+
+   CHOIR_COMMAND_REVIEW_ASSIGNMENTS
+      -- Requests that the senior peer examine the NoteAssignmentsMap, and update it
+         according to the rules of the current Bell Assignments Mode.  (In Automatic mode,
+         this means that the handbell assignments will be redistributed when necessary so
+         that all peers are given a roughly equal number of handbells; in Assisted mode,
+         the senior peer will only try to make sure that any currently-unassigned handbells
+         get assigned to the currently-least-loaded peer.  In Manual mode, no automatic
+         assignments are made at all, and this Message is a no-op)
+
+   CHOIR_COMMAND_SET_STRATEGY
+      -- Sets the current bell-assignment strategy (see above for a description of what they do)
+
+   CHOIR_COMMAND_NOOP
+      -- Does nothing; this is only here because in some cases the senior peer might decide
+         that nothing needs to be done, but since SeniorUpdate() interpretes a NULL return
+         value as an error, we need to return a valid-yet-empty command for the junior peers
+         to "execute".
+</pre>
+
+
+<h4>VIII.  PlaybackState uses a "timebase" to efficiently co-ordinate playback across machines</h4>
+
+The PlaybackState class (which represents the current state of the CHOIR_DATABASE_PLAYBACKSTATE database)
+has an interesting quality in that it is time-invariant, which is to say that it doesn't change
+state during song playback.  The GUI shows the playback-position (i.e. the red vertical line) moving 
+during playback, and the notes all get played at the correct times, but this is done without updating
+any databases at all (except once when playback starts and once again when it ends, or when the user
+manually changes the playback position).
+
+<p>It would be possible (and in some respects, simpler) to implement the PlaybackState class to
+simply contain the current-playback-state position as an attribute, and then during playback
+to send out database-update requests every so-many milliseconds that tell all ZGChoir peers
+to set the position of the red line to its new position.  This would more-or-less work, but it
+would be non-optimal because it would generate a lot of additional network traffic, and (worse)
+it would make the timing of the playback of each note dependent on the performance of the network
+at the moment that note was expected to be played.  If the packet corresponding to that note's
+time-position in the score was delivered late, then the note would be played late, or if
+the packet was dropped, then the ZG system would have to recognize that error and correct for it,
+which would result in the note being played even later.
+
+<p>To avoid that sort of jankiness, the PlaybackState object doesn't try to maintain an explicit
+current-playback-position value.  Instead, it simply stores the time at which the song-playback 
+was started <a href="#timebase_footnote">(*)</a>, and since every ZG peer has access to the system-wide shared network clock, every
+ZG peer can subtract the song-start time from the current-network-time to compute the system's 
+current playback position within the song.  In this way the various ZGChoir peers are able to
+draw the vertical red-line in the proper place, and play notes at the proper time, without 
+sending any messages to each other (outside of the normal ZG heartbeat messages, of course).
+
+<p id="timebase_footnote">(*) Technically, it stores the time at which the playback position would have been located at the beginning of the song.  If you start the song playing from the beginning, then this is the same thing as the time playback started; however if you start the song playing somewhere in the middle, then the stored value will be the time at which playback started, minus the time it would have taken to play the initial part of the song (up to the location where you started the song playing at).
+
+<h4>IX. Incremental/Running checksums</h4>
+
+ZG requires (or at least, enthusiastically encourages) the calculation of checksums for each ZG 
+database; that way any unexpected problems (software errors, network errors, or contention 
+between ZG peers) can be quickly detected, reported, and resolved by the ZG system itself,
+which is better than having a system that silently remains in an incoherent state indefinitely (the
+latter situation being difficult to detect, understand, or debug).  Accordingly, ZGChoir implements
+checksums for each of its three database types.
+
+<p>The PlaybackState object is small object (just a few member variables) represents a fixed
+amount of data, so from a performance perspective it is no big deal to simply recalculate a 
+new checksum from scratch whenever the state of the object changes.  Therefore, the
+PlaybackState::GetCurrentChecksum() method is implemented simply to call through to
+CalculateChecksum() and return its result; and CalculateChecksum() computes a full checksum 
+from first principles by checksumming each member-variable of the class and summing the
+results.
+
+<p>That's all well and good for PlaybackState, but the other two databases may contain
+an arbitrarily large amount of data, which could make a full checksum recalculation
+expensive.  For example, if an ambitious user decided to create a song with 1,000,000
+notes in it, then iterating over the entire song to come up with a new checksum would
+start to become rather expensive, especially if that calculation had to be performed
+again every single time the CHOIR_DATABASE_SCORE database was modified in any way.
+
+<p>To retain the benefits of checksums while avoiding the CPU cost of iterating over large
+amounts of data, non-trivial ZG databases are encouraged to maintain "running" checksum
+values that they update incrementally whenever they modify their state.  For example, 
+here is the MusicSheet class's CalculateChecksum() method that calculates the database's
+checksum the hard way, by iterating over all data in the song:
+
+<pre>
+uint32 MusicSheet :: CalculateChecksum() const
+{
+   uint32 ret = _songFilePath.CalculateChecksum();
+
+   // Ooh, this part could be expensive if (_chords) has very many items in it! 
+   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++) 
+   {
+      ret += CalculateChecksumForChord(iter.GetKey(), iter.GetValue());
+   }
+   return ret;
+}
+</pre>
+
+We don't want to call that method very often if we can help it -- and in fact ZG will
+only ever call it under very unusual circumstances; in particular after a checksum 
+mismatch has been detected and ZG wants to print some debug information to stdout, 
+including a recomputed-from-scratch checksum value to compare against the possibly-incorrect
+incremental checksum value.
+
+So instead of always calling CalculateChecksum(), the MusicSheet class contains a _checksum member variable:
+
+<pre>
+   uint32 _checksum;    // always kept current, by updating it after each change
+</pre>
+
+... and every method inside MusicSheet that changes the MusicSheet's state
+is careful to update this value at the same time, e.g.:
+
+<pre>
+void MusicSheet :: SetSongFilePath(const String & songFilePath)
+{
+   if (songFilePath != _songFilePath)
+   {
+      _checksum -= _songFilePath.CalculateChecksum();
+      _songFilePath = songFilePath;
+      _checksum += _songFilePath.CalculateChecksum();
+   }
+}
+
+// Simplified implementation for better readability (error checking removed)
+void MusicSheet :: PutChord(uint32 whichChord, uint64 newChordValue)
+{
+   const uint64 oldChordValue = _chords[whichChord];
+
+   _checksum -= CalculateChecksumForChord(whichChord, oldChordValue);
+   _chords[whichChord] = newChordValue;
+   _checksum += CalculateChecksumForChord(whichChord, newChordValue);
+}
+</pre>
+
+The NoteAssignmentsMap works along similar principles, even though the likelihood of
+the CHOIR_DATABASE_ROSTER database becoming very large is lower (mainly because 
+it's unlikely that there will ever be more than a few dozen ZGChoir peers online at once, 
+or more than a few dozen possible handbells to assign to them).
+
+<h4>X.  Private (PZG) classes</h4>
+
+The C++ classes declared in the zg/include/zg/private folder and defined in the zg/src/private.
+folder are just that -- private.  The intention is that user code should never need to know (or
+care) about the existence of purpose of these classes, and therefore won't break if they are
+drastically changed (or replaced entirely) as part of a future release of ZG.  The bulk of ZG's
+functionality is implemented inside these private classes, but they aren't documented here.
+If you're feeling curious about what they do, you can browse their header files for comments; 
+just don't try to reference the PZG* classes directly from your own code, unless you are 
+comfortable with tying your program very tightly to the current release of ZG, and having your 
+program break when you update to a newer version of ZG.
+
+<h4>XI.  Final notes</h4>
+
+While ZG isn't a huge amount of code, the task it tries to accomplish is non-trivial.  As such,
+understanding how it works and how to use it is also non-trivial, especially since a full understanding
+will also require familiarity with the underlying MUSCLE networking library.  I expect that 
+anyone who has gotten this far in to this document and wants to develop a program using ZG
+will have lots of further questions about it; if so, feel free to email me (at jfriesne@gmail.com)
+and I will do my best to answer them and help out if I can.  You can also post questions to the
+MUSCLE developer's mailing list ( muscle-request@freelists.org ) if you'd like to make your
+discussions semi-public; I and other MUSCLE/ZG users are likely to read and respond to them there.
+<p>
+-Jeremy Friesner (jfriesne@gmail.com)
+
+</body></html>

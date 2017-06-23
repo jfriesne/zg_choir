@@ -1,0 +1,17 @@
+ <!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+    <file>bell.png</file>
+    <file>quarter_note.png</file>
+    <file>choir_play.png</file>
+    <file>choir_pause.png</file>
+    <file>choir_stop.png</file>
+    <file>choir_open_file.png</file>
+    <file>choir_save_file.png</file>
+    <file>choir_clear_song.png</file>
+    <file>clone_choir_window.png</file>
+    <file>choir_bell.png</file>
+    <file>choir_loop.png</file>
+    <file>choir_insert.png</file>
+    <file>choir_delete.png</file>
+ </qresource>
+ </RCC>

@@ -1,0 +1,25 @@
+ <!DOCTYPE RCC><RCC version="1.0">
+ <qresource>
+    <file>bell_0.wav</file>
+    <file>bell_1.wav</file>
+    <file>bell_2.wav</file>
+    <file>bell_3.wav</file>
+    <file>bell_4.wav</file>
+    <file>bell_5.wav</file>
+    <file>bell_6.wav</file>
+    <file>bell_7.wav</file>
+    <file>bell_8.wav</file>
+    <file>bell_9.wav</file>
+    <file>bell_10.wav</file>
+    <file>bell_11.wav</file>
+    <file>bell_12.wav</file>
+    <file>bell_13.wav</file>
+    <file>bell_14.wav</file>
+    <file>bell_15.wav</file>
+    <file>bell_16.wav</file>
+    <file>bell_17.wav</file>
+    <file>bell_18.wav</file>
+    <file>bell_19.wav</file>
+    <file>bell_20.wav</file>
+ </qresource>
+ </RCC>

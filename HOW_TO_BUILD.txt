@@ -1,0 +1,25 @@
+Quick instructions on how to compile this software, in case you care to do so.
+
+To compile the ZGChoir GUI demo app under MacOS/X, Windows, or Linux:
+
+1) Make sure you have a reasonably modern C++ compiler installed
+2) Make sure you have a reasonably recent version of Qt installed (I use Qt 5.9.0; other Qt 5.x versions will probably work too but YMMV)
+3) cd to the zg/demos/choir sub-directory
+4) Run "qmake"
+5) Under Windows, then run "nmake"; under MacOS/X or Linux, run "make"
+6) Wait a few minutes for the application to build
+7) When it's done building, the executable will be named ZGChoir.app under MacOS/X, ZGChoir under Linux, or Release\ZGChoir.exe under Windows
+
+To compile the test_peer command-line app under MacOS/X or Linux:
+
+1) Make sure you have a reasonably modern C++ compiler installed
+2) cd to the zg/tests folder
+3) Run "make"
+4) Wait a minute for the test_peer program to build
+5) When it's done building, you can run it with no arguments, like this:  ./test_peer
+
+That's all there is to it!
+
+-Jeremy Friesner
+6/22/2017
+jfriesne@gmail.com
