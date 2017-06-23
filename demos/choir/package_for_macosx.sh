@@ -25,17 +25,17 @@ pushd "${SCRIPT_PATH}"
   mv "./${CHOIR_APP_NAME}.app" "${ZGCHOIR_OUTPUT_PATH}"
   # TODO:  codesign the .app here!
 
-  # Place a clean checkout of the current zg git repository into the output folder as well
+  # Place a clean checkout of the current zg_choir git repository into the output folder as well
   pushd "${SCRIPT_PATH}/../.."
-  git archive --format zip --output "${ZGCHOIR_OUTPUT_PATH}/zg.zip" master
+  git archive --format zip --output "${ZGCHOIR_OUTPUT_PATH}/zg_choir.zip" master
   popd   # pop back to ${SCRIPT_PATH}
 
-  # Place the zg and muscle source archives into the "zg" subfolder of the distribution, for convenience
+  # Place the zg_choir and muscle source archives into the "zg_choir" subfolder of the distribution, for convenience
   pushd "${ZGCHOIR_FOR_MACOSX_DIR_PATH}"
     pushd "${ZGCHOIR_OUTPUT_PATH}"
-      mkdir zg
-      pushd zg
-        unzip -q ../zg.zip ; rm ../zg.zip
+      mkdir zg_choir
+      pushd zg_choir
+        unzip -q ../zg_choir.zip ; rm ../zg_choir.zip
         pushd html/autodocs
            chmod ugo+rx ./genDocs.sh
            ./genDocs.sh
@@ -45,10 +45,10 @@ pushd "${SCRIPT_PATH}"
       popd   # pop back to ${ZGCHOIR_OUTPUT_PATH}
 
       README_NAME="README.html"
-      cp "zg/demos/choir/html/${README_NAME}" .
-      sed -i .bak 's/images\/ZGChoir/zg\/demos\/choir\/html\/images\/ZGChoir/g' "./${README_NAME}"  # fix relative links since we moved the HTML
+      cp "zg_choir/demos/choir/html/${README_NAME}" .
+      sed -i .bak 's/images\/ZGChoir/zg_choir\/demos\/choir\/html\/images\/ZGChoir/g' "./${README_NAME}"  # fix relative links since we moved the HTML
       rm -f "${README_NAME}".bak
-      ln -s zg/demos/choir/songs/ .
+      ln -s zg_choir/demos/choir/songs/ .
     popd   # pop back to the ${ZGCHOIR_FOR_MACOSX_DIR_PATH}
     ln -s /Applications "Drag here to install"
   popd   # pop back to the ${SCRIPT_PATH}
