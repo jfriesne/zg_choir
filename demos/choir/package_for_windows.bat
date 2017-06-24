@@ -1,15 +1,29 @@
+setlocal disableDelayedExpansion
+
+@echo off
+for /f "tokens=1,2,3 delims= " %%a in (ChoirProtocol.h) do (
+   if "%%b"=="CHOIR_VERSION_STRING" (SET CHOIR_VERSION=%%c)
+)
+@echo on
+
+REM remove the quote marks from %CHOIR_VERSION%
+set CHOIR_VERSION=%CHOIR_VERSION:~1,-1%
+echo CHOIR_VERSION IS %CHOIR_VERSION%
+
 set CHOIR_NAME=ZGChoir
-REM set CHOIR_VERSION=`grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2`
-set CHOIR_VERSION=0.8b
-set CHOIR_DIR=.\%CHOIR_NAME%_v%CHOIR_VERSION%_for_Windows
+set CHOIR_DIR=%CHOIR_NAME%_Dist
+
+nmake
 
 rd /s /q %CHOIR_DIR%
 mkdir %CHOIR_DIR%
 
-move .\Release\%CHOIR_NAME%.exe %CHOIR_DIR%
+copy .\Release\%CHOIR_NAME%.exe %CHOIR_DIR%
 mkdir %CHOIR_DIR%\songs
 copy .\songs\* %CHOIR_DIR%\songs\
-copy .\README.txt %CHOIR_DIR%
+copy .\html\README.html %CHOIR_DIR%\
+mkdir %CHOIR_DIR%\images
+copy .\html\images\*.png %CHOIR_DIR%\images
 
 set QTLIBDIR=%QTDIR%\qtbase\lib
 copy %QTLIBDIR%\Qt5Multimedia.dll %CHOIR_DIR%
@@ -18,4 +32,4 @@ copy %QTLIBDIR%\Qt5Gui.dll %CHOIR_DIR%
 copy %QTLIBDIR%\Qt5Core.dll %CHOIR_DIR%
 copy C:\windows\system32\vcruntime140.dll %CHOIR_DIR%
 
-zip -r %CHOIR_DIR%.zip %CHOIR_DIR%
+"\Program Files (x86)\Inno Setup 5\ISCC.exe" zg_choir.iss /DCHOIR_VERSION=%CHOIR_VERSION%
