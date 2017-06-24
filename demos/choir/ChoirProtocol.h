@@ -6,7 +6,7 @@
 
 namespace choir {
 
-#define CHOIR_VERSION_STRING "0.8b"  /**< The user-visible version string for the ZGChoir application */
+#define CHOIR_VERSION_STRING "1.00"  /**< The user-visible version string for the ZGChoir application */
 
 enum {
    CHOIR_DATABASE_SCORE = 0,     // the music itself
