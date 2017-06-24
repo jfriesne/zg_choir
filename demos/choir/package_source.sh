@@ -4,7 +4,7 @@ CHOIR_APP_NAME="ZGChoir"
 CHOIR_APP_VERSION=`grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2`
 
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SOURCE_PACKAGE_DIR_NAME="${CHOIR_APP_NAME}_v${CHOIR_APP_VERSION}_for_MacOSX"
+SOURCE_PACKAGE_DIR_NAME="${CHOIR_APP_NAME}_v${CHOIR_APP_VERSION}_Source"
 SOURCE_PACKAGE_DIR_PATH="${SCRIPT_PATH}/${SOURCE_PACKAGE_DIR_NAME}"
 ZGCHOIR_OUTPUT_PATH="${SOURCE_PACKAGE_DIR_PATH}/${CHOIR_APP_NAME}_${CHOIR_APP_VERSION}"
 
@@ -27,7 +27,7 @@ pushd "${SCRIPT_PATH}"
         svn export https://github.com/jfriesne/muscle/trunk
         mv trunk muscle
      popd   # pop back out of zg_choir
-     zip -r ${ZIP_FILE_PATH}" zg_choir
+     zip -r "${ZIP_FILE_PATH}" zg_choir
   popd   # pop back to the ${SCRIPT_PATH}
 popd  # pop back out to (wherever the user's current working directory originally was)
 
