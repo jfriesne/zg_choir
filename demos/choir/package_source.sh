@@ -25,7 +25,8 @@ pushd "${SCRIPT_PATH}"
      pushd zg_choir
         unzip -q ../zg_choir.zip ; rm ../zg_choir.zip
         svn export https://github.com/jfriesne/muscle/trunk
-        mv trunk muscle
+        rm -rf muscle  # get rid of git's unpopulated stub, if it's present
+        mv ./trunk ./muscle
      popd   # pop back out of zg_choir
      zip -r "${ZIP_FILE_PATH}" zg_choir
   popd   # pop back to the ${SCRIPT_PATH}
