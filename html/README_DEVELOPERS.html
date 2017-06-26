@@ -8,13 +8,15 @@
 
 <h4>I. What ZG does:  The ZG library provides the following useful services to a program that includes it:</h4>
 <ol>
-<li>Automatic continuous detection and heartbeat-monitoring of all other ZG peers in the same system.   Whenever another ZG peer is started (on any LAN that your own ZG peer is also on), your code will be notified about its presence with a second or two.  Similarly, if that peer goes offline again, your peer will be notified about its departure within a second or two.  Your program is also able examine the list of currently-online peers (including some optional user-definable metadata describing each peer) at any time.  Heartbeat emission and monitoring is handled by a dedicated thread, so the peers-roster will remain reliable and timely even when a peer's main thread is under heavy load.</li>
+<li>Automatic continuous detection and heartbeat-monitoring of all other ZG peers in the same system.   Whenever another ZG peer is started (on any LAN that your own ZG peer is also on), your code will be notified 
+
+<a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#a7348d1973ec7bd746cd03b28ee2696a0">notified</a> about its presence with a second or two.  Similarly, if that peer goes offline again, your peer will be <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#af2223b65f0dab7a1916ebb69d52a007e">notified</a> about its departure within a second or two.  Your program is also able examine the <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#ab73bdc55c3698194832c58b7c438eae2">list</a> of currently-online peers (including some optional user-definable metadata describing each peer) at any time.  Heartbeat emission and monitoring is handled by a dedicated thread, so the peers-roster will remain reliable and timely even when a peer's main thread is under heavy load.</li>
 <li>Automatic ordering of online peers.  The online peers in a ZG system sort themselves into a universally agreed-upon "pecking order" based on seniority, so that in the event of the senior peer going offline, all the other peers already know which peer will step in and take charge of the system so that processing can continue.</li>
-<li>Automatic replication and synchronization of one or more databases.  Whenever a new ZG peer joins the system, the system's current database will be automatically transmitted to the new ZG peer.  Whenever the database's state is changed, that change is automatically and efficiently propagated to all ZG peers.  In the event that a network glitch or other transient error causes a peer to miss (or mis-handle) an update, the system will immediately recognize the problem and automatically take steps to recover from it.</li>
-<li>Well-ordered database updating.  In order to avoid confusion caused by different peers making different changes to the database simultaneously, all requests to update the system's database are forwarded to the senior peer first, and the change is then propagated from there back to the rest of the peers.  This process is handled internally and is largely transparent to the calling code.</li>
+<li>Automatic continuous replication and synchronization of one or more databases to all peers.  Whenever a new ZG peer joins the system, the system's current database will be automatically transmitted to the new ZG peer.  Whenever the database's state is changed, that change is automatically and efficiently propagated to all ZG peers.  In the event that a network glitch or other transient error causes a peer to miss (or mis-handle) an update, the system will immediately recognize the problem and automatically take steps to recover from it.</li>
+<li>Well-ordered database updating.  In order to avoid confusion caused by different peers making different changes to different copies of the database simultaneously, all <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#ad05ba8226d0996574056d5028c3973f9">requests</a> to update the system's database are forwarded to the senior peer first, and the change is then propagated from there back to the rest of the peers.  This process is handled internally and is largely transparent to the calling code.</li>
 <li>Continuous database verification.  Each database carries a running checksum, and all junior peers use that checksum to verify after every update that their local database still matches the canonical database being held by the senior peer.  If (after an update) the checksums do not match, the junior peer will automatically recover by requesting a retransmission of the canonical database from the senior peer.</li>
-<li>Asynchronous Peer-to-peer direct messaging.  Any peer can send any <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> to any other peer, or to all other peers, via unicast or multicast, via a single method call.   Message sizes up to four gigabytes are supported.</li>
-<li>System-wide clock-synchronization with automatic network-latency compensation.   All peers have access to a common system-wide system clock, which is guaranteed to be approximately the same on all peers (regardless of what their local clock settings are).  Network latency between peers is constantly measured and the returned clock values are correct to adjust for this latency, providing accurate timing synchronization between peers.</li>
+<li>Asynchronous Peer-to-peer direct messaging.  Any peer can send any <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> to <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#a103965e952f4e85264c28fe4a5d31668">any other peer</a>, or to <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#a19110517ff19c25916622744200095a9">all other peers</a>, via unicast or multicast, via a single method call.   Message sizes up to four gigabytes are supported.</li>
+<li>System-wide clock-synchronization with automatic network-latency compensation.   All peers have <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#a7b2928662fb1e137125cfe2bce596811">access</a> to a common system-wide system clock, which is guaranteed to be approximately the same on all peers (regardless of what their local clock settings are).  Network latency between peers is constantly <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGPeerSession.html#ab19b7f43ff70e253eae40aec3d72ed82">measured</a> and the returned clock values are automatically corrected to compensate for this latency, providing accurate timing synchronization between peers.</li>
 <li>Application-neutral data semantics.  Since all updates are done simply by passing generic <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> objects from peer to peer, with no assumptions about the semantics of the data held in those Messages, there are no restrictions on how the application represents its data or on what kind of data can be passed around.  If your data fits into a Message object (and it will, because any kind of data can be added to a Message object) then it can be used in a ZG system.</li>
 </ol>
 
@@ -361,20 +363,20 @@ is a text-based command line application.
 
 <p>Qt has its own event loop system, where the Qt GUI thread spends all of its time inside
 QApplication::exec().  This is similar in concept to ZG/MUSCLE's event loop, where the ZG/MUSCLE
-thread spends all of its time inside ReflectServer::ServerEventLoop(), but of course the same
+thread spends all of its time inside <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1ReflectServer.html#a76a1b18af0dacbb6b0a03d5c6433e15e">ReflectServer::ServerProcessLoop()</a>, but of course the same
 thread cannot (easily) run two different event loops at one time.  To get around that problem,
 ZGChoir runs the ZG/MUSCLE event loop inside a separate thread, so that both the Qt event loop
 and the ZG/MUSCLE event loop can run in parallel with each other.  Communication between the
 Qt/GUI code and the ZG/MUSCLE networking code is done entirely by sending <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1Message.html">Message</a> objects back
 and forth, with zero shared data.
 
-<p>The ZG/MUSCLE event loop is set up and run inside a ChoirThread object, which is a slightly
+<p>The ZG/MUSCLE event loop is set up and run inside a <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1ChoirThread.html">ChoirThread</a> object, which is a slightly
 specialized subclass of the MUSCLE <a href="https://public.msli.com/lcs/muscle/html/classmuscle_1_1QMessageTransceiverThread.html">QMessageTransceiverThread</a> class.  Typically a QMessageTransceiverThread
 object would be used to make it easy for a Qt program to communicate with a MUSCLE server, but in this 
 case we are using it to allow the Qt program to communicate easily with our local ZG peer instead.
 
-<p>Inside the ZG/MUSCLE thread, a ChoirSession object is created; this object is a subclass of the
-ZGDatabasePeerSession class provided by the ZG library, and for the ZGChoir application we have set
+<p>Inside the ZG/MUSCLE thread, a <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1ChoirSession.html">ChoirSession</a> object is created; this object is a subclass of the
+<a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1ZGDatabasePeerSession.html">ZGDatabasePeerSession</a> convenience class provided by the ZG library, and for the ZGChoir application we have set
 it up to manage three different ZG databases (by passing NUM_CHOIR_DATABASES aka 3 to the ZGPeerSettings
 constructor).  For convenience, each ZG database's current state is maintained by a different 
 <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a>-derived database-object.  The three ZG databases that ZGChoir's ZG system maintains 
@@ -390,7 +392,7 @@ Note that there's no cast-in-stone reason that all of ZGChoir's data couldn't be
 in a single ZG database; or alternatively broken out further into more than three databases; these 
 three databases are just how I chose to organize the data, as it seemed to partition well that way.
 
-The ChoirSession object implements its CreateDatabaseObject() method to create an object
+The ChoirSession object implements its <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1ChoirSession.html#adf1138949a229e7e77e8e325b777ec32">CreateDatabaseObject()</a> method to create an object
 of the appropriate type for each ZG database:
 
 <pre>
@@ -409,14 +411,14 @@ IDatabaseObjectRef ChoirSession :: CreateDatabaseObject(uint32 whichDatabase)
 }  
 </pre>
 
-... CreateDatabaseObject() is called once for each ZG database at startup, and from then on
+... <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1ChoirSession.html#adf1138949a229e7e77e8e325b777ec32">CreateDatabaseObject()</a> is called once for each ZG database at startup, and from then on
 all of the ZG-style database-management calls are forwarded on to the corresponding <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1IDatabaseObject.html">IDatabaseObject</a>.
-For example, the PlaybackState class (which represents the current state of the song-playback
+For example, the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a> class (which represents the current state of the song-playback
 mechanism, i.e. whether it is paused or playing, whether looping is enabled, and the song's
 current-playback-position) implements these virtual methods:
 
 <pre>
-class PlaybackState: public MusicDatabaseObject
+class PlaybackState : public MusicDatabaseObject
 {
 public:
    [...]
@@ -466,7 +468,7 @@ it holds to draw its GUI from.  In most cases the Message sent to the GUI is the
 that the ZG thread used to update its own <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a>, since there is no reason to define two
 different sets of object-update commands when you can just re-use a single set.
 
-<p>The various commands defined by the ZGChoir app (in ChoirProtocol.h) to update the <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a> are as follows:
+<p>The various commands defined by the ZGChoir app (in <a href="https://jfriesne.github.io/zg_choir_docs/html/ChoirProtocol_8h.html">ChoirProtocol.h</a>) to update the <a href="https://jfriesne.github.io/zg_choir_docs/html/classzg_1_1IDatabaseObject.html">IDatabaseObjects</a> are as follows:
 
 <pre>
    Commands that update the MusicSheet object (a.k.a the CHOIR_DATABASE_SCORE database):
@@ -535,14 +537,14 @@ different sets of object-update commands when you can just re-use a single set.
 
 <h4>VIII.  PlaybackState uses a "timebase" to efficiently co-ordinate playback across machines</h4>
 
-The PlaybackState class (which represents the current state of the CHOIR_DATABASE_PLAYBACKSTATE database)
+The <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a> class (which represents the current state of the CHOIR_DATABASE_PLAYBACKSTATE database)
 has an interesting quality in that it is time-invariant, which is to say that it doesn't change
 state during song playback.  The GUI shows the playback-position (i.e. the red vertical line) moving 
 during playback, and the notes all get played at the correct times, but this is done without updating
 any databases at all (except once when playback starts and once again when it ends, or when the user
 manually changes the playback position).
 
-<p>It would be possible (and in some respects, simpler) to implement the PlaybackState class to
+<p>It would be possible (and in some respects, simpler) to implement the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a> class to
 simply contain the current-playback-state position as an attribute, and then during playback
 to send out database-update requests every so-many milliseconds that tell all ZGChoir peers
 to set the position of the red line to its new position.  This would more-or-less work, but it
@@ -553,7 +555,7 @@ time-position in the score was delivered late, then the note would be played lat
 the packet was dropped, then the ZG system would have to recognize that error and correct for it,
 which would result in the note being played even later.
 
-<p>To avoid that sort of jankiness, the PlaybackState object doesn't try to maintain an explicit
+<p>To avoid that sort of jankiness, the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a> object doesn't try to maintain an explicit
 current-playback-position value.  Instead, it simply stores the time at which the song-playback 
 was started <a href="#timebase_footnote">(*)</a>, and since every ZG peer has access to the system-wide shared network clock, every
 ZG peer can subtract the song-start time from the current-network-time to compute the system's 
@@ -572,15 +574,15 @@ which is better than having a system that silently remains in an incoherent stat
 latter situation being difficult to detect, understand, or debug).  Accordingly, ZGChoir implements
 checksums for each of its three database types.
 
-<p>The PlaybackState object is small object (just a few member variables) represents a fixed
+<p>The <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a> object is small object (just a few member variables) represents a fixed
 amount of data, so from a performance perspective it is no big deal to simply recalculate a 
 new checksum from scratch whenever the state of the object changes.  Therefore, the
-PlaybackState::GetCurrentChecksum() method is implemented simply to call through to
-CalculateChecksum() and return its result; and CalculateChecksum() computes a full checksum 
+<a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html#ac8677ceb9d24e1b12d63975b8da88250">PlaybackState::GetCurrentChecksum()</a> method is implemented simply to call through to
+<a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html#a5801c47f2c0df393326aaae1dfba2e7e">CalculateChecksum()</a> and return its result; and <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html#a5801c47f2c0df393326aaae1dfba2e7e">CalculateChecksum()</a> computes a full checksum 
 from first principles by checksumming each member-variable of the class and summing the
 results.
 
-<p>That's all well and good for PlaybackState, but the other two databases may contain
+<p>That's all well and good for <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1PlaybackState.html">PlaybackState</a>, but the other two databases may contain
 an arbitrarily large amount of data, which could make a full checksum recalculation
 expensive.  For example, if an ambitious user decided to create a song with 1,000,000
 notes in it, then iterating over the entire song to come up with a new checksum would
@@ -590,7 +592,7 @@ again every single time the CHOIR_DATABASE_SCORE database was modified in any wa
 <p>To retain the benefits of checksums while avoiding the CPU cost of iterating over large
 amounts of data, non-trivial ZG databases are encouraged to maintain "running" checksum
 values that they update incrementally whenever they modify their state.  For example, 
-here is the MusicSheet class's CalculateChecksum() method that calculates the database's
+here is the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html">MusicSheet</a> class's <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html#a5801c47f2c0df393326aaae1dfba2e7e">CalculateChecksum()</a> method that calculates the database's
 checksum the hard way, by iterating over all data in the song:
 
 <pre>
@@ -613,13 +615,13 @@ mismatch has been detected and ZG wants to print some debug information to stdou
 including a recomputed-from-scratch checksum value to compare against the possibly-incorrect
 incremental checksum value.
 
-So instead of always calling CalculateChecksum(), the MusicSheet class contains a _checksum member variable:
+So instead of always calling <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html#a5801c47f2c0df393326aaae1dfba2e7e">CalculateChecksum()</a>, the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html">MusicSheet</a> class contains a _checksum member variable:
 
 <pre>
    uint32 _checksum;    // always kept current, by updating it after each change
 </pre>
 
-... and every method inside MusicSheet that changes the MusicSheet's state
+... and every method inside <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html">MusicSheet</a> that changes the <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1MusicSheet.html">MusicSheet</a>'s state
 is careful to update this value at the same time, e.g.:
 
 <pre>
@@ -644,7 +646,7 @@ void MusicSheet :: PutChord(uint32 whichChord, uint64 newChordValue)
 }
 </pre>
 
-The NoteAssignmentsMap works along similar principles, even though the likelihood of
+The <a href="https://jfriesne.github.io/zg_choir_docs/html/classchoir_1_1NoteAssignmentsMap.html">NoteAssignmentsMap</a> works along similar principles, even though the likelihood of
 the CHOIR_DATABASE_ROSTER database becoming very large is lower (mainly because 
 it's unlikely that there will ever be more than a few dozen ZGChoir peers online at once, 
 or more than a few dozen possible handbells to assign to them).
@@ -665,7 +667,7 @@ program break when you update to a newer version of ZG.
 
 While ZG isn't a huge amount of code, the task it tries to accomplish is non-trivial.  As such,
 understanding how it works and how to use it is also non-trivial, especially since a full understanding
-will also require familiarity with the underlying MUSCLE networking library.  I expect that 
+will also require familiarity with the underlying <a href="https://public.msli.com/lcs/muscle/">MUSCLE messaging library</a>.  I expect that 
 anyone who has gotten this far in to this document and wants to develop a program using ZG
 will have lots of further questions about it; if so, feel free to email me (at jfriesne@gmail.com)
 and I will do my best to answer them and help out if I can.  You can also post questions to the
