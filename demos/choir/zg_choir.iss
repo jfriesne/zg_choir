@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=ZGChoir
-AppVersion={%CHOIR_VERSION|Unknown}
-AppVerName=ZGChoir {%CHOIR_VERSION|Unknown}
+AppVersion={%CHOIR_VERSION|}
+AppVerName=ZGChoir {%CHOIR_VERSION|}
 AppPublisher=Jeremy Friesner
 DefaultDirName={pf}\ZGChoir
 DefaultGroupName=ZGChoir
