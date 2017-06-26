@@ -1,14 +1,17 @@
 Quick instructions on how to compile this software, in case you care to do so.
 
 /***
+*
 * Note for git users:  If you downloaded this source from git using "git clone", be sure to do a
 * 
 *     git submodule update --init --recursive
 * 
 * while inside this folder, so that the contents of the MUSCLE external library will also be downloaded into this 
 * local checkout, at the right location.  (if you don't do that, you'll get lots of "Error, couldn't find file 
-* ../../muscle/blah/blah" error messages when you try to compile).  If you downloaded this source code as a .zip 
-* file, on the other hand, the muscle subdirectly should already be correctly populated so you can ignore this note.
+* ../../muscle/blah/blah" error messages when you try to compile).  If you downloaded this source code from the
+* release page as a pre-packaged .zip file, on the other hand, the muscle subdirectly should already be correctly
+* populated, so you can ignore this note.
+*
 ***/
 
 To compile the ZGChoir GUI demo app under MacOS/X, Windows, or Linux:
