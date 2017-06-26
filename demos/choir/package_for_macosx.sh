@@ -73,6 +73,8 @@ pushd "${SCRIPT_PATH}"
 
   # Make sure we've got a fresh ZGChoir.app built and ready to go
   rm -rf "${CHOIR_APP_NAME}.app"
+  qmake
+  make clean
   make -j4
 
   # Deploy ZGChoir.app and move it into the output folder

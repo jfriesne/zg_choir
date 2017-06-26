@@ -13,6 +13,8 @@ echo CHOIR_VERSION IS %CHOIR_VERSION%
 set CHOIR_NAME=ZGChoir
 set CHOIR_DIR=%CHOIR_NAME%_Dist
 
+qmake
+nmake clean
 nmake
 
 rd /s /q %CHOIR_DIR%
