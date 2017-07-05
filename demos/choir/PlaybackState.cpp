@@ -56,7 +56,7 @@ void PlaybackState :: SetMicrosPerChord(uint64 microsPerChord, uint64 optNetwork
 {
    if ((optNetworkNow != MUSCLE_TIME_NEVER)&&(IsPaused() == false)) 
    {
-      const double curSeekPosInChords = (_microsPerChord>0) ? ((double)GetPlaybackPositionForNetworkTimeMicroseconds(optNetworkNow))/_microsPerChord : 0;
+      const double curSeekPosInChords = (_microsPerChord>0) ? (((double)GetPlaybackPositionForNetworkTimeMicroseconds(optNetworkNow))/_microsPerChord) : 0;
       _networkStartTimeMicros = optNetworkNow - (curSeekPosInChords*microsPerChord);
    }
    _microsPerChord = microsPerChord;
@@ -83,7 +83,7 @@ void PlaybackState :: PausePlayback(uint64 networkNow)
 {
    if (IsPaused() == false)
    {
-      _pausedIndex = (_networkStartTimeMicros < networkNow) ? ((networkNow-_networkStartTimeMicros)/_microsPerChord) : 0;
+      _pausedIndex = ((_microsPerChord>0)&&(_networkStartTimeMicros < networkNow)) ? ((networkNow-_networkStartTimeMicros)/_microsPerChord) : 0;
       _networkStartTimeMicros = MUSCLE_TIME_NEVER;
    }
 }
@@ -99,7 +99,7 @@ uint32 PlaybackState :: GetChordIndexForNetworkTimeStamp(uint64 networkTimeStamp
    if (IsPaused()) return _pausedIndex;
 
    const uint64 timeOffsetMicros = ((optLoopLengthChords!=0)?(networkTimeStamp%optLoopLengthChords):networkTimeStamp);
-   return ((timeOffsetMicros/_networkStartTimeMicros)/_microsPerChord);
+   return (_microsPerChord>0) ? ((timeOffsetMicros/_networkStartTimeMicros)/_microsPerChord) : 0;
 }
 
 uint64 PlaybackState :: GetNetworkTimeToPlayChord(uint32 chordIndex) const
