@@ -125,7 +125,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          MessageRef userDBStateMsg = msg()->GetMessage(PZG_PEER_NAME_USER_MESSAGE);
          if (userDBStateMsg() == NULL)
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to replace senior database #%u!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to replace senior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
             return B_ERROR;
          }
 
@@ -142,7 +142,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
          else
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #%u to state!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state!\n", _whichDatabase);
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
             return B_ERROR;
          }
@@ -154,7 +154,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          MessageRef userDBUpdateMsg = msg()->GetMessage(PZG_PEER_NAME_USER_MESSAGE);
          if (userDBUpdateMsg() == NULL)
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update senior database #%u!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update senior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
             return B_ERROR;
          }
 
@@ -172,7 +172,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
          else
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #%u to state!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state!\n", _whichDatabase);
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
             return B_ERROR;
          }
@@ -368,18 +368,18 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdat
    _printDatabaseStatesComparisonOnNextReplace = false;  // clear this now so that if we return early it will still be cleared
    if (doPrints)
    {
-      LogTime(MUSCLE_LOG_WARNING, "JuniorExecuteDatabaseReplace(#%u):  pre-update local checksum is " UINT32_FORMAT_SPEC " (recalc=" UINT32_FORMAT_SPEC "), dbUp=[%s]\n", _whichDatabase, _dbChecksum, _master->CalculateLocalDatabaseChecksum(_whichDatabase), dbUp.ToString()());
+      LogTime(MUSCLE_LOG_WARNING, "JuniorExecuteDatabaseReplace(#" UINT32_FORMAT_SPEC "):  pre-update local checksum is " UINT32_FORMAT_SPEC " (recalc=" UINT32_FORMAT_SPEC "), dbUp=[%s]\n", _whichDatabase, _dbChecksum, _master->CalculateLocalDatabaseChecksum(_whichDatabase), dbUp.ToString()());
       String dbStr = _master->GetLocalDatabaseContentsAsString(_whichDatabase);
-      if (dbStr.HasChars()) printf("Contents of database #%u before the DB-replace are:\n\n%s\n", _whichDatabase, dbStr());
+      if (dbStr.HasChars()) printf("Contents of database #" UINT32_FORMAT_SPEC " before the DB-replace are:\n\n%s\n", _whichDatabase, dbStr());
    }
 
    if (JuniorExecuteDatabaseUpdateAux(dbUp) != B_NO_ERROR) return B_ERROR;
 
    if (doPrints)
    {
-      LogTime(MUSCLE_LOG_WARNING, "JuniorExecuteDatabaseReplace(#%u):  post-update local checksum is " UINT32_FORMAT_SPEC " (recalc=" UINT32_FORMAT_SPEC "), dbUp=[%s]\n", _whichDatabase, _dbChecksum, _master->CalculateLocalDatabaseChecksum(_whichDatabase), dbUp.ToString()());
+      LogTime(MUSCLE_LOG_WARNING, "JuniorExecuteDatabaseReplace(#" UINT32_FORMAT_SPEC "):  post-update local checksum is " UINT32_FORMAT_SPEC " (recalc=" UINT32_FORMAT_SPEC "), dbUp=[%s]\n", _whichDatabase, _dbChecksum, _master->CalculateLocalDatabaseChecksum(_whichDatabase), dbUp.ToString()());
       String dbStr = _master->GetLocalDatabaseContentsAsString(_whichDatabase);
-      if (dbStr.HasChars()) printf("Contents of database #%u after the DB-replace are:\n\n%s\n", _whichDatabase, dbStr());
+      if (dbStr.HasChars()) printf("Contents of database #" UINT32_FORMAT_SPEC " after the DB-replace are:\n\n%s\n", _whichDatabase, dbStr());
    }
 
    const uint64 newDatabaseStateID = dbUp.GetUpdateID();
@@ -410,7 +410,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          const ConstMessageRef & userDBStateMsg = dbUp.GetPayloadBufferAsMessage();
          if (userDBStateMsg() == NULL)
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message available to replace junior database #%u!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message available to replace junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
             return B_ERROR;
          }
 
@@ -424,7 +424,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          const ConstMessageRef & userDBUpdateMsg = dbUp.GetPayloadBufferAsMessage();
          if (userDBUpdateMsg() == NULL)
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update junior database #%u!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
             return B_ERROR;
          }
 
@@ -434,7 +434,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
       }
 
       default:
-         LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::JuniorExecuteDatabaseUpdateAux:  Unknown update type code %u\n", dbUp.GetUpdateType());
+         LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::JuniorExecuteDatabaseUpdateAux:  Unknown update type code " UINT32_FORMAT_SPEC "\n", dbUp.GetUpdateType());
       return B_ERROR;
    }
 }

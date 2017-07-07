@@ -168,7 +168,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       for (uint32 i=0; i<niis.GetNumItems(); i++)
       {
          const NetworkInterfaceInfo & nii = niis[i];
-         printf("%u. %s\n", i, nii.ToString()());
+         printf(UINT32_FORMAT_SPEC ". %s\n", i, nii.ToString()());
       }
    }
    else if ((s.StartsWith("print peers"))||(s == "pp")) 
