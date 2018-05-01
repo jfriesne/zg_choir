@@ -32,6 +32,14 @@ To compile the test_peer command-line app under MacOS/X or Linux:
 4) Wait a minute for the test_peer program to build
 5) When it's done building, you can run it with no arguments, like this:  ./test_peer
 
+Or alternatively use CMake:
+
+1) mkdir build && cd build
+2) Run "cmake .."
+3) Run "make"
+4) Wait a minute for the test_peer program to build (it also build MUSCLE)
+5) When it's done building, you can run it with no arguments, like this: ./test_peer and the fun is to start multiple instances of it.
+
 That's all there is to it!
 
 -Jeremy Friesner
