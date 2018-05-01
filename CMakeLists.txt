@@ -5,10 +5,7 @@ cmake_minimum_required(VERSION 3.5)
 project(zg)
 
 set(CMAKE_CXX_STANDARD 11)
-
-add_definitions(-DMUSCLE_ENABLE_ZLIB_ENCODING)
-add_definitions(-DMUSCLE_USE_PTHREADS)
-add_definitions(-DMUSCLE_CATCH_SIGNALS_BY_DEFAULT)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DMUSCLE_ENABLE_ZLIB_ENCODING -DMUSCLE_USE_PTHREADS -DMUSCLE_CATCH_SIGNALS_BY_DEFAULT -DMUSCLE_NO_EXCEPTIONS -fno-exceptions -W -Wall -Wno-multichar")
 
 include_directories(include muscle)
 add_subdirectory(muscle)
