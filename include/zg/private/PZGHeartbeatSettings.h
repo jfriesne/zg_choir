@@ -2,6 +2,7 @@
 #define PZGHeartbeatSettings_h
 
 #include "dataio/DataIO.h"
+#include "dataio/PacketDataIO.h"
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/private/PZGNameSpace.h"
