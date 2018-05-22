@@ -167,6 +167,9 @@ protected:
    /** Implemented as a no-op, since by default this session doesn't have a gateway */
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
+   /** Implemented as a no-op so we don't force subclasses to implement this method */
+   virtual void MessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
+
    /** Must be implemented to reset local state of the specified database to its well-known default state.
      * @param whichDatabase The index of the database to reset (e.g. 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new checksum value.
@@ -288,7 +291,7 @@ private:
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
 
    // These methods are called from the PZGNetworkIOSession code
-   void MessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
+   void PrivateMessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
    void BeaconDataChanged(const zg_private::ConstPZGBeaconDataRef & beaconData);
    void BackOrderResultReceived(const zg_private::PZGUpdateBackOrderKey & ubok, const zg_private::ConstPZGDatabaseUpdateRef & optUpdateData);
    zg_private::ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint32 whichDatabase, uint64 updateID) const;
