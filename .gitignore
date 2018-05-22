@@ -7,3 +7,5 @@ demos/choir/ZGChoir.app
 demos/choir/qrc_images.cpp
 demos/choir/qrc_samples.cpp
 .qmake.stash
+tests/*.o
+tests/test_peer
