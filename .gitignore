@@ -1,2 +1,9 @@
 build/
 _build/
+demos/choir/objects
+demos/choir/Makefile
+demos/choir/moc
+demos/choir/ZGChoir.app
+demos/choir/qrc_images.cpp
+demos/choir/qrc_samples.cpp
+.qmake.stash
