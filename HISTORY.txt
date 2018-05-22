@@ -1,0 +1,8 @@
+
+v1.01 -
+   - Added code to test_peer.cpp to test sending and receiving of
+     user-level Messages via unicast and multicast.
+   * Merged in changes from Ruurd Adema to make 
+     MessageReceivedFromPeer() protected instead of private.
+
+v1.00 - Initial release
