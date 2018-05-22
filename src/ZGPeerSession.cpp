@@ -398,8 +398,8 @@ status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinat
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
    if (nios == NULL) return B_ERROR;
 
-   // No wrapper Message necessary for unicast, at least for now
-   return nios->SendUnicastMessageToPeer(destinationPeerID, userMsg);
+   MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
+   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? nios->SendUnicastMessageToPeer(destinationPeerID, wrapMsg) : B_ERROR;
 }
 
 void ZGPeerSession :: PrintDatabaseStateInfo(int32 whichDatabase) const
