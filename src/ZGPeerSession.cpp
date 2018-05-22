@@ -267,7 +267,7 @@ void ZGPeerSession :: PrivateMessageReceivedFromPeer(const ZGPeerID & fromPeerID
       case PZG_PEER_COMMAND_USER_MESSAGE:
       {
          MessageRef userMsg = msg()->GetMessage(PZG_PEER_NAME_USER_MESSAGE);
-         if (userMsg()) PrivateMessageReceivedFromPeer(fromPeerID, userMsg);
+         if (userMsg()) MessageReceivedFromPeer(fromPeerID, userMsg);
                    else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::MessageReceivedFromPeer:  No user message inside wrapper from [%s]\n", fromPeerID.ToString()());
       }
       break;
@@ -284,7 +284,8 @@ void ZGPeerSession :: PrivateMessageReceivedFromPeer(const ZGPeerID & fromPeerID
       break;
 
       default:
-         MessageReceivedFromPeer(fromPeerID, msg);
+         LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::PrivateMessageReceivedFromPeer:  Received unknown Message from [%s]:\n", fromPeerID.ToString()());
+         msg()->PrintToStream();
       break;
    }
 }
