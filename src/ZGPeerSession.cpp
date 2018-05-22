@@ -131,7 +131,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       // Take the remainder of the Message and send it to everybody, to save on typing
       String cmd = s.Substring(10).Trim();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastUserMessageToAllPeers(msg) == B_NO_ERROR))
+      if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg) == B_NO_ERROR))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to all peers.\n", cmd());
          return TextCommandReceived(cmd); 
@@ -144,10 +144,10 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
    }
    else if (s.StartsWith("senior peer")) 
    {
-      // Take the remainder of the Message and send it to everybody, to save on typing
+      // Take the remainder of the Message and send it to the senior peer
       String cmd = s.Substring(11).Trim();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastUserMessageToPeer(GetSeniorPeerID(), msg) == B_NO_ERROR))
+      if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg) == B_NO_ERROR))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to senior peer [%s].\n", cmd(), GetSeniorPeerID().ToString()());
          return true;
@@ -349,13 +349,10 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    if (whichDatabase >= _peerSettings.GetNumDatabases()) return B_ERROR;  // invalid database index!
    if (_seniorPeerID.IsValid() == false) return B_ERROR;  // can't send to senior peer if we don't know who he is!
 
-   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   if (nios == NULL) return B_ERROR;  // paranoia?
-
    MessageRef sendMsg = GetMessageFromPool(whatCode);
    if ((sendMsg() == NULL)||(sendMsg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID, whichDatabase) != B_NO_ERROR)||(sendMsg()->CAddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) != B_NO_ERROR)) return B_ERROR;
 
-   return nios->SendUnicastMessageToPeer(_seniorPeerID, sendMsg);
+   return SendUnicastInternalMessageToPeer(_seniorPeerID, sendMsg);
 }
 
 status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok)
@@ -375,31 +372,49 @@ status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseU
    return ((wrapMsg())&&(wrapMsg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, FlatCountableRef(CastAwayConstFromRef(dbUp))) == B_NO_ERROR)) ? nios->SendMulticastMessageToAllPeers(wrapMsg) : B_ERROR;
 }
 
+static MessageRef WrapUserMessage(const MessageRef & userMsg)
+{
+   MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
+   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? wrapMsg : MessageRef();
+}
+
 status_t ZGPeerSession :: SendMulticastUserMessageToAllPeers(const MessageRef & userMsg)
 {
-   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   if (nios == NULL) return B_ERROR;
+   return SendMulticastInternalMessageToAllPeers(WrapUserMessage(userMsg));
+}
 
-   MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? nios->SendMulticastMessageToAllPeers(wrapMsg) : B_ERROR;
+status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg)
+{
+   if (internalMsg() == NULL) return B_ERROR;
+
+   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
+   return nios ? nios->SendMulticastMessageToAllPeers(internalMsg) : B_ERROR;
 }
 
 status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const MessageRef & userMsg)
 {
-   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   if (nios == NULL) return B_ERROR;
+   return SendUnicastInternalMessageToAllPeers(WrapUserMessage(userMsg));
+}
 
-   MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? nios->SendUnicastMessageToAllPeers(wrapMsg) : B_ERROR;
+status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef & internalMsg)
+{
+   if (internalMsg() == NULL) return B_ERROR;
+
+   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
+   return nios ? nios->SendUnicastMessageToAllPeers(internalMsg) : B_ERROR;
 }
 
 status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & userMsg)
 {
-   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   if (nios == NULL) return B_ERROR;
+   return SendUnicastInternalMessageToPeer(destinationPeerID, WrapUserMessage(userMsg));
+}
 
-   MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? nios->SendUnicastMessageToPeer(destinationPeerID, wrapMsg) : B_ERROR;
+status_t ZGPeerSession :: SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & internalMsg)
+{
+   if (internalMsg() == NULL) return B_ERROR;
+
+   PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
+   return nios ? nios->SendUnicastMessageToPeer(destinationPeerID, internalMsg) : B_ERROR;
 }
 
 void ZGPeerSession :: PrintDatabaseStateInfo(int32 whichDatabase) const

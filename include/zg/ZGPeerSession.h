@@ -295,6 +295,9 @@ private:
    status_t SendDatabaseUpdateViaMulticast(const zg_private::ConstPZGDatabaseUpdateRef  & dbUp);
    status_t RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok);
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
+   status_t SendUnicastInternalMessageToAllPeers(const MessageRef & msg);
+   status_t SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
+   status_t SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg);
 
    // These methods are called from the PZGNetworkIOSession code
    void PrivateMessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
