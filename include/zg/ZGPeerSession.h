@@ -167,12 +167,11 @@ protected:
    /** Implemented as a no-op, since by default this session doesn't have a gateway */
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
-   /** This method will be called when a message is sent to us by another peer.
-     * A subclass may override this method to catch any user-defined Messages that other
-     * peers might want to send it.  The default implementation of this method just prints
-     * an "Unknown Message Reeceived" warning to the log.
-     * @param fromPeerID The unique ID of the peer who sent the Message to this peer.
-     * @param msg The Message that was sent to this peer.
+   /** This method will be called when a message is sent to us by a peersession.
+     * A subclass should override this method to catch all the arbitray messages as this function is 
+     * implemented as no-op and will print a warning about receiving an unknown message.
+     * @param fromPpeerID The peerID of the sender
+     * @param msg The message sent to this session
      */
    virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
 

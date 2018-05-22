@@ -1,7 +1,6 @@
 #include "reflector/ReflectServer.h"
 #include "system/SetupSystem.h"
 #include "util/MiscUtilityFunctions.h"
-#include "util/StringTokenizer.h"
 
 #include "zg/ZGPeerSession.h"
 #include "zg/ZGStdinSession.h"
@@ -12,7 +11,6 @@ enum {
    TOY_DB_COMMAND_SET_DB_STATE = 1953462628, // 'toyd' -- clears the current DB state and then adds the specified key/value pairs
    TOY_DB_COMMAND_PUT_STRINGS,               //        -- adds the specified key/value pairs (overwriting the value of any existing keys that match the new keys)
    TOY_DB_COMMAND_REMOVE_STRINGS,            //        -- removes any key/value pairs whose keys match those found in the Message
-   TOY_DB_COMMAND_USER_TEXT,                 //        -- just some chat text to print when received, for testing
 };
 
 enum {NUM_TOY_DATABASES = 1};  // for now!
@@ -27,13 +25,7 @@ static ZGPeerSettings GetTestZGPeerSettings()
 
    ZGPeerSettings s("test", NUM_TOY_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
-#ifdef ENABLE_TEST_FULL_DATABASE_UPDATES
-   // Setting this #define will cause ZG to keep only a single Message in its recent-transactions-Queue,
-   // making it easier to test the functionality of SaveLocalDatabaseToMessage() and SetLocalDatabaseFromMessage().
-   s.SetMaximumUpdateLogSizeForDatabase(0, 1);
-#else
    s.SetMaximumUpdateLogSizeForDatabase(0, 256*1024);
-#endif
    return s;
 }
 
@@ -81,48 +73,6 @@ public:
          const String s = TestInstructionsToString(updateMsg);
          if (RequestUpdateDatabaseState(0, updateMsg) == B_NO_ERROR) LogTime(MUSCLE_LOG_INFO,  "Database put-items-request [%s] sent\n", s());
                                                                 else LogTime(MUSCLE_LOG_ERROR, "Database put-items-request [%s] failed!\n", s());
-      }
-      else if (text.StartsWith("sendunicast "))
-      {
-         StringTokenizer tok(text.Substring(12).Trim()(), " ");
-         const char * target = tok();
-         if (target)
-         {
-            const char * chatText = tok.GetRemainderOfString();
-
-            MessageRef msg = GetMessageFromPool(TOY_DB_COMMAND_USER_TEXT);
-            if ((msg())&&(msg()->CAddString("chat_text", chatText) == B_NO_ERROR))
-            {
-               if (strcmp(target, "*") == 0) 
-               {
-                  LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via unicast.\n", chatText);
-                  SendUnicastUserMessageToAllPeers(msg);
-               }
-               else
-               {
-                  ZGPeerID targetPeerID;
-                  targetPeerID.FromString(target);
-                  if (targetPeerID.IsValid())
-                  {
-                     LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to peer [%s] via unicast.\n", chatText, targetPeerID.ToString()());
-                     SendUnicastUserMessageToPeer(targetPeerID, msg);
-                  }
-                  else LogTime(MUSCLE_LOG_INFO, "Unable to parse target peer ID [%s]\n", target);
-               }
-            }
-         }
-         else LogTime(MUSCLE_LOG_ERROR, "Usage:  sendunicast <peerID> [msg text]\n");
-      }
-      else if (text.StartsWith("sendmulticast "))
-      {
-         const String chatText = text.Substring(14).Trim();
-
-         MessageRef msg = GetMessageFromPool(TOY_DB_COMMAND_USER_TEXT);
-         if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trim()) == B_NO_ERROR))
-         {
-            LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via multicast.\n", chatText());
-            SendMulticastUserMessageToAllPeers(msg);
-         }
       }
       else if (text == "print db")
       {
@@ -200,12 +150,6 @@ protected:
       String ret;
       for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++) ret += String("   [%1] -> [%2]\n").Arg(iter.GetKey()).Arg(iter.GetValue()());
       return ret;
-   }
-
-   virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
-   {
-      printf("Received incoming Message from peer [%s]:\n", fromPeerID.ToString()());
-      msg()->PrintToStream();
    }
 
    virtual uint64 GetPulseTime(const PulseArgs & args) {return _printDBPending ? 0 : muscleMin(ZGPeerSession::GetPulseTime(args), _nextAutoUpdateTime, _nextPrintNetworkTimeTime);}
