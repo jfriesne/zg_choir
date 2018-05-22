@@ -168,8 +168,8 @@ protected:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
    /** This method will be called when a message is sent to us by a peersession.
-     * A subclass should override this message to catch all the arbitray messages as this function is implemented as no-op
-     * and will print a warning about receiving an unknown message.
+     * A subclass should override this method to catch all the arbitray messages as this function is 
+     * implemented as no-op and will print a warning about receiving an unknown message.
      * @param fromPpeerID The peerID of the sender
      * @param msg The message sent to this session
      */
