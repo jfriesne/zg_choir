@@ -167,6 +167,14 @@ protected:
    /** Implemented as a no-op, since by default this session doesn't have a gateway */
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
+   /** This method will be called when a message is sent to us by a peersession.
+     * A subclass should override this method to catch all the arbitray messages as this function is 
+     * implemented as no-op and will print a warning about receiving an unknown message.
+     * @param fromPpeerID The peerID of the sender
+     * @param msg The message sent to this session
+     */
+   virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
+
    /** Must be implemented to reset local state of the specified database to its well-known default state.
      * @param whichDatabase The index of the database to reset (e.g. 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new checksum value.
@@ -288,7 +296,7 @@ private:
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
 
    // These methods are called from the PZGNetworkIOSession code
-   void MessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
+   void PrivateMessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);
    void BeaconDataChanged(const zg_private::ConstPZGBeaconDataRef & beaconData);
    void BackOrderResultReceived(const zg_private::PZGUpdateBackOrderKey & ubok, const zg_private::ConstPZGDatabaseUpdateRef & optUpdateData);
    zg_private::ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint32 whichDatabase, uint64 updateID) const;

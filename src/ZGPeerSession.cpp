@@ -77,6 +77,11 @@ void ZGPeerSession :: MessageReceivedFromGateway(const MessageRef &, void *)
    // empty
 }
 
+void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
+{
+   LogTime(MUSCLE_LOG_WARNING, "ZGPeerSession::MessageReceivedFromPeer():  Unknown what code " UINT32_FORMAT_SPEC " in Message from [%s]\n", msg()->what, fromPeerID.ToString()());
+}
+
 status_t ZGPeerSession :: AttachedToServer()
 {
    if (StorageReflectSession::AttachedToServer() != B_NO_ERROR) return B_ERROR;
@@ -248,7 +253,7 @@ void ZGPeerSession :: LocalSeniorPeerStatusChanged()
    // empty
 }
 
-void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
+void ZGPeerSession :: PrivateMessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
 {
    switch(msg()->what)
    {
@@ -262,7 +267,7 @@ void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const
       case PZG_PEER_COMMAND_USER_MESSAGE:
       {
          MessageRef userMsg = msg()->GetMessage(PZG_PEER_NAME_USER_MESSAGE);
-         if (userMsg()) MessageReceivedFromPeer(fromPeerID, userMsg);
+         if (userMsg()) PrivateMessageReceivedFromPeer(fromPeerID, userMsg);
                    else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::MessageReceivedFromPeer:  No user message inside wrapper from [%s]\n", fromPeerID.ToString()());
       }
       break;
@@ -279,7 +284,7 @@ void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const
       break;
 
       default:
-         LogTime(MUSCLE_LOG_WARNING, "ZGPeerSession::MessageReceivedFromPeer():  Unknown what code " UINT32_FORMAT_SPEC " in Message from [%s]\n", msg()->what, fromPeerID.ToString()());
+         MessageReceivedFromPeer(fromPeerID, msg);
       break;
    }
 }

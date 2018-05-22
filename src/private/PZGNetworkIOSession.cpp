@@ -174,7 +174,7 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
             if (SendMessageToInternalThread(MessageRef(&_retryMsg, false)) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
          } 
       }
-      else _master->MessageReceivedFromPeer(tag.GetPeerID(), msg);
+      else _master->PrivateMessageReceivedFromPeer(tag.GetPeerID(), msg);
    }
 }
 
@@ -633,7 +633,7 @@ void PZGNetworkIOSession :: ComputerJustWokeUp()
 
 void PZGNetworkIOSession :: UnicastMessageReceivedFromPeer(const ZGPeerID & remotePeerID, const MessageRef & msg)
 {
-   _master->MessageReceivedFromPeer(remotePeerID, msg);
+   _master->PrivateMessageReceivedFromPeer(remotePeerID, msg);
 }
 
 status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
