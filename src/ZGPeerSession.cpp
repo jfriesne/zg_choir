@@ -77,7 +77,7 @@ void ZGPeerSession :: MessageReceivedFromGateway(const MessageRef &, void *)
    // empty
 }
 
-void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg)
+void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
 {
    LogTime(MUSCLE_LOG_WARNING, "ZGPeerSession::MessageReceivedFromPeer():  Unknown what code " UINT32_FORMAT_SPEC " in Message from [%s]\n", msg()->what, fromPeerID.ToString()());
 }
