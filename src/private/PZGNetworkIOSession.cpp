@@ -524,10 +524,17 @@ void PZGNetworkIOSession :: Pulse(const PulseArgs & args)
    while(_messagesSentToSelf.RemoveHead(nextMsgToSelf) == B_NO_ERROR) UnicastMessageReceivedFromPeer(GetLocalPeerID(), nextMsgToSelf);
 }
 
-status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & msg)
+status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf)
 {
    for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(GetMainThreadPeers()); iter.HasData(); iter++)
+   {
+      if (sendToSelf == false)
+      {
+         if (iter.GetKey() == GetLocalPeerID()) continue;
+      }
+      
       if (SendUnicastMessageToPeer(iter.GetKey(), msg) != B_NO_ERROR) return B_ERROR;
+   }
    return B_NO_ERROR;
 }
 
