@@ -43,7 +43,7 @@ public:
 
    /** Sends the specified Message to all peers via unicast/TCP.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
-     * @param sendToSelf Whether the message should be send to the sending peer (this).
+     * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR on success, or B_ERROR on failure.
      */
    status_t SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);

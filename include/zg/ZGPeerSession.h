@@ -266,7 +266,7 @@ protected:
 
    /** Tries to send the given Message to all peers via multiple instances of TCP unicast.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
-     * @param sendToSelf Whether the message should be send to our selves (defaults to true).
+     * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of B_ERROR otherwise.
      */
    status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
