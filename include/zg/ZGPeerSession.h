@@ -264,11 +264,12 @@ protected:
      */
    status_t SendMulticastUserMessageToAllPeers(const MessageRef & msg);
 
-   /** Tries to send the given Message to all peers (except this one) via multiple instances of TCP unicast.
+   /** Tries to send the given Message to all peers via multiple instances of TCP unicast.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
+     * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of B_ERROR otherwise.
      */
-   status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg);
+   status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
 
    /** Tries to send the given Message to a specific peers via TCP unicast.
      * @param destinationPeerID The ZGPeerID of the peer we want this Message to be sent to.
@@ -295,7 +296,7 @@ private:
    status_t SendDatabaseUpdateViaMulticast(const zg_private::ConstPZGDatabaseUpdateRef  & dbUp);
    status_t RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok);
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
-   status_t SendUnicastInternalMessageToAllPeers(const MessageRef & msg);
+   status_t SendUnicastInternalMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
    status_t SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
    status_t SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg);
 

@@ -391,17 +391,17 @@ status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const MessageRe
    return nios ? nios->SendMulticastMessageToAllPeers(internalMsg) : B_ERROR;
 }
 
-status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const MessageRef & userMsg)
+status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const MessageRef & userMsg, bool sendToSelf)
 {
-   return SendUnicastInternalMessageToAllPeers(WrapUserMessage(userMsg));
+   return SendUnicastInternalMessageToAllPeers(WrapUserMessage(userMsg), sendToSelf);
 }
 
-status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef & internalMsg)
+status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef & internalMsg, bool sendToSelf)
 {
    if (internalMsg() == NULL) return B_ERROR;
 
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   return nios ? nios->SendUnicastMessageToAllPeers(internalMsg) : B_ERROR;
+   return nios ? nios->SendUnicastMessageToAllPeers(internalMsg, sendToSelf) : B_ERROR;
 }
 
 status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & userMsg)

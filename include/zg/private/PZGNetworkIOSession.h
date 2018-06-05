@@ -43,9 +43,10 @@ public:
 
    /** Sends the specified Message to all peers via unicast/TCP.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
+     * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR on success, or B_ERROR on failure.
      */
-   status_t SendUnicastMessageToAllPeers(const MessageRef & msg);
+   status_t SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
 
    /** Tells the multicast I/O thread what beacon data to transmit periodically (if any) 
      * @param optBeaconData If non-NULL, this is the data to transmit every so often.  If NULL, no beacon data should be transmitted.
