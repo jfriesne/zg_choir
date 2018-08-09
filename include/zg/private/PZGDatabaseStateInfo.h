@@ -11,7 +11,7 @@ enum {
    PZG_DATABASE_STATE_INFO = 2053596258, // 'zgdb' 
 };
 
-/** This class contains some advertised info about the current state of a given RepDB database.  This information is periodically
+/** This class contains some advertised info about the current state of a given replicated-database.  This information is periodically
   * shared between peers so that they can keep tabs on each others' progress in updating their local databases.
   */
 class PZGDatabaseStateInfo : public PseudoFlattenable

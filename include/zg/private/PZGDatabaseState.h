@@ -17,7 +17,7 @@ class ZGPeerSession;
 namespace zg_private
 {
 
-/** This class represents the current state of a single RepDB database.  */
+/** This class represents the current state of a single replicated database.  */
 class PZGDatabaseState : public PulseNode
 {
 public:

@@ -64,9 +64,9 @@ private:
    uint32 FlattenedSizeNotIncludingPayload() const;
 
    uint8 _updateType;                 // PZG_DATABASE_UPDATE_TYPE_*
-   uint16 _databaseIndex;             // Index of the database (within this RepDB arena) that this update is intended for
+   uint16 _databaseIndex;             // Index of the database (within this replicated-database-arena) that this update is intended for
    uint16 _seniorElapsedTimeMillis;   // how many milliseconds it took to execute this update on the senior peer
-   ZGPeerID _sourcePeerID;            // ID of the RepDB peer that requested this update
+   ZGPeerID _sourcePeerID;            // ID of the peer that requested this update
    uint64 _updateID;                  // State-ID that this update will place the database into when applied.
    uint32 _preUpdateDBChecksum;       // 32-bit checksum of our database as it was before this update was applied
    uint32 _postUpdateDBChecksum;      // 32-bit checksum of our database as it was after this update was applied
