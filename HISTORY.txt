@@ -1,5 +1,8 @@
 v1.01 -
    - Added code to test_peer.cpp to test sending and receiving of
      user-level Messages via unicast and multicast.
+   - Added multicast-behavior setting to the ZGPeerSettings class
+     to allow control of what sort of multicast packets should go over
+     Wi-Fi and non-Wifi network interfaces, respectively.
    * Merged in changes from Ruurd Adema to make
      MessageReceivedFromPeer() protected instead of private.

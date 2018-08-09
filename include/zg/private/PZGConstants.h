@@ -24,7 +24,7 @@ extern const String PZG_PEER_NAME_DATABASE_UPDATE;
 extern const String PZG_PEER_NAME_DATABASE_UPDATE_ID;
 extern const String PZG_PEER_NAME_TEXT;
 
-// This sepecial databse-udpate-ID value represents a request for a resend of the entire database
+// This is a special/magic database-update-ID value that represents a request for a resend of the entire database
 #define DATABASE_UPDATE_ID_FULL_UPDATE ((uint64)-1)
 
 /** Given a PeerInfo Message, tries to return a single-line text description of what's in it (for debugging purposes) */

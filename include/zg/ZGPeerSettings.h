@@ -13,10 +13,19 @@ namespace zg_private
 namespace zg
 {
 
+/** The different types of peer that ZG supports */
 enum {
-   PEER_TYPE_FULL_PEER = 0,  // a full peer is one that is able to become senior peer if necessary
-   PEER_TYPE_JUNIOR_ONLY,    // a junior-only peer is one that wants to follow along as a junior peer but doesn't want to be senior
-   NUM_PEER_TYPES
+   PEER_TYPE_FULL_PEER = 0,  ///< a full peer is one that is able to become senior peer if necessary
+   PEER_TYPE_JUNIOR_ONLY,    ///< a junior-only peer is one that wants to follow along as a junior peer but doesn't want to be senior
+   NUM_PEER_TYPES            ///< Guard value
+};
+
+/** The different types of multicast behavior that ZG support */
+enum {
+   ZG_MULTICAST_BEHAVIOR_AUTO = 0,       ///< Default behavior -- use simulated-multicast for WiFi interfaces, real-multicast for non-WiFi
+   ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY,  ///< Use real-multicast on all devices (even Wi-Fi devices!)
+   ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY, ///< Use simulated-multicast on all devices (even non-Wi-Fi devices!)
+   NUM_ZG_MULTICAST_BEHAVIORS
 };
 
 /** This immutable class holds various read-only settings that will be used to define the
@@ -41,6 +50,7 @@ public:
       , _heartbeatsBeforeFullyAttached(4)
       , _maxMissingHeartbeats(4)
       , _beaconsPerSecond(4)
+      , _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
       , _outgoingHeartbeatPacketIDCounter(0)
    {
       // empty
@@ -112,6 +122,14 @@ public:
      */
    void SetBeaconsPerSecond(uint32 bps) {_beaconsPerSecond = bps;}
 
+   /** Specify what kind of multicast behavior ZG should use
+     * @param whichBehavior a ZG_MULTICAST_BEHAVIOR_* value.  (Default state is ZG_MULTICAST_BEHAVIOR_AUTO)
+     */
+   void SetMulticastBehavior(uint32 whichBehavior) {_multicastBehavior = whichBehavior;}
+
+   /** Returns the current ZG_MULTICAST_BEHAVIOR_* value */
+   uint32 GetMulticastBehavior() const {return _multicastBehavior;}
+  
    /** Call this to set the maximum number of bytes of RAM the specified database should be allowed
      * to use for its database-update-log records.  If not specified for a given database, a default
      * limit of two megabytes will be used.
@@ -139,6 +157,7 @@ private:
    uint32 _heartbeatsBeforeFullyAttached;  // how many heartbeat-periods we should allow to elapse before declaring ourselves fully part of the system.
    uint32 _maxMissingHeartbeats;       // how many heartbeat-periods must go by without receiving a heartbeat from a peer, before we declare him offline
    uint32 _beaconsPerSecond;           // how many beacon-packets we should send out per second if we are the senior peer
+   uint32 _multicastBehavior;          // our ZG_MULTICAST_BEHAVIOR_* value
    Hashtable<uint32, uint64> _maxUpdateLogSizeBytes;
    mutable uint32 _outgoingHeartbeatPacketIDCounter;
 };

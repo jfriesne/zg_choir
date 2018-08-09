@@ -110,6 +110,16 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
    const IPAddress multicastAddress = GetMulticastAddressForSystemNameAndPort(GetSystemName(), udpPort);
    Queue<NetworkInterfaceInfo> niis = GetNetworkInterfaceInfos();
    Queue<int> iidxQ;
+
+   /** This enumeration defines some different approaches that RepDB can use to handle multicast packets on a given network interface */
+   enum {
+      MULTICAST_MODE_AUTO = 0,  ///< Default mode -- use "real multicast" for wired network interfaces, and "simulated multicast" for Wi-Fi
+      MULTICAST_MODE_STANDARD,  ///< Use "real multicast packets" on this network interface
+      MULTICAST_MODE_SIMULATED, ///< Use "simulated multicast" on this network interface
+      MULTICAST_MODE_DISABLED,  ///< Don't use this network interface at all
+      NUM_MULTICAST_MODES       ///< Guard value
+   };
+
    for (int32 i=niis.GetNumItems()-1; i>=0; i--)
    {
       const NetworkInterfaceInfo & nii = niis[i];
@@ -119,30 +129,64 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
       if ((iidx > 0)&&(iidxQ.Contains(iidx) == false))
       {
          nextMulticastAddress.SetInterfaceIndex(iidx);
+
+         int modeForThisNIC;
+         switch(GetMulticastBehavior())
+         {
+            case ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY:  modeForThisNIC = MULTICAST_MODE_STANDARD;  break;
+            case ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY: modeForThisNIC = MULTICAST_MODE_SIMULATED; break;
+            case ZG_MULTICAST_BEHAVIOR_AUTO: default:  modeForThisNIC = MULTICAST_MODE_AUTO;      break;
+         }
+
+         const char * ifTypeDesc = "other";
+
+         // Decide which multicast mode to use   
          if (nii.GetHardwareType() == NETWORK_INTERFACE_HARDWARE_TYPE_WIFI)
          {
             if (includeWiFi)
             {
-               // We need to handle WiFi networks in a different fashion since vanilla
-               // multicast-over-WiFi works very poorly!
+               ifTypeDesc = "WiFi";
+
+               // Prefer simulated-multicast for Wi-Fi (real-multicast over Wi-Fi performs badly)
+               if (modeForThisNIC == MULTICAST_MODE_AUTO) modeForThisNIC = MULTICAST_MODE_SIMULATED;
+            }
+            else modeForThisNIC = MULTICAST_MODE_DISABLED;
+         }
+         else
+         {
+            ifTypeDesc = "wired";
+            if (modeForThisNIC == MULTICAST_MODE_AUTO) modeForThisNIC = MULTICAST_MODE_STANDARD;
+         }
+
+         switch(modeForThisNIC)
+         {
+            case MULTICAST_MODE_SIMULATED:
+            {
                SimulatedMulticastDataIORef wifiIO(newnothrow SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
                if ((wifiIO())&&(ret.AddTail(wifiIO) == B_NO_ERROR)) 
                {
-                  LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on WiFi interface: %s\n", dataDesc, nii.ToString()());
+                  LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);
                }
                else WARN_OUT_OF_MEMORY;
             }
-         }
-         else
-         {
-            UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, isForHeartbeats ? _hbUDPPort : _dataUDPPort));
-            if ((wiredIO())&&(ret.AddTail(wiredIO) == B_NO_ERROR))
+            break;
+
+            case MULTICAST_MODE_STANDARD:
             {
-               LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on wired interface: %s\n", dataDesc, nii.ToString()());
-               (void) iidxQ.AddTail(iidx);
+               UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, isForHeartbeats ? _hbUDPPort : _dataUDPPort));
+               if ((wiredIO())&&(ret.AddTail(wiredIO) == B_NO_ERROR))
+               {
+                  LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
+                  (void) iidxQ.AddTail(iidx);
+               }
+               else LogTime(MUSCLE_LOG_ERROR, "Couldn't created multicast data IO %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Couldn't created multicast data IO %s on wired interface: %s\n", dataDesc, nii.ToString()());
+            break;
+
+            default:
+               // do nothing
+            break;
          }
       }
    }

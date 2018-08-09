@@ -17,7 +17,7 @@ enum {
 
 enum {NUM_TOY_DATABASES = 1};  // for now!
 
-static ZGPeerSettings GetTestZGPeerSettings()
+static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
 {
    // Just so we can see that this is working
    MessageRef peerAttributes = GetMessageFromPool();
@@ -28,13 +28,33 @@ static ZGPeerSettings GetTestZGPeerSettings()
    ZGPeerSettings s("test", NUM_TOY_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
 
-#ifdef ENABLE_TEST_FULL_DATABASE_UPDATES
-   // Setting this #define will cause ZG to keep only a single Message in its recent-transactions-Queue,
-   // making it easier to test the functionality of SaveLocalDatabaseToMessage() and SetLocalDatabaseFromMessage().
-   s.SetMaximumUpdateLogSizeForDatabase(0, 1);
-#else
-   s.SetMaximumUpdateLogSizeForDatabase(0, 256*1024);
-#endif
+   String multicastMode;
+   if (args.FindString("multicast", multicastMode) == B_NO_ERROR)
+   {
+      if (multicastMode.ContainsIgnoreCase("sim"))
+      {
+         LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use SimulatedMulticastDataIO!\n");
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY);      
+      }
+      else if (multicastMode.ContainsIgnoreCase("standard"))
+      {
+         LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use real multicast DataIO!\n");
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY);      
+      }
+   }
+
+   String maxLogSizeBytesStr;
+   if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr) == B_NO_ERROR)
+   {
+      uint32 maxBytes = atol(maxLogSizeBytesStr());
+      if (maxBytes > 0)
+      {
+         LogTime(MUSCLE_LOG_INFO, "Setting maximum log size for database #0 to " UINT32_FORMAT_SPEC " bytes.\n", maxBytes);
+         s.SetMaximumUpdateLogSizeForDatabase(0, maxBytes);
+      }
+      else LogTime(MUSCLE_LOG_WARNING, "maxlogsizebytes argument didn't contain a value greater than zero, ignoring it.\n");
+   }
+
    return s;
 }
 
@@ -42,8 +62,8 @@ static ZGPeerSettings GetTestZGPeerSettings()
 class TestZGPeerSession : public ZGPeerSession
 {
 public:
-   TestZGPeerSession() 
-      : ZGPeerSession(GetTestZGPeerSettings())
+   TestZGPeerSession(const Message & args) 
+      : ZGPeerSession(GetTestZGPeerSettings(args))
       , _autoUpdateDelay(0)
       , _nextAutoUpdateTime(MUSCLE_TIME_NEVER)
       , _nextPrintNetworkTimeTime(MUSCLE_TIME_NEVER)
@@ -373,7 +393,7 @@ int main(int argc, char ** argv)
    HandleStandardDaemonArgs(args);
 
    // Our test_peer business logic is all implemented inside this object
-   TestZGPeerSession zgPeerSession;
+   TestZGPeerSession zgPeerSession(args);
 
    // This object will read from stdin for us, so we can accept typed text commands from the user
    ZGStdinSession zgStdinSession(zgPeerSession, true);
