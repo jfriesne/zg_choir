@@ -111,7 +111,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
    Queue<NetworkInterfaceInfo> niis = GetNetworkInterfaceInfos();
    Queue<int> iidxQ;
 
-   /** This enumeration defines some different approaches that RepDB can use to handle multicast packets on a given network interface */
+   /** This enumeration defines some different approaches that ZG can use to handle multicast packets on a given network interface */
    enum {
       MULTICAST_MODE_AUTO = 0,  ///< Default mode -- use "real multicast" for wired network interfaces, and "simulated multicast" for Wi-Fi
       MULTICAST_MODE_STANDARD,  ///< Use "real multicast packets" on this network interface
