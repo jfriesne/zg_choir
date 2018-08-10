@@ -56,7 +56,9 @@ static bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
 Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() const
 {
    Queue<NetworkInterfaceInfo> niis;
-   (void) muscle::GetNetworkInterfaceInfos(niis, GNII_INCLUDE_ENABLED_INTERFACES|GNII_INCLUDE_IPV6_INTERFACES|GNII_INCLUDE_LOOPBACK_INTERFACES|(IsSystemOnLocalhostOnly()?0:(int)GNII_INCLUDE_NONLOOPBACK_INTERFACES));
+   GNIIFlags flags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES);
+   if (IsSystemOnLocalhostOnly() == false) flags.SetBit(GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
+   (void) muscle::GetNetworkInterfaceInfos(niis, flags);
 
    for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceAcceptable(niis[i]) == false) (void) niis.RemoveItemAt(i);
    niis.Sort(CompareNetworkInterfacesFunctor());
