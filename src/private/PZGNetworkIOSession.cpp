@@ -134,13 +134,13 @@ static ConstPZGBeaconDataRef GetBeaconDataFromMessage(const MessageRef & msg)
    if (msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef) == B_NO_ERROR)
    {
       PZGBeaconDataRef beaconRef(fcRef.GetRefCountableRef(), true);
-      if (beaconRef()) return beaconRef;
+      if (beaconRef()) return AddConstToRef(beaconRef);
    }
 
    // Didn't work?  Okay, let's try to unflatten some bytes instead
    PZGBeaconDataRef beaconRef = GetBeaconDataFromPool();
    if ((beaconRef())&&(msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconRef()) != B_NO_ERROR)) beaconRef.Reset();
-   return beaconRef;
+   return AddConstToRef(beaconRef);
 }
 
 PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, ZGPeerSession * master) 

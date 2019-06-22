@@ -526,7 +526,7 @@ ConstPZGDatabaseUpdateRef PZGDatabaseState :: GetDatabaseUpdateByID(uint64 updat
             dbUp()->SetSeniorElapsedTimeMicros(GetRunTime64()-startTime);
             dbUp()->SetPostUpdateDBChecksum(_dbChecksum);
             dbUp()->SetPayloadMessage(savedDBMsg);
-            return dbUp;
+            return AddConstToRef(dbUp);
          }
          else WARN_OUT_OF_MEMORY;
       }

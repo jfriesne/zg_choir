@@ -214,7 +214,7 @@ ConstMessageRef MusicSheet :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
             if ((juniorMsg())&&(juniorMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx) == B_NO_ERROR)&&(juniorMsg()->AddInt64(CHOIR_NAME_CHORD_VALUE, newChord) == B_NO_ERROR)) 
             {
                SendMessageToGUI(juniorMsg, true);
-               return juniorMsg;
+               return AddConstToRef(juniorMsg);
             }
          }
          else LogTime(MUSCLE_LOG_ERROR, "MusicSheet::SeniorUpdate():  Unable to toggle note " UINT32_FORMAT_SPEC " at chord index " UINT32_FORMAT_SPEC "\n", noteIdx, chordIdx);

@@ -80,7 +80,7 @@ ConstMessageRef MusicDatabaseObject :: SendFullStateToGUI(bool allowReviewTrigge
    MessageRef msg = GetMessageFromPool();
    if ((msg() == NULL)||(SaveToArchive(msg) != B_NO_ERROR)) return ConstMessageRef();
    SendMessageToGUI(msg, allowReviewTrigger);
-   return msg;
+   return AddConstToRef(msg);
 }
 
 void MusicDatabaseObject :: SendMessageToGUI(const ConstMessageRef & msg, bool allowReviewTrigger) 

@@ -1,4 +1,4 @@
-v1.01 -
+v1.01 - 6/22/2019
    - Added code to test_peer.cpp to test sending and receiving of
      user-level Messages via unicast and multicast.
    - Added multicast-behavior setting to the ZGPeerSettings class
@@ -6,3 +6,5 @@ v1.01 -
      Wi-Fi and non-Wifi network interfaces, respectively.
    * Merged in changes from Ruurd Adema to make
      MessageReceivedFromPeer() protected instead of private.
+   * Updated the muscle submodule to v7.30, and fixed some compiler 
+     warnings.

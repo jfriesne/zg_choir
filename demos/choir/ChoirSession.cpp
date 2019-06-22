@@ -55,7 +55,7 @@ ConstMessageRef ChoirSession :: GenerateLatenciesMessage() const
          (void) msg()->RemoveData(CHOIR_NAME_PEER_ID, msg()->GetNumValuesInName(CHOIR_NAME_PEER_ID-1));  // roll back!
       }
    }
-   return msg;
+   return AddConstToRef(msg);
 }
 
 bool ChoirSession :: IsStrategyReviewMaybeNecessary() const

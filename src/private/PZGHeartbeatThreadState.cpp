@@ -382,7 +382,7 @@ Queue<ZGPeerID> PZGHeartbeatThreadState :: CalculateOrderedPeersList()
 ConstPZGHeartbeatPeerInfoRef PZGHeartbeatThreadState :: GetPZGHeartbeatPeerInfoRefFor(uint64 now, const ZGPeerID & peerID) const
 {
    PZGHeartbeatPeerInfoRef ret = GetPZGHeartbeatPeerInfoFromPool();
-   if (ret() == NULL) return ret;  // doh!
+   if (ret() == NULL) return ConstPZGHeartbeatPeerInfoRef();  // doh!
 
    ret()->SetPeerID(peerID);
 
@@ -405,7 +405,7 @@ ConstPZGHeartbeatPeerInfoRef PZGHeartbeatThreadState :: GetPZGHeartbeatPeerInfoR
       }
    }
 
-   return ret;
+   return AddConstToRef(ret);
 }
 
 void PZGHeartbeatThreadState :: MessageReceivedFromOwner(const MessageRef & msgFromOwner)

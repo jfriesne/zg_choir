@@ -355,7 +355,7 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    return SendUnicastInternalMessageToPeer(_seniorPeerID, sendMsg);
 }
 
-status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok)
+status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
 {
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
    if (nios == NULL) return B_ERROR;  // paranoia?
@@ -450,17 +450,19 @@ uint64 ZGPeerSession :: GetPulseTime(const PulseArgs & args)
    return StorageReflectSession::GetPulseTime(args);
 }
 
-zg_private::ConstPZGBeaconDataRef ZGPeerSession :: GetNewSeniorBeaconData() const
+ConstPZGBeaconDataRef ZGPeerSession :: GetNewSeniorBeaconData() const
 {
-   zg_private::PZGBeaconDataRef beaconDataRef = GetBeaconDataFromPool();
-   if (beaconDataRef() == NULL) return beaconDataRef;
+   using namespace zg_private;
+
+   PZGBeaconDataRef beaconDataRef = GetBeaconDataFromPool();
+   if (beaconDataRef() == NULL) return ConstPZGBeaconDataRef();
 
    const uint32 numDBs = _databases.GetNumItems();
    Queue<PZGDatabaseStateInfo> & q = beaconDataRef()->GetDatabaseStateInfos();
-   if (q.EnsureSize(numDBs) != B_NO_ERROR) return zg_private::PZGBeaconDataRef();
+   if (q.EnsureSize(numDBs) != B_NO_ERROR) return ConstPZGBeaconDataRef();
 
    for (uint32 i=0; i<numDBs; i++) (void) q.AddTail(_databases[i].GetDatabaseStateInfo());
-   return beaconDataRef;
+   return AddConstToRef(beaconDataRef);
 }
 
 void ZGPeerSession :: Pulse(const PulseArgs & args)
@@ -479,14 +481,14 @@ void ZGPeerSession :: Pulse(const PulseArgs & args)
       PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
       if (nios)
       {
-         zg_private::ConstPZGBeaconDataRef beaconData;
+         ConstPZGBeaconDataRef beaconData;
          if (IAmTheSeniorPeer()) beaconData = GetNewSeniorBeaconData();
          if (nios->SetBeaconData(beaconData) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession:  Couldn't set beacon data!\n");
       }
    }
 }
 
-void ZGPeerSession :: BeaconDataChanged(const zg_private::ConstPZGBeaconDataRef & beaconData)
+void ZGPeerSession :: BeaconDataChanged(const ConstPZGBeaconDataRef & beaconData)
 {
    const uint32 numDBIs = beaconData() ? beaconData()->GetDatabaseStateInfos().GetNumItems() : 0;
    if (numDBIs == _databases.GetNumItems())
