@@ -1,7 +1,7 @@
 #! /bin/bash -ex
 
 CHOIR_APP_NAME="ZGChoir"
-CHOIR_APP_VERSION=`grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2`
+CHOIR_APP_VERSION=$(grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2)
 
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SOURCE_PACKAGE_DIR_NAME="${CHOIR_APP_NAME}_v${CHOIR_APP_VERSION}_Source"

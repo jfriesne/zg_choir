@@ -1,7 +1,7 @@
 #! /bin/bash -ex
 
 CHOIR_APP_NAME="ZGChoir"
-CHOIR_APP_VERSION=`grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2`
+CHOIR_APP_VERSION=$(grep CHOIR_VERSION_STRING ChoirProtocol.h | cut -d \" -f 2)
 
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ZGCHOIR_FOR_MACOSX_DIR_NAME="${CHOIR_APP_NAME}_v${CHOIR_APP_VERSION}_for_MacOSX"
@@ -18,9 +18,9 @@ DMG_FILE_PATH="${SCRIPT_PATH}/${DMG_FILE_NAME}"
 # non-kosher LC_RPATHs in the Qt*.frameworks, causing Gatekeeper to balk
 function RemoveBogusLCRPaths {
     filePath="$1"
-    outputText=`otool -l $filePath | grep everywhere || true`
+    outputText=$(otool -l $filePath | grep everywhere || true)
     while read -r line; do
-       path=`echo $line | cut -d " " -f 2`
+       path=$(echo $line | cut -d " " -f 2)
        echo "PATH=$path"
        if [[ $path == /* ]] ;
        then
