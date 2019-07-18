@@ -35,7 +35,7 @@ function DoCodeSign {
   if [ "$DISABLE_CODESIGN" != "1" ]; then
      codesign "$@"
   else
-     echo "Code signing disabled, not executing:  codesign $@"
+     echo "Code signing disabled, not executing:  codesign $*"
   fi
 }
 
