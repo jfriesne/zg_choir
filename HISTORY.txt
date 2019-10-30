@@ -1,3 +1,6 @@
+v1.02 -
+   - Updated the muscle submodule to v7.51
+
 v1.01 - 6/22/2019
    - Added code to test_peer.cpp to test sending and receiving of
      user-level Messages via unicast and multicast.
