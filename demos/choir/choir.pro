@@ -39,8 +39,13 @@ win32:INCLUDEPATH += $$MUSCLE_DIR/regex/regex
 RESOURCES = ./samples/samples.qrc \
             ./images/images.qrc
 
-MUSCLE_SOURCES = $$MUSCLE_DIR/dataio/StdinDataIO.cpp                  \
+MUSCLE_SOURCES = \
+                 $$MUSCLE_DIR/dataio/ByteBufferDataIO.cpp             \
+                 $$MUSCLE_DIR/dataio/FileDataIO.cpp                   \
+                 $$MUSCLE_DIR/dataio/StdinDataIO.cpp                  \
                  $$MUSCLE_DIR/dataio/SimulatedMulticastDataIO.cpp     \
+                 $$MUSCLE_DIR/dataio/TCPSocketDataIO.cpp              \
+                 $$MUSCLE_DIR/dataio/UDPSocketDataIO.cpp              \
                  $$MUSCLE_DIR/iogateway/AbstractMessageIOGateway.cpp  \
                  $$MUSCLE_DIR/iogateway/MessageIOGateway.cpp          \
                  $$MUSCLE_DIR/iogateway/PlainTextMessageIOGateway.cpp \

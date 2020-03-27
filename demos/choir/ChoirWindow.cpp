@@ -137,7 +137,13 @@ ChoirWindow :: ChoirWindow()
       hbl->addWidget(_tempoSlider);
 
       _tempoValueLabel = new QLabel;
-      _tempoValueLabel->setFixedWidth(_tempoValueLabel->fontMetrics().width("100%"));
+      const QString p100 = "100%";
+#if QT_VERSION >= 0x050B00
+      const int tw = _tempoValueLabel->fontMetrics().horizontalAdvance(p100);
+#else
+      const int tw = _tempoValueLabel->fontMetrics().width(p100);
+#endif
+      _tempoValueLabel->setFixedWidth(tw);
       hbl->addWidget(_tempoValueLabel);
       UpdateTempoValueLabel();
 

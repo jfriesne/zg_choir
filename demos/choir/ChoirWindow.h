@@ -122,7 +122,7 @@ private:
    QString GetLocalPeerNickname() const;
    const ZGPeerID & GetLocalPeerID() const;
    QString GetStrategyName(uint32 whichStrategy) const;
-   QAction * CreateMenuItem(QMenu * menu, const QString & label, QObject * target, const char * slotName, const QString & optShortcut = QString::null, bool isCheckable = false);
+   QAction * CreateMenuItem(QMenu * menu, const QString & label, QObject * target, const char * slotName, const QString & optShortcut = QString(), bool isCheckable = false);
 
    void ScheduleSendUpdatedMusicSheetToPlayer();
    void ScheduleSendUpdatedPlaybackStateToPlayer();
