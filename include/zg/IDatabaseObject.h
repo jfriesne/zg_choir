@@ -1,9 +1,10 @@
 #ifndef IDatabaseObject_h
 #define IDatabaseObject_h
 
+#include "message/Message.h"
 #include "util/RefCount.h"
 #include "zg/INetworkTimeProvider.h"
-#include "zg/ZGNameSpace.h"
+#include "zg/ZGPeerID.h"
 
 namespace zg
 {

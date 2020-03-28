@@ -15,11 +15,11 @@ CXXFLAGS = $(CFLAGS) -O3 $(DEFINES)
 
 LFLAGS      =  
 LIBS        = -lpthread
-EXECUTABLES = test_peer
+EXECUTABLES = test_peer tree_peer
 ZLIBOBJS    = adler32.o deflate.o trees.o zutil.o inflate.o inftrees.o inffast.o crc32.o compress.o gzclose.o gzread.o gzwrite.o gzlib.o
-MUSCLEOBJS  = Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o SocketMultiplexer.o NetworkUtilityFunctions.o SysLog.o PulseNode.o SetupSystem.o ByteBuffer.o ZLibCodec.o SetupSystem.o StdinDataIO.o SimulatedMulticastDataIO.o FileDescriptorDataIO.o MiscUtilityFunctions.o QueryFilter.o FilePathInfo.o ReflectServer.o StringMatcher.o ServerComponent.o AbstractReflectSession.o Thread.o Directory.o SignalHandlerSession.o SignalMultiplexer.o PlainTextMessageIOGateway.o DumbReflectSession.o StorageReflectSession.o PathMatcher.o DataNode.o ZLibUtilityFunctions.o DetectNetworkConfigChangesSession.o PacketTunnelIOGateway.o
+MUSCLEOBJS  = Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o SocketMultiplexer.o NetworkUtilityFunctions.o SysLog.o PulseNode.o SetupSystem.o ByteBuffer.o ZLibCodec.o SetupSystem.o ByteBufferDataIO.o FileDataIO.o StdinDataIO.o TCPSocketDataIO.o UDPSocketDataIO.o SimulatedMulticastDataIO.o FileDescriptorDataIO.o MiscUtilityFunctions.o QueryFilter.o FilePathInfo.o ReflectServer.o StringMatcher.o ServerComponent.o AbstractReflectSession.o Thread.o Directory.o SignalHandlerSession.o SignalMultiplexer.o PlainTextMessageIOGateway.o DumbReflectSession.o StorageReflectSession.o PathMatcher.o DataNode.o ZLibUtilityFunctions.o DetectNetworkConfigChangesSession.o PacketTunnelIOGateway.o
 REGEXOBJS   = 
-ZGOBJS      = ZGPeerSession.o ZGStdinSession.o
+ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o ZGMessageTreeDatabaseObject.o
 PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
 
 VPATH = . ../src ../src/private $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
@@ -58,6 +58,9 @@ endif
 all : $(EXECUTABLES)
 
 test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) test_peer.o
+	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
+
+tree_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) tree_peer.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean :

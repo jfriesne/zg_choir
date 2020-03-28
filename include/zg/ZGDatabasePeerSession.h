@@ -7,6 +7,8 @@
 namespace zg
 {
 
+class ZGMessageTreeDatabaseObject;
+
 /** This is a convenience class; it is the same as a ZGPeerSession except that it also knows
   * how to create and manage some user-provided IDatabaseObjects (one per database) so that 
   * the subclass doesn't have to implement all of the Message<->IDatabaseObject plumbing manually.
@@ -50,6 +52,8 @@ protected:
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
 
 private:
+   friend class ZGMessageTreeDatabaseObject;
+
    Queue<IDatabaseObjectRef> _databaseObjects;
 };
 DECLARE_REFTYPES(ZGDatabasePeerSession);
