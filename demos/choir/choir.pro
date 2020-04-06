@@ -84,7 +84,9 @@ MUSCLE_SOURCES = \
 
 ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp         \
              $$ZG_DIR/src/ZGDatabasePeerSession.cpp \
-             $$ZG_DIR/src/ZGStdinSession.cpp
+             $$ZG_DIR/src/ZGStdinSession.cpp        \
+             $$ZG_DIR/src/gateway/IGateway.cpp      \
+             $$ZG_DIR/src/gateway/tree/ITreeGateway.cpp
 
 PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGThreadedSession.cpp       \

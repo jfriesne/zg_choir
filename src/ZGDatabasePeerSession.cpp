@@ -116,4 +116,54 @@ int64 IDatabaseObject :: GetToNetworkTimeOffset() const
    return dbps ? dbps->GetToNetworkTimeOffset() : 0;
 }
 
+status_t ZGDatabasePeerSession :: AddTreeSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RemoveTreeSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RemoveAllTreeSubscriptions(ITreeGatewaySubscriber * calledBy)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RequestTreeNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RequestTreeNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: UploadTreeNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: UploadTreeNodeValues(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RequestDeleteTreeNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: RequestMoveTreeIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
+status_t ZGDatabasePeerSession :: PingTreeServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
+{
+return B_UNIMPLEMENTED;
+}
+
 };  // end namespace zg

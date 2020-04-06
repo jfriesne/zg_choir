@@ -3,6 +3,7 @@
 
 #include "zg/ZGPeerSession.h"
 #include "zg/IDatabaseObject.h"
+#include "zg/gateway/tree/ITreeGateway.h"
 
 namespace zg
 {
@@ -13,7 +14,7 @@ class ZGMessageTreeDatabaseObject;
   * how to create and manage some user-provided IDatabaseObjects (one per database) so that 
   * the subclass doesn't have to implement all of the Message<->IDatabaseObject plumbing manually.
   */
-class ZGDatabasePeerSession : public ZGPeerSession
+class ZGDatabasePeerSession : public ZGPeerSession, public ITreeGateway
 {
 public:
    /** Constructor
@@ -50,6 +51,19 @@ protected:
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg);
    virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const;
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
+
+   // ITreeGateway API implementation
+   virtual status_t AddTreeSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+   virtual status_t RemoveTreeSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef);
+   virtual status_t RemoveAllTreeSubscriptions(ITreeGatewaySubscriber * calledBy);
+   virtual status_t RequestTreeNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+   virtual status_t RequestTreeNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags);
+   virtual status_t UploadTreeNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
+   virtual status_t UploadTreeNodeValues(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags);
+   virtual status_t RequestDeleteTreeNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+   virtual status_t RequestMoveTreeIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags);
+   virtual status_t PingTreeServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
+   virtual bool IsTreeGatewayConnected() const {return IAmFullyAttached();}
 
 private:
    friend class ZGMessageTreeDatabaseObject;
