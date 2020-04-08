@@ -9,6 +9,7 @@
 namespace zg {
 
 class IGateway;
+class SubscriberCommandBatchGuard;
 
 /** Abstract base class for objects that want to interact with a gateway's public API. */
 class IGatewaySubscriber : public NotCopyable
@@ -20,10 +21,25 @@ protected:
    void SetGateway(IGateway * g);
    IGateway * GetGateway() const {return _gateway;}
 
+   virtual void BeginCommandBatch();
+   virtual void EndCommandBatch();
+
 private:
    friend class IGateway;
+   friend class SubscriberCommandBatchGuard;
 
    IGateway * _gateway;
+};
+
+/** RIAA stack-guard object to begin and end an IGateway's Command Batch at the appropriate times */
+class SubscriberCommandBatchGuard : public NotCopyable
+{
+public:
+   SubscriberCommandBatchGuard(IGatewaySubscriber * sub) : _sub(sub) {_sub->BeginCommandBatch();}
+   ~SubscriberCommandBatchGuard() {_sub->EndCommandBatch();}
+
+private:
+   IGatewaySubscriber * _sub;
 };
 
 /** Abstract base class for objects that want to server as a gateway to a number of IGatewaySubscriber objects */
@@ -33,8 +49,8 @@ public:
    IGateway() {/* empty */}
    virtual ~IGateway() {MASSERT(_registeredSubscribers.IsEmpty(), "IGateway was destroyed without calling ShutdownGateway() on it first!");}
 
-   virtual bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins(); return ret;}
-   virtual bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();   _commandBatchCounter.Decrement(); return ret;}
+   virtual bool BeginCommandBatch(IGatewaySubscriber * /*calledBy*/) {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins(); return ret;}
+   virtual bool   EndCommandBatch(IGatewaySubscriber * /*calledBy*/) {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();   _commandBatchCounter.Decrement(); return ret;}
 
    virtual bool BeginCallbackBatch() {const bool ret = _callbackBatchCounter.Increment();  if (ret) CallbackBatchBegins(); return ret;}
    virtual bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds(); _callbackBatchCounter.Decrement(); return ret;}
@@ -77,17 +93,6 @@ private:
    NestCount _callbackBatchCounter;
 };
 DECLARE_REFTYPES(IGateway);
-
-/** RIAA stack-guard object to begin and end an IGateway's Command Batch at the appropriate times */
-class GatewayCommandBatchGuard : public NotCopyable
-{
-public:
-   GatewayCommandBatchGuard(IGateway * ig) : _gateway(ig) {_gateway->BeginCommandBatch();}
-   ~GatewayCommandBatchGuard() {_gateway->EndCommandBatch();}
-
-private:
-   IGateway * _gateway;
-};
 
 /** RIAA stack-guard object to begin and end an IGateway's Callback Batch at the appropriate times */
 class GatewayCallbackBatchGuard : public NotCopyable
