@@ -17,7 +17,7 @@ public:
 protected:
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
-   virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &) {return _returnValue;}
+   virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber *) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeValues(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber *, const Queue<String> &, const Queue<ConstQueryFilterRef> &, const String &, uint32, TreeGatewayFlags) {return _returnValue;}

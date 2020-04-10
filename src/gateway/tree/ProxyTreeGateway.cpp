@@ -34,7 +34,7 @@ status_t ProxyTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber 
    return ITreeGatewaySubscriber::AddTreeSubscription(subscriptionPath, optFilterRef, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef)
+status_t ProxyTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    return ITreeGatewaySubscriber::RemoveTreeSubscription(subscriptionPath, optFilterRef);
 }

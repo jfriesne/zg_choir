@@ -8,9 +8,9 @@ status_t ITreeGatewaySubscriber :: AddTreeSubscription(const String & subscripti
    return GetGateway()->TreeGateway_AddSubscription(this, subscriptionPath, optFilterRef, flags);
 }
 
-status_t ITreeGatewaySubscriber :: RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef) 
+status_t ITreeGatewaySubscriber :: RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_RemoveSubscription(this, subscriptionPath, optFilterRef);
+   return GetGateway()->TreeGateway_RemoveSubscription(this, subscriptionPath, optFilterRef, flags);
 }
 
 status_t ITreeGatewaySubscriber :: RemoveAllTreeSubscriptions() 

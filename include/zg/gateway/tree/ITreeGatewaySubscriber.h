@@ -1,19 +1,32 @@
 #ifndef ITreeGatewaySubscriber_h
 #define ITreeGatewaySubscriber_h
 
-#include "zg/gateway/tree/DummyTreeGateway.h"
+#include "support/BitChord.h"
+#include "message/Message.h"
+#include "regex/QueryFilter.h"
+#include "zg/gateway/IGatewaySubscriber.h"
 
 namespace zg {
 
+class ITreeGateway;
+
+/** Flags used to optionally modify the behavior of ITreeGateway commands */
+enum {
+   TREE_GATEWAY_FLAG_INDEXED = 0,  /**< If set, the uploaded node should be added to it's parent's ordered-nodes index. */
+   TREE_GATEWAY_FLAG_NOREPLY,      /**< If set, no initial reply is desired */
+   TREE_GATEWAY_FLAG_TOSENIOR,     /**< If set in a call to PingTreeServer(), the ping will travel to the senior peer before coming back */
+   NUM_TREE_GATEWAY_FLAGS          /**< Guard value */
+};
+DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);
+
+class ITreeGateway;
+
 /** Abstract base class for objects that want to connect to an ITreeGateway as downstream clients */
-class ITreeGatewaySubscriber : public IGatewaySubscriber
+class ITreeGatewaySubscriber : public IGatewaySubscriber<ITreeGateway>
 {
 public:
-   ITreeGatewaySubscriber(ITreeGateway * gateway) : IGatewaySubscriber(gateway) {/* empty */}
+   ITreeGatewaySubscriber(ITreeGateway * gateway) : IGatewaySubscriber<ITreeGateway>(gateway) {/* empty */}
    virtual ~ITreeGatewaySubscriber() {/* empty */}
-
-   void SetTreeGateway(ITreeGateway * gateway) {IGatewaySubscriber::SetGateway(gateway);}
-   ITreeGateway * GetTreeGateway() const {ITreeGateway * gw = static_cast<ITreeGateway *>(GetGateway()); return gw ? gw : GetDummyTreeGateway();}
 
 public:
    // ITreeGatewaySubscriber callback API
@@ -34,21 +47,21 @@ public:
 
 protected:
    // Function-call API -- passed through to our ITreeGateway's function-call API
-   virtual status_t AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_AddSubscription(this, subscriptionPath, optFilterRef, flags);}
-   virtual status_t RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef) {return GetTreeGateway()->TreeGateway_RemoveSubscription(this, subscriptionPath, optFilterRef);}
-   virtual status_t RemoveAllTreeSubscriptions() {return GetTreeGateway()->TreeGateway_RemoveAllSubscriptions(this);}
+   virtual status_t AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RemoveAllTreeSubscriptions();
 
-   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_RequestNodeValues(this, queryString, optFilterRef, flags);}
-   virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_RequestNodeSubtrees(this, queryStrings, queryFilters, tag, maxDepth, flags);}
+   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags = TreeGatewayFlags());
 
-   virtual status_t UploadTreeNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const char * optBefore = NULL) {return GetTreeGateway()->TreeGateway_UploadNodeValue(this, path, optPayload, flags, optBefore);}
-   virtual status_t UploadTreeNodeValues(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_UploadNodeValues(this, basePath, valuesMsg, flags);}
+   virtual status_t UploadTreeNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const char * optBefore = NULL);
+   virtual status_t UploadTreeNodeValues(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags());
 
-   virtual status_t RequestDeleteTreeNodes(const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_RequestDeleteNodes(this, path, optFilterRef, flags);}
-   virtual status_t RequestMoveTreeIndexEntry(const String & path, const char * optBefore, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_RequestMoveIndexEntry(this, path, optBefore, flags);}
+   virtual status_t RequestDeleteTreeNodes(const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestMoveTreeIndexEntry(const String & path, const char * optBefore, TreeGatewayFlags flags = TreeGatewayFlags());
 
-   virtual status_t PingTreeServer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags()) {return GetTreeGateway()->TreeGateway_PingServer(this, tag, flags);}
-   virtual bool IsTreeGatewayConnected() const {return GetTreeGateway()->TreeGateway_IsGatewayConnected();}
+   virtual status_t PingTreeServer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual bool IsTreeGatewayConnected() const;
 
 private:
    friend class ITreeGateway;

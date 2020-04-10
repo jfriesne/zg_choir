@@ -121,7 +121,7 @@ status_t ZGDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscr
 return B_UNIMPLEMENTED;
 }
 
-status_t ZGDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef)
+status_t ZGDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 return B_UNIMPLEMENTED;
 }

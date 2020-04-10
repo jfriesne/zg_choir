@@ -7,7 +7,7 @@
 namespace zg {
 
 /** This class just forwards on all requests from its downstream ITreeGatewaySubscribers to its upstream ITreeGateway,
-  * and all replies from its upstream ITreeGateay back to its downstream ITreeGatewaySubscribers.
+  * and all replies from its upstream ITreeGateway back to its downstream ITreeGatewaySubscribers.
   * It's not that useful on its own, but rather is generally used as a starting point to subclass from.
   */
 class ProxyTreeGateway : public ITreeGateway, public ITreeGatewaySubscriber
@@ -33,16 +33,13 @@ public:
    virtual void TreeGatewayShuttingDown();
 
 protected:
-   // Synonym for ITreeGatewaySubscriber::GetTreeGateway(), just to make the code clearer
-   ITreeGateway * GetUpstreamGateway() const {return GetTreeGateway();}
-
    // IGateway function-call API
    virtual void CommandBatchBegins();
    virtual void CommandBatchEnds();
 
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
-   virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef);
+   virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy);
    virtual status_t TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags);
