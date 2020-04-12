@@ -126,7 +126,7 @@ status_t ZGDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySub
 return B_UNIMPLEMENTED;
 }
 
-status_t ZGDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy)
+status_t ZGDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags)
 {
 return B_UNIMPLEMENTED;
 }
@@ -146,7 +146,7 @@ status_t ZGDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscr
 return B_UNIMPLEMENTED;
 }
 
-status_t ZGDatabasePeerSession :: TreeGateway_UploadNodeValues(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t ZGDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
 return B_UNIMPLEMENTED;
 }

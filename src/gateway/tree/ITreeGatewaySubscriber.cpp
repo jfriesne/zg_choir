@@ -13,9 +13,9 @@ status_t ITreeGatewaySubscriber :: RemoveTreeSubscription(const String & subscri
    return GetGateway()->TreeGateway_RemoveSubscription(this, subscriptionPath, optFilterRef, flags);
 }
 
-status_t ITreeGatewaySubscriber :: RemoveAllTreeSubscriptions() 
+status_t ITreeGatewaySubscriber :: RemoveAllTreeSubscriptions(TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_RemoveAllSubscriptions(this);
+   return GetGateway()->TreeGateway_RemoveAllSubscriptions(this, flags);
 }
 
 status_t ITreeGatewaySubscriber :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 
@@ -33,9 +33,9 @@ status_t ITreeGatewaySubscriber :: UploadTreeNodeValue(const String & path, cons
    return GetGateway()->TreeGateway_UploadNodeValue(this, path, optPayload, flags, optBefore);
 }
 
-status_t ITreeGatewaySubscriber :: UploadTreeNodeValues(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags) 
+status_t ITreeGatewaySubscriber :: UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_UploadNodeValues(this, basePath, valuesMsg, flags);
+   return GetGateway()->TreeGateway_UploadNodeSubtree(this, basePath, valuesMsg, flags);
 }
 
 status_t ITreeGatewaySubscriber :: RequestDeleteTreeNodes(const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 

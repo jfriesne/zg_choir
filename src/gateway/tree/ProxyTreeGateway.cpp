@@ -36,12 +36,12 @@ status_t ProxyTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber 
 
 status_t ProxyTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::RemoveTreeSubscription(subscriptionPath, optFilterRef);
+   return ITreeGatewaySubscriber::RemoveTreeSubscription(subscriptionPath, optFilterRef, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/)
+status_t ProxyTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::RemoveAllTreeSubscriptions();
+   return ITreeGatewaySubscriber::RemoveAllTreeSubscriptions(flags);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -59,9 +59,9 @@ status_t ProxyTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber 
    return ITreeGatewaySubscriber::UploadTreeNodeValue(path, optPayload, flags, optBefore);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_UploadNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::UploadTreeNodeValues(basePath, valuesMsg, flags);
+   return ITreeGatewaySubscriber::UploadTreeNodeSubtree(basePath, valuesMsg, flags);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)

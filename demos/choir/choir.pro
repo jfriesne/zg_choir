@@ -88,6 +88,7 @@ ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp         \
              $$ZG_DIR/src/gateway/tree/ITreeGatewaySubscriber.cpp \
              $$ZG_DIR/src/gateway/tree/DummyTreeGateway.cpp \
              $$ZG_DIR/src/gateway/tree/MuxTreeGateway.cpp   \
+             $$ZG_DIR/src/gateway/tree/NetworkTreeGateway.cpp   \
              $$ZG_DIR/src/gateway/tree/ProxyTreeGateway.cpp \
 
 PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \

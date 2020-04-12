@@ -18,11 +18,11 @@ protected:
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
-   virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber *) {return _returnValue;}
+   virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber *, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeValues(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber *, const Queue<String> &, const Queue<ConstQueryFilterRef> &, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_UploadNodeValue(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags, const char *) {return _returnValue;}
-   virtual status_t TreeGateway_UploadNodeValues(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags) {return _returnValue;}
+   virtual status_t TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber *, const String &, const char *, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}

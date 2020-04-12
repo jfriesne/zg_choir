@@ -129,7 +129,7 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
    return B_NO_ERROR;
 }
 
-status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy)
+status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags /*flags*/)
 {
    GatewaySubscriberCommandBatchGuard<ITreeGatewaySubscriber> batchGuard(calledBy);
 
@@ -434,7 +434,7 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    if (_subscriberInfos.ContainsKey(sub))
    {
-      TreeGateway_RemoveAllSubscriptions(sub);
+      TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
       (void) _needsCallbackBatchEndsCall.Remove(sub);
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);
