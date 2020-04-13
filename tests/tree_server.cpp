@@ -6,6 +6,7 @@
 #include "zg/ZGDatabasePeerSession.h"
 #include "zg/ZGStdinSession.h"
 #include "zg/ZGMessageTreeDatabaseObject.h"
+#include "zg/gateway/tree/TreeServerSideSession.h"
 
 using namespace zg;
 
@@ -100,6 +101,8 @@ private:
 
 int main(int argc, char ** argv)
 {
+   const uint16 TREE_PEER_SERVER_PORT = 4444;
+
    int exitCode = 10;
 
    // This object is required by the MUSCLE library; 
@@ -117,15 +120,20 @@ int main(int argc, char ** argv)
    // This object will read from stdin for us, so we can accept typed text commands from the user
    ZGStdinSession zgStdinSession(zgPeerSession, true);
 
+   // Accept incoming TCP connections from clients
+   TreeServerSideSessionFactory sssFactory(&zgPeerSession);
+
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
-   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)) == B_NO_ERROR))&&
-       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)) == B_NO_ERROR))
+   status_t ret;
+   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK(ret)))&&
+       (server.PutAcceptFactory(TREE_PEER_SERVER_PORT, ReflectSessionFactoryRef(&sssFactory, false)).IsOK(ret))&&
+       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
-      status_t ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
+      ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
       if (ret == B_NO_ERROR) 
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
@@ -136,7 +144,7 @@ int main(int argc, char ** argv)
       // Required in order to ensure an orderly shutdown
       server.Cleanup();
    }
-   else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't add TestTreeZGPeerSession!\n");
+   else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up sessions [%s]!\n", ret());
 
    return exitCode;
 }

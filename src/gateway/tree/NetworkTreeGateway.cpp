@@ -38,8 +38,9 @@ static const String NTG_NAME_BEFORE      = "ntg_b4";
 static const String NTG_NAME_INDEX       = "ntg_idx";
 static const String NTG_NAME_NAME        = "ntg_nam";
 
-NetworkTreeGateway :: NetworkTreeGateway(ITreeGateway * optUpstreamGateway)
+NetworkTreeGateway :: NetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender)
    : ProxyTreeGateway(optUpstreamGateway)
+   , _messageSender(messageSender)
    , _isConnected(false)
 {
    // empty
@@ -66,7 +67,7 @@ status_t NetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySu
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
    status_t ret;
-   return msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsOK(ret) ? AddOutgoingMessage(msg) : ret;
+   return msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsOK(ret) ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 status_t NetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -91,7 +92,7 @@ status_t NetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubsc
        | msg()->CAddFlat( NTG_NAME_FLAGS,    flags)
        | msg()->AddString(NTG_NAME_TAG,      tag);
 
-   return ret.IsOK() ? AddOutgoingMessage(msg) : ret;
+   return ret.IsOK() ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 status_t NetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
@@ -104,7 +105,7 @@ status_t NetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscribe
                       | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
                       | msg()->CAddString( NTG_NAME_BEFORE,  optBefore);
 
-   return ret.IsOK() ? AddOutgoingMessage(msg) : ret;
+   return ret.IsOK() ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 status_t NetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
@@ -116,7 +117,7 @@ status_t NetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscri
                       | msg()->CAddMessage(NTG_NAME_PAYLOAD, valuesMsg)
                       | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags);
 
-   return ret.IsOK() ? AddOutgoingMessage(msg) : ret;
+   return ret.IsOK() ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 status_t NetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -133,7 +134,7 @@ status_t NetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySub
                       | msg()->CAddString(NTG_NAME_BEFORE, optBefore)
                       | msg()->CAddFlat(  NTG_NAME_FLAGS, flags);
 
-   return ret.IsOK() ? AddOutgoingMessage(msg) : ret;
+   return ret.IsOK() ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 status_t NetworkTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
@@ -143,7 +144,7 @@ status_t NetworkTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /
 
    status_t ret;
    if (msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
-   return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? AddOutgoingMessage(msg) : ret;
+   return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 void NetworkTreeGateway :: SetNetworkConnected(bool isConnected)
@@ -155,10 +156,10 @@ void NetworkTreeGateway :: SetNetworkConnected(bool isConnected)
    }
 }
 
-status_t NetworkTreeGateway :: AddOutgoingMessage(const MessageRef & msgRef)
+status_t NetworkTreeGateway :: AddOrSendOutgoingMessage(const MessageRef & msgRef)
 {
    if (msgRef() == NULL) return B_BAD_ARGUMENT;
-   return IsInCommandBatch() ? AssembleBatchMessage(_outgoingBatchMsg, msgRef) : SendOutgoingTreeMessageToNetwork(msgRef);
+   return IsInCommandBatch() ? AssembleBatchMessage(_outgoingBatchMsg, msgRef) : SendOutgoingMessageToNetwork(msgRef);
 }
 
 void NetworkTreeGateway :: CommandBatchEnds()
@@ -166,7 +167,7 @@ void NetworkTreeGateway :: CommandBatchEnds()
    ITreeGateway::CommandBatchEnds();
    if (_outgoingBatchMsg())
    {
-      (void) SendOutgoingTreeMessageToNetwork(_outgoingBatchMsg);
+      (void) SendOutgoingMessageToNetwork(_outgoingBatchMsg);
       _outgoingBatchMsg.Reset();
    }
 }
@@ -183,7 +184,7 @@ status_t NetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String &
    ret = (msg()->CAddString( NTG_NAME_PATH,  subscriptionPath)) |
          (msg()->CAddFlat(   NTG_NAME_FLAGS, flags));
 
-   return ret.IsOK() ? AddOutgoingMessage(msg) : ret;
+   return ret.IsOK() ? AddOrSendOutgoingMessage(msg) : ret;
 }
 
 QueryFilterRef NetworkTreeGatewaySubscriber :: InstantiateQueryFilterAux(const Message & msg, uint32 which)
@@ -239,13 +240,13 @@ status_t NetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromClient(c
 void NetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_NODEUPDATED);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, nodePath).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingTreeMessageToClient(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, nodePath).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void NetworkTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_INDEXCLEARED);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())) SendOutgoingTreeMessageToClient(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void NetworkTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
@@ -261,19 +262,19 @@ void NetworkTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & pa
 void NetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, idx).IsOK())&&(msg()->CAddString(NTG_NAME_NAME, nodeName).IsOK())) SendOutgoingTreeMessageToClient(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, idx).IsOK())&&(msg()->CAddString(NTG_NAME_NAME, nodeName).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void NetworkTreeGatewaySubscriber :: TreeServerPonged(const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingTreeMessageToClient(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void NetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_SUBTREES);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, subtreeData).IsOK())) SendOutgoingTreeMessageToClient(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, subtreeData).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 status_t NetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)

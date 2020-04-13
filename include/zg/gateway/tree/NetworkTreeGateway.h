@@ -1,6 +1,7 @@
 #ifndef NetworkTreeGateway_h
 #define NetworkTreeGateway_h
 
+#include "zg/gateway/INetworkMessageSender.h"
 #include "zg/gateway/tree/ProxyTreeGateway.h"
 
 namespace zg {
@@ -12,7 +13,11 @@ namespace zg {
 class NetworkTreeGateway : public ProxyTreeGateway
 {
 public:
-   NetworkTreeGateway(ITreeGateway * optUpstreamGateway);
+   /** Constructor
+     * @param optUpstreamGateway what upstream gateway to use.  (Set to NULL if we're on the client side and using TCP as our "upstream" rather than another gateway)
+     * @param messageSender An object that will send Messages out over the TCP connection on our behalf.  Must not be NULL.
+     */
+   NetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender);
 
    virtual ~NetworkTreeGateway();
 
@@ -20,9 +25,6 @@ public:
    bool IsNetworkConnect() const {return _isConnected;}
 
 protected:
-   // Must be implemented by subclass to send the specified MessageRef out to the network.
-   virtual status_t SendOutgoingTreeMessageToNetwork(const MessageRef & msg) = 0;
-
    // IGateway function-call API
    virtual void CommandBatchEnds();
 
@@ -40,8 +42,11 @@ protected:
    virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
 
 private:
-   status_t AddOutgoingMessage(const MessageRef & msgRef);
+   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
+   status_t AddOrSendOutgoingMessage(const MessageRef & msgRef);
    status_t HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+
+   INetworkMessageSender * _messageSender;
 
    bool _isConnected;
    MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
@@ -53,7 +58,7 @@ private:
 class NetworkTreeGatewaySubscriber : public ITreeGatewaySubscriber
 {
 public:
-   NetworkTreeGatewaySubscriber(ITreeGateway * gateway) : ITreeGatewaySubscriber(gateway) {/* empty */}
+   NetworkTreeGatewaySubscriber(ITreeGateway * gateway, INetworkMessageSender * messageSender) : ITreeGatewaySubscriber(gateway), _messageSender(messageSender) {/* empty */}
 
    /**
      * To be called (on the server) when a command-Message is received from our client via the TCP connection
@@ -77,15 +82,12 @@ public:
    virtual void TreeServerPonged(const String & tag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
-protected:
-   /** Subclass should implement this to send the specified Message back to our client via the TCP connection 
-     * @param msg the Message to send to our client
-     */
-   virtual void SendOutgoingTreeMessageToClient(const MessageRef & msg) = 0;
-
 private:
+   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
    QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
    void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName);
+
+   INetworkMessageSender * _messageSender;
 };
 
 };  // end namespace zg
