@@ -182,7 +182,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
                   LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);
                }
-               else LogTime(MUSCLE_LOG_ERROR, "Couldn't created multicast data IO %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
+               else LogTime(MUSCLE_LOG_ERROR, "Couldn't create multicast data IO %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
             }
             break;
 
