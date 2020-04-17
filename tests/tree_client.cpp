@@ -97,7 +97,7 @@ int main(int argc, char ** argv)
    uint16 port;
    if (ParseConnectArg(args, "host", host, port).IsError())
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Usage:  ./tree_client host=127.0.0.1:%u", TREE_PEER_SERVER_PORT);
+      LogTime(MUSCLE_LOG_CRITICALERROR, "Usage:  ./tree_client host=127.0.0.1:%u\n", TREE_PEER_SERVER_PORT);
       return 10;
    }
    if (port == 0) port = TREE_PEER_SERVER_PORT;
@@ -123,11 +123,11 @@ int main(int argc, char ** argv)
          exitCode = 0;
       }
       else LogTime(MUSCLE_LOG_ERROR, "Event loop aborted!\n");
-
-      // Required in order to ensure an orderly shutdown
-      server.Cleanup();
    }
    else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up sessions [%s]!\n", ret());
+
+   // Required in order to ensure an orderly shutdown
+   server.Cleanup();
 
    return exitCode;
 }

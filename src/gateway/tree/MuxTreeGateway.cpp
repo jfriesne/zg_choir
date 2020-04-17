@@ -439,6 +439,7 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);
    }
+   ProxyTreeGateway::UnregisterSubscriber(s);
 }
 
 };

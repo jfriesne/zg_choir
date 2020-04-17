@@ -1,4 +1,5 @@
 #include "zg/gateway/tree/ProxyTreeGateway.h"
+#include "zg/gateway/tree/DummyTreeGateway.h"
 
 namespace zg {
 
@@ -15,7 +16,7 @@ ProxyTreeGateway :: ~ProxyTreeGateway()
 
 void ProxyTreeGateway :: ShutdownGateway()
 {
-   GetGateway()->ShutdownGateway();  // tell our upstream gateway to shut down also
+   if (GetGateway()) GetGateway()->ShutdownGateway();  // tell our upstream gateway to shut down also
    ITreeGateway::ShutdownGateway();
 }
 

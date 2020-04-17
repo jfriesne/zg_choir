@@ -140,11 +140,11 @@ int main(int argc, char ** argv)
          exitCode = 0;
       }
       else LogTime(MUSCLE_LOG_ERROR, "Event loop aborted!\n");
-
-      // Required in order to ensure an orderly shutdown
-      server.Cleanup();
    }
    else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up sessions [%s]!\n", ret());
+
+   // Required in order to ensure an orderly shutdown
+   server.Cleanup();
 
    return exitCode;
 }

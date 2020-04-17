@@ -12,7 +12,7 @@ TreeClientSideSession :: TreeClientSideSession()
 
 TreeClientSideSession :: ~TreeClientSideSession()
 {
-   // empty
+   _muxGateway.ShutdownGateway();
 }
 
 void TreeClientSideSession :: AsyncConnectCompleted()
