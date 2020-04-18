@@ -19,62 +19,183 @@ public:
 
    virtual bool IsReadyForTextCommands() const {return IsTreeGatewayConnected();}
 
-   virtual bool TextCommandReceived(const String & cmd)
+   virtual bool TextCommandReceived(const String & textStr)
    {
-      printf("TreeClientStdinSession::TextCommandReceived(%s)\n", cmd());
+      LogTime(MUSCLE_LOG_INFO, "You typed: [%s]\n", textStr());
+
+      StringTokenizer tok(textStr(), " ");
+      const char * cmd = tok();
+      if (cmd == NULL) cmd = "";
+
+      status_t ret;
+      switch(cmd[0])
+      {
+#ifdef REDO_THIS
+         case 'm':
+            ref()->what = MAKETYPE("umsg");
+            if (arg1) ref()->AddString(PR_NAME_KEYS, arg1);
+            ref()->AddString("info", "This is a user message");
+         break;
+#endif
+
+         case 'p': case 'P':
+         {
+            const bool isSeniorPing = (cmd[0] == 'P');
+            const String pingTag    = tok();
+            if (PingTreeServer(pingTag, isSeniorPing?TreeGatewayFlags(TREE_GATEWAY_FLAG_TOSENIOR):TreeGatewayFlags()).IsOK(ret)) 
+            {
+               LogTime(MUSCLE_LOG_INFO, "Sent %s ping with tag [%s]\n", isSeniorPing?"senior":"normal", pingTag());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send %s ping with tag [%s] (%s)\n", isSeniorPing?"senior":"normal", pingTag(), ret()); 
+         }
+         break;
+ 
+         case 's':
+         {
+            const String path = tok();
+          
+            MessageRef payloadMsg = GetMessageFromPool(1234);
+            payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
+            if (UploadTreeNodeValue(path, payloadMsg).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error uploading Message to relative path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'd':
+         {
+            const String path = tok();
+          
+            if (RequestDeleteTreeNodes(path).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of nodes matching path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'g':
+         {
+            const String path = tok();
+          
+            if (RequestTreeNodeValues(path).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Requested download of node(s) matching [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error requesting download of nodes matching path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'G':
+         {
+            const String path = tok();
+            const String maxDepthStr = tok();
+            const String tag = tok();
+          
+            const uint32 maxDepth = ((maxDepthStr.HasChars())&&(muscleInRange(maxDepthStr[0], '0', '9'))) ? atol(maxDepthStr()) : MUSCLE_NO_LIMIT;
+
+            Queue<String> paths; (void) paths.AddTail(path);
+            if (RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), tag, maxDepth).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Requested download of subtrees(s) matching [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error requesting download of subtrees matching path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'S':
+         {
+            const String path = tok();
+          
+            if (AddTreeSubscription(path).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Subscribed to node(s) matching [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error subscribing to nodes matching path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'U':
+         {
+            const String path = tok();
+          
+            if (RemoveTreeSubscription(path).IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Unsubscribed from node(s) matching [%s]\n", path());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error unsubscribing from nodes matching path [%s] (%s)\n", path(), ret());
+         }
+         break;
+
+         case 'Z':
+         {
+            if (RemoveAllTreeSubscriptions().IsOK(ret))
+            {
+               LogTime(MUSCLE_LOG_INFO, "Unsubscribed all node subscriptions\n");
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error unsubscribing from all node subscriptions (%s)\n", ret());
+         }
+         break;
+
+         default:
+            LogTime(MUSCLE_LOG_ERROR, "Sorry, wot?\n");
+            return false;
+      }
       return true;
    }
 
    virtual void TreeCallbackBatchBeginning()
    {
-      printf("TreeClientStdinSession::TreeCallbackBatchBeginning)\n");
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeCallbackBatchBeginning)\n");
    }
 
    virtual void TreeCallbackBatchEnding()
    {
-      printf("TreeClientStdinSession::TreeCallbackBatchEnding)\n");
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeCallbackBatchEnding)\n");
    }
 
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)
    {
-      printf("TreeClientStdinSession::TreeNodeUpdated(%s,%p)\n", nodePath(), payloadMsg());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p)\n", nodePath(), payloadMsg());
       if (payloadMsg()) payloadMsg()->PrintToStream();
    }
 
    virtual void TreeNodeIndexCleared(const String & path)
    {
-      printf("TreeClientStdinSession::TreeNodeIndexCleared(%s)\n", path());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexCleared(%s)\n", path());
    }
 
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
    {
-      printf("TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), insertedAtIndex, nodeName());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), insertedAtIndex, nodeName());
    }
 
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName)
    {
-      printf("TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), removedAtIndex, nodeName());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), removedAtIndex, nodeName());
    }
 
    virtual void TreeServerPonged(const String & tag)
    {
-      printf("TreeClientStdinSession::TreeServerPonged(%s)\n", tag());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeServerPonged(%s)\n", tag());
    }
 
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
    {
-      printf("TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p)\n", tag(), subtreeData());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p)\n", tag(), subtreeData());
       if (subtreeData()) subtreeData()->PrintToStream();
    }
 
    virtual void TreeGatewayConnectionStateChanged()
    {
-      printf("TreeClientStdinSession::TextCommandReceived(%i)\n", IsTreeGatewayConnected());
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TextCommandReceived(%i)\n", IsTreeGatewayConnected());
    }
 
    virtual void TreeGatewayShuttingDown()
    {
-      printf("TreeClientStdinSession::TreeGatewayShuttingDown()\n");
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayShuttingDown()\n");
    }
 };
 
@@ -97,8 +218,9 @@ int main(int argc, char ** argv)
    uint16 port;
    if (ParseConnectArg(args, "host", host, port).IsError())
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Usage:  ./tree_client host=127.0.0.1:%u\n", TREE_PEER_SERVER_PORT);
-      return 10;
+      LogTime(MUSCLE_LOG_WARNING, "No host=hostname:port argument specified; defaulting to 127.0.0.1:%u\n", TREE_PEER_SERVER_PORT);
+      host = "127.0.0.1"; 
+      port = TREE_PEER_SERVER_PORT;
    }
    if (port == 0) port = TREE_PEER_SERVER_PORT;
 
