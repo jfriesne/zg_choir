@@ -1,7 +1,7 @@
 #ifndef ServerSideNetworkTreeGatewaySubscriber_h
 #define ServerSideNetworkTreeGatewaySubscriber_h
 
-#include "zg/gateway/tree/ProxyTreeGateway.h"
+#include "zg/messagetree/gateway/ProxyTreeGateway.h"
 
 namespace zg {
 

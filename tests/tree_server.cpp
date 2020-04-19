@@ -3,10 +3,10 @@
 #include "util/MiscUtilityFunctions.h"
 #include "util/StringTokenizer.h"
 
-#include "zg/ZGMessageTreeDatabasePeerSession.h"
 #include "zg/ZGStdinSession.h"
-#include "zg/ZGMessageTreeDatabaseObject.h"
-#include "zg/gateway/tree/TreeServerSideSession.h"
+#include "zg/messagetree/server/ZGMessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/server/ZGMessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/TreeServerSideSession.h"
 
 using namespace zg;
 

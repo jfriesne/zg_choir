@@ -3,8 +3,8 @@
 
 #include "zg/ZGDatabasePeerSession.h"
 #include "zg/IDatabaseObject.h"
-#include "zg/gateway/tree/MuxTreeGateway.h"
-#include "zg/gateway/tree/ProxyTreeGateway.h"
+#include "zg/messagetree/gateway/MuxTreeGateway.h"
+#include "zg/messagetree/gateway/ProxyTreeGateway.h"
 
 namespace zg
 {

@@ -1,4 +1,4 @@
-#include "zg/gateway/tree/TreeServerSideSession.h"
+#include "zg/messagetree/server/TreeServerSideSession.h"
 
 namespace zg {
 

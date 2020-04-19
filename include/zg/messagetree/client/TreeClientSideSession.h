@@ -2,8 +2,8 @@
 #define TreeClientSideSession_h
 
 #include "zg/gateway/INetworkMessageSender.h"
-#include "zg/gateway/tree/MuxTreeGateway.h"
-#include "zg/gateway/tree/ClientSideNetworkTreeGateway.h"
+#include "zg/messagetree/gateway/MuxTreeGateway.h"
+#include "zg/messagetree/client/ClientSideNetworkTreeGateway.h"
 #include "reflector/AbstractReflectSession.h"
 
 namespace zg {

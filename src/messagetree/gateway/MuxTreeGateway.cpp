@@ -1,4 +1,4 @@
-#include "zg/gateway/tree/MuxTreeGateway.h"
+#include "zg/messagetree/gateway/MuxTreeGateway.h"
 #include "reflector/StorageReflectConstants.h"  // for INDEX_OP_*
 
 namespace zg {

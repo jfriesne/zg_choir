@@ -1,5 +1,5 @@
-#include "zg/ZGMessageTreeDatabasePeerSession.h"
-#include "zg/ZGMessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/ZGMessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/server/ZGMessageTreeDatabaseObject.h"
 
 namespace zg 
 {

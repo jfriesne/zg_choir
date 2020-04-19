@@ -2,7 +2,7 @@
 #define ITreeGateway_h
 
 #include "zg/gateway/IGateway.h"
-#include "zg/gateway/tree/ITreeGatewaySubscriber.h"
+#include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 

@@ -25,7 +25,7 @@ ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.
 ZGTREESERVEROBJS = ZGMessageTreeDatabasePeerSession.o TreeServerSideSession.o ZGMessageTreeDatabaseObject.o
 ZGTREECLIENTOBJS = TreeClientSideSession.o
 
-VPATH = . ../src ../src/private ../src/gateway ../src/gateway/tree $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
+VPATH = . ../src ../src/private ../src/messagetree/gateway ../src/messagetree/client ../src/messagetree/server $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
 
 # if the OS type variable is unset, try to set it using the uname shell command 
 ifeq ($(OSTYPE),) 

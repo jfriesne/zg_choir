@@ -1,6 +1,6 @@
 #include "zg/gateway/INetworkMessageSender.h"
-#include "zg/gateway/tree/ClientSideNetworkTreeGateway.h"
-#include "zg/gateway/tree/ServerSideNetworkTreeGatewaySubscriber.h"
+#include "zg/messagetree/client/ClientSideNetworkTreeGateway.h"
+#include "zg/messagetree/server/ServerSideNetworkTreeGatewaySubscriber.h"
 #include "regex/QueryFilter.h"          // for CreateQueryFilter()
 #include "util/MiscUtilityFunctions.h"  // for AssembleBatchMesssage()
 

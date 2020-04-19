@@ -1,5 +1,5 @@
-#include "zg/gateway/tree/ITreeGateway.h"
-#include "zg/gateway/tree/ITreeGatewaySubscriber.h"
+#include "zg/messagetree/gateway/ITreeGateway.h"
+#include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 
 namespace zg {
 

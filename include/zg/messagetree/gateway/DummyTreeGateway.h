@@ -1,7 +1,7 @@
 #ifndef DummyTreeGateway_h
 #define DummyTreeGateway_h
 
-#include "zg/gateway/tree/ITreeGateway.h"
+#include "zg/messagetree/gateway/ITreeGateway.h"
 
 namespace zg {
 

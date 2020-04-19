@@ -4,7 +4,7 @@
 #include "util/StringTokenizer.h"
 
 #include "zg/ZGStdinSession.h"
-#include "zg/gateway/tree/TreeClientSideSession.h"
+#include "zg/messagetree/client/TreeClientSideSession.h"
 
 using namespace zg;
 

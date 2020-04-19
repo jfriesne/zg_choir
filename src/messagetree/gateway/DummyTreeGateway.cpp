@@ -1,4 +1,4 @@
-#include "zg/gateway/tree/DummyTreeGateway.h"
+#include "zg/messagetree/gateway/DummyTreeGateway.h"
 
 namespace zg {
 

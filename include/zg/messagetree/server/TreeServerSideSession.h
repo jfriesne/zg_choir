@@ -2,7 +2,7 @@
 #define TreeServerSideSession_h
 
 #include "zg/gateway/INetworkMessageSender.h"
-#include "zg/gateway/tree/ServerSideNetworkTreeGatewaySubscriber.h"
+#include "zg/messagetree/server/ServerSideNetworkTreeGatewaySubscriber.h"
 #include "reflector/StorageReflectSession.h"
 
 namespace zg {

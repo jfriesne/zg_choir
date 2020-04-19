@@ -1,7 +1,7 @@
 #ifndef MuxTreeGateway_h
 #define MuxTreeGateway_h
 
-#include "zg/gateway/tree/ProxyTreeGateway.h"
+#include "zg/messagetree/gateway/ProxyTreeGateway.h"
 #include "regex/PathMatcher.h"
 #include "util/Hashtable.h"
 
