@@ -3,7 +3,7 @@
 
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/gateway/tree/MuxTreeGateway.h"
-#include "zg/gateway/tree/NetworkTreeGateway.h"
+#include "zg/gateway/tree/ClientSideNetworkTreeGateway.h"
 #include "reflector/AbstractReflectSession.h"
 
 namespace zg {
