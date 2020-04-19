@@ -3,16 +3,21 @@
 namespace zg {
 
 TreeClientSideSession :: TreeClientSideSession()
-   : ClientSideNetworkTreeGatewaySubscriber(NULL, this)  // I pass NULL here only because _networkGateway hasn't been constructed yet
-   , _networkGateway(NULL, this)
-   , _muxGateway(&_networkGateway)
+   : MuxTreeGateway(NULL)  // gotta pass NULL here since _networkGateway hasn't been constructed yet
+   , _networkGateway(this)
 {
-   NetworkTreeGatewaySubscriber::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
+   MuxTreeGateway::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
 }
 
 TreeClientSideSession :: ~TreeClientSideSession()
 {
-   _muxGateway.ShutdownGateway();
+   // empty
+}
+
+void TreeClientSideSession :: AboutToDetachFromServer()
+{
+   ShutdownGateway();
+   AbstractReflectSession::AboutToDetachFromServer();
 }
 
 void TreeClientSideSession :: AsyncConnectCompleted()
@@ -30,7 +35,7 @@ bool TreeClientSideSession :: ClientConnectionClosed()
 
 void TreeClientSideSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
 {
-   (void) IncomingTreeMessageReceivedFromServer(msg);
+   _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
 }
 
 };

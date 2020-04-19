@@ -78,8 +78,8 @@ printf("NetworkTreeGateway::CommandBatchEnds %p\n", _outgoingBatchMsg());
    }
 }
 
-ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender)
-   : NetworkTreeGateway(optUpstreamGateway, messageSender)
+ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
+   : NetworkTreeGateway(NULL, messageSender)
 {
    // empty
 }
@@ -307,9 +307,9 @@ printf("ServerSideNetworkTreeGatewaySubscriber::SubtreesRequestResultReturned [%
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, subtreeData).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-status_t ClientSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
+status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
 {
-printf("ClientSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromServer: "); msg()->PrintToStream();
+printf("ClientSideNetworkTreeGateway::IncomingTreeMessageReceivedFromServer: "); msg()->PrintToStream();
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag  = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
    const String & name = *(msg()->GetStringPointer(NTG_NAME_NAME, &GetEmptyString()));
@@ -322,11 +322,7 @@ printf("ClientSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromS
       case NTG_REPLY_INDEXCLEARED:       TreeNodeIndexCleared(path);                  break;
       case NTG_REPLY_INDEXENTRYINSERTED: TreeNodeIndexEntryInserted(path, idx, name); break;
       case NTG_REPLY_INDEXENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, idx, name); break;
-      case NTG_REPLY_PONG:
-printf("k1\n");
-               TreeServerPonged(tag);                       
-printf("k2\n");
-break;
+      case NTG_REPLY_PONG:               TreeServerPonged(tag);                       break;
       case NTG_REPLY_SUBTREES:           SubtreesRequestResultReturned(tag, payload); break;
 
       default:

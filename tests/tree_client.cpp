@@ -228,7 +228,7 @@ int main(int argc, char ** argv)
    TreeClientSideSession clientSession;
 
    // This object will read from stdin for us, so we can accept typed text commands from the user
-   TreeClientStdinSession stdinSession(clientSession.GetTreeGateway());
+   TreeClientStdinSession stdinSession(&clientSession);
 
    // This object implements the standard MUSCLE event loop
    ReflectServer server;

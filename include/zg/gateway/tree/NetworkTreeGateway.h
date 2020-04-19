@@ -44,12 +44,18 @@ class ClientSideNetworkTreeGateway : public NetworkTreeGateway
 {
 public:
    /** Constructor
-     * @param optUpstreamGateway what upstream gateway to use.  (Set to NULL if we're on the client side and using TCP as our "upstream" rather than another gateway)
      * @param messageSender An object that will send Messages out over the TCP connection on our behalf.  Must not be NULL.
      */
-   ClientSideNetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender);
+   ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender);
 
    virtual ~ClientSideNetworkTreeGateway();
+
+   /**
+     * To be called when a reply-Message is received from our server via the TCP connection
+     * @param msg the Message that was received
+     * @returns B_NO_ERROR if the Message was handled, or B_UNIMPLEMENTED if the Message type was unknown, or some other error on miscellaneous failure.
+     */
+   virtual status_t IncomingTreeMessageReceivedFromServer(const MessageRef & msg);
 
 protected:
    // ITreeGateway function-call API
@@ -68,39 +74,17 @@ private:
    status_t HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
 };
 
-/** Semi-abstract base class for both ClientSideNetworkTreeGatewaySubscriber and ServerSideNetworkTreeGatewaySubscriber classes
+/** Semi-abstract base class for the ServerSideNetworkTreeGatewaySubscriber classes
   */
 class NetworkTreeGatewaySubscriber : public ITreeGatewaySubscriber
 {
 protected:
-   /** Constructor (protected because you need to instantiate either a ClientSideNetworkTreeGatewaySubscriber or a ServerSideNetworkTreeGatewaySubscriber, not just a NetworkTreeGatewaySubscriber) */
+   /** Constructor (protected because you need to instantiate a ServerSideNetworkTreeGatewaySubscriber, not just a NetworkTreeGatewaySubscriber) */
    NetworkTreeGatewaySubscriber(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender) : ITreeGatewaySubscriber(optUpstreamGateway), _messageSender(messageSender) {/* empty */}
 
    status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
 
 private:
-   INetworkMessageSender * _messageSender;
-};
-
-/** Semi-abstract client-side subscriber class, with a IncomingTreeMessageReceivedFromServer() method
-  * to handle incoming NTG_REPLY_* Messages that were received from the server via TCP.
-  */
-class ClientSideNetworkTreeGatewaySubscriber : public NetworkTreeGatewaySubscriber
-{
-public:
-   ClientSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender) : NetworkTreeGatewaySubscriber(upstreamGateway, messageSender) {/* empty */}
-
-   /**
-     * To be called when a reply-Message is received from our server via the TCP connection
-     * @param msg the Message that was received
-     * @returns B_NO_ERROR if the Message was handled, or B_UNIMPLEMENTED if the Message type was unknown, or some other error on miscellaneous failure.
-     */
-   virtual status_t IncomingTreeMessageReceivedFromServer(const MessageRef & msg);
-
-private:
-   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
-   QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
-
    INetworkMessageSender * _messageSender;
 };
 
