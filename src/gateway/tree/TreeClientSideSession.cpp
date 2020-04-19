@@ -3,7 +3,7 @@
 namespace zg {
 
 TreeClientSideSession :: TreeClientSideSession()
-   : NetworkTreeGatewaySubscriber(NULL, this)
+   : ClientSideNetworkTreeGatewaySubscriber(NULL, this)  // I pass NULL here only because _networkGateway hasn't been constructed yet
    , _networkGateway(NULL, this)
    , _muxGateway(&_networkGateway)
 {

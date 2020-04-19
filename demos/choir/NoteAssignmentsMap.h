@@ -9,8 +9,10 @@ namespace choir {
 class NoteAssignmentsMap : public MusicDatabaseObject
 {
 public:
-   /** Constructor */
-   NoteAssignmentsMap();
+   /** Constructor 
+     * @param session pointer to the ZGDatabasePeerSession object that created us  
+     */
+   NoteAssignmentsMap(ZGDatabasePeerSession * session = NULL);
 
    /** Destructor */
    ~NoteAssignmentsMap();

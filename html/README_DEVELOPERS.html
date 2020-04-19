@@ -401,10 +401,10 @@ IDatabaseObjectRef ChoirSession :: CreateDatabaseObject(uint32 whichDatabase)
    IDatabaseObjectRef ret;
    switch(whichDatabase)
    {
-      case CHOIR_DATABASE_SCORE:         ret.SetRef(newnothrow MusicSheet);         break;
-      case CHOIR_DATABASE_PLAYBACKSTATE: ret.SetRef(newnothrow PlaybackState);      break;
-      case CHOIR_DATABASE_ROSTER:        ret.SetRef(newnothrow NoteAssignmentsMap); break;
-      default:                           /* empty */                                break;
+      case CHOIR_DATABASE_SCORE:         ret.SetRef(newnothrow MusicSheet(this));         break;
+      case CHOIR_DATABASE_PLAYBACKSTATE: ret.SetRef(newnothrow PlaybackState(this));      break;
+      case CHOIR_DATABASE_ROSTER:        ret.SetRef(newnothrow NoteAssignmentsMap(this)); break;
+      default:                           /* empty */                                      break;
    } 
    if (ret() == NULL) WARN_OUT_OF_MEMORY;
    return ret;

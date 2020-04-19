@@ -3,12 +3,12 @@
 
 namespace choir {
 
-MusicSheet :: MusicSheet()
+MusicSheet :: MusicSheet(ZGDatabasePeerSession * session) : MusicDatabaseObject(session)
 {
    SetToDefaultStateAux();
 }
 
-MusicSheet :: MusicSheet(const MusicSheet & rhs)
+MusicSheet :: MusicSheet(const MusicSheet & rhs) : MusicDatabaseObject(rhs.GetDatabasePeerSession())
 {
    *this = rhs;
 }

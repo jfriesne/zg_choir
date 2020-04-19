@@ -10,7 +10,7 @@ namespace zg {
 /** This class is a StorageReflectSession that functions as a connected client's interface to a
   * server that is implementing a database.
   */
-class TreeServerSideSession : public StorageReflectSession, public NetworkTreeGatewaySubscriber, private INetworkMessageSender
+class TreeServerSideSession : public StorageReflectSession, public ServerSideNetworkTreeGatewaySubscriber, private INetworkMessageSender
 {
 public:
    TreeServerSideSession(ITreeGateway * upstreamGateway);

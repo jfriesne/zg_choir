@@ -5,7 +5,7 @@
 
 namespace choir {
 
-NoteAssignmentsMap :: NoteAssignmentsMap()
+NoteAssignmentsMap :: NoteAssignmentsMap(ZGDatabasePeerSession * session) : MusicDatabaseObject(session)
 {
    SetToDefaultStateAux();
 }

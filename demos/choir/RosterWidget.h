@@ -141,12 +141,13 @@ private:
 
    void DrawShadedRow(QPainter & p, const ZGPeerID & peerID, const QColor & c);
    void DrawBell(QPainter & p, uint32 rowIdx, uint32 colIdx, bool shakeIt) const;
-   void DrawBellAt(QPainter & p, int x, int y) const;
+   void DrawBellAt(QPainter & p, int x, int y, bool ringing) const;
 
    void HandleMouseEvent(QMouseEvent * e, bool isPress);
 
    const ZGPeerID _localPeerID;
    const QPixmap _bellPixmap;
+   const QPixmap _ringingBellPixmap;
 
    OrderedKeysHashtable<ZGPeerID, ConstMessageRef> _onlinePeers;  // the rows we are currently showing
    Hashtable<ZGPeerID, uint64> _peerNoteAssignments;   // which peers should be doing which notes

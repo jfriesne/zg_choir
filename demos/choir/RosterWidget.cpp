@@ -15,6 +15,7 @@ RosterWidget :: RosterWidget(const ZGPeerID & localPeerID, QWidget * parent)
    : QWidget(parent)
    , _localPeerID(localPeerID)
    , _bellPixmap(QPixmap(":/choir_bell.png").scaled(QSize(_columnWidth-(_bellIconMargin*2), _rowHeight-(_bellIconMargin*2)), Qt::IgnoreAspectRatio, Qt::SmoothTransformation))
+   , _ringingBellPixmap(QPixmap(":/choir_bell_ringing.png").scaled(QSize(_columnWidth-(_bellIconMargin*2), _rowHeight-(_bellIconMargin*2)), Qt::IgnoreAspectRatio, Qt::SmoothTransformation))
    , _currentNotesChord(0)
    , _scrollOffsetY(0)
    , _draggingNoteIdx(-1)
@@ -198,7 +199,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
    if (_draggingNoteIdx >= 0)
    {
       p.setOpacity(0.5);
-      DrawBellAt(p, GetXForColumn(GetColumnForNoteIndex(_draggingNoteIdx)), _scrollOffsetY+_draggingNoteY-_draggingNoteYOffset-(_bellPixmap.height()/2));
+      DrawBellAt(p, GetXForColumn(GetColumnForNoteIndex(_draggingNoteIdx)), _scrollOffsetY+_draggingNoteY-_draggingNoteYOffset-(_bellPixmap.height()/2), false);
       p.setOpacity(1.0);
    }
 
@@ -291,12 +292,12 @@ void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
 void RosterWidget :: DrawBell(QPainter & p, uint32 rowIdx, uint32 colIdx, bool shakeIt) const
 {
    if ((rowIdx == MUSCLE_NO_LIMIT)||(colIdx == MUSCLE_NO_LIMIT)) return;  // paranoia
-   DrawBellAt(p, GetXForColumn(colIdx)+(shakeIt?2:0), GetYForRow(rowIdx)+(shakeIt?2:0));
+   DrawBellAt(p, GetXForColumn(colIdx)+(shakeIt?2:0), GetYForRow(rowIdx)+(shakeIt?2:0), shakeIt);
 }
 
-void RosterWidget :: DrawBellAt(QPainter & p, int x, int y) const
+void RosterWidget :: DrawBellAt(QPainter & p, int x, int y, bool ringing) const
 {
-   p.drawPixmap(x+_bellIconMargin, y+_bellIconMargin, _bellPixmap);
+   p.drawPixmap(x+_bellIconMargin, y+_bellIconMargin, ringing?_ringingBellPixmap:_bellPixmap);
 }
 
 void RosterWidget :: AnimateLocalBells(quint64 notesChord)
@@ -304,7 +305,7 @@ void RosterWidget :: AnimateLocalBells(quint64 notesChord)
    _animatedBells |= notesChord;
    update();
 
-   QTimer::singleShot(50, this, SLOT(ClearAnimatedLocalBells()));
+   QTimer::singleShot(100, this, SLOT(ClearAnimatedLocalBells()));
 }
 
 void RosterWidget :: ClearAnimatedLocalBells()

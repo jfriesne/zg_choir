@@ -9,8 +9,10 @@ namespace choir {
 class MusicSheet : public MusicDatabaseObject
 {
 public:
-   /** Constructor */
-   MusicSheet();
+   /** Constructor 
+     * @param session pointer to the ZGDatabasePeerSession object that created us
+     */
+   MusicSheet(ZGDatabasePeerSession * session = NULL);
 
    /** Constructor */
    MusicSheet(const MusicSheet & rhs);

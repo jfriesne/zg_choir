@@ -4,7 +4,7 @@
 
 namespace choir {
 
-PlaybackState :: PlaybackState()
+PlaybackState :: PlaybackState(ZGDatabasePeerSession * session) : MusicDatabaseObject(session)
 {
    SetToDefaultStateAux();
 }

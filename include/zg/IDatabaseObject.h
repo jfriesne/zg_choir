@@ -15,8 +15,10 @@ class ZGDatabasePeerSession;
 class IDatabaseObject : public RefCountable, public INetworkTimeProvider
 {
 public:
-   /** Default Constructor */
-   IDatabaseObject() : _session(NULL) {/* empty */}
+   /** Constructor
+     * @param session pointer to the ZGDatabasePeerSession object that created us 
+     */
+   IDatabaseObject(ZGDatabasePeerSession * session) : _session(session) {/* empty */}
 
    /** Destructor */
    virtual ~IDatabaseObject() {/* empty */}
@@ -79,14 +81,9 @@ public:
    virtual String ToString() const = 0;
 
    /** Returns a pointer to the ZGDatabasePeerSession object that created us, or NULL
-     * if this object was not created by a ZGDatabasePeerSession.  (Note that this pointer
-     * is not set until after our constructor returns, this method will always return NULL
-     * if called from a constructor)
+     * if this object was not created by a ZGDatabasePeerSession.
      */
-   ZGDatabasePeerSession * GetDatabasePeerSession() {return _session;}
-
-   /** As above, but returns a const/read-only pointer. */
-   const ZGDatabasePeerSession * GetDatabasePeerSession() const {return _session;}
+   ZGDatabasePeerSession * GetDatabasePeerSession() const {return _session;}
 
 protected:
    /** Returns a read-only pointer to the specified IDatabaseObject held by our 
@@ -126,8 +123,6 @@ protected:
    virtual int64 GetToNetworkTimeOffset() const;
 
 private:
-   friend class ZGDatabasePeerSession;
-
    ZGDatabasePeerSession * _session;
 };
 DECLARE_REFTYPES(IDatabaseObject);

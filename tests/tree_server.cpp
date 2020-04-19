@@ -3,7 +3,7 @@
 #include "util/MiscUtilityFunctions.h"
 #include "util/StringTokenizer.h"
 
-#include "zg/ZGDatabasePeerSession.h"
+#include "zg/ZGMessageTreeDatabasePeerSession.h"
 #include "zg/ZGStdinSession.h"
 #include "zg/ZGMessageTreeDatabaseObject.h"
 #include "zg/gateway/tree/TreeServerSideSession.h"
@@ -67,10 +67,10 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 }
 
 // This class implements a database-peer to test out the ZGMessageTreeDatabaseObject class
-class TestTreeZGPeerSession : public ZGDatabasePeerSession
+class TestTreeZGPeerSession : public ZGMessageTreeDatabasePeerSession
 {
 public:
-   TestTreeZGPeerSession(const Message & args) : ZGDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
+   TestTreeZGPeerSession(const Message & args) : ZGMessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
 
    virtual const char * GetTypeName() const {return "TestTreeZGPeer";}
 
@@ -83,7 +83,7 @@ public:
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
-      IDatabaseObjectRef ret(newnothrow ZGMessageTreeDatabaseObject(String("dbs/db_%1").Arg(whichDatabase)));
+      IDatabaseObjectRef ret(newnothrow ZGMessageTreeDatabaseObject(this, String("dbs/db_%1").Arg(whichDatabase)));
       if (ret() == NULL) WARN_OUT_OF_MEMORY;
       return ret;
    }

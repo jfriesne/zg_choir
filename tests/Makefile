@@ -21,7 +21,9 @@ MUSCLEOBJS  = Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o S
 REGEXOBJS   = 
 ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o 
 PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
-ZGTREEOBJS  = TreeClientSideSession.o TreeServerSideSession.o ZGMessageTreeDatabaseObject.o ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
+ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
+ZGTREESERVEROBJS = ZGMessageTreeDatabasePeerSession.o TreeServerSideSession.o ZGMessageTreeDatabaseObject.o
+ZGTREECLIENTOBJS = TreeClientSideSession.o
 
 VPATH = . ../src ../src/private ../src/gateway ../src/gateway/tree $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
 
@@ -58,13 +60,13 @@ endif
 # Makes all the programs that can be made using just cross-platform code
 all : $(EXECUTABLES)
 
-test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(ZGTREEOBJS) $(PZGOBJS) test_peer.o
+test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) test_peer.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tree_server : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREEOBJS) tree_server.o
+tree_server : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREESERVEROBJS) tree_server.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tree_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREEOBJS) tree_client.o
+tree_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) tree_client.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean :

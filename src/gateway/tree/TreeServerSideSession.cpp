@@ -3,7 +3,7 @@
 namespace zg {
 
 TreeServerSideSession :: TreeServerSideSession(ITreeGateway * upstreamGateway)
-   : NetworkTreeGatewaySubscriber(upstreamGateway, this)
+   : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)
 {
    // empty
 }

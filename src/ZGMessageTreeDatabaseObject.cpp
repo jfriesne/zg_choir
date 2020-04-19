@@ -1,18 +1,26 @@
+#include "zg/ZGMessageTreeDatabasePeerSession.h"
 #include "zg/ZGMessageTreeDatabaseObject.h"
-#include "zg/ZGDatabasePeerSession.h"
 
 namespace zg 
 {
 
+ZGMessageTreeDatabaseObject :: ZGMessageTreeDatabaseObject(ZGMessageTreeDatabasePeerSession * session, const String & rootNodePath) 
+   : IDatabaseObject(session)
+   , _rootNodePath(rootNodePath)
+   , _checksum(0)
+{
+   // empty
+}
+
 void ZGMessageTreeDatabaseObject :: SetToDefaultState()
 {
-   ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh) (void) zsh->RemoveDataNodes(_rootNodePath);
 }
 
 status_t ZGMessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & archive)
 {
-   ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
    return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePath, true, true);
@@ -20,7 +28,7 @@ status_t ZGMessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & a
 
 status_t ZGMessageTreeDatabaseObject :: SaveToArchive(const MessageRef & archive) const
 {
-   const ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   const ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
    const DataNode * rootNode = zsh->GetDataNode(_rootNodePath);
@@ -29,7 +37,7 @@ status_t ZGMessageTreeDatabaseObject :: SaveToArchive(const MessageRef & archive
 
 uint32 ZGMessageTreeDatabaseObject :: CalculateChecksum() const
 {
-   const ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   const ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return 0;
 
    const DataNode * rootNode = zsh->GetDataNode(_rootNodePath);
@@ -38,7 +46,7 @@ uint32 ZGMessageTreeDatabaseObject :: CalculateChecksum() const
 
 ConstMessageRef ZGMessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
 {
-   ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return ConstMessageRef();
 
    // TODO IMPLEMENT THIS
@@ -48,7 +56,7 @@ ConstMessageRef ZGMessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRe
 
 status_t ZGMessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
 {
-   ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
    // TODO IMPLEMENT THIS
@@ -58,7 +66,7 @@ status_t ZGMessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & jun
 
 String ZGMessageTreeDatabaseObject :: ToString() const
 {
-   const ZGDatabasePeerSession * zsh = GetDatabasePeerSession();
+   const ZGMessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return "<no database peer session!>";
 
    String ret;

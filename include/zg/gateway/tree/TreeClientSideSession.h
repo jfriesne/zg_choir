@@ -11,7 +11,7 @@ namespace zg {
 /** This class is a StorageReflectSession that functions as a connected client's interface to a
   * server that is implementing a database.
   */
-class TreeClientSideSession : public AbstractReflectSession, private NetworkTreeGatewaySubscriber, private INetworkMessageSender
+class TreeClientSideSession : public AbstractReflectSession, private ClientSideNetworkTreeGatewaySubscriber, private INetworkMessageSender
 {
 public:
    TreeClientSideSession();
@@ -27,7 +27,7 @@ private:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
 
-   NetworkTreeGateway _networkGateway;
+   ClientSideNetworkTreeGateway _networkGateway;
    MuxTreeGateway _muxGateway;
 };
 DECLARE_REFTYPES(TreeClientSideSession);
