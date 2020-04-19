@@ -58,7 +58,7 @@ endif
 # Makes all the programs that can be made using just cross-platform code
 all : $(EXECUTABLES)
 
-test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) test_peer.o
+test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(ZGTREEOBJS) $(PZGOBJS) test_peer.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 tree_server : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREEOBJS) tree_server.o

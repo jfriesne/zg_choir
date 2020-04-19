@@ -76,7 +76,7 @@ public:
 
    virtual bool TextCommandReceived(const String & text)
    {
-      printf("You typed:  [%s]\n", text());
+      printf("TestTreeZGPeerSession:  You typed:  [%s]\n", text());
       return true;  // indicate handled?
    }
 
@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
    ZGStdinSession zgStdinSession(zgPeerSession, true);
 
    // Accept incoming TCP connections from clients
-   TreeServerSideSessionFactory sssFactory(&zgPeerSession);
+   TreeServerSideSessionFactory sssFactory(zgPeerSession.GetClientTreeGateway());
 
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;

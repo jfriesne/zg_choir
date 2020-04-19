@@ -3,7 +3,7 @@
 namespace zg
 {
 
-ZGDatabasePeerSession :: ZGDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGPeerSession(zgPeerSettings)
+ZGDatabasePeerSession :: ZGDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGPeerSession(zgPeerSettings), ProxyTreeGateway(NULL), _muxGateway(this)
 {
    // empty
 }
@@ -74,6 +74,13 @@ String ZGDatabasePeerSession :: GetLocalDatabaseContentsAsString(uint32 whichDat
    return GetDatabaseObject(whichDatabase)->ToString();
 }
 
+void ZGDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+{
+   const bool wasFullyAttached = IAmFullyAttached();
+   ZGPeerSession::PeerHasComeOnline(peerID, peerInfo);
+   if ((wasFullyAttached == false)&&(IAmFullyAttached())) ProxyTreeGateway::TreeGatewayConnectionStateChanged();  // notify our subscribers that we're now connected to the database.
+}
+
 const IDatabaseObject * IDatabaseObject :: GetDatabaseObject(uint32 whichDatabase) const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
@@ -118,41 +125,49 @@ int64 IDatabaseObject :: GetToNetworkTimeOffset() const
 
 status_t ZGDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
+printf("ZG Add [%s]\n", subscriptionPath());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
+printf("ZG Remove [%s]\n", subscriptionPath());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags)
 {
+printf("ZG RemoveAll\n");
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
+printf("ZG Request [%s]\n", queryString());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
 {
+printf("ZG RequestSubtrees [%s]\n", queryStrings.HeadWithDefault()());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
+printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
+printf("ZG UploadNodeSubtree [%s]\n", basePath());
 return B_UNIMPLEMENTED;
 }
 
 status_t ZGDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
+printf("ZG RequestDeleteNodes [%s]\n", path());
 return B_UNIMPLEMENTED;
 }
 
@@ -163,6 +178,7 @@ return B_UNIMPLEMENTED;
 
 status_t ZGDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
+printf("ZG PingServer [%s]\n", tag());
 return B_UNIMPLEMENTED;
 }
 

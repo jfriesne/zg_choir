@@ -3,7 +3,8 @@
 
 #include "zg/ZGPeerSession.h"
 #include "zg/IDatabaseObject.h"
-#include "zg/gateway/tree/ITreeGateway.h"
+#include "zg/gateway/tree/MuxTreeGateway.h"
+#include "zg/gateway/tree/ProxyTreeGateway.h"
 
 namespace zg
 {
@@ -14,7 +15,7 @@ class ZGMessageTreeDatabaseObject;
   * how to create and manage some user-provided IDatabaseObjects (one per database) so that 
   * the subclass doesn't have to implement all of the Message<->IDatabaseObject plumbing manually.
   */
-class ZGDatabasePeerSession : public ZGPeerSession, public ITreeGateway
+class ZGDatabasePeerSession : public ZGPeerSession, private ProxyTreeGateway
 {
 public:
    /** Constructor
@@ -35,6 +36,9 @@ public:
      */
    const IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return _databaseObjects[whichDatabase]();}
 
+   /** Returns a pointer to the ITreeGateway object that our clients should use to access the ZG-synchronized database data */
+   ITreeGateway * GetClientTreeGateway() {return &_muxGateway;}
+
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return
@@ -51,6 +55,7 @@ protected:
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg);
    virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const;
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
 
    // ITreeGateway API implementation
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
@@ -69,6 +74,8 @@ private:
    friend class ZGMessageTreeDatabaseObject;
 
    Queue<IDatabaseObjectRef> _databaseObjects;
+
+   MuxTreeGateway _muxGateway;
 };
 DECLARE_REFTYPES(ZGDatabasePeerSession);
 
