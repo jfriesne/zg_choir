@@ -7,7 +7,7 @@ unix:!mac:LIBS += -lutil -lrt
 mac:LIBS       += -framework IOKit -framework SystemConfiguration -framework Carbon
 OBJECTS_DIR     = objects
 MOC_DIR         = moc
-MUSCLE_DIR      = ../../muscle
+MUSCLE_DIR      = ../../submodules/muscle
 ZG_DIR          = ../..
 win32:DEFINES  += _WIN32_WINNT=0x0501
 INCLUDEPATH    += $$MUSCLE_DIR $$ZG_DIR/include
