@@ -22,8 +22,8 @@ REGEXOBJS   =
 ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o 
 PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
 ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
-ZGTREESERVEROBJS = ZGMessageTreeDatabasePeerSession.o TreeServerSideSession.o ZGMessageTreeDatabaseObject.o
-ZGTREECLIENTOBJS = TreeClientSideSession.o
+ZGTREESERVEROBJS = MessageTreeDatabasePeerSession.o MessageTreeDatabaseObject.o ServerSideMessageTreeSession.o
+ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o
 
 VPATH = . ../src ../src/private ../src/messagetree/gateway ../src/messagetree/client ../src/messagetree/server $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
 

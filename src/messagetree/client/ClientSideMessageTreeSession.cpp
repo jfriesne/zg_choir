@@ -1,39 +1,39 @@
-#include "zg/messagetree/client/TreeClientSideSession.h"
+#include "zg/messagetree/client/ClientSideMessageTreeSession.h"
 
 namespace zg {
 
-TreeClientSideSession :: TreeClientSideSession()
+ClientSideMessageTreeSession :: ClientSideMessageTreeSession()
    : MuxTreeGateway(NULL)  // gotta pass NULL here since _networkGateway hasn't been constructed yet
    , _networkGateway(this)
 {
    MuxTreeGateway::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
 }
 
-TreeClientSideSession :: ~TreeClientSideSession()
+ClientSideMessageTreeSession :: ~ClientSideMessageTreeSession()
 {
    // empty
 }
 
-void TreeClientSideSession :: AboutToDetachFromServer()
+void ClientSideMessageTreeSession :: AboutToDetachFromServer()
 {
    ShutdownGateway();
    AbstractReflectSession::AboutToDetachFromServer();
 }
 
-void TreeClientSideSession :: AsyncConnectCompleted()
+void ClientSideMessageTreeSession :: AsyncConnectCompleted()
 {
    AbstractReflectSession::AsyncConnectCompleted();
    _networkGateway.SetNetworkConnected(true);
 }
 
-bool TreeClientSideSession :: ClientConnectionClosed()
+bool ClientSideMessageTreeSession :: ClientConnectionClosed()
 {
    const bool ret = AbstractReflectSession::ClientConnectionClosed();
    _networkGateway.SetNetworkConnected(false);
    return ret; 
 }
 
-void TreeClientSideSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
+void ClientSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
 {
    _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
 }

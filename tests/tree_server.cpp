@@ -4,9 +4,9 @@
 #include "util/StringTokenizer.h"
 
 #include "zg/ZGStdinSession.h"
-#include "zg/messagetree/server/ZGMessageTreeDatabasePeerSession.h"
-#include "zg/messagetree/server/ZGMessageTreeDatabaseObject.h"
-#include "zg/messagetree/server/TreeServerSideSession.h"
+#include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 
 using namespace zg;
 
@@ -66,11 +66,11 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    return s;
 }
 
-// This class implements a database-peer to test out the ZGMessageTreeDatabaseObject class
-class TestTreeZGPeerSession : public ZGMessageTreeDatabasePeerSession
+// This class implements a database-peer to test out the MessageTreeDatabaseObject class
+class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession
 {
 public:
-   TestTreeZGPeerSession(const Message & args) : ZGMessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
+   TestTreeZGPeerSession(const Message & args) : MessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
 
    virtual const char * GetTypeName() const {return "TestTreeZGPeer";}
 
@@ -83,7 +83,7 @@ public:
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
-      IDatabaseObjectRef ret(newnothrow ZGMessageTreeDatabaseObject(this, String("dbs/db_%1").Arg(whichDatabase)));
+      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, String("dbs/db_%1").Arg(whichDatabase)));
       if (ret() == NULL) WARN_OUT_OF_MEMORY;
       return ret;
    }
@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
    ZGStdinSession zgStdinSession(zgPeerSession, true);
 
    // Accept incoming TCP connections from clients
-   TreeServerSideSessionFactory sssFactory(zgPeerSession.GetClientTreeGateway());
+   ServerSideMessageTreeSessionFactory sssFactory(zgPeerSession.GetClientTreeGateway());
 
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;

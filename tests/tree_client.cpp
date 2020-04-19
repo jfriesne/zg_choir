@@ -4,7 +4,7 @@
 #include "util/StringTokenizer.h"
 
 #include "zg/ZGStdinSession.h"
-#include "zg/messagetree/client/TreeClientSideSession.h"
+#include "zg/messagetree/client/ClientSideMessageTreeSession.h"
 
 using namespace zg;
 
@@ -225,7 +225,7 @@ int main(int argc, char ** argv)
    if (port == 0) port = TREE_PEER_SERVER_PORT;
 
    // This object will connect to the tree_server process
-   TreeClientSideSession clientSession;
+   ClientSideMessageTreeSession clientSession;
 
    // This object will read from stdin for us, so we can accept typed text commands from the user
    TreeClientStdinSession stdinSession(&clientSession);

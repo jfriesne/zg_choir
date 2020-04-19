@@ -1,5 +1,5 @@
-#ifndef ZGMessageTreeDatabasePeerSession_h
-#define ZGMessageTreeDatabasePeerSession_h
+#ifndef MessageTreeDatabasePeerSession_h
+#define MessageTreeDatabasePeerSession_h
 
 #include "zg/ZGDatabasePeerSession.h"
 #include "zg/IDatabaseObject.h"
@@ -9,18 +9,18 @@
 namespace zg
 {
 
-class ZGMessageTreeDatabaseObject;
+class MessageTreeDatabaseObject;
 
 /** This is a ZGDatabasePeerSession that has been further specialized to be able to
   * support MUSCLE node-tree database semantics in particular.
   */
-class ZGMessageTreeDatabasePeerSession : public ZGDatabasePeerSession, private ProxyTreeGateway
+class MessageTreeDatabasePeerSession : public ZGDatabasePeerSession, private ProxyTreeGateway
 {
 public:
    /** Constructor
      * @param peerSettings the ZGPeerSettings that this system is to use.
      */
-   ZGMessageTreeDatabasePeerSession(const ZGPeerSettings & peerSettings);
+   MessageTreeDatabasePeerSession(const ZGPeerSettings & peerSettings);
 
    /** Returns a pointer to the ITreeGateway object that our clients should use to access the ZG-synchronized database data */
    ITreeGateway * GetClientTreeGateway() {return &_muxGateway;}
@@ -28,7 +28,7 @@ public:
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return
-     * a reference to it, for the ZGMessageTreeDatabasePeerSession to manage.
+     * a reference to it, for the MessageTreeDatabasePeerSession to manage.
      * @param whichDatabase The index of the database that we need an object to represent.
      */
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase) = 0;
@@ -50,13 +50,13 @@ protected:
    virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
 
 private:
-   friend class ZGMessageTreeDatabaseObject;
+   friend class MessageTreeDatabaseObject;
 
    Queue<IDatabaseObjectRef> _databaseObjects;
 
    MuxTreeGateway _muxGateway;
 };
-DECLARE_REFTYPES(ZGMessageTreeDatabasePeerSession);
+DECLARE_REFTYPES(MessageTreeDatabasePeerSession);
 
 };  // end namespace zg
 
