@@ -38,48 +38,10 @@ static const String NTG_NAME_BEFORE      = "ntg_b4";
 static const String NTG_NAME_INDEX       = "ntg_idx";
 static const String NTG_NAME_NAME        = "ntg_nam";
 
-NetworkTreeGateway :: NetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender)
-   : ProxyTreeGateway(optUpstreamGateway)
+ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
+   : ProxyTreeGateway(NULL)
    , _messageSender(messageSender)
    , _isConnected(false)
-{
-   // empty
-}
-
-NetworkTreeGateway :: ~NetworkTreeGateway()
-{
-   // empty
-}
-
-void NetworkTreeGateway :: SetNetworkConnected(bool isConnected)
-{
-printf("NetworkTreeGateway::SetNetworkConnected %i\n", isConnected);
-   if (isConnected != _isConnected)
-   {
-      _isConnected = isConnected;
-      TreeGatewayConnectionStateChanged();
-   }
-}
-
-status_t NetworkTreeGateway :: SendOutgoingMessageToNetwork(const MessageRef & msgRef)
-{
-   if (msgRef() == NULL) return B_BAD_ARGUMENT;
-   return IsInCommandBatch() ? AssembleBatchMessage(_outgoingBatchMsg, msgRef) : _messageSender->SendOutgoingMessageToNetwork(msgRef);
-}
-
-void NetworkTreeGateway :: CommandBatchEnds()
-{
-   ITreeGateway::CommandBatchEnds();
-printf("NetworkTreeGateway::CommandBatchEnds %p\n", _outgoingBatchMsg());
-   if (_outgoingBatchMsg())
-   {
-      (void) _messageSender->SendOutgoingMessageToNetwork(_outgoingBatchMsg);
-      _outgoingBatchMsg.Reset();
-   }
-}
-
-ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
-   : NetworkTreeGateway(NULL, messageSender)
 {
    // empty
 }
@@ -87,6 +49,33 @@ ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSend
 ClientSideNetworkTreeGateway :: ~ClientSideNetworkTreeGateway()
 {
    // empty
+}
+
+void ClientSideNetworkTreeGateway :: SetNetworkConnected(bool isConnected)
+{
+printf("ClientSideNetworkTreeGateway::SetNetworkConnected %i\n", isConnected);
+   if (isConnected != _isConnected)
+   {
+      _isConnected = isConnected;
+      TreeGatewayConnectionStateChanged();
+   }
+}
+
+status_t ClientSideNetworkTreeGateway :: SendOutgoingMessageToNetwork(const MessageRef & msgRef)
+{
+   if (msgRef() == NULL) return B_BAD_ARGUMENT;
+   return IsInCommandBatch() ? AssembleBatchMessage(_outgoingBatchMsg, msgRef) : _messageSender->SendOutgoingMessageToNetwork(msgRef);
+}
+
+void ClientSideNetworkTreeGateway :: CommandBatchEnds()
+{
+   ProxyTreeGateway::CommandBatchEnds();
+printf("ClientSideNetworkTreeGateway::CommandBatchEnds %p\n", _outgoingBatchMsg());
+   if (_outgoingBatchMsg())
+   {
+      (void) _messageSender->SendOutgoingMessageToNetwork(_outgoingBatchMsg);
+      _outgoingBatchMsg.Reset();
+   }
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -209,6 +198,14 @@ status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, cons
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
+
+ServerSideNetworkTreeGatewaySubscriber :: ServerSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender)
+   : ITreeGatewaySubscriber(upstreamGateway)
+   , _messageSender(messageSender)
+{
+   // empty
+}
+
 
 QueryFilterRef ServerSideNetworkTreeGatewaySubscriber :: InstantiateQueryFilterAux(const Message & msg, uint32 which)
 {

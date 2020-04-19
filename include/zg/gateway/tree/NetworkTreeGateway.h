@@ -6,41 +6,8 @@
 
 namespace zg {
 
-/** Base class for both ClientSideNetworkTreeGateway and ServerSideNetworkTreeGateway classes */
-class NetworkTreeGateway : public ProxyTreeGateway
-{
-protected:
-   /** Constructor (protected because you need to instantiate a ClientSideNetworkTreeGateway, not just a NetworkTreeGateway)
-     * @param optUpstreamGateway what upstream gateway to use.  (Set to NULL if we're on the client side and using TCP as our "upstream" rather than another gateway)
-     * @param messageSender An object that will send Messages out over the TCP connection on our behalf.  Must not be NULL.
-     */
-   NetworkTreeGateway(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender);
-
-public:
-   virtual ~NetworkTreeGateway();
-
-   void SetNetworkConnected(bool isConnected);
-   bool IsNetworkConnect() const {return _isConnected;}
-
-protected:
-   // IGateway function-call API
-   virtual void CommandBatchEnds();
-
-   // ITreeGateway function-call API
-   virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
-
-protected:
-   status_t SendOutgoingMessageToNetwork(const MessageRef & msgRef);
-
-private:
-   INetworkMessageSender * _messageSender;
-
-   bool _isConnected;
-   MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
-};
-
 /** This gateway is intended to be run on a client; its methods are implemented to create the appropriate Message objects and send them to the server over TCP.  */
-class ClientSideNetworkTreeGateway : public NetworkTreeGateway
+class ClientSideNetworkTreeGateway : public ProxyTreeGateway
 {
 public:
    /** Constructor
@@ -50,6 +17,9 @@ public:
 
    virtual ~ClientSideNetworkTreeGateway();
 
+   void SetNetworkConnected(bool isConnected);
+   bool IsNetworkConnect() const {return _isConnected;}
+
    /**
      * To be called when a reply-Message is received from our server via the TCP connection
      * @param msg the Message that was received
@@ -58,6 +28,9 @@ public:
    virtual status_t IncomingTreeMessageReceivedFromServer(const MessageRef & msg);
 
 protected:
+   // IGateway function-call API
+   virtual void CommandBatchEnds();
+
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
@@ -69,32 +42,26 @@ protected:
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
+   virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
+
+protected:
+   status_t SendOutgoingMessageToNetwork(const MessageRef & msgRef);
 
 private:
    status_t HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
-};
 
-/** Semi-abstract base class for the ServerSideNetworkTreeGatewaySubscriber classes
-  */
-class NetworkTreeGatewaySubscriber : public ITreeGatewaySubscriber
-{
-protected:
-   /** Constructor (protected because you need to instantiate a ServerSideNetworkTreeGatewaySubscriber, not just a NetworkTreeGatewaySubscriber) */
-   NetworkTreeGatewaySubscriber(ITreeGateway * optUpstreamGateway, INetworkMessageSender * messageSender) : ITreeGatewaySubscriber(optUpstreamGateway), _messageSender(messageSender) {/* empty */}
-
-   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
-
-private:
    INetworkMessageSender * _messageSender;
+   bool _isConnected;
+   MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
 };
 
-/** Semi-abstract server-side subscriber class, with a IncomingTreeMessageReceivedFromClient() method
-  * to handle incoming NTG_COMMAND_* Messages that were received from a client via TCP.
+/** Server-side gateway-subscriber class; parses incoming incoming NTG_COMMAND_* Messages from our TCP-connection to our client
+  * and calls the appropriate ITreeGateway methods so that they will be acted upon by the upstream gateway.
   */
-class ServerSideNetworkTreeGatewaySubscriber : public NetworkTreeGatewaySubscriber
+class ServerSideNetworkTreeGatewaySubscriber : public ITreeGatewaySubscriber
 {
 public:
-   ServerSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender) : NetworkTreeGatewaySubscriber(upstreamGateway, messageSender) {/* empty */}
+   ServerSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender);
 
    /**
      * To be called when a command-Message is received from our client via the TCP connection
@@ -103,7 +70,7 @@ public:
      */
    virtual status_t IncomingTreeMessageReceivedFromClient(const MessageRef & msg);
 
-   // ITreeGatewaySubscriber callback API -- implemented to create Message objecst and send them back to our client over TCP
+   // ITreeGatewaySubscriber callback API -- implemented to create Message objects and send them back to our client over TCP
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg);
    virtual void TreeNodeIndexCleared(const String & path);
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
@@ -113,8 +80,11 @@ public:
 
 private:
    void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName);
+   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return _messageSender->SendOutgoingMessageToNetwork(msg);}
 
    QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
+
+   INetworkMessageSender * _messageSender;
 };
 
 };  // end namespace zg
