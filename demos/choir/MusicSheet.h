@@ -9,10 +9,14 @@ namespace choir {
 class MusicSheet : public MusicDatabaseObject
 {
 public:
+   /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
+   MusicSheet();
+
    /** Constructor 
      * @param session pointer to the ZGDatabasePeerSession object that created us
+     * @param dbIndex the database index of this database in the ZGDatabasePeerSession object
      */
-   MusicSheet(ZGDatabasePeerSession * session = NULL);
+   MusicSheet(ZGDatabasePeerSession * session, int32 dbIndex);
 
    /** Constructor */
    MusicSheet(const MusicSheet & rhs);

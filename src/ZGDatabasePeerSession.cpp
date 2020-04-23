@@ -35,6 +35,7 @@ void ZGDatabasePeerSession :: ResetLocalDatabaseToDefault(uint32 whichDatabase, 
 ConstMessageRef ZGDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+printf(" SeniorUpdateLocalDatabase whichDatabase=%u db=%p msg=%p\n", whichDatabase, db, seniorDoMsg());
    ConstMessageRef ret = db->SeniorUpdate(seniorDoMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
@@ -113,6 +114,24 @@ int64 IDatabaseObject :: GetToNetworkTimeOffset() const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
    return dbps ? dbps->GetToNetworkTimeOffset() : 0;
+}
+
+status_t IDatabaseObject :: RequestResetDatabaseStateToDefault()
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->RequestResetDatabaseStateToDefault(_dbIndex) : B_BAD_OBJECT;
+}
+
+status_t IDatabaseObject :: RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg)
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->RequestReplaceDatabaseState(_dbIndex, newDatabaseStateMsg) : B_BAD_OBJECT;
+}
+
+status_t IDatabaseObject :: RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg)
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->RequestUpdateDatabaseState(_dbIndex, databaseUpdateMsg) : B_BAD_OBJECT;
 }
 
 };  // end namespace zg

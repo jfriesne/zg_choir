@@ -51,6 +51,8 @@ protected:
 
 private:
    Queue<IDatabaseObjectRef> _databaseObjects;
+
+   friend class IDatabaseObject;
 };
 DECLARE_REFTYPES(ZGDatabasePeerSession);
 

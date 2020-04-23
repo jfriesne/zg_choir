@@ -9,10 +9,14 @@ namespace choir {
 class PlaybackState: public MusicDatabaseObject
 {
 public:
+   /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
+   PlaybackState();
+
    /** Constructor 
      * @param session pointer to the ZGDatabasePeerSession object that created us  
+     * @param dbIndex the database index of this database in the ZGDatabasePeerSess
      */
-   PlaybackState(ZGDatabasePeerSession * session = NULL);
+   PlaybackState(ZGDatabasePeerSession * session, int32 dbIndex);
 
    /** Destructor */
    ~PlaybackState();

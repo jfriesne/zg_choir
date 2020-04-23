@@ -83,7 +83,7 @@ public:
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
-      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, String("dbs/db_%1").Arg(whichDatabase)));
+      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, String("dbs/db_%1").Arg(whichDatabase)));
       if (ret() == NULL) WARN_OUT_OF_MEMORY;
       return ret;
    }

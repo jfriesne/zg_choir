@@ -9,10 +9,14 @@ namespace choir {
 class NoteAssignmentsMap : public MusicDatabaseObject
 {
 public:
+   /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
+   NoteAssignmentsMap();
+
    /** Constructor 
      * @param session pointer to the ZGDatabasePeerSession object that created us  
+     * @param dbIndex the database index of this database in the ZGDatabasePeerSess
      */
-   NoteAssignmentsMap(ZGDatabasePeerSession * session = NULL);
+   NoteAssignmentsMap(ZGDatabasePeerSession * session, int32 dbIndex);
 
    /** Destructor */
    ~NoteAssignmentsMap();

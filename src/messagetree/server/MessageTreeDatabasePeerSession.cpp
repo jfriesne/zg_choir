@@ -1,4 +1,5 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 
 namespace zg
 {
@@ -48,7 +49,14 @@ return B_UNIMPLEMENTED;
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
 printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
-return B_UNIMPLEMENTED;
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if ((mtDB)&&(mtDB->ContainsPath(path))) return mtDB->UploadNodeValue(path, optPayload, flags, optBefore);
+   }
+   LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeValue():  Supplied node-path [%s] is not contained by any of our " UINT32_FORMAT_SPEC " MessageTreeDatabaseObjects, can't upload it!\n", path(), numDBs);
+   return B_UNIMPLEMENTED;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
@@ -60,7 +68,15 @@ return B_UNIMPLEMENTED;
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestDeleteNodes [%s]\n", path());
-return B_UNIMPLEMENTED;
+   status_t ret;
+
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if ((mtDB)&&(mtDB->ContainsPath(path))) ret |= mtDB->RequestDeleteNodes(path, optFilterRef, flags);  // not sure if this path-matching logic is correct (e.g. should the user be able to delete all DBs by passing "*"?  If so, how to implement?  --jaf)
+   }
+   return ret;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags)

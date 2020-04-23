@@ -4,7 +4,12 @@
 
 namespace choir {
 
-MusicSheetPlayer :: MusicSheetPlayer(const INetworkTimeProvider * networkTimeProvider, QObject * parent) : QObject(parent), _networkTimeProvider(networkTimeProvider), _nextChordIndex(0), _nextWakeupTimeLocal(MUSCLE_TIME_NEVER), _wakeupTimer(NULL)
+MusicSheetPlayer :: MusicSheetPlayer(const INetworkTimeProvider * networkTimeProvider, QObject * parent) 
+   : QObject(parent)
+   , _networkTimeProvider(networkTimeProvider)
+   , _nextChordIndex(0)
+   , _nextWakeupTimeLocal(MUSCLE_TIME_NEVER)
+   , _wakeupTimer(NULL)
 {
    // empty
 }

@@ -55,7 +55,7 @@ status_t ITreeGatewaySubscriber :: PingTreeServer(const String & tag, TreeGatewa
 
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 
 {
-   return GetGateway()->TreeGateway_IsGatewayConnected();
+   return ((GetGateway())&&(GetGateway()->TreeGateway_IsGatewayConnected()));
 }
 
 };

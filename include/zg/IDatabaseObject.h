@@ -15,10 +15,14 @@ class ZGDatabasePeerSession;
 class IDatabaseObject : public RefCountable, public INetworkTimeProvider
 {
 public:
-   /** Constructor
-     * @param session pointer to the ZGDatabasePeerSession object that created us 
+   /** Default constructor for an IDatabaseObject that is to be used outside the context of a ZGDatabasePeerSession */
+   IDatabaseObject() : _session(NULL), _dbIndex(-1) {/* empty */}
+   
+   /** Constructor for an IDatabaseObject that is created via ZGDatabasePeerSession::CreateDatabaseObject()
+     * @param session pointer to the ZGDatabasePeerSession object that created us, or NULL if we weren't created by a ZGDatabasePeerSession
+     * @param databaseIndex our position within the ZGDatabasePeerSession's databases-list, or -1 if we weren't created by a ZGDatabasePeerSession
      */
-   IDatabaseObject(ZGDatabasePeerSession * session) : _session(session) {/* empty */}
+   IDatabaseObject(ZGDatabasePeerSession * session, int32 dbIndex) : _session(session), _dbIndex(dbIndex) {/* empty */}
 
    /** Destructor */
    virtual ~IDatabaseObject() {/* empty */}
@@ -85,6 +89,11 @@ public:
      */
    ZGDatabasePeerSession * GetDatabasePeerSession() const {return _session;}
 
+   /** Returns our index within the ZGDatabasePeerSession object's databses-list, or -1
+     * if this object was not created by a ZGDatabasePeerSession.
+     */
+   int32 GetDatabaseIndex() const {return _dbIndex;}
+
 protected:
    /** Returns a read-only pointer to the specified IDatabaseObject held by our 
      * ZGDatabasePeerSession, or NULL if we don't have a ZGDatabasePeerSession
@@ -122,8 +131,14 @@ protected:
      */
    virtual int64 GetToNetworkTimeOffset() const;
 
+   // Pass-throughs to the ZGDatabasePeerSession object
+   status_t RequestResetDatabaseStateToDefault();
+   status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
+   status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
+
 private:
    ZGDatabasePeerSession * _session;
+   int32 _dbIndex;
 };
 DECLARE_REFTYPES(IDatabaseObject);
 

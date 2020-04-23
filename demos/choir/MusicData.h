@@ -74,10 +74,14 @@ enum {
 class MusicDatabaseObject : public IDatabaseObject
 {
 public:
+   /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
+   MusicDatabaseObject() {/* empty */}
+
    /** Constructor
      * @param session pointer to the ZGDatabasePeerSession object that created us  
+     * @param dbIndex our index within the databases-list.
      */
-   MusicDatabaseObject(ZGDatabasePeerSession * session) : IDatabaseObject(session) {/* empty */}
+   MusicDatabaseObject(ZGDatabasePeerSession * session, int32 dbIndex) : IDatabaseObject(session, dbIndex) {/* empty */}
 
 protected:
    /** Returns a pointer to the ChoirSession object that created this object. */

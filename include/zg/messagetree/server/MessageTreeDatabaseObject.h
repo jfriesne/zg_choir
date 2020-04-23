@@ -14,12 +14,13 @@ class MessageTreeDatabaseObject : public IDatabaseObject
 public:
    /** Constructor
      * @param session pointer to the MessageTreeDatabasePeerSession object that created us
+     * @param dbIndex our index within the databases-list.
      * @param rootNodePath a sub-path indicating where the root of our managed Message sub-tree
      *                     should be located (relative to the MessageTreeDatabasePeerSession's session-node)
      *                     May be empty if you want the session's session-node itself of be the
      *                     root of the managed sub-tree.
      */
-   MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, const String & rootNodePath);
+   MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath);
 
    /** Destructor */
    virtual ~MessageTreeDatabaseObject() {/* empty */}
@@ -39,8 +40,15 @@ public:
      */
    MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const {return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());}
 
+   /** Returns true iff the given relative-node-path is within our sub-tree */
+   bool ContainsPath(const String & path) const {return path.StartsWith(_rootNodePath);}
+
+   status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
+   status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+
 private:
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
+   status_t SeniorUpdateAux(const ConstMessageRef & msg);
 
    MessageTreeDatabasePeerSession * _messageTreeSession;
 
