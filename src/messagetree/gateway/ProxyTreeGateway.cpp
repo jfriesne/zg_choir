@@ -119,7 +119,6 @@ void ProxyTreeGateway :: TreeNodeIndexEntryRemoved(const String & nodePath, uint
 
 void ProxyTreeGateway :: TreeServerPonged(const String & tag)
 {
-printf("ProxyTreeGateway::TreeServerPonged(%s) (%u)\n", tag(), GetRegisteredSubscribers().GetNumItems());
    for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeServerPonged(tag);
 }
 

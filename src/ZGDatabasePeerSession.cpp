@@ -35,7 +35,6 @@ void ZGDatabasePeerSession :: ResetLocalDatabaseToDefault(uint32 whichDatabase, 
 ConstMessageRef ZGDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
-printf(" SeniorUpdateLocalDatabase whichDatabase=%u db=%p msg=%p\n", whichDatabase, db, seniorDoMsg());
    ConstMessageRef ret = db->SeniorUpdate(seniorDoMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;

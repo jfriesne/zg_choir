@@ -179,7 +179,6 @@ status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * 
 
 status_t MuxTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
-printf("MUX Ping [%s] _isConnected=%i\n", tag(), _isConnected);
    return _isConnected ? ITreeGatewaySubscriber::PingTreeServer(AddCallbackPointerPrefix(calledBy, tag), flags) : B_BAD_OBJECT;
 }
 

@@ -77,7 +77,11 @@ public:
    virtual bool TextCommandReceived(const String & text)
    {
       printf("TestTreeZGPeerSession:  You typed:  [%s]\n", text());
-      return true;  // indicate handled?
+
+      if (text.StartsWith("printsessions")) {PrintFactoriesInfo(); PrintSessionsInfo();}
+      else return false;
+
+      return true;  // indicate handled
    }
 
 protected:

@@ -21,11 +21,11 @@ public:
    IGateway() {/* empty */}
    virtual ~IGateway() {MASSERT(_registeredSubscribers.IsEmpty(), "IGateway was destroyed without calling ShutdownGateway() on it first!");}
 
-   virtual bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins(); return ret;}
-   virtual bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();   _commandBatchCounter.Decrement(); return ret;}
+   virtual bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins();    return ret;}
+   virtual bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();      _commandBatchCounter.Decrement();  return ret;}
 
    virtual bool BeginCallbackBatch() {const bool ret = _callbackBatchCounter.Increment();   if (ret) CallbackBatchBegins(); return ret;}
-   virtual bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds(); _callbackBatchCounter.Decrement(); return ret;}
+   virtual bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds();   _callbackBatchCounter.Decrement(); return ret;}
 
    bool  IsInCommandBatch() const {return _commandBatchCounter.IsInBatch();}
    bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}

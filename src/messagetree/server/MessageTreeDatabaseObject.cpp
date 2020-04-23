@@ -59,7 +59,7 @@ uint32 MessageTreeDatabaseObject :: CalculateChecksum() const
 
 ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
 {
-printf("MTDO::SeniorUpdate A\n");
+   GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
 
    // Setup stuff here
 
@@ -72,7 +72,6 @@ printf("MTDO::SeniorUpdate A\n");
 
    // Cleanup stuff here
 
-printf("MTDO::SeniorUpdate B\n");
    return seniorDoMsg;  // todo:  return generated JuniorMsg instead!
 }
 
@@ -98,13 +97,12 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
 
       case MTDO_SENIOR_COMMAND_UPLOADNODEVALUE:
       {
-printf("k3\n");
          const String * pPath     = msg()->GetStringPointer(MTDO_NAME_PATH);
          MessageRef optPayload    = msg()->GetMessage(MTDO_NAME_PAYLOAD);
          TreeGatewayFlags flags   = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
          const String * optBefore = msg()->GetStringPointer(MTDO_NAME_BEFORE);
 
-         return zsh->SetDataNode(pPath?*pPath:GetEmptyString(), optPayload, true, true, !flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+         return zsh->SetDataNode(pPath?*pPath:GetEmptyString(), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
       }
       break;
 

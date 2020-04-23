@@ -6,6 +6,7 @@ namespace zg
 
 MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGDatabasePeerSession(zgPeerSettings), ProxyTreeGateway(NULL), _muxGateway(this)
 {
+printf("MessageTreeDatabasePeerSession=%p _muxGateway=%p\n", this, &_muxGateway);
    // empty
 }
 
@@ -96,6 +97,12 @@ printf("ZG PingServer [%s]\n", tag());
       TreeServerPonged(tag);
       return B_NO_ERROR;
    }
+}
+
+void MessageTreeDatabasePeerSession :: CommandBatchEnds()
+{
+   ProxyTreeGateway::CommandBatchEnds();
+   if (IsAttachedToServer()) PushSubscriptionMessages();  // make sure any subscription updates go out in a timely fashion
 }
 
 };  // end namespace zg

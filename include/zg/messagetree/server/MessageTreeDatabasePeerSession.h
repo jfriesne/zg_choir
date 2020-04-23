@@ -33,8 +33,12 @@ protected:
      */
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase) = 0;
 
+   virtual void CommandBatchEnds();
+
    // ZGPeerSession API implementation
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+
+   virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
 
    // ITreeGateway API implementation
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
