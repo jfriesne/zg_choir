@@ -79,7 +79,7 @@ private:
 
    void RemoveOldMeasurement()
    {
-      uint64 oldMeasurement;
+      uint64 oldMeasurement = 0;  // set to zero to avoid compiler warning
       if (_measurements.RemoveHead(oldMeasurement) == B_NO_ERROR) 
       {
          _totalMicros -= oldMeasurement;

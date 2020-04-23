@@ -5,8 +5,8 @@ DEFINES += -DMUSCLE_CATCH_SIGNALS_BY_DEFAULT
 MUSCLEDIR = ../submodules/muscle
 
 INCLUDEDIRS = -I../include -I$(MUSCLEDIR) -I$(MUSCLEDIR/zlib/zlib)
-CFLAGS = $(INCLUDEDIRS) -g
-GCCFLAGS = -fno-exceptions -DMUSCLE_NO_EXCEPTIONS -W -Wall -Wno-multichar
+CFLAGS = $(INCLUDEDIRS) -g -Wall
+GCCFLAGS = -fno-exceptions -DMUSCLE_NO_EXCEPTIONS
 CXXFLAGS = $(CFLAGS) -O3 $(DEFINES)
 
 # Uncomment these to enable clang++'s static analyzer (for more thorough error checking)

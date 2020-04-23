@@ -122,7 +122,8 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    _databaseIndex           = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    _seniorElapsedTimeMillis = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    /* reserved 16-bit field is here; maybe we'll do something with it someday */ buf += sizeof(uint16); size -= sizeof(uint16);
-   if (_sourcePeerID.Unflatten(buf, size) != B_NO_ERROR) return B_ERROR;      buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
+   if (_sourcePeerID.Unflatten(buf, size) != B_NO_ERROR) return B_ERROR;         /* buf/size advancement on next line to avoid compiler warning */
+                                                                                 buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
    _updateID                = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
    _preUpdateDBChecksum     = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
    _postUpdateDBChecksum    = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
