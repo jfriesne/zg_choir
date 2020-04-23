@@ -64,11 +64,16 @@ printf("MTDO::SeniorUpdate A\n");
    // Setup stuff here
 
    const status_t ret = SeniorUpdateAux(seniorDoMsg);
+   if (ret.IsError())
+   {
+      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdate():  SeniorUpdateAux() failed! [%s]\n", ret());
+      return ConstMessageRef();
+   }
 
    // Cleanup stuff here
 
 printf("MTDO::SeniorUpdate B\n");
-   return seniorDoMsg;
+   return seniorDoMsg;  // todo:  return generated JuniorMsg instead!
 }
 
 status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & msg)
@@ -95,7 +100,6 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       {
 printf("k3\n");
          const String * pPath     = msg()->GetStringPointer(MTDO_NAME_PATH);
-         const String & path      = pPath ? *pPath : GetEmptyString();
          MessageRef optPayload    = msg()->GetMessage(MTDO_NAME_PAYLOAD);
          TreeGatewayFlags flags   = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
          const String * optBefore = msg()->GetStringPointer(MTDO_NAME_BEFORE);

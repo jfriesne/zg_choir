@@ -50,8 +50,6 @@ private:
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
    status_t SeniorUpdateAux(const ConstMessageRef & msg);
 
-   MessageTreeDatabasePeerSession * _messageTreeSession;
-
    const String _rootNodePath;
    uint32 _checksum;  // running checksum
 };
