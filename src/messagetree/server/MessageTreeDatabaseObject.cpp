@@ -1,13 +1,28 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "reflector/StorageReflectSession.h"  // for NODE_DEPTH_USER
+#include "util/MiscUtilityFunctions.h"  // for AssembleBatchMessage()
 
 namespace zg 
 {
 
+// Command-codes that can be used in both SeniorUpdate() and JuniorUpdate()
 enum {
-   MTDO_SENIOR_COMMAND_BATCH = 1836344431, // 'mtdo' 
-   MTDO_SENIOR_COMMAND_UPLOADNODEVALUE,
-   MTDO_SENIOR_COMMAND_REQUESTDELETENODES,
+   MTDO_COMMAND_BATCH = 1836344163, // 'mtcc' 
+   MTDO_COMMAND_NOOP,
+   MTDO_COMMAND_UPDATENODEVALUE,
+   MTDO_COMMAND_INSERTINDEXENTRY,
+   MTDO_COMMAND_REMOVEINDEXENTRY,
+};
+
+// Command-codes that can be used only in SeniorUpdate()
+enum {
+   MTDO_SENIOR_COMMAND_REQUESTDELETENODES = 1836348259, // 'mtsc' 
+};
+
+// Command-codes that can be used only in JuniorUpdate()
+enum {
+   MTDO_JUNIOR_COMMAND_UNUSED = 1836345955, // 'mtjc' 
 };
 
 static const String MTDO_NAME_PATH       = "pth";
@@ -16,6 +31,8 @@ static const String MTDO_NAME_FLAGS      = "flg";
 static const String MTDO_NAME_BEFORE     = "be4";
 static const String MTDO_NAME_SUBMESSAGE = "sub";
 static const String MTDO_NAME_FILTER     = "fil";
+static const String MTDO_NAME_INDEX      = "idx";
+static const String MTDO_NAME_KEY        = "key";
 
 MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : IDatabaseObject(session, dbIndex)
@@ -61,7 +78,7 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
 {
    GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
 
-   // Setup stuff here
+   NestCountGuard ncg(_inSeniorUpdateNestCount);
 
    const status_t ret = SeniorUpdateAux(seniorDoMsg);
    if (ret.IsError())
@@ -70,9 +87,11 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
       return ConstMessageRef();
    }
 
-   // Cleanup stuff here
+   if (_assembledJuniorMessage() == NULL) _assembledJuniorMessage = GetMessageFromPool(MTDO_COMMAND_NOOP);
 
-   return seniorDoMsg;  // todo:  return generated JuniorMsg instead!
+   ConstMessageRef juniorMsg = _assembledJuniorMessage;
+   _assembledJuniorMessage.Reset();
+   return juniorMsg;
 }
 
 status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & msg)
@@ -82,28 +101,20 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
 
    switch(msg()->what)
    {
-      case MTDO_SENIOR_COMMAND_BATCH:
+      case MTDO_COMMAND_BATCH:
       {
          status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(MTDO_NAME_SUBMESSAGE, i, subMsg).IsOK(); i++) 
-         {
-            ret = SeniorUpdateAux(subMsg);
-            if (ret.IsError()) return ret;
-         }
-         return B_NO_ERROR;
+         for (int32 i=0; msg()->FindMessage(MTDO_NAME_SUBMESSAGE, i, subMsg).IsOK(); i++) if (SeniorUpdateAux(subMsg).IsError(ret)) return ret;
       }
       break;
 
-      case MTDO_SENIOR_COMMAND_UPLOADNODEVALUE:
-      {
-         const String * pPath     = msg()->GetStringPointer(MTDO_NAME_PATH);
-         MessageRef optPayload    = msg()->GetMessage(MTDO_NAME_PAYLOAD);
-         TreeGatewayFlags flags   = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String * optBefore = msg()->GetStringPointer(MTDO_NAME_BEFORE);
+      case MTDO_COMMAND_NOOP:
+         // empty
+      break;
 
-         return zsh->SetDataNode(pPath?*pPath:GetEmptyString(), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
-      }
+      case MTDO_COMMAND_UPDATENODEVALUE:
+         return HandleUpdateNodeMessage(*msg());
       break;
 
       case MTDO_SENIOR_COMMAND_REQUESTDELETENODES:
@@ -111,10 +122,9 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
          MessageRef qfMsg;
          TreeGatewayFlags flags    = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
          const String * pPath      = msg()->GetStringPointer(MTDO_NAME_PATH);
-         const String & path       = pPath ? *pPath : GetEmptyString();
          ConstQueryFilterRef qfRef = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return zsh->RemoveDataNodes(path, qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+         return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
       }
       break;
 
@@ -122,16 +132,94 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
          LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdateAux():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
          return B_UNIMPLEMENTED;
    }
+
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
 {
-   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   if (zsh == NULL) return B_BAD_OBJECT;
+   GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
+   NestCountGuard ncg(_inJuniorUpdateNestCount);
 
-   // TODO IMPLEMENT THIS
+   status_t ret;
+   if (JuniorUpdateAux(juniorDoMsg).IsError(ret))
+   {
+      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorUpdate():  JuniorUpdate() failed! [%s]\n", ret());
+      return ret;
+   }
 
    return B_NO_ERROR;
+}
+
+status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & msg)
+{
+   switch(msg()->what)
+   {
+      case MTDO_COMMAND_BATCH:
+      {
+         status_t ret;
+         MessageRef subMsg;
+         for (int32 i=0; msg()->FindMessage(MTDO_NAME_SUBMESSAGE, i, subMsg).IsOK(); i++) if (JuniorUpdateAux(subMsg).IsError(ret)) return ret;
+      }
+      break;
+
+      case MTDO_COMMAND_NOOP:
+         // empty
+      break;
+
+      case MTDO_COMMAND_UPDATENODEVALUE:
+         return HandleUpdateNodeMessage(*msg());
+      break;
+
+      case MTDO_COMMAND_INSERTINDEXENTRY:
+      case MTDO_COMMAND_REMOVEINDEXENTRY:
+         return HandleUpdateNodeIndexMessage(*msg());
+      break;
+
+      default:
+         LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorUpdateAux():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
+         return B_UNIMPLEMENTED;
+   }
+
+   return B_NO_ERROR;
+}
+
+void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
+{
+   if (_inSeniorUpdateNestCount.IsInBatch())
+   {
+      // update our assembled-junior-message so the junior-peers can later replicate what we did here
+      MessageRef juniorMsg = CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
+      if ((juniorMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, juniorMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!\n", this, isBeingRemoved?"removed":"updated", relativePath());
+   }
+   else if (_inJuniorUpdateNestCount.IsInBatch() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context!\n", this, relativePath(), isBeingRemoved?"removed":"updated");
+
+   // Update our running database-checksum to account for the changes being made to our subtree
+        if (isBeingRemoved) _checksum -= node.CalculateChecksum();
+   else if (oldDataRef())
+   {
+      _checksum -= oldDataRef()->CalculateChecksum();
+      if (node.GetData()()) _checksum += node.GetData()()->CalculateChecksum();
+   }
+   else _checksum += node.CalculateChecksum();
+}
+
+void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key)
+{
+   if (_inSeniorUpdateNestCount.IsInBatch())
+   {
+      MessageRef cmdMsg = CreateUpdateNodeIndexMessage(relativePath, op, index, key);
+      if ((cmdMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, cmdMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node index update to of [%s]!\n", this, relativePath());
+   }
+   else if (_inJuniorUpdateNestCount.IsInBatch() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context!\n", this, relativePath());
+
+   // Update our running database-checksum to account for the changes being made to our subtree
+   switch(op)
+   {
+      case INDEX_OP_ENTRYINSERTED: _checksum += key.CalculateChecksum(); break;
+      case INDEX_OP_ENTRYREMOVED:  _checksum -= key.CalculateChecksum(); break;
+      case INDEX_OP_CLEARED:       LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged():  checksum-update for INDEX_OP_CLEARED is not implemented!  (%s)\n", relativePath()); break;  // Dunno how to handle this, and it never gets called anyway
+   }
 }
 
 String MessageTreeDatabaseObject :: ToString() const
@@ -152,15 +240,8 @@ void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node,
 
 status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
-   MessageRef cmdMsg = GetMessageFromPool(MTDO_SENIOR_COMMAND_UPLOADNODEVALUE);
-   if (cmdMsg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   const status_t ret = cmdMsg()->CAddString( MTDO_NAME_PATH,    path)
-                      | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD, optPayload)
-                      | cmdMsg()->AddFlat(    MTDO_NAME_FLAGS,   flags)
-                      | cmdMsg()->CAddString( MTDO_NAME_BEFORE,  optBefore);
-
-   return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
+   MessageRef cmdMsg = CreateNodeUpdateMessage(path, optPayload, flags, optBefore);
+   return cmdMsg() ? RequestUpdateDatabaseState(cmdMsg) : B_OUT_OF_MEMORY;
 }
 
 status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
@@ -177,5 +258,86 @@ status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, co
    return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
 }
 
+status_t MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
+{
+        if (path.StartsWith('/')) return GetDatabaseSubpath(GetPathClause(NODE_DEPTH_USER, path()), optRetRelativePath);   // convert absolute path to session-relative path
+   else if (path.StartsWith(_rootNodePath))
+   {
+      if (optRetRelativePath) *optRetRelativePath = path.Substring(_rootNodePath.Length());
+      return B_NO_ERROR;
+   }
+   else return B_DATA_NOT_FOUND;
+}
+
+// Creates MTDO_COMMAND_UPDATENODEVALUE Messages
+MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const
+{
+   MessageRef cmdMsg = GetMessageFromPool(MTDO_COMMAND_UPDATENODEVALUE);
+   if (cmdMsg())
+   {
+      const status_t ret = cmdMsg()->CAddString( MTDO_NAME_PATH,    path)
+                         | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD, optPayload)
+                         | cmdMsg()->AddFlat(    MTDO_NAME_FLAGS,   flags)
+                         | cmdMsg()->CAddString( MTDO_NAME_BEFORE,  optBefore);
+      if (ret.IsOK()) return cmdMsg;
+   }
+
+   LogTime(MUSCLE_LOG_CRITICALERROR, "Error assembling node update Message for %s -> %p\n", path(), optPayload());
+   return MessageRef();
+}
+
+// Handles MTDO_COMMAND_UPDATENODEVALUE Messages
+status_t MessageTreeDatabaseObject :: HandleUpdateNodeMessage(const Message & msg)
+{
+   const String * pPath     = msg.GetStringPointer(MTDO_NAME_PATH);
+   MessageRef optPayload    = msg.GetMessage(MTDO_NAME_PAYLOAD);
+   TreeGatewayFlags flags   = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+   const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);
+
+   return GetMessageTreeDatabasePeerSession()->SetDataNode(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+}
+
+MessageRef MessageTreeDatabaseObject :: CreateUpdateNodeIndexMessage(const String & relativePath, char op, uint32 index, const String & key)
+{
+   uint32 whatCode;
+   switch(op)
+   {
+      case INDEX_OP_ENTRYINSERTED: whatCode = MTDO_COMMAND_INSERTINDEXENTRY; break;
+      case INDEX_OP_ENTRYREMOVED:  whatCode = MTDO_COMMAND_REMOVEINDEXENTRY; break;
+      default:                     LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Unknown opCode %c for path [%s]\n", this, op, relativePath()); return MessageRef();
+   }
+
+   if (whatCode != 0)
+   {
+      // update our assembled-junior-message so the junior-peers can later replicate what we did here
+      MessageRef juniorMsg = GetMessageFromPool(whatCode);
+      if ((juniorMsg())
+       && (juniorMsg()->CAddString(MTDO_NAME_PATH,  relativePath).IsOK())
+       && (juniorMsg()->CAddInt32( MTDO_NAME_INDEX, index).IsOK())
+       && (juniorMsg()->CAddString(MTDO_NAME_KEY,   key).IsOK())) return juniorMsg;
+   }
+   return MessageRef();
+}
+
+status_t MessageTreeDatabaseObject :: HandleUpdateNodeIndexMessage(const Message & msg)
+{
+   const String * path = msg.GetStringPointer(MTDO_NAME_PATH);
+   const int32 index   = msg.GetInt32(MTDO_NAME_INDEX);
+   const String * key  = msg.GetStringPointer(MTDO_NAME_KEY);
+
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   DataNode * node = zsh->GetDataNode(DatabaseSubpathToSessionRelativePath(path?*path:GetEmptyString()));
+   if (node) 
+   {
+      if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) node->InsertIndexEntryAt(index, zsh, key?*key:GetEmptyString());
+                                                else node->RemoveIndexEntryAt(index, zsh);
+      return B_NO_ERROR;
+   }
+   else 
+   {
+      LogTime(MUSCLE_LOG_CRITICALERROR, "JuniorUpdateAux:  Couldn't find node for path [%s] to update node-index!\n", path?path->Cstr():NULL);
+      return B_DATA_NOT_FOUND;
+   }
+}
 
 }; // end namespace zg

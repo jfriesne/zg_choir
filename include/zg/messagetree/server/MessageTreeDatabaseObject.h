@@ -2,6 +2,7 @@
 #define MessageTreeDatabaseObject_h
 
 #include "zg/IDatabaseObject.h"
+#include "util/NestCount.h"
 
 namespace zg
 {
@@ -40,15 +41,36 @@ public:
      */
    MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const {return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());}
 
-   /** Returns true iff the given relative-node-path is within our sub-tree */
-   bool ContainsPath(const String & path) const {return path.StartsWith(_rootNodePath);}
+   /** Checks if the given path belongs to this database.
+     * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
+     * @param optRetRelativePath if non-NULL, and this method returns true, then the String this points to will
+     *                           be written to with the path to the node that is relative to our root-node (e.g. "foo/bar").
+     * @returns B_NO_ERROR iff the given relative-node-path is within our sub-tree
+     */
+   status_t GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
    status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
+   virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
+   virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
+
 private:
+   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.Prepend(_rootNodePath);}
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
    status_t SeniorUpdateAux(const ConstMessageRef & msg);
+   status_t JuniorUpdateAux(const ConstMessageRef & msg);
+
+   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const;
+   status_t HandleUpdateNodeMessage(const Message & msg);
+
+   MessageRef CreateUpdateNodeIndexMessage(const String & relativePath, char op, uint32 index, const String & key);
+   status_t HandleUpdateNodeIndexMessage(const Message & msg);
+
+   NestCount _inSeniorUpdateNestCount;
+   NestCount _inJuniorUpdateNestCount;
+
+   MessageRef _assembledJuniorMessage;
 
    const String _rootNodePath;
    uint32 _checksum;  // running checksum

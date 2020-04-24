@@ -50,14 +50,14 @@ return B_UNIMPLEMENTED;
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
 printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
-   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
-   for (uint32 i=0; i<numDBs; i++)
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
+   if (mtDB) return mtDB->UploadNodeValue(relativePath, optPayload, flags, optBefore);
+   else 
    {
-      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
-      if ((mtDB)&&(mtDB->ContainsPath(path))) return mtDB->UploadNodeValue(path, optPayload, flags, optBefore);
+      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeValue():  No database found for path [%s]!\n", path());
+      return B_BAD_ARGUMENT;
    }
-   LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeValue():  Supplied node-path [%s] is not contained by any of our " UINT32_FORMAT_SPEC " MessageTreeDatabaseObjects, can't upload it!\n", path(), numDBs);
-   return B_UNIMPLEMENTED;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
@@ -69,19 +69,19 @@ return B_UNIMPLEMENTED;
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestDeleteNodes [%s]\n", path());
-   status_t ret;
-
-   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
-   for (uint32 i=0; i<numDBs; i++)
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
+   if (mtDB) return mtDB->RequestDeleteNodes(relativePath, optFilterRef, flags); 
+   else 
    {
-      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
-      if ((mtDB)&&(mtDB->ContainsPath(path))) ret |= mtDB->RequestDeleteNodes(path, optFilterRef, flags);  // not sure if this path-matching logic is correct (e.g. should the user be able to delete all DBs by passing "*"?  If so, how to implement?  --jaf)
+      LogTime(MUSCLE_LOG_ERROR, "TreeGateway_RequestDeleteNodes:  No database found for path [%s]\n", path());
+      return B_BAD_ARGUMENT;
    }
-   return ret;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags)
 {
+printf("ZG RequestMoveIndexEntry [%s]\n", path());
 return B_UNIMPLEMENTED;
 }
 
@@ -103,6 +103,35 @@ void MessageTreeDatabasePeerSession :: CommandBatchEnds()
 {
    ProxyTreeGateway::CommandBatchEnds();
    if (IsAttachedToServer()) PushSubscriptionMessages();  // make sure any subscription updates go out in a timely fashion
+}
+
+void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
+{
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
+   if (mtDB) mtDB->MessageTreeNodeUpdated(relativePath, node, oldDataRef, isBeingRemoved);
+
+   ZGDatabasePeerSession::NotifySubscribersThatNodeChanged(node, oldDataRef, isBeingRemoved);
+}
+
+void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
+{
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
+   if (mtDB) mtDB->MessageTreeNodeIndexChanged(relativePath, node, op, index, key);
+
+   ZGDatabasePeerSession::NotifySubscribersThatNodeIndexChanged(node, op, index, key);
+}
+
+MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath)
+{
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if ((mtDB)&&(mtDB->GetDatabaseSubpath(nodePath, optRetRelativePath).IsOK())) return mtDB;
+   }
+   return NULL;
 }
 
 };  // end namespace zg

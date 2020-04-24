@@ -33,12 +33,18 @@ protected:
      */
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase) = 0;
 
+   // Overridden to call PushSubscriptionMessages()
    virtual void CommandBatchEnds();
+
+   /** Given a nodePath, returns the associated MessageTreeDatabaseObject, or NULL if none matches.
+     * @param nodePath a node-path to check (either absolute or session-relative)
+     * @param optRetRelativePath if non-NULL, then on success, a database-object-relative sub-path will be written here.
+     * @returns a pointer to the appropriate MessageTreeDatabaseObject on success, or NULL on failure (no matching DB found)
+     */
+   MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath);
 
    // ZGPeerSession API implementation
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
-
-   virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
 
    // ITreeGateway API implementation
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
@@ -52,6 +58,11 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
+
+   // StorageReflectSession API implementation
+   virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
+   virtual void NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved);
+   virtual void NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
 
 private:
    friend class MessageTreeDatabaseObject;
