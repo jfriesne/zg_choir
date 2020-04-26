@@ -11,6 +11,8 @@ namespace zg {
 
 class ITreeGateway;
 
+extern ITreeGateway * GetDummyTreeGateway();
+
 /** Abstract base class for objects that want to server as a gateway to a number of IGatewaySubscriber objects 
  *  The GatewaySubscriberType template-argument should be either IGatewaySubscriber or a subclass thereof.
  *  The GatewaySubclass template-argument should be type of the gateway subclass itself (just so we can declare IGatewaySubscriber<GatewaySubclass> as a friend, argh)
@@ -30,7 +32,7 @@ public:
    bool  IsInCommandBatch() const {return _commandBatchCounter.IsInBatch();}
    bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}
 
-   virtual void ShutdownGateway() {while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(NULL);}
+   virtual void ShutdownGateway() {while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());}
 
 protected:
    /** Called when our command-batch counter has just gone from 0 to 1. */

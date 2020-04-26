@@ -60,7 +60,7 @@ status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(uint32 whichDB, const Stri
 
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 
 {
-   return ((GetGateway())&&(GetGateway()->TreeGateway_IsGatewayConnected()));
+   return GetGateway()->TreeGateway_IsGatewayConnected();
 }
 
 };

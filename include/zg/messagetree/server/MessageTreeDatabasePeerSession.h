@@ -64,6 +64,8 @@ protected:
    virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
    virtual void NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved);
    virtual void NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
+   virtual void NodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved);
+   virtual void NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
 
    // ZGPeerSession API implementation
    virtual ConstMessageRef SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg);
@@ -72,6 +74,7 @@ protected:
 private:
    friend class MessageTreeDatabaseObject;
 
+   status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);
 
    Queue<IDatabaseObjectRef> _databaseObjects;

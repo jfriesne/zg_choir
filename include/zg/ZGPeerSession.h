@@ -164,9 +164,6 @@ protected:
      */
    status_t RequestUpdateDatabaseState(uint32 whichDatabase, const MessageRef & databaseUpdateMsg);
 
-   /** Implemented as a no-op, since by default this session doesn't have a gateway */
-   virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
-
    /** This method will be called when a message is sent to us by another peer.
      * A subclass may override this method to catch any user-defined Messages that other
      * peers might want to send it.  The default implementation of this method just prints
