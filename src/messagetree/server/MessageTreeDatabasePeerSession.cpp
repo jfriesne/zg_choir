@@ -87,10 +87,17 @@ printf("ZG RequestDeleteNodes [%s]\n", path());
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestMoveIndexEntry [%s]\n", path());
-return B_UNIMPLEMENTED;
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
+   if (mtDB) return mtDB->RequestMoveIndexEntry(relativePath, optBefore, optFilterRef, flags); 
+   else 
+   {
+      LogTime(MUSCLE_LOG_ERROR, "TreeGateway_RequestMoveIndexEntry:  No database found for path [%s]\n", path());
+      return B_BAD_ARGUMENT;
+   }
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
@@ -151,7 +158,6 @@ MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNode
 
 ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
 {
-printf("K0\n"); seniorDoMsg()->PrintToStream();
    switch(seniorDoMsg()->what)
    {
       case MTDPS_COMMAND_PINGSENIORPEER:

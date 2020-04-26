@@ -58,7 +58,7 @@ protected:
    virtual status_t UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags());
 
    virtual status_t RequestDeleteTreeNodes(const String & path, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
-   virtual status_t RequestMoveTreeIndexEntry(const String & path, const char * optBefore, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestMoveTreeIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
 
    virtual status_t PingTreeServer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
    virtual status_t PingTreeSeniorPeer(uint32 whichDB, const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());

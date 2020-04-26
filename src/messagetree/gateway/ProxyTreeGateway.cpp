@@ -70,9 +70,9 @@ status_t ProxyTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscrib
    return ITreeGatewaySubscriber::RequestDeleteTreeNodes(path, optFilterRef, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::RequestMoveTreeIndexEntry(path, optBefore, flags);
+   return ITreeGatewaySubscriber::RequestMoveTreeIndexEntry(path, optBefore, optFilterRef, flags);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)

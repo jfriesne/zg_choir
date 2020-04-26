@@ -43,9 +43,9 @@ status_t ITreeGatewaySubscriber :: RequestDeleteTreeNodes(const String & path, c
    return GetGateway()->TreeGateway_RequestDeleteNodes(this, path, optFilterRef, flags);
 }
 
-status_t ITreeGatewaySubscriber :: RequestMoveTreeIndexEntry(const String & path, const char * optBefore, TreeGatewayFlags flags) 
+status_t ITreeGatewaySubscriber :: RequestMoveTreeIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_RequestMoveIndexEntry(this, path, optBefore, flags);
+   return GetGateway()->TreeGateway_RequestMoveIndexEntry(this, path, optBefore, optFilterRef, flags);
 }
 
 status_t ITreeGatewaySubscriber :: PingTreeServer(const String & tag, TreeGatewayFlags flags) 

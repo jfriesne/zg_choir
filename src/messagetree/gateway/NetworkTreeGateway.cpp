@@ -17,7 +17,7 @@ enum {
    NTG_COMMAND_UPLOADNODEVALUE,
    NTG_COMMAND_UPLOADNODESUBTREE,
    NTG_COMMAND_REMOVENODES,
-   NTG_COMMAND_REORDERNODES,
+   NTG_COMMAND_MOVEINDEXENTRIES,
 };
 
 // Reply-codes for Messages sent from server to client
@@ -163,15 +163,18 @@ printf("ClientSideNetworkTreeGateway::RequestDeleteNodes [%s]\n", path());
    return HandleBasicCommandAux(NTG_COMMAND_REMOVENODES, path, optFilterRef, flags);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ClientSideNetworkTreeGateway::RequestMoveIndexEntry [%s]\n", path());
-   MessageRef msg = GetMessageFromPool(NTG_COMMAND_REORDERNODES);
+   MessageRef msg = GetMessageFromPool(NTG_COMMAND_MOVEINDEXENTRIES);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   const status_t ret = msg()->CAddString(NTG_NAME_PATH,   path) 
-                      | msg()->CAddString(NTG_NAME_BEFORE, optBefore)
-                      | msg()->CAddFlat(  NTG_NAME_FLAGS, flags);
+   status_t ret;
+   if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
+
+   ret = msg()->CAddString(NTG_NAME_PATH,   path) 
+       | msg()->CAddString(NTG_NAME_BEFORE, optBefore)
+       | msg()->CAddFlat(  NTG_NAME_FLAGS, flags);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
@@ -242,12 +245,12 @@ printf("ServerSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromC
 
    switch(msg()->what)
    {
-      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,     flags); break;
-      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,     flags); break;
-      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,     flags); break;
-      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,     flags); break;
-      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload,   flags); break;
-      case NTG_COMMAND_REORDERNODES:       (void) RequestMoveTreeIndexEntry(path, optBefore, flags); break;
+      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,     flags);            break;
+      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,     flags);            break;
+      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,     flags);            break;
+      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,     flags);            break;
+      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload,   flags);            break;
+      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optBefore, qfRef, flags);     break;
       case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload,   flags, optBefore); break;
 
       case NTG_COMMAND_PING:

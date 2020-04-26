@@ -18,6 +18,7 @@ enum {
 // Command-codes that can be used only in SeniorUpdate()
 enum {
    MTDO_SENIOR_COMMAND_REQUESTDELETENODES = 1836348259, // 'mtsc' 
+   MTDO_SENIOR_COMMAND_MOVEINDEXENTRY,
 };
 
 // Command-codes that can be used only in JuniorUpdate()
@@ -120,11 +121,23 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       case MTDO_SENIOR_COMMAND_REQUESTDELETENODES:
       {
          MessageRef qfMsg;
-         TreeGatewayFlags flags    = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String * pPath      = msg()->GetStringPointer(MTDO_NAME_PATH);
-         ConstQueryFilterRef qfRef = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
+         const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+         const String * pPath         = msg()->GetStringPointer(MTDO_NAME_PATH);
+         ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
          return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+      }
+      break;
+
+      case MTDO_SENIOR_COMMAND_MOVEINDEXENTRY:
+      {
+         MessageRef qfMsg;
+         const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+         const String * pPath         = msg()->GetStringPointer(MTDO_NAME_PATH);
+         const String * optBefore     = msg()->GetStringPointer(MTDO_NAME_BEFORE);
+         ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
+
+         zsh->MoveIndexEntries(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), optBefore, qfRef);
       }
       break;
 
@@ -256,6 +269,22 @@ status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, co
        | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags);
 
    return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
+}
+
+status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
+{
+   MessageRef cmdMsg = GetMessageFromPool(MTDO_SENIOR_COMMAND_MOVEINDEXENTRY);
+   if (cmdMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if ((optFilter())&&(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()).IsError(ret))) return ret;
+
+   ret = cmdMsg()->CAddString(MTDO_NAME_PATH,   path)
+       | cmdMsg()->CAddString(MTDO_NAME_BEFORE, optBefore)
+       | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags);
+
+   return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
+   
 }
 
 status_t MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
