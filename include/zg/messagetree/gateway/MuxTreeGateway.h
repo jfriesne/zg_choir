@@ -63,6 +63,11 @@ private:
    void DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName);
    void DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName);
 
+   String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub) const;
+   String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s) const;
+   ITreeGatewaySubscriber * ParseRegistrationID(const String & ascii) const;
+   ITreeGatewaySubscriber * ParseRegistrationIDPrefix(const String & s, String & retSuffix) const;
+
    Hashtable<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> _subscriberInfos;
    Hashtable<ITreeGatewaySubscriber *, Void> _needsCallbackBatchEndsCall;
    Hashtable<ITreeGatewaySubscriber *, Queue<String> > _requestedSubtrees;

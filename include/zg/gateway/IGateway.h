@@ -18,7 +18,7 @@ class ITreeGateway;
 template<class GatewaySubscriberType, class GatewaySubclass> class IGateway : public NotCopyable
 {
 public:
-   IGateway() {/* empty */}
+   IGateway() : _registrationIDCounter(0) {/* empty */}
    virtual ~IGateway() {MASSERT(_registeredSubscribers.IsEmpty(), "IGateway was destroyed without calling ShutdownGateway() on it first!");}
 
    virtual bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins();    return ret;}
@@ -45,17 +45,34 @@ protected:
    /** Called when our callback-batch counter is just about to go from 1 to 0. */
    virtual void CallbackBatchEnds() {/* empty */}
 
-   /** Returns a read-only reference to our table of currently-registered IGatewaySubscriber objects */
-   const Hashtable<GatewaySubscriberType *, Void> & GetRegisteredSubscribers() const {return _registeredSubscribers;}
+   /** Returns a read-only reference to our table of currently-registered IGatewaySubscriber objects, mapped to their registration IDs */
+   const Hashtable<GatewaySubscriberType *, uint32> & GetRegisteredSubscribers() const {return _registeredSubscribers;}
+
+   /** Returns a read-only reference to our table of current registration IDs, mapped to their subscribers */
+   const Hashtable<uint32, GatewaySubscriberType *> & GetRegistrationIDs() const {return _registrationIDs;}
 
 protected:
-   virtual void   RegisterSubscriber(void * s) {(void) _registeredSubscribers.PutWithDefault(static_cast<GatewaySubscriberType *>(s));}
-   virtual void UnregisterSubscriber(void * s) {(void) _registeredSubscribers.Remove(static_cast<GatewaySubscriberType *>(s));}
+   virtual void RegisterSubscriber(void * s) 
+   {
+      const uint32 registrationID = ++_registrationIDCounter;
+      GatewaySubscriberType * sub = static_cast<GatewaySubscriberType *>(s);
+      if ((_registeredSubscribers.Put(sub, registrationID).IsError())||(_registrationIDs.Put(registrationID, sub).IsError())) MCRASH("IGateway::RegisterSubscriber:  Registration failed!");
+   }
+
+   virtual void UnregisterSubscriber(void * s) 
+   {
+      GatewaySubscriberType * sub = static_cast<GatewaySubscriberType *>(s);
+      uint32 registrationID = 0;  // just to avoid a compiler warning
+      if (_registeredSubscribers.Remove(sub, registrationID).IsOK()) (void) _registrationIDs.Remove(registrationID);
+                                                                else MCRASH("IGateway::UnregisterSubscriber:  Unknown subscriber!");
+   }
    
 private:
    friend class IGatewaySubscriber<GatewaySubclass>;
 
-   Hashtable<GatewaySubscriberType *, Void> _registeredSubscribers;
+   uint32 _registrationIDCounter;
+   Hashtable<GatewaySubscriberType *, uint32> _registeredSubscribers;   // subscriber -> registrationID
+   Hashtable<uint32, GatewaySubscriberType *> _registrationIDs;         // registrationID -> subscriber
    NestCount _commandBatchCounter;
    NestCount _callbackBatchCounter;
 };

@@ -89,52 +89,52 @@ bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
 
 void ProxyTreeGateway :: TreeCallbackBatchBeginning()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchBeginning();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchBeginning();
 }
 
 void ProxyTreeGateway :: TreeCallbackBatchEnding()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchEnding();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchEnding();
 }
 
 void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & nodeMsg)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeUpdated(nodePath, nodeMsg);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeUpdated(nodePath, nodeMsg);
 }
 
 void ProxyTreeGateway :: TreeNodeIndexCleared(const String & nodePath)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexCleared(nodePath);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexCleared(nodePath);
 }
 
 void ProxyTreeGateway :: TreeNodeIndexEntryInserted(const String & nodePath, uint32 insertedAtIndex, const String & nodeName)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryInserted(nodePath, insertedAtIndex, nodeName);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryInserted(nodePath, insertedAtIndex, nodeName);
 }
 
 void ProxyTreeGateway :: TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryRemoved(nodePath, removedAtIndex, nodeName);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryRemoved(nodePath, removedAtIndex, nodeName);
 }
 
 void ProxyTreeGateway :: TreeServerPonged(const String & tag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeServerPonged(tag);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeServerPonged(tag);
 }
 
 void ProxyTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->SubtreesRequestResultReturned(tag, subtreeData);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->SubtreesRequestResultReturned(tag, subtreeData);
 }
 
 void ProxyTreeGateway :: TreeGatewayConnectionStateChanged()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeGatewayConnectionStateChanged();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeGatewayConnectionStateChanged();
 }
 
 void ProxyTreeGateway :: TreeGatewayShuttingDown()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeGatewayShuttingDown();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeGatewayShuttingDown();
 }
 
 };

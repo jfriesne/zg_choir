@@ -3,46 +3,28 @@
 
 namespace zg {
 
-static String NybbleizePointer(const void * ptr)
+String MuxTreeGateway :: GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub) const 
 {
-   String ret; (void) ret.Prealloc(sizeof(ptr)*2);
-
-   const uint8 * bytePtr = (const uint8 *)(&ptr);
-   for (uint32 i=0; i<sizeof(ptr); i++)
-   {
-      uint8 byte = bytePtr[i];
-      ret += ((byte >> 0) & 0x0F) + 'A';
-      ret += ((byte >> 4) & 0x0F) + 'A';
-   }
-   return ret;
+   return String("_%1_").Arg(GetRegisteredSubscribers()[sub]);
 }
 
-static String AddCallbackPointerPrefix(void * ptr, const String & s) {return s.Prepend(NybbleizePointer(ptr)+':');}
-
-static void * DenybbleizePointer(const String & ascii)
+String MuxTreeGateway :: PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s) const
 {
-   void * ptr = NULL;
-   uint8 * bytePtr = (uint8 *)(&ptr);
-   uint32 numBytes = sizeof(ptr);
-   if (ascii.Length() >= numBytes*2)
-   {
-      for (uint32 i=0; i<numBytes; i++)
-      {
-         const uint8 loNybble = (ascii[(i*2)+0]-'A');
-         const uint8 hiNybble = (ascii[(i*2)+1]-'A');
-         bytePtr[i] = ((loNybble<<0)|(hiNybble<<4));
-      }
-   }
-   return ptr;
+   return s.Prepend(GetRegistrationIDPrefix(sub)+':');
 }
 
-void * ParseCallbackPointerPrefix(const String & s, String & retSuffix)
+ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationID(const String & ascii) const
+{
+   return ((ascii.StartsWith('_'))&&(ascii.EndsWith('_'))) ? GetRegistrationIDs()[atol(ascii()+1)] : NULL;
+}
+
+ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const String & s, String & retSuffix) const
 {
    const int32 colIdx = s.IndexOf(':');
-   if (colIdx >= (int32)(sizeof(void *)*2))
+   if (colIdx >= 0)
    {
       retSuffix = s.Substring(colIdx+1);
-      return DenybbleizePointer(s);
+      return ParseRegistrationID(s.Substring(0,colIdx));
    }
    else return NULL;
 }
@@ -162,7 +144,7 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscribe
       status_t ret;
       if (q->AddTail(tag).IsOK(ret))
       {
-         if (ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, AddCallbackPointerPrefix(calledBy, tag), maxDepth, flags).IsOK(ret)) return ret;
+         if (ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, PrependRegistrationIDPrefix(calledBy, tag), maxDepth, flags).IsOK(ret)) return ret;
          q->RemoveTail();  // oops, roll back!
       }
       if (q->IsEmpty()) (void) _requestedSubtrees.Remove(calledBy);
@@ -179,7 +161,7 @@ status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * 
 
 status_t MuxTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
-   return _isConnected ? ITreeGatewaySubscriber::PingTreeServer(AddCallbackPointerPrefix(calledBy, tag), flags) : B_BAD_OBJECT;
+   return _isConnected ? ITreeGatewaySubscriber::PingTreeServer(PrependRegistrationIDPrefix(calledBy, tag), flags) : B_BAD_OBJECT;
 }
 
 // Begin ITreeGatewaySubscriber callback API
@@ -276,14 +258,14 @@ void MuxTreeGateway :: DoIndexNotificationAux(ITreeGatewaySubscriber * sub, cons
 void MuxTreeGateway :: TreeServerPonged(const String & tag)
 {
    String suffix;
-   ITreeGatewaySubscriber * untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseCallbackPointerPrefix(tag, suffix));
-   if (_subscriberInfos.ContainsKey(untrustedSubPtr)) untrustedSubPtr ->TreeServerPonged(suffix);
+   ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
+   if (s) s ->TreeServerPonged(suffix);
 }
 
 void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
    String suffix;
-   ITreeGatewaySubscriber * untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseCallbackPointerPrefix(tag, suffix));
+   ITreeGatewaySubscriber * untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix));
    Queue<String> * q = _requestedSubtrees.Get(untrustedSubPtr);
    if (q)
    {
@@ -301,7 +283,7 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
    if ((filterQueue)&&(filterQueue->HasItems()))
    {
       const Queue<SubscriptionInfo> & q = *filterQueue;
-      String obss; if (optSubscriber) obss = NybbleizePointer(optSubscriber);
+      String obss; if (optSubscriber) obss = GetRegistrationIDPrefix(optSubscriber);
 
       ConstQueryFilterRef sendFilter;  // what we will actually send
       ConstQueryFilterRef unionFilter; // the "matches against any of the following" meta-filter, demand-allocated
@@ -312,7 +294,7 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
          if (optSubscriber == NULL)
          {
             if (obss.HasChars()) obss += ',';
-            obss += NybbleizePointer(nextItem.GetSubscriber());
+            obss += GetRegistrationIDPrefix(nextItem.GetSubscriber());
          }
 
          if (useFilter)
