@@ -14,7 +14,6 @@ class ITreeGateway;
 enum {
    TREE_GATEWAY_FLAG_INDEXED = 0,  /**< If set, the uploaded node should be added to it's parent's ordered-nodes index. */
    TREE_GATEWAY_FLAG_NOREPLY,      /**< If set, no initial reply is desired */
-   TREE_GATEWAY_FLAG_TOSENIOR,     /**< If set in a call to PingTreeServer(), the ping will travel to the senior peer before coming back */
    NUM_TREE_GATEWAY_FLAGS          /**< Guard value */
 };
 DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);
@@ -39,6 +38,7 @@ public:
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName) {(void) path; (void) insertedAtIndex; (void) nodeName;}
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName) {(void) path; (void) removedAtIndex; (void) nodeName;}
    virtual void TreeServerPonged(const String & tag) {(void) tag;}
+   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag) {(void) whichDB; (void) tag;}
 
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData) {(void) tag; (void) subtreeData;}
 
@@ -61,6 +61,7 @@ protected:
    virtual status_t RequestMoveTreeIndexEntry(const String & path, const char * optBefore, TreeGatewayFlags flags = TreeGatewayFlags());
 
    virtual status_t PingTreeServer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t PingTreeSeniorPeer(uint32 whichDB, const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
    virtual bool IsTreeGatewayConnected() const;
 
 private:

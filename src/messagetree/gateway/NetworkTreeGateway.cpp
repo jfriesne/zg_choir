@@ -39,6 +39,7 @@ static const String NTG_NAME_MAXDEPTH    = "ntg_max";
 static const String NTG_NAME_BEFORE      = "ntg_b4";
 static const String NTG_NAME_INDEX       = "ntg_idx";
 static const String NTG_NAME_NAME        = "ntg_nam";
+static const String NTG_NAME_DBIDX       = "ntg_dbi";
 
 ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
    : ProxyTreeGateway(NULL)
@@ -177,12 +178,22 @@ printf("ClientSideNetworkTreeGateway::RequestMoveIndexEntry [%s]\n", path());
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::PingServer [%s]\n", tag());
+   return PingServerAux(tag, flags, -1);
+}
+
+status_t ClientSideNetworkTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+{
+   return PingServerAux(tag, flags, whichDB);
+}
+
+status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, TreeGatewayFlags flags, int32 optWhichDB)
+{
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_PING);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
    status_t ret;
    if (msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
+   if (msg()->CAddInt32(NTG_NAME_DBIDX, optWhichDB, -1).IsError(ret)) return ret;
    return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
@@ -237,8 +248,15 @@ printf("ServerSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromC
       case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,     flags); break;
       case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload,   flags); break;
       case NTG_COMMAND_REORDERNODES:       (void) RequestMoveTreeIndexEntry(path, optBefore, flags); break;
-      case NTG_COMMAND_PING:               (void) PingTreeServer(                 tag,       flags); break;
       case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload,   flags, optBefore); break;
+
+      case NTG_COMMAND_PING:
+      {
+         const int32 whichDB = msg()->GetInt32(NTG_NAME_DBIDX, -1);
+         if (whichDB >= 0) (void) PingTreeSeniorPeer(whichDB, tag, flags);
+                      else (void) PingTreeServer(             tag, flags);
+      }
+      break;
 
       case NTG_COMMAND_REQUESTNODESUBTREES:
       {
@@ -303,6 +321,13 @@ printf("ServerSideNetworkTreeGatewaySubscriber::TreeServerPonged [%s]\n", tag())
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
+void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
+{
+printf("ServerSideNetworkTreeGatewaySubscriber::TreeSeniorPeerPonged [%s]\n", tag());
+   MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->AddInt32(NTG_NAME_DBIDX, whichDB).IsOK())) SendOutgoingMessageToNetwork(msg);
+}
+
 void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
 printf("ServerSideNetworkTreeGatewaySubscriber::SubtreesRequestResultReturned [%s] %p\n", tag(), subtreeData());
@@ -325,8 +350,16 @@ printf("ClientSideNetworkTreeGateway::IncomingTreeMessageReceivedFromServer: ");
       case NTG_REPLY_INDEXCLEARED:       TreeNodeIndexCleared(path);                  break;
       case NTG_REPLY_INDEXENTRYINSERTED: TreeNodeIndexEntryInserted(path, idx, name); break;
       case NTG_REPLY_INDEXENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, idx, name); break;
-      case NTG_REPLY_PONG:               TreeServerPonged(tag);                       break;
       case NTG_REPLY_SUBTREES:           SubtreesRequestResultReturned(tag, payload); break;
+
+      case NTG_REPLY_PONG:
+      {
+         const int32 dbIdx = msg()->GetInt32(NTG_NAME_DBIDX, -1);
+printf("   dbIdx=%i\n", dbIdx);
+         if (dbIdx >= 0) TreeSeniorPeerPonged(dbIdx, tag);
+                    else TreeServerPonged(tag);
+      }
+      break;
 
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!

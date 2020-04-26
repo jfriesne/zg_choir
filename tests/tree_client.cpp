@@ -38,15 +38,25 @@ public:
          break;
 #endif
 
-         case 'p': case 'P':
+         case 'p':
          {
-            const bool isSeniorPing = (cmd[0] == 'P');
-            const String pingTag    = tok();
-            if (PingTreeServer(pingTag, isSeniorPing?TreeGatewayFlags(TREE_GATEWAY_FLAG_TOSENIOR):TreeGatewayFlags()).IsOK(ret)) 
+            const String pingTag = tok();
+            if (PingTreeServer(pingTag).IsOK(ret)) 
             {
-               LogTime(MUSCLE_LOG_INFO, "Sent %s ping with tag [%s]\n", isSeniorPing?"senior":"normal", pingTag());
+               LogTime(MUSCLE_LOG_INFO, "Sent server-ping with tag [%s]\n", pingTag());
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send %s ping with tag [%s] (%s)\n", isSeniorPing?"senior":"normal", pingTag(), ret()); 
+            else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send server-ping with tag [%s] (%s)\n", pingTag(), ret()); 
+         }
+         break;
+ 
+         case 'P':
+         {
+            const String pingTag = tok();
+            if (PingTreeSeniorPeer(0, pingTag).IsOK(ret))   // assuming we want the ping to route through the update-path of database #0, for now 
+            {
+               LogTime(MUSCLE_LOG_INFO, "Sent senior-peer-ping with tag [%s]\n", pingTag());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send senior-peer-ping with tag [%s] (%s)\n", pingTag(), ret()); 
          }
          break;
  
@@ -180,6 +190,11 @@ public:
    virtual void TreeServerPonged(const String & tag)
    {
       LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeServerPonged(%s)\n", tag());
+   }
+
+   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
+   {
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeSeniorPeerPonged(" UINT32_FORMAT_SPEC ", %s)\n", whichDB, tag());
    }
 
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

@@ -28,6 +28,7 @@ public:
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
    virtual void TreeServerPonged(const String & tag);
+   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
 private:

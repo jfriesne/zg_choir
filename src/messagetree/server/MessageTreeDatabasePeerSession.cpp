@@ -4,6 +4,14 @@
 namespace zg
 {
 
+enum {
+   MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp' 
+};
+
+static const String MTDPS_NAME_TAG    = "mtp_tag";
+static const String MTDPS_NAME_SOURCE = "mtp_src";
+static const String MTDPS_NAME_FLAGS  = "mtp_flg";
+
 MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGDatabasePeerSession(zgPeerSettings), ProxyTreeGateway(NULL), _muxGateway(this)
 {
 printf("MessageTreeDatabasePeerSession=%p _muxGateway=%p\n", this, &_muxGateway);
@@ -87,16 +95,23 @@ return B_UNIMPLEMENTED;
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false) TreeServerPonged(tag);
+   return B_NO_ERROR;
+}
+
+status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+{
 printf("ZG PingServer [%s]\n", tag());
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_TOSENIOR))
-   {
-      return B_UNIMPLEMENTED;  // todo implement this!
-   }
-   else 
-   {
-      TreeServerPonged(tag);
-      return B_NO_ERROR;
-   }
+   if (GetSeniorPeerID().IsValid() == false) return B_ERROR("PingSeniorPeer:  Senior peer not available");
+
+printf("PING SENIOR [%s]\n", tag());
+   MessageRef seniorPingMsg = GetMessageFromPool(MTDPS_COMMAND_PINGSENIORPEER);
+   if (seniorPingMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret = seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag)
+                | seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID())
+                | seniorPingMsg()->CAddFlat(MTDPS_NAME_FLAGS,  flags);
+   return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, seniorPingMsg) : ret;
 }
 
 void MessageTreeDatabasePeerSession :: CommandBatchEnds()
@@ -134,4 +149,40 @@ MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNode
    return NULL;
 }
 
+ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
+{
+printf("K0\n"); seniorDoMsg()->PrintToStream();
+   switch(seniorDoMsg()->what)
+   {
+      case MTDPS_COMMAND_PINGSENIORPEER:
+         HandleSeniorPeerPingMessage(whichDatabase, seniorDoMsg);
+         return seniorDoMsg;
+      break;
+
+      default:
+         return ZGDatabasePeerSession::SeniorUpdateLocalDatabase(whichDatabase, dbChecksum, seniorDoMsg);
+   }
+}
+
+status_t MessageTreeDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg)
+{
+   switch(juniorDoMsg()->what)
+   {
+      case MTDPS_COMMAND_PINGSENIORPEER:
+         HandleSeniorPeerPingMessage(whichDatabase, juniorDoMsg);
+         return B_NO_ERROR;
+      break;
+
+      default:
+         return ZGDatabasePeerSession::JuniorUpdateLocalDatabase(whichDatabase, dbChecksum, juniorDoMsg);
+   }
+}
+
+void MessageTreeDatabasePeerSession :: HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg)
+{
+   const String * tag          = msg()->GetStringPointer(MTDPS_NAME_TAG);
+   const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
+   TreeGatewayFlags flags      = msg()->GetFlat<TreeGatewayFlags>(MTDPS_NAME_FLAGS);
+   if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(whichDatabase, *tag);
+}
 };  // end namespace zg

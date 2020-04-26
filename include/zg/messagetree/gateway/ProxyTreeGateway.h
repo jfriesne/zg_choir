@@ -28,6 +28,7 @@ public:
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
    virtual void TreeServerPonged(const String & tag);
+   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeGatewayShuttingDown();
@@ -48,6 +49,7 @@ protected:
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
+   virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & tag, TreeGatewayFlags flags);
    virtual bool TreeGateway_IsGatewayConnected() const;
 };
 

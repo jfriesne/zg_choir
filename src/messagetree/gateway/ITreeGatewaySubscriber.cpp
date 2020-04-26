@@ -53,6 +53,11 @@ status_t ITreeGatewaySubscriber :: PingTreeServer(const String & tag, TreeGatewa
    return GetGateway()->TreeGateway_PingServer(this, tag, flags);
 }
 
+status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(uint32 whichDB, const String & tag, TreeGatewayFlags flags) 
+{
+   return GetGateway()->TreeGateway_PingSeniorPeer(this, whichDB, tag, flags);
+}
+
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 
 {
    return ((GetGateway())&&(GetGateway()->TreeGateway_IsGatewayConnected()));

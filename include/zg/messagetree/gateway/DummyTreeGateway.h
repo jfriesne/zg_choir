@@ -26,6 +26,7 @@ protected:
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber *, const String &, const char *, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
+   virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *, uint32, const String &, TreeGatewayFlags) {return _returnValue;}
    virtual bool TreeGateway_IsGatewayConnected() const {return false;}
 
 private:
