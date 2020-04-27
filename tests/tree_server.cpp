@@ -130,10 +130,26 @@ int main(int argc, char ** argv)
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
 
-   // Add our session objects to the ReflectServer object so that they will be used during program execution
+   // Since we want to be able to run multiple servers at once, we'll keep trying to bind to a port until
+   // we find one that's open.
    status_t ret;
+   uint16 acceptPort = TREE_PEER_SERVER_PORT;
+   while(server.PutAcceptFactory(acceptPort, ReflectSessionFactoryRef(&sssFactory, false)).IsError(ret))
+   {
+      if ((acceptPort-TREE_PEER_SERVER_PORT) >= 1000)
+      {
+         LogTime(MUSCLE_LOG_CRITICALERROR, "Too many ports attempted without success, giving up!\n");
+         return 10;
+      }
+
+      LogTime(MUSCLE_LOG_WARNING, "Couldn't bind to port %u (%s); trying the next port...\n", acceptPort, ret());
+      ret = B_NO_ERROR;  // clear the error-flag
+      acceptPort++;
+   }
+   LogTime(MUSCLE_LOG_INFO, "Listening for incoming client TCP connections (from tree_client) on port %u\n", acceptPort);
+
+   // Add our session objects to the ReflectServer object so that they will be used during program execution
    if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK(ret)))&&
-       (server.PutAcceptFactory(TREE_PEER_SERVER_PORT, ReflectSessionFactoryRef(&sssFactory, false)).IsOK(ret))&&
        (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
