@@ -49,6 +49,13 @@ public:
      */
    status_t GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
+   /** Returns the number of "hops upstream" it takes to get from (path) to this MessageTreeDatabaseObject's root-node.
+     * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
+     * @returns 0 if (path) is our database's root-node, 1 if it is a child of the root-node, 2 if it's a grandchild, and so on.
+     *          Returns -1 if the given path is outside of our root-node's subtree.
+     */
+   int32 GetDistanceFromDatabaseRootToNode(const String & path) const;
+
    status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
    status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
@@ -57,7 +64,7 @@ public:
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
 private:
-   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.Prepend(_rootNodePath);}
+   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? subPath.Prepend(_rootNodePathWithSlash) : _rootNodePathWithoutSlash;}
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
    status_t SeniorUpdateAux(const ConstMessageRef & msg);
    status_t JuniorUpdateAux(const ConstMessageRef & msg);
@@ -73,7 +80,8 @@ private:
 
    MessageRef _assembledJuniorMessage;
 
-   const String _rootNodePath;
+   const String _rootNodePathWithoutSlash;
+   const String _rootNodePathWithSlash;
    uint32 _checksum;  // running checksum
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);

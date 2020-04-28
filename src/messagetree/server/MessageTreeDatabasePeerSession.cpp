@@ -201,13 +201,25 @@ void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op
 
 MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath)
 {
+   uint32 closestDist = MUSCLE_NO_LIMIT;
+   MessageTreeDatabaseObject * ret = NULL;
+
    const uint32 numDBs = GetPeerSettings().GetNumDatabases();
    for (uint32 i=0; i<numDBs; i++)
    {
-      MessageTreeDatabaseObject * mtDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
-      if ((mtDB)&&(mtDB->GetDatabaseSubpath(nodePath, optRetRelativePath).IsOK())) return mtDB;
+      MessageTreeDatabaseObject * nextDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if (nextDB)
+      {
+         const int32 dist = nextDB->GetDistanceFromDatabaseRootToNode(nodePath);
+         if ((dist >= 0)&&(((uint32)dist) < closestDist))
+         {
+            ret         = nextDB;
+            closestDist = dist;
+         }
+      }
    }
-   return NULL;
+
+   return ((ret)&&(ret->GetDatabaseSubpath(nodePath, optRetRelativePath).IsOK())) ? ret : NULL;
 }
 
 ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)

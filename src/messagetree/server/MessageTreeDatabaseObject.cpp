@@ -37,7 +37,8 @@ static const String MTDO_NAME_KEY        = "key";
 
 MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : IDatabaseObject(session, dbIndex)
-   , _rootNodePath(rootNodePath.WithSuffix("/"))
+   , _rootNodePathWithoutSlash(rootNodePath)
+   , _rootNodePathWithSlash(rootNodePath.WithSuffix("/"))
    , _checksum(0)
 {
    // empty
@@ -46,7 +47,7 @@ MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSe
 void MessageTreeDatabaseObject :: SetToDefaultState()
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   if (zsh) (void) zsh->RemoveDataNodes(_rootNodePath);
+   if (zsh) (void) zsh->RemoveDataNodes(_rootNodePathWithoutSlash);
 }
 
 status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & archive)
@@ -54,7 +55,7 @@ status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & arc
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
-   return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePath, true, true);
+   return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePathWithoutSlash, true, true);
 }
 
 status_t MessageTreeDatabaseObject :: SaveToArchive(const MessageRef & archive) const
@@ -62,7 +63,7 @@ status_t MessageTreeDatabaseObject :: SaveToArchive(const MessageRef & archive) 
    const MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
-   const DataNode * rootNode = zsh->GetDataNode(_rootNodePath);
+   const DataNode * rootNode = zsh->GetDataNode(_rootNodePathWithoutSlash);
    return rootNode ? zsh->SaveNodeTreeToMessage(*archive(), rootNode, GetEmptyString(), true) : B_NO_ERROR;
 }
 
@@ -71,7 +72,7 @@ uint32 MessageTreeDatabaseObject :: CalculateChecksum() const
    const MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return 0;
 
-   const DataNode * rootNode = zsh->GetDataNode(_rootNodePath);
+   const DataNode * rootNode = zsh->GetDataNode(_rootNodePathWithoutSlash);
    return rootNode ? rootNode->CalculateChecksum() : 0;
 }
 
@@ -241,7 +242,7 @@ String MessageTreeDatabaseObject :: ToString() const
    if (zsh == NULL) return "<no database peer session!>";
 
    String ret;
-   const DataNode * rootNode = zsh->GetDataNode(_rootNodePath);
+   const DataNode * rootNode = zsh->GetDataNode(_rootNodePathWithoutSlash);
    if (rootNode) DumpDescriptionToString(*rootNode, ret, 0);
    return ret;
 }
@@ -290,14 +291,36 @@ status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path,
 status_t MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
 {
         if (path.StartsWith('/')) return GetDatabaseSubpath(GetPathClause(NODE_DEPTH_USER, path()), optRetRelativePath);   // convert absolute path to session-relative path
-   else if (path.StartsWith(_rootNodePath))
+   else if (path == _rootNodePathWithoutSlash)
    {
-      if (optRetRelativePath) *optRetRelativePath = path.Substring(_rootNodePath.Length());
+      if (optRetRelativePath) optRetRelativePath->Clear();
+      return B_NO_ERROR; 
+   }
+   else if (path.StartsWith(_rootNodePathWithSlash))
+   {
+      if (optRetRelativePath) *optRetRelativePath = path.Substring(_rootNodePathWithSlash.Length());
       return B_NO_ERROR;
    }
    else return B_DATA_NOT_FOUND;
 }
 
+int32 MessageTreeDatabaseObject :: GetDistanceFromDatabaseRootToNode(const String & path) const
+{
+        if (path.StartsWith('/')) return GetDistanceFromDatabaseRootToNode(GetPathClause(NODE_DEPTH_USER, path()));   // convert absolute path to session-relative path
+   else if (path == _rootNodePathWithoutSlash) return 0;
+   else if (path.StartsWith(_rootNodePathWithSlash))
+   {
+      const char * subPath = path()+_rootNodePathWithSlash.Length();
+      uint32 numSlashes = 0;
+      while(subPath)
+      {
+         subPath = strchr(subPath, '/');
+         if (subPath) numSlashes++;
+      }
+      return numSlashes+1;
+   }
+   else return -1;
+}
 // Creates MTDO_COMMAND_UPDATENODEVALUE Messages
 MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const
 {
