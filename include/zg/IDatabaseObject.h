@@ -131,6 +131,18 @@ protected:
      */
    virtual int64 GetToNetworkTimeOffset() const;
 
+   /** Returns true iff we are currently executing in a context where it okay to
+     * update the local database as a senior-peer (e.g. we are running in a function that was
+     * called by the ZGPeerSession's SeniorUpdateLocalDatabase() method, or similar)
+     */
+   bool IsInSeniorDatabaseUpdateContext() const;
+
+   /** Returns true iff we are currently executing in a context where it okay to
+     * update the local database as a junior-peer (e.g. we are running in a function that was
+     * called by the ZGPeerSession's JuniorUpdateLocalDatabase() method, or similar)
+     */
+   bool IsInJuniorDatabaseUpdateContext() const;
+
    // Pass-throughs to the ZGDatabasePeerSession object
    status_t RequestResetDatabaseStateToDefault();
    status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);

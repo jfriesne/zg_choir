@@ -133,4 +133,16 @@ status_t IDatabaseObject :: RequestUpdateDatabaseState(const MessageRef & databa
    return dbps ? dbps->RequestUpdateDatabaseState(_dbIndex, databaseUpdateMsg) : B_BAD_OBJECT;
 }
 
+bool IDatabaseObject :: IsInSeniorDatabaseUpdateContext() const
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->IsInSeniorDatabaseUpdateContext(_dbIndex) : false;
+}
+
+bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext() const
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex) : false;
+}
+
 };  // end namespace zg

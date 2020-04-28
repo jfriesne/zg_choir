@@ -5,6 +5,7 @@
 #include "zg/private/PZGDatabaseStateInfo.h"
 #include "zg/private/PZGDatabaseUpdate.h"
 #include "zg/private/PZGUpdateBackOrderKey.h"
+#include "util/NestCount.h"
 #include "util/PulseNode.h"
 
 namespace zg
@@ -43,6 +44,9 @@ public:
    void BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData);
    ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint64 updateID) const;
 
+   bool IsInJuniorDatabaseUpdateContext() const {return _inJuniorDatabaseUpdate.IsInBatch();}
+   bool IsInSeniorDatabaseUpdateContext() const {return _inSeniorDatabaseUpdate.IsInBatch();}
+
 private:
    void RescanUpdateLog();
    status_t AddDatabaseUpdateToUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);
@@ -78,6 +82,9 @@ private:
    bool _printDatabaseStatesComparisonOnNextReplace;  // for easier debugging
 
    Hashtable<PZGUpdateBackOrderKey, Void> _backorders;  // update-resends we have on order from the senior peer
+
+   NestCount _inJuniorDatabaseUpdate;
+   NestCount _inSeniorDatabaseUpdate;
 };
 
 };  // end namespace zg_private

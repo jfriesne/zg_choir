@@ -45,16 +45,11 @@ public:
      * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
      * @param optRetRelativePath if non-NULL, and this method returns true, then the String this points to will
      *                           be written to with the path to the node that is relative to our root-node (e.g. "foo/bar").
-     * @returns B_NO_ERROR iff the given relative-node-path is within our sub-tree
+     * @returns The distance between path and our root-node, in "hops", on success (e.g. 0 means the path matches our database's
+     *          root-node exactly; 1 means it matches at the level of our database's children, and so on).
+     *          Returns -1 if the path doesn't match anything in our database.
      */
-   status_t GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
-
-   /** Returns the number of "hops upstream" it takes to get from (path) to this MessageTreeDatabaseObject's root-node.
-     * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
-     * @returns 0 if (path) is our database's root-node, 1 if it is a child of the root-node, 2 if it's a grandchild, and so on.
-     *          Returns -1 if the given path is outside of our root-node's subtree.
-     */
-   int32 GetDistanceFromDatabaseRootToNode(const String & path) const;
+   int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
    status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
@@ -75,13 +70,11 @@ private:
    MessageRef CreateUpdateNodeIndexMessage(const String & relativePath, char op, uint32 index, const String & key);
    status_t HandleUpdateNodeIndexMessage(const Message & msg);
 
-   NestCount _inSeniorUpdateNestCount;
-   NestCount _inJuniorUpdateNestCount;
-
    MessageRef _assembledJuniorMessage;
 
    const String _rootNodePathWithoutSlash;
    const String _rootNodePathWithSlash;
+   const uint32 _rootNodeDepth;
    uint32 _checksum;  // running checksum
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);

@@ -130,6 +130,20 @@ public:
      */
    bool IsPeerOnline(const ZGPeerID & peerID) const;
 
+   /** Returns true iff we are currently executing in a context where it okay to
+     * update the specified local database as a senior-peer (e.g. we are running in a function that was
+     * called by the SeniorUpdateLocalDatabase() method, or similar)
+     * @param whichDB index of the database we are inquiring about
+     */
+   bool IsInSeniorDatabaseUpdateContext(uint32 whichDB) const;
+
+   /** Returns true iff we are currently executing in a context where it okay to
+     * update the local database as a junior-peer (e.g. we are running in a function that was
+     * called by the JuniorUpdateLocalDatabase() method, or similar)
+     * @param whichDB index of the database we are inquiring about
+     */
+   bool IsInJuniorDatabaseUpdateContext(uint32 whichDB) const;
+
    /** Gets our current estimate of the one-way network latency between us and the specified peer.
      * @param peerID The peer ID to get the latency of
      * @returns The estimated latency, in microseconds, or MUSCLE_TIME_NEVER if the latency is unknown.

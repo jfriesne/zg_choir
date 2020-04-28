@@ -114,7 +114,10 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
 
          const uint64 startTime = GetRunTime64();
-         (void) _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
+         {
+            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            (void) _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
+         }
          SeniorUpdateCompleted(dbUp, startTime, ConstMessageRef());
          return B_NO_ERROR;
       }
@@ -135,14 +138,20 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
 
          const uint64 startTime = GetRunTime64();
-         if (_master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg) == B_NO_ERROR) 
+         status_t ret;
+         {
+            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
+         }
+     
+         if (ret.IsOK())
          {
             SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg);
             return B_NO_ERROR;
          }
          else
          {
-            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state!\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state! [%s]\n", _whichDatabase, ret());
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
             return B_ERROR;
          }
@@ -164,7 +173,12 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
 
          const uint64 startTime = GetRunTime64();
-         const ConstMessageRef juniorMsg = _master->SeniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
+         ConstMessageRef juniorMsg;
+         {
+            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            juniorMsg = _master->SeniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
+         }
+
          if (juniorMsg())
          {
             SeniorUpdateCompleted(dbUp, startTime, juniorMsg);
@@ -239,6 +253,8 @@ void PZGDatabaseState :: RescanUpdateLog()
 
       if (IsAwaitingFullDatabaseResendReply() == false)  // no point replaying our log if we're waiting for the full DB anyway
       {
+         NestCountGuard ncg(_inJuniorDatabaseUpdate);
+
          // What we want to do is try to move our database state forward as much as possible, hopefully
          // until it matches the current state of the senior peer.  Ideally we have all the PZGDatabaseUpdates
          // in our update-log that will tell us how to do this, but if not (e.g. because we didn't
@@ -483,7 +499,8 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
          if (optUpdateData())
          {
             LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Received full database state from senior peer.\n", _whichDatabase);
-           if (JuniorExecuteDatabaseReplace(*optUpdateData()) == B_NO_ERROR) ScheduleLogContentsRescan();
+            NestCountGuard ncg(_inJuniorDatabaseUpdate);
+            if (JuniorExecuteDatabaseReplace(*optUpdateData()) == B_NO_ERROR) ScheduleLogContentsRescan();
          }
          else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC ":  Senior peer failed to send full database state to us!\n", _whichDatabase, ubok.GetDatabaseUpdateID());  // now what do we do?
       }

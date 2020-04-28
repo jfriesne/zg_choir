@@ -36,12 +36,18 @@ protected:
    // Overridden to call PushSubscriptionMessages()
    virtual void CommandBatchEnds();
 
-   /** Given a nodePath, returns the associated MessageTreeDatabaseObject, or NULL if none matches.
+   /** Given a nodePath, returns the most-closely associated MessageTreeDatabaseObject, or NULL if none matches.
      * @param nodePath a node-path to check (either absolute or session-relative)
      * @param optRetRelativePath if non-NULL, then on success, a database-object-relative sub-path will be written here.
      * @returns a pointer to the appropriate MessageTreeDatabaseObject on success, or NULL on failure (no matching DB found)
      */
    MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath);
+
+   /** Given a nodePath, returns a table of all associated MessageTreeDatabaseObjects and their respective sub-paths.
+     * @param nodePath a node-path to check (either absolute or session-relative; wildcards okay)
+     * @returns a table of matching MessageTreeDatabaseObjects, each paired with the sub-path it should use.
+     */
+   Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath);
 
    // ZGPeerSession API implementation
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);

@@ -1,6 +1,7 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "reflector/StorageReflectSession.h"  // for NODE_DEPTH_USER
+#include "regex/SegmentedStringMatcher.h"
 #include "util/MiscUtilityFunctions.h"  // for AssembleBatchMessage()
 
 namespace zg 
@@ -8,8 +9,7 @@ namespace zg
 
 // Command-codes that can be used in both SeniorUpdate() and JuniorUpdate()
 enum {
-   MTDO_COMMAND_BATCH = 1836344163, // 'mtcc' 
-   MTDO_COMMAND_NOOP,
+   MTDO_COMMAND_NOOP = 1836344163, // 'mtcc' 
    MTDO_COMMAND_UPDATENODEVALUE,
    MTDO_COMMAND_INSERTINDEXENTRY,
    MTDO_COMMAND_REMOVEINDEXENTRY,
@@ -26,19 +26,19 @@ enum {
    MTDO_JUNIOR_COMMAND_UNUSED = 1836345955, // 'mtjc' 
 };
 
-static const String MTDO_NAME_PATH       = "pth";
-static const String MTDO_NAME_PAYLOAD    = "pay";
-static const String MTDO_NAME_FLAGS      = "flg";
-static const String MTDO_NAME_BEFORE     = "be4";
-static const String MTDO_NAME_SUBMESSAGE = "sub";
-static const String MTDO_NAME_FILTER     = "fil";
-static const String MTDO_NAME_INDEX      = "idx";
-static const String MTDO_NAME_KEY        = "key";
+static const String MTDO_NAME_PATH    = "pth";
+static const String MTDO_NAME_PAYLOAD = "pay";
+static const String MTDO_NAME_FLAGS   = "flg";
+static const String MTDO_NAME_BEFORE  = "be4";
+static const String MTDO_NAME_FILTER  = "fil";
+static const String MTDO_NAME_INDEX   = "idx";
+static const String MTDO_NAME_KEY     = "key";
 
 MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : IDatabaseObject(session, dbIndex)
    , _rootNodePathWithoutSlash(rootNodePath)
    , _rootNodePathWithSlash(rootNodePath.WithSuffix("/"))
+   , _rootNodeDepth(GetPathDepth(rootNodePath()))
    , _checksum(0)
 {
    // empty
@@ -80,8 +80,6 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
 {
    GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
 
-   NestCountGuard ncg(_inSeniorUpdateNestCount);
-
    const status_t ret = SeniorUpdateAux(seniorDoMsg);
    if (ret.IsError())
    {
@@ -103,11 +101,11 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
 
    switch(msg()->what)
    {
-      case MTDO_COMMAND_BATCH:
+      case PR_COMMAND_BATCH:
       {
          status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(MTDO_NAME_SUBMESSAGE, i, subMsg).IsOK(); i++) if (SeniorUpdateAux(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (SeniorUpdateAux(subMsg).IsError(ret)) return ret;
       }
       break;
 
@@ -123,10 +121,10 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       {
          MessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String * pPath         = msg()->GetStringPointer(MTDO_NAME_PATH);
+         const String * path          = msg()->GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+         return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
       }
       break;
 
@@ -134,11 +132,11 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       {
          MessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String * pPath         = msg()->GetStringPointer(MTDO_NAME_PATH);
+         const String * path          = msg()->GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
          const String * optBefore     = msg()->GetStringPointer(MTDO_NAME_BEFORE);
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         zsh->MoveIndexEntries(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), optBefore, qfRef);
+         zsh->MoveIndexEntries(DatabaseSubpathToSessionRelativePath(*path), optBefore, qfRef);
       }
       break;
 
@@ -153,7 +151,6 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
 status_t MessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
 {
    GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
-   NestCountGuard ncg(_inJuniorUpdateNestCount);
 
    status_t ret;
    if (JuniorUpdateAux(juniorDoMsg).IsError(ret))
@@ -169,11 +166,11 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
 {
    switch(msg()->what)
    {
-      case MTDO_COMMAND_BATCH:
+      case PR_COMMAND_BATCH:
       {
          status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(MTDO_NAME_SUBMESSAGE, i, subMsg).IsOK(); i++) if (JuniorUpdateAux(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (JuniorUpdateAux(subMsg).IsError(ret)) return ret;
       }
       break;
 
@@ -192,6 +189,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorUpdateAux():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
+         msg()->PrintToStream();
          return B_UNIMPLEMENTED;
    }
 
@@ -200,13 +198,13 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
 
 void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
 {
-   if (_inSeniorUpdateNestCount.IsInBatch())
+   if (IsInSeniorDatabaseUpdateContext())
    {
       // update our assembled-junior-message so the junior-peers can later replicate what we did here
       MessageRef juniorMsg = CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
       if ((juniorMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, juniorMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!\n", this, isBeingRemoved?"removed":"updated", relativePath());
    }
-   else if (_inJuniorUpdateNestCount.IsInBatch() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context!\n", this, relativePath(), isBeingRemoved?"removed":"updated");
+   else if (IsInJuniorDatabaseUpdateContext() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context!\n", this, relativePath(), isBeingRemoved?"removed":"updated");
 
    // Update our running database-checksum to account for the changes being made to our subtree
         if (isBeingRemoved) _checksum -= node.CalculateChecksum();
@@ -220,12 +218,12 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
 
 void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key)
 {
-   if (_inSeniorUpdateNestCount.IsInBatch())
+   if (IsInSeniorDatabaseUpdateContext())
    {
       MessageRef cmdMsg = CreateUpdateNodeIndexMessage(relativePath, op, index, key);
       if ((cmdMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, cmdMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node index update to of [%s]!\n", this, relativePath());
    }
-   else if (_inJuniorUpdateNestCount.IsInBatch() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context!\n", this, relativePath());
+   else if (IsInJuniorDatabaseUpdateContext() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context!\n", this, relativePath());
 
    // Update our running database-checksum to account for the changes being made to our subtree
    switch(op)
@@ -285,42 +283,40 @@ status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path,
        | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags);
 
    return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
-   
 }
 
-status_t MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
+int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
 {
         if (path.StartsWith('/')) return GetDatabaseSubpath(GetPathClause(NODE_DEPTH_USER, path()), optRetRelativePath);   // convert absolute path to session-relative path
+   else if (CanWildcardStringMatchMultipleValues(path()))
+   {
+      // Gotta check the first (_rootNodeDepth) segments of (path) to see if their wildcards can match our path
+      const uint32 pathDepth = GetPathDepth(path());
+      if (pathDepth < _rootNodeDepth) return -1;  // (path) is too short to reach our sub-tree anyway
+
+      const SegmentedStringMatcher ssm(path, true, "/", _rootNodeDepth);
+      if (ssm.Match(_rootNodePathWithoutSlash))
+      {
+         if (optRetRelativePath) *optRetRelativePath = GetPathClause(_rootNodeDepth, path());
+         return (pathDepth-_rootNodeDepth);
+      }
+      else return -1; 
+   }
    else if (path == _rootNodePathWithoutSlash)
    {
       if (optRetRelativePath) optRetRelativePath->Clear();
-      return B_NO_ERROR; 
+      return 0; 
    }
    else if (path.StartsWith(_rootNodePathWithSlash))
    {
-      if (optRetRelativePath) *optRetRelativePath = path.Substring(_rootNodePathWithSlash.Length());
-      return B_NO_ERROR;
-   }
-   else return B_DATA_NOT_FOUND;
-}
-
-int32 MessageTreeDatabaseObject :: GetDistanceFromDatabaseRootToNode(const String & path) const
-{
-        if (path.StartsWith('/')) return GetDistanceFromDatabaseRootToNode(GetPathClause(NODE_DEPTH_USER, path()));   // convert absolute path to session-relative path
-   else if (path == _rootNodePathWithoutSlash) return 0;
-   else if (path.StartsWith(_rootNodePathWithSlash))
-   {
-      const char * subPath = path()+_rootNodePathWithSlash.Length();
-      uint32 numSlashes = 0;
-      while(subPath)
-      {
-         subPath = strchr(subPath, '/');
-         if (subPath) numSlashes++;
-      }
-      return numSlashes+1;
+      String temp = path.Substring(_rootNodePathWithSlash.Length());
+      const uint32 ret = temp.GetNumInstancesOf('/')+1;
+      if (optRetRelativePath) optRetRelativePath->SwapContents(temp);
+      return ret;
    }
    else return -1;
 }
+
 // Creates MTDO_COMMAND_UPDATENODEVALUE Messages
 MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const
 {
@@ -341,12 +337,17 @@ MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & p
 // Handles MTDO_COMMAND_UPDATENODEVALUE Messages
 status_t MessageTreeDatabaseObject :: HandleUpdateNodeMessage(const Message & msg)
 {
-   const String * pPath     = msg.GetStringPointer(MTDO_NAME_PATH);
-   MessageRef optPayload    = msg.GetMessage(MTDO_NAME_PAYLOAD);
-   TreeGatewayFlags flags   = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-   const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
-   return GetMessageTreeDatabasePeerSession()->SetDataNode(DatabaseSubpathToSessionRelativePath(pPath?*pPath:GetEmptyString()), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+   MessageRef optPayload  = msg.GetMessage(MTDO_NAME_PAYLOAD);
+   TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+   const String * path    = msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
+   if (optPayload())
+   {
+      const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);
+      return zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(*path), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+   }
+   else return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
 
 MessageRef MessageTreeDatabaseObject :: CreateUpdateNodeIndexMessage(const String & relativePath, char op, uint32 index, const String & key)

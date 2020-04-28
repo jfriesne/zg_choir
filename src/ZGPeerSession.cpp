@@ -534,6 +534,16 @@ String ZGPeerSession :: GetLocalDatabaseContentsAsString(uint32 /*whichDatabase*
    return "(GetLocalDatabaseContentsAsString unimplemented)";
 }
 
+bool ZGPeerSession :: IsInSeniorDatabaseUpdateContext(uint32 whichDB) const
+{
+   return _databases[whichDB].IsInSeniorDatabaseUpdateContext();
+}
+
+bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB) const
+{
+   return _databases[whichDB].IsInJuniorDatabaseUpdateContext();
+}
+
 String PeerInfoToString(const ConstMessageRef & peerInfo)
 {
    return zg_private::PeerInfoToString(peerInfo);

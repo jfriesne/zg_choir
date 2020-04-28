@@ -91,14 +91,10 @@ return B_UNIMPLEMENTED;
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestDeleteNodes [%s]\n", path());
-   String relativePath;
-   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
-   if (mtDB) return mtDB->RequestDeleteNodes(relativePath, optFilterRef, flags); 
-   else 
-   {
-      LogTime(MUSCLE_LOG_ERROR, "TreeGateway_RequestDeleteNodes:  No database found for path [%s]\n", path());
-      return B_BAD_ARGUMENT;
-   }
+   status_t ret;
+   const Hashtable<MessageTreeDatabaseObject *, String> dbs = GetDatabasesForNodePath(path);
+   for (HashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags);
+   return ret;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -181,6 +177,7 @@ MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNode
 {
    uint32 closestDist = MUSCLE_NO_LIMIT;
    MessageTreeDatabaseObject * ret = NULL;
+   String closestSubpath, temp;
 
    const uint32 numDBs = GetPeerSettings().GetNumDatabases();
    for (uint32 i=0; i<numDBs; i++)
@@ -188,16 +185,33 @@ MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNode
       MessageTreeDatabaseObject * nextDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
       if (nextDB)
       {
-         const int32 dist = nextDB->GetDistanceFromDatabaseRootToNode(nodePath);
+         const int32 dist = nextDB->GetDatabaseSubpath(nodePath, &temp);
          if ((dist >= 0)&&(((uint32)dist) < closestDist))
          {
-            ret         = nextDB;
-            closestDist = dist;
+            ret            = nextDB;
+            closestDist    = dist;
+            closestSubpath = temp;
          }
       }
    }
 
-   return ((ret)&&(ret->GetDatabaseSubpath(nodePath, optRetRelativePath).IsOK())) ? ret : NULL;
+   if (optRetRelativePath) *optRetRelativePath = closestSubpath;
+   return ret;
+}
+
+Hashtable<MessageTreeDatabaseObject *, String> MessageTreeDatabasePeerSession :: GetDatabasesForNodePath(const String & nodePath)
+{
+   Hashtable<MessageTreeDatabaseObject *, String> ret;
+
+   String temp;
+
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      MessageTreeDatabaseObject * nextDB = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if ((nextDB)&&(nextDB->GetDatabaseSubpath(nodePath, &temp) >= 0)) (void) ret.Put(nextDB, temp);
+   }
+   return ret;
 }
 
 ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
