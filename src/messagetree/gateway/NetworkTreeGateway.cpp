@@ -1,7 +1,10 @@
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/messagetree/client/ClientSideNetworkTreeGateway.h"
 #include "zg/messagetree/server/ServerSideNetworkTreeGatewaySubscriber.h"
+#include "reflector/StorageReflectConstants.h"  // for PR_RESULT_*
+#include "reflector/StorageReflectSession.h"    // for NODE_DEPTH_*
 #include "regex/QueryFilter.h"          // for CreateQueryFilter()
+#include "regex/PathMatcher.h"          // for GetPathDepth()
 #include "util/MiscUtilityFunctions.h"  // for AssembleBatchMesssage()
 
 namespace zg {
@@ -266,9 +269,9 @@ printf("ServerSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromC
          Queue<String> queryStrings;
          Queue<ConstQueryFilterRef> queryFilters;
          const String * nextString;
-         for (uint32 i=0; msg()->FindString(NTG_NAME_PATH, i, &nextString) == B_NO_ERROR; i++)
+         for (uint32 i=0; msg()->FindString(NTG_NAME_PATH, i, &nextString).IsOK(); i++)
          {
-            if (queryStrings.AddTail(*nextString) == B_NO_ERROR) 
+            if (queryStrings.AddTail(*nextString).IsOK()) 
             {
                QueryFilterRef nextQF = (i==0) ? qfRef : InstantiateQueryFilterAux(*msg(), i);
                if (nextQF()) (void) queryFilters.AddTail(nextQF);
@@ -341,6 +344,8 @@ printf("ServerSideNetworkTreeGatewaySubscriber::SubtreesRequestResultReturned [%
 status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
 {
 printf("ClientSideNetworkTreeGateway::IncomingTreeMessageReceivedFromServer: "); msg()->PrintToStream();
+   if (muscleInRange(msg()->what, (uint32)BEGIN_PR_RESULTS, (uint32)END_PR_RESULTS)) return IncomingMuscledMessageReceivedFromServer(msg);
+
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag  = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
    const String & name = *(msg()->GetStringPointer(NTG_NAME_NAME, &GetEmptyString()));
@@ -371,5 +376,105 @@ printf("   dbIdx=%i\n", dbIdx);
    return B_NO_ERROR; // If we got here, the Message was handled
 }
 
+status_t ClientSideNetworkTreeGateway :: ConvertPathToSessionRelative(String & path) const
+{
+   if (GetPathDepth(path()) >= NODE_DEPTH_USER)
+   {
+      path = GetPathClause(NODE_DEPTH_USER, path());
+      return B_NO_ERROR;
+   }
+   return B_BAD_ARGUMENT;
+}
+
+// Special handling for PR_RESULT_* values, for cases where it's more convenient to have the server
+// return results in that form than to use our internal NTG_REPLY_* format.
+status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServer(const MessageRef & msg)
+{
+printf("BORK!\n");
+   switch(msg()->what)
+   {
+      case PR_RESULT_DATATREES:
+      {  
+printf("PR_RESULT_DATATREES!\n");
+         String tag;
+         if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, tag).IsOK())
+         {
+            MessageRef sessionRelativeMsg = GetMessageFromPool();
+            if (sessionRelativeMsg())
+            {  
+               // Convert the absolute paths back into user-friendly relative paths
+               for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
+               {  
+                  String sessionRelativeString = iter.GetFieldName();
+                  if (ConvertPathToSessionRelative(sessionRelativeString).IsOK()) (void) msg()->ShareName(iter.GetFieldName(), *sessionRelativeMsg(), sessionRelativeString);
+               }
+               SubtreesRequestResultReturned(tag, sessionRelativeMsg);
+            }
+         }
+      }
+      break;
+
+      case PR_RESULT_DATAITEMS:
+      {
+printf("PR_RESULT_DATAITEMS!\n");
+         // Handle notifications of removed nodes
+         {
+            String nodePath;
+            for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
+               if (ConvertPathToSessionRelative(nodePath).IsOK()) TreeNodeUpdated(nodePath, MessageRef());
+         }
+
+         // Handle notifications of added/updated nodes
+         {
+            MessageRef nodeRef;
+            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
+            {
+               String nodePath = iter.GetFieldName();
+               if (ConvertPathToSessionRelative(nodePath).IsOK())
+                  for (uint32 i=0; msg()->FindMessage(iter.GetFieldName(), i, nodeRef).IsOK(); i++)
+                     TreeNodeUpdated(nodePath, nodeRef);
+            }
+         }
+      }
+      break;
+
+      case PR_RESULT_INDEXUPDATED:
+      {
+printf("PR_RESULT_INDEXUPDATED!\n");
+         // Handle notifications of node-index changes
+         for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_STRING_TYPE); iter.HasData(); iter++)
+         {
+            String sessionRelativePath = iter.GetFieldName();
+            if (ConvertPathToSessionRelative(sessionRelativePath).IsOK())
+            {
+               const char * indexCmd;
+               for (int i=0; msg()->FindString(iter.GetFieldName(), i, &indexCmd).IsOK(); i++)
+               {
+                  const char * colonAt = strchr(indexCmd, ':');
+                  char c = indexCmd[0];
+                  switch(c)
+                  {
+                     case INDEX_OP_CLEARED:       TreeNodeIndexCleared(sessionRelativePath);                                                   break;
+                     case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(sessionRelativePath, atoi(&indexCmd[1]), colonAt?(colonAt+1):""); break;
+                     case INDEX_OP_ENTRYREMOVED:  TreeNodeIndexEntryRemoved(sessionRelativePath,  atoi(&indexCmd[1]), colonAt?(colonAt+1):""); break;
+                  }
+               }
+            }
+         }
+      }
+      break;
+
+      case PR_RESULT_PONG:
+printf("PR_RESULT_PONG!\n");
+         TreeServerPonged(msg()->GetString(NTG_NAME_TAG));
+      break;
+
+      default:
+printf("Doh!\n");
+         return B_UNIMPLEMENTED;  // unhandled/unknowm Message type!
+   }
+
+   return B_NO_ERROR;
+}
 
 }; // end namespace zg

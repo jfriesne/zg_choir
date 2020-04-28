@@ -52,6 +52,8 @@ protected:
 private:
    status_t HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    status_t PingServerAux(const String & tag, TreeGatewayFlags flags, int32 optWhichDB);
+   status_t IncomingMuscledMessageReceivedFromServer(const MessageRef & msg);
+   status_t ConvertPathToSessionRelative(String & path) const;
 
    INetworkMessageSender * _messageSender;
    bool _isConnected;

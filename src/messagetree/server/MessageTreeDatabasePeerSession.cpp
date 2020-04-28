@@ -1,5 +1,6 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/ServerSideMessageUtilityFunctions.h"
 
 namespace zg
 {
@@ -24,74 +25,51 @@ void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID
    if ((wasFullyAttached == false)&&(IAmFullyAttached())) ProxyTreeGateway::TreeGatewayConnectionStateChanged();  // notify our subscribers that we're now connected to the database.
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG AddSubscription [%s] qf=%p\n", subscriptionPath(), optFilterRef());
-   return AddRemoveSubscriptionAux(PR_COMMAND_SETPARAMETERS, subscriptionPath, optFilterRef, flags);
+   MessageRef cmdMsg;
+   const status_t ret = CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg);
+   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
+   return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & /*optFilterRef*/, TreeGatewayFlags /*flags*/)
 {
 printf("ZG RemoveSubscription [%s]\n", subscriptionPath());
-   return AddRemoveSubscriptionAux(PR_COMMAND_REMOVEPARAMETERS, subscriptionPath, optFilterRef, flags);
+   MessageRef cmdMsg;
+   const status_t ret = CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg);
+   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
+   return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags /*flags*/)
 {
 printf("ZG RemoveAllSubscriptions\n");
-   MessageRef msg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
-   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   status_t ret;
-   if (msg()->AddBool("SUBSCRIBE:*", true).IsOK(ret)) MessageReceivedFromGateway(msg, NULL);
+   MessageRef cmdMsg;
+   const status_t ret = CreateMuscleUnsubscribeAllMessage(cmdMsg);
+   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
-{
-   MessageRef msg = GetMessageFromPool(whatCode);
-   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   const String pathArg = ((whatCode == PR_COMMAND_SETPARAMETERS) ? subscriptionPath : EscapeRegexTokens(subscriptionPath)).Prepend("SUBSCRIBE:");  // don't accidentally remove multiple subscriptions due to wildcarding!
-   const status_t ret   = (optFilterRef() ? msg()->CAddArchiveMessage(pathArg, optFilterRef) : msg()->AddBool(pathArg, true))
-                        | msg()->CAddBool(PR_NAME_SUBSCRIBE_QUIETLY, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
-   if (ret.IsOK()) MessageReceivedFromGateway(msg, NULL);
-   return ret;
-}
-
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/)
 {
 printf("ZG RequestNodeValues [%s]\n", queryString());
-
-   MessageRef msg = GetMessageFromPool(PR_COMMAND_GETDATA);
-   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   status_t ret;
-   if ((msg()->AddString(PR_NAME_KEYS, queryString).IsOK(ret)) && (msg()->CAddArchiveMessage(PR_NAME_FILTERS, optFilterRef).IsOK(ret))) MessageReceivedFromGateway(msg, NULL);
+   MessageRef cmdMsg;
+   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg);
+   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags /*flags*/)
 {
-printf("ZG RequestNodeSubtrees [%s]\n", queryStrings.HeadWithDefault()());
-   MessageRef msg = GetMessageFromPool(PR_COMMAND_GETDATATREES);
-   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   status_t ret;
-   uint32 numQueryStrings = queryStrings.GetNumItems();
-   for (uint32 i=0; i<numQueryStrings; i++)
-   {
-      if (msg()->AddString(PR_NAME_KEYS, queryStrings[i]).IsError(ret)) return ret;
-      if ((i<queryFilters.GetNumItems())&&(msg()->CAddArchiveMessage(PR_NAME_FILTERS, queryFilters[i]).IsError(ret))) return ret;
-   }
-   if (msg()->CAddInt32(PR_NAME_MAXDEPTH, maxDepth, MUSCLE_NO_LIMIT).IsError(ret)) return ret;
-   if (msg()->AddString(PR_NAME_TREE_REQUEST_ID, tag).IsError(ret)) return ret;
-
-   MessageReceivedFromGateway(msg, NULL);
+   MessageRef cmdMsg;
+   const status_t ret = CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg);
+   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
 printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
    String relativePath;
@@ -104,13 +82,13 @@ printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * calledBy, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
 printf("ZG UploadNodeSubtree [%s]\n", basePath());
 return B_UNIMPLEMENTED;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestDeleteNodes [%s]\n", path());
    String relativePath;
@@ -123,7 +101,7 @@ printf("ZG RequestDeleteNodes [%s]\n", path());
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
 printf("ZG RequestMoveIndexEntry [%s]\n", path());
    String relativePath;
@@ -136,13 +114,13 @@ printf("ZG RequestMoveIndexEntry [%s]\n", path());
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false) TreeServerPonged(tag);
    return B_NO_ERROR;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
 {
 printf("ZG PingSeniorPeer [%s]\n", tag());
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("PingSeniorPeer:  Senior peer not available");
