@@ -5,6 +5,7 @@
 #include "zg/IDatabaseObject.h"
 #include "zg/messagetree/gateway/MuxTreeGateway.h"
 #include "zg/messagetree/gateway/ProxyTreeGateway.h"
+#include "util/NestCount.h"
 
 namespace zg
 {
@@ -25,6 +26,9 @@ public:
    /** Returns a pointer to the ITreeGateway object that our clients should use to access the ZG-synchronized database data */
    ITreeGateway * GetClientTreeGateway() {return &_muxGateway;}
 
+   virtual status_t AttachedToServer();
+   virtual void AboutToDetachFromServer();
+
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return
@@ -41,13 +45,13 @@ protected:
      * @param optRetRelativePath if non-NULL, then on success, a database-object-relative sub-path will be written here.
      * @returns a pointer to the appropriate MessageTreeDatabaseObject on success, or NULL on failure (no matching DB found)
      */
-   MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath);
+   MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath) const;
 
    /** Given a nodePath, returns a table of all associated MessageTreeDatabaseObjects and their respective sub-paths.
      * @param nodePath a node-path to check (either absolute or session-relative; wildcards okay)
      * @returns a table of matching MessageTreeDatabaseObjects, each paired with the sub-path it should use.
      */
-   Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath);
+   Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath) const;
 
    // ZGPeerSession API implementation
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
@@ -82,10 +86,12 @@ private:
 
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);
+   bool IsInSetupOrTeardown() const {return _inPeerSessionSetupOrTeardown.IsInBatch();}
 
    Queue<IDatabaseObjectRef> _databaseObjects;
 
    MuxTreeGateway _muxGateway;
+   NestCount _inPeerSessionSetupOrTeardown;
 };
 DECLARE_REFTYPES(MessageTreeDatabasePeerSession);
 

@@ -37,7 +37,7 @@ static const String MTDO_NAME_KEY     = "key";
 
 MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : IDatabaseObject(session, dbIndex)
-   , _rootNodePathWithoutSlash(rootNodePath)
+   , _rootNodePathWithoutSlash(rootNodePath.WithoutSuffix("/"))
    , _rootNodePathWithSlash(rootNodePath.WithSuffix("/"))
    , _rootNodeDepth(GetPathDepth(rootNodePath()))
    , _checksum(0)
@@ -47,8 +47,7 @@ MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSe
 
 void MessageTreeDatabaseObject :: SetToDefaultState()
 {
-   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   if (zsh) (void) zsh->RemoveDataNodes(_rootNodePathWithoutSlash);
+   (void) SafeRemoveDataNodes(_rootNodePathWithoutSlash);
 }
 
 status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & archive)
@@ -129,7 +128,7 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
          const String * path          = msg()->GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+         return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
       }
       break;
 
@@ -141,7 +140,7 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
          const String * optBefore     = msg()->GetStringPointer(MTDO_NAME_BEFORE);
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         zsh->MoveIndexEntries(DatabaseSubpathToSessionRelativePath(*path), optBefore, qfRef);
+         SafeMoveIndexEntries(DatabaseSubpathToSessionRelativePath(*path), optBefore, qfRef);
       }
       break;
 
@@ -205,6 +204,12 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
    return B_NO_ERROR;
 }
 
+bool MessageTreeDatabaseObject :: IsInSetupOrTeardown() const
+{
+   const MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return ((zsh)&&(zsh->IsInSetupOrTeardown()));
+}
+
 void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
 {
    if (IsInSeniorDatabaseUpdateContext())
@@ -213,7 +218,11 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
       MessageRef juniorMsg = CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
       if ((juniorMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, juniorMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!\n", this, isBeingRemoved?"removed":"updated", relativePath());
    }
-   else if (IsInJuniorDatabaseUpdateContext() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context!\n", this, relativePath(), isBeingRemoved?"removed":"updated");
+   else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
+   {
+      LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context of database [%s]!\n", this, relativePath(), isBeingRemoved?"removed":"updated", _rootNodePathWithoutSlash());
+      PrintStackTrace();
+   }
 
    // Update our running database-checksum to account for the changes being made to our subtree
         if (isBeingRemoved) _checksum -= node.CalculateChecksum();
@@ -232,7 +241,11 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
       MessageRef cmdMsg = CreateNodeIndexUpdateMessage(relativePath, op, index, key);
       if ((cmdMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, cmdMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node index update to of [%s]!\n", this, relativePath());
    }
-   else if (IsInJuniorDatabaseUpdateContext() == false) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context!\n", this, relativePath());
+   else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
+   {
+      LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context of database [%s]\n", this, relativePath(), _rootNodePathWithoutSlash());
+      PrintStackTrace();
+   }
 
    // Update our running database-checksum to account for the changes being made to our subtree
    switch(op)
@@ -322,9 +335,9 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
       if (optRetRelativePath) optRetRelativePath->Clear();
       return 0; 
    }
-   else if (path.StartsWith(_rootNodePathWithSlash))
+   else if ((_rootNodePathWithoutSlash.IsEmpty())||((path.StartsWith(_rootNodePathWithSlash))))
    {
-      String temp = path.Substring(_rootNodePathWithSlash.Length());
+      String temp = _rootNodePathWithoutSlash.IsEmpty() ? path : path.Substring(_rootNodePathWithSlash.Length());
       const uint32 ret = temp.GetNumInstancesOf('/')+1;
       if (optRetRelativePath) optRetRelativePath->SwapContents(temp);
       return ret;
@@ -400,7 +413,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessage(const Message & ms
       const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);
       return zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(*path), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
    }
-   else return zsh->RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+   else return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
 
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
@@ -442,6 +455,36 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
       LogTime(MUSCLE_LOG_ERROR, "HandleSubtreeUpdateMessage():  No payload found for path [%s]\n", path->Cstr());
       return B_BAD_ARGUMENT;
    }
+}
+
+bool MessageTreeDatabaseObject :: IsNodeInThisDatabase(const DataNode & dn) const
+{
+   const MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return ((zsh)&&(zsh->GetDatabaseForNodePath(dn.GetNodePath(), NULL) == this));
+}
+
+// Like StorageReflectSession::SafeRemoveDataNodes(), except it is careful not to remove data nodes that aren't part of our own database
+status_t MessageTreeDatabaseObject :: SafeRemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef, bool quiet)
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   if (zsh == NULL) return B_BAD_OBJECT;
+
+   const SafeQueryFilter safeQF(this);
+   AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
+   if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
+   return zsh->RemoveDataNodes(nodePath, ConstQueryFilterRef(&andQF, false), quiet);
+}
+
+// Like StorageReflectSession::MoveIndexEntries(), except it is careful not to modify the indices of any data nodes that aren't part of our own database
+status_t MessageTreeDatabaseObject :: SafeMoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef)
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   if (zsh == NULL) return B_BAD_OBJECT;
+
+   const SafeQueryFilter safeQF(this);
+   AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
+   if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
+   return zsh->MoveIndexEntries(nodePath, optBefore, ConstQueryFilterRef(&andQF, false));
 }
 
 }; // end namespace zg

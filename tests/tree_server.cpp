@@ -19,11 +19,25 @@ enum {
 
 // Some example-databases we might want to manage separately from each other
 enum {
-   TREE_DATABASE_USERDATA = 0,  // user's data goes here
-   TREE_DATABASE_SYSTEMINFO,    // system's information about its current state goes here
+   TREE_DATABASE_DEFAULT = 0,   // default database for all nodes that aren't in a more well-defined db-category
+   TREE_DATABASE_SERVERINFO,    // system's information about what servers are currently online
+   TREE_DATABASE_CLIENTINFO,    // system's information about what clients are currently online
    TREE_DATABASE_LOG,           // system log messages go here
    NUM_TREE_DATABASES
 };
+
+// Returns the session-relative sub-path of the sub-tree that each ZG database should control
+static String GetDatabaseRootPath(uint32 whichDB)
+{
+   switch(whichDB)
+   {
+      case TREE_DATABASE_DEFAULT:    return GetEmptyString();   // umbrella DB to handle anything the other ones don't
+      case TREE_DATABASE_SERVERINFO: return "srv";
+      case TREE_DATABASE_CLIENTINFO: return "cli";
+      case TREE_DATABASE_LOG:        return "log";
+      default:                       return "???";
+   }
+}
 
 static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 {
@@ -87,7 +101,7 @@ public:
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
-      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, String("dbs/db_%1").Arg(whichDatabase)));
+      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, GetDatabaseRootPath(whichDatabase)));
       if (ret() == NULL) WARN_OUT_OF_MEMORY;
       return ret;
    }

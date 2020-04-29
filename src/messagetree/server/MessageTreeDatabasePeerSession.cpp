@@ -18,6 +18,36 @@ MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSet
    SetRoutingFlag(MUSCLE_ROUTING_FLAG_REFLECT_TO_SELF, true);  // necessary because we want to be notified about updates to our own subtree
 }
 
+status_t MessageTreeDatabasePeerSession :: AttachedToServer()
+{
+   NestCountGuard ncd(_inPeerSessionSetupOrTeardown);
+   status_t ret = ZGDatabasePeerSession::AttachedToServer();
+
+   // Check for duplicate mount-points
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      const MessageTreeDatabaseObject * idb = dynamic_cast<const MessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      for (uint32 j=0; j<numDBs; j++)
+      {
+         const MessageTreeDatabaseObject * jdb = dynamic_cast<const MessageTreeDatabaseObject *>(GetDatabaseObject(j));
+         if ((idb)&&(jdb)&&(idb != jdb)&&(idb->GetRootPath() == jdb->GetRootPath()))
+         {
+            LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabasePeerSession::AttachedToServer:  Database #" UINT32_FORMAT_SPEC " has the same root-path [%s] as previously added database #" UINT32_FORMAT_SPEC "!\n", i, idb->GetRootPath()(), j);
+            return B_LOGIC_ERROR;
+         } 
+      }
+   }
+
+   return ret;
+}
+
+void MessageTreeDatabasePeerSession :: AboutToDetachFromServer()
+{
+   NestCountGuard ncd(_inPeerSessionSetupOrTeardown);
+   ZGDatabasePeerSession::AboutToDetachFromServer();
+}
+
 void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
    const bool wasFullyAttached = IAmFullyAttached();
@@ -171,7 +201,7 @@ void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op
    }
 }
 
-MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath)
+MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath) const
 {
    uint32 closestDist = MUSCLE_NO_LIMIT;
    MessageTreeDatabaseObject * ret = NULL;
@@ -197,7 +227,7 @@ MessageTreeDatabaseObject * MessageTreeDatabasePeerSession :: GetDatabaseForNode
    return ret;
 }
 
-Hashtable<MessageTreeDatabaseObject *, String> MessageTreeDatabasePeerSession :: GetDatabasesForNodePath(const String & nodePath)
+Hashtable<MessageTreeDatabaseObject *, String> MessageTreeDatabasePeerSession :: GetDatabasesForNodePath(const String & nodePath) const
 {
    Hashtable<MessageTreeDatabaseObject *, String> ret;
 

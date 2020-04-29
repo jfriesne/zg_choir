@@ -51,6 +51,9 @@ public:
      */
    int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
+   /** Returns the session-relative path of the root of this database's subtree (without any trailing slash) */
+   const String & GetRootPath() const {return _rootNodePathWithoutSlash;}
+
    status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
    status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
@@ -60,8 +63,25 @@ public:
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
 private:
-   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? subPath.Prepend(_rootNodePathWithSlash) : _rootNodePathWithoutSlash;}
+   class SafeQueryFilter : public QueryFilter
+   {
+   public:
+      SafeQueryFilter(const MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj) {/* empty */}
+   
+      virtual bool Matches(ConstMessageRef & msg, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
+      virtual uint32 TypeCode() const {return 0;}
+   
+   private:
+      const MessageTreeDatabaseObject * _dbObj;
+   };
+
+   bool IsInSetupOrTeardown() const;
+   bool IsNodeInThisDatabase(const DataNode & node) const;
+   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;}
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
+   status_t SafeRemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false);
+   status_t SafeMoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef);
+
    status_t SeniorUpdateAux(const ConstMessageRef & msg);
    status_t JuniorUpdateAux(const ConstMessageRef & msg);
 

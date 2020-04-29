@@ -25,12 +25,7 @@ public:
    /** Convenience method:  Returns a read/write pointer to the specified IDatabaseObject that we hold. 
      * @param whichDatabase The index of the database that we need an object to represent.
      */
-   IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) {return _databaseObjects[whichDatabase]();}
-
-   /** Convenience method:  Returns a read-only pointer to the specified IDatabaseObject that we hold. 
-     * @param whichDatabase The index of the database that we need an object to represent.
-     */
-   const IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return _databaseObjects[whichDatabase]();}
+   IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return _databaseObjects[whichDatabase]();}
 
 protected:
    /** This will be called as part of the startup sequence.  It should create
