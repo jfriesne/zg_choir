@@ -27,7 +27,6 @@ void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ZG AddSubscription [%s] qf=%p\n", subscriptionPath(), optFilterRef());
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
@@ -36,7 +35,6 @@ printf("ZG AddSubscription [%s] qf=%p\n", subscriptionPath(), optFilterRef());
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & /*optFilterRef*/, TreeGatewayFlags /*flags*/)
 {
-printf("ZG RemoveSubscription [%s]\n", subscriptionPath());
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
@@ -45,7 +43,6 @@ printf("ZG RemoveSubscription [%s]\n", subscriptionPath());
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags /*flags*/)
 {
-printf("ZG RemoveAllSubscriptions\n");
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleUnsubscribeAllMessage(cmdMsg);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
@@ -54,7 +51,6 @@ printf("ZG RemoveAllSubscriptions\n");
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/)
 {
-printf("ZG RequestNodeValues [%s]\n", queryString());
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
@@ -71,7 +67,6 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
-printf("ZG UploadNodeValue [%s] %p\n", path(), optPayload());
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
    if (mtDB) return mtDB->UploadNodeValue(relativePath, optPayload, flags, optBefore);
@@ -90,7 +85,6 @@ return B_UNIMPLEMENTED;
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ZG RequestDeleteNodes [%s]\n", path());
    status_t ret;
    const Hashtable<MessageTreeDatabaseObject *, String> dbs = GetDatabasesForNodePath(path);
    for (HashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags);
@@ -99,7 +93,6 @@ printf("ZG RequestDeleteNodes [%s]\n", path());
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ZG RequestMoveIndexEntry [%s]\n", path());
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
    if (mtDB) return mtDB->RequestMoveIndexEntry(relativePath, optBefore, optFilterRef, flags); 
@@ -118,7 +111,6 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySu
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
 {
-printf("ZG PingSeniorPeer [%s]\n", tag());
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("PingSeniorPeer:  Senior peer not available");
 
    MessageRef seniorPingMsg = GetMessageFromPool(MTDPS_COMMAND_PINGSENIORPEER);

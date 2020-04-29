@@ -5,23 +5,22 @@
 namespace zg
 {
 
-static status_t CreateMuscleSubscribeMessageAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, MessageRef & retMsg)
-{
-   retMsg = GetMessageFromPool(whatCode);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
-
-   const String pathArg = ((whatCode == PR_COMMAND_SETPARAMETERS) ? subscriptionPath : EscapeRegexTokens(subscriptionPath)).Prepend("SUBSCRIBE:");  // don't accidentally remove multiple subscriptions due to wildcarding!
-   return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true)) | retMsg()->CAddBool(PR_NAME_SUBSCRIBE_QUIETLY, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
-}
-
 status_t CreateMuscleSubscribeMessage(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, MessageRef & retMsg)
 {
-   return CreateMuscleSubscribeMessageAux(PR_COMMAND_SETPARAMETERS, subscriptionPath, optFilterRef, flags, retMsg);
+   retMsg = GetMessageFromPool(PR_COMMAND_SETPARAMETERS);
+   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   const String pathArg = subscriptionPath.Prepend("SUBSCRIBE:");
+   return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true)) 
+        | (retMsg()->CAddBool(PR_NAME_SUBSCRIBE_QUIETLY, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)));
 }
 
 status_t CreateMuscleUnsubscribeMessage(const String & subscriptionPath, MessageRef & retMsg)
 {
-   return CreateMuscleSubscribeMessageAux(PR_COMMAND_REMOVEPARAMETERS, subscriptionPath, ConstQueryFilterRef(), TreeGatewayFlags(), retMsg);
+   retMsg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
+   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   return retMsg()->AddString(PR_NAME_KEYS, EscapeRegexTokens(subscriptionPath).Prepend("SUBSCRIBE:"));  // EscapeRegexTokens() is here to avoid accidentally removing other subscription-paths that the wildcards happen to match to
 }
 
 status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)
@@ -29,7 +28,7 @@ status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)
    retMsg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
    if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   return retMsg()->AddBool("SUBSCRIBE:*", true);
+   return retMsg()->AddString(PR_NAME_KEYS, "SUBSCRIBE:*");
 }
 
 status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg)
@@ -43,7 +42,6 @@ status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const 
 
 status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, MessageRef & retMsg)
 {
-printf("ZG RequestNodeSubtrees [%s]\n", queryStrings.HeadWithDefault()());
    retMsg = GetMessageFromPool(PR_COMMAND_GETDATATREES);
    if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
 

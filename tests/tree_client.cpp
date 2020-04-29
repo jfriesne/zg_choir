@@ -37,6 +37,21 @@ public:
             ref()->AddString("info", "This is a user message");
          break;
 #endif
+         case '?':
+         {
+            LogTime(MUSCLE_LOG_INFO, "tree_client command set is as follows:\n");
+            LogTime(MUSCLE_LOG_INFO, "  p <tag>      -- Ping the client's local server with the given tag-string\n"); 
+            LogTime(MUSCLE_LOG_INFO, "  P <tag>      -- Ping the senior peer with the given tag-string\n"); 
+            LogTime(MUSCLE_LOG_INFO, "  s dbs/db_0/x -- set a DataNode at the given path\n");
+            LogTime(MUSCLE_LOG_INFO, "  d dbs/db_0/* -- delete one or more nodes or node-subtrees\n");
+            LogTime(MUSCLE_LOG_INFO, "  g dbs/db_*/* -- submit a one-time query for the current state of nodes matching this path\n");
+            LogTime(MUSCLE_LOG_INFO, "  G dbs/db_0   -- submit a one-time query for the node-subtree at the given path\n");
+            LogTime(MUSCLE_LOG_INFO, "  S dbs/db_*/* -- subscribe to nodes matching this path\n");
+            LogTime(MUSCLE_LOG_INFO, "  U dbs/**/*   -- unsubscribe from nodes matching this path\n");
+            LogTime(MUSCLE_LOG_INFO, "  Z            -- unsubscribe from all this client's subscriptions\n");
+            LogTime(MUSCLE_LOG_INFO, "  ?            -- print this text\n");
+         }
+         break;
 
          case 'p':
          {
@@ -100,18 +115,18 @@ public:
 
          case 'G':
          {
-            const String path = tok();
+            const String path        = tok();
+            const String tag         = tok();
             const String maxDepthStr = tok();
-            const String tag = tok();
           
             const uint32 maxDepth = ((maxDepthStr.HasChars())&&(muscleInRange(maxDepthStr[0], '0', '9'))) ? atol(maxDepthStr()) : MUSCLE_NO_LIMIT;
 
             Queue<String> paths; (void) paths.AddTail(path);
             if (RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), tag, maxDepth).IsOK(ret))
             {
-               LogTime(MUSCLE_LOG_INFO, "Requested download of subtrees(s) matching [%s]\n", path());
+               LogTime(MUSCLE_LOG_INFO, "Requested download of subtrees(s) matching [%s], using tag [%s] and maxDepth=" UINT32_FORMAT_SPEC "\n", path(), tag(), maxDepth);
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Error requesting download of subtrees matching path [%s] (%s)\n", path(), ret());
+            else LogTime(MUSCLE_LOG_ERROR, "Error requesting download of subtrees matching path [%s] using tag [%s] (%s)\n", path(), tag(), ret());
          }
          break;
 
@@ -205,7 +220,13 @@ public:
 
    virtual void TreeGatewayConnectionStateChanged()
    {
-      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TextCommandReceived(%i)\n", IsTreeGatewayConnected());
+      const bool isConnected = IsTreeGatewayConnected();
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayConnectionStateChanged(%s)\n", isConnected?"to CONNECTED":"to DISCONNECTED");
+      if (isConnected == false)
+      {
+         LogTime(MUSCLE_LOG_CRITICALERROR, "Connection to server lost, exiting!\n");
+         EndServer();  // tell our local ReflectServer::ServerProcessLoop() call to return so that this client process can exit cleanly
+      }
    }
 
    virtual void TreeGatewayShuttingDown()
@@ -253,6 +274,8 @@ int main(int argc, char ** argv)
    if ((server.AddNewSession(ZGStdinSessionRef(&stdinSession, false)).IsOK(ret))&&(server.AddNewConnectSession(AbstractReflectSessionRef(&clientSession, false), host, port).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
+
+      LogTime(MUSCLE_LOG_INFO, "tree_client is accepting commands on stdin.  Enter '?' for a list of available commands.\n");
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
       if (ret == B_NO_ERROR) 
       {

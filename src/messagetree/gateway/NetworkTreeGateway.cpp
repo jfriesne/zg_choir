@@ -59,7 +59,6 @@ ClientSideNetworkTreeGateway :: ~ClientSideNetworkTreeGateway()
 
 void ClientSideNetworkTreeGateway :: SetNetworkConnected(bool isConnected)
 {
-printf("ClientSideNetworkTreeGateway::SetNetworkConnected %i\n", isConnected);
    if (isConnected != _isConnected)
    {
       _isConnected = isConnected;
@@ -76,7 +75,6 @@ status_t ClientSideNetworkTreeGateway :: SendOutgoingMessageToNetwork(const Mess
 void ClientSideNetworkTreeGateway :: CommandBatchEnds()
 {
    ProxyTreeGateway::CommandBatchEnds();
-printf("ClientSideNetworkTreeGateway::CommandBatchEnds %p\n", _outgoingBatchMsg());
    if (_outgoingBatchMsg())
    {
       (void) _messageSender->SendOutgoingMessageToNetwork(_outgoingBatchMsg);
@@ -86,19 +84,16 @@ printf("ClientSideNetworkTreeGateway::CommandBatchEnds %p\n", _outgoingBatchMsg(
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::AddSubscription [%s]\n", subscriptionPath());
    return HandleBasicCommandAux(NTG_COMMAND_ADDSUBSCRIPTION, subscriptionPath, optFilterRef, flags);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RemoveSubscription [%s]\n", subscriptionPath());
    return HandleBasicCommandAux(NTG_COMMAND_REMOVESUBSCRIPTION, subscriptionPath, optFilterRef, flags);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RemoveAllSubscriptions\n");
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_REMOVEALLSUBSCRIPTIONS);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
@@ -108,13 +103,11 @@ printf("ClientSideNetworkTreeGateway::RemoveAllSubscriptions\n");
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RequestNodeValues [%s]\n", queryString());
    return HandleBasicCommandAux(NTG_COMMAND_REQUESTNODEVALUES, queryString, optFilterRef, flags);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RequestNodeSubtrees [%s]\n", queryStrings.HeadWithDefault()());
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_REQUESTNODESUBTREES);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
@@ -135,7 +128,6 @@ printf("ClientSideNetworkTreeGateway::RequestNodeSubtrees [%s]\n", queryStrings.
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
 {
-printf("ClientSideNetworkTreeGateway::UploadNodeValue [%s] %p [%s[\n", path(), optPayload(), optBefore);
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODEVALUE);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
@@ -149,7 +141,6 @@ printf("ClientSideNetworkTreeGateway::UploadNodeValue [%s] %p [%s[\n", path(), o
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::UploadNodeSubtree [%s]\n", basePath());
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODESUBTREE);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
@@ -162,13 +153,11 @@ printf("ClientSideNetworkTreeGateway::UploadNodeSubtree [%s]\n", basePath());
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RequestDeleteNodes [%s]\n", path());
    return HandleBasicCommandAux(NTG_COMMAND_REMOVENODES, path, optFilterRef, flags);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-printf("ClientSideNetworkTreeGateway::RequestMoveIndexEntry [%s]\n", path());
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MOVEINDEXENTRIES);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
@@ -238,7 +227,6 @@ QueryFilterRef ServerSideNetworkTreeGatewaySubscriber :: InstantiateQueryFilterA
 
 status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromClient(const MessageRef & msg)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromClient: "); msg()->PrintToStream();
    TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS);
    QueryFilterRef qfRef   = InstantiateQueryFilterAux(*msg(), 0);
    const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
@@ -290,27 +278,23 @@ printf("ServerSideNetworkTreeGatewaySubscriber::IncomingTreeMessageReceivedFromC
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeNodeUpdated [%s]\n", nodePath());
    MessageRef msg = GetMessageFromPool(NTG_REPLY_NODEUPDATED);
    if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, nodePath).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeNodeIndexCleared [%s]\n", path());
    MessageRef msg = GetMessageFromPool(NTG_REPLY_INDEXCLEARED);
    if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeNodeIndexEntryInserted [%s]\n", path());
    HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYINSERTED, path, insertedAtIndex, nodeName);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeNodeIndexEntryRemoved [%s]\n", path());
    HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYREMOVED, path, removedAtIndex, nodeName);
 }
 
@@ -322,28 +306,24 @@ void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 wha
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeServerPonged(const String & tag)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeServerPonged [%s]\n", tag());
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::TreeSeniorPeerPonged [%s]\n", tag());
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->AddInt32(NTG_NAME_DBIDX, whichDB).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
-printf("ServerSideNetworkTreeGatewaySubscriber::SubtreesRequestResultReturned [%s] %p\n", tag(), subtreeData());
    MessageRef msg = GetMessageFromPool(NTG_REPLY_SUBTREES);
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, subtreeData).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
 {
-printf("ClientSideNetworkTreeGateway::IncomingTreeMessageReceivedFromServer: "); msg()->PrintToStream();
    if (muscleInRange(msg()->what, (uint32)BEGIN_PR_RESULTS, (uint32)END_PR_RESULTS)) return IncomingMuscledMessageReceivedFromServer(msg);
 
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
@@ -363,7 +343,6 @@ printf("ClientSideNetworkTreeGateway::IncomingTreeMessageReceivedFromServer: ");
       case NTG_REPLY_PONG:
       {
          const int32 dbIdx = msg()->GetInt32(NTG_NAME_DBIDX, -1);
-printf("   dbIdx=%i\n", dbIdx);
          if (dbIdx >= 0) TreeSeniorPeerPonged(dbIdx, tag);
                     else TreeServerPonged(tag);
       }
@@ -390,12 +369,10 @@ status_t ClientSideNetworkTreeGateway :: ConvertPathToSessionRelative(String & p
 // return results in that form than to use our internal NTG_REPLY_* format.
 status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServer(const MessageRef & msg)
 {
-printf("BORK!\n");
    switch(msg()->what)
    {
       case PR_RESULT_DATATREES:
       {  
-printf("PR_RESULT_DATATREES!\n");
          String tag;
          if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, tag).IsOK())
          {
@@ -416,7 +393,6 @@ printf("PR_RESULT_DATATREES!\n");
 
       case PR_RESULT_DATAITEMS:
       {
-printf("PR_RESULT_DATAITEMS!\n");
          // Handle notifications of removed nodes
          {
             String nodePath;
@@ -440,7 +416,6 @@ printf("PR_RESULT_DATAITEMS!\n");
 
       case PR_RESULT_INDEXUPDATED:
       {
-printf("PR_RESULT_INDEXUPDATED!\n");
          // Handle notifications of node-index changes
          for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_STRING_TYPE); iter.HasData(); iter++)
          {
@@ -465,12 +440,10 @@ printf("PR_RESULT_INDEXUPDATED!\n");
       break;
 
       case PR_RESULT_PONG:
-printf("PR_RESULT_PONG!\n");
          TreeServerPonged(msg()->GetString(NTG_NAME_TAG));
       break;
 
       default:
-printf("Doh!\n");
          return B_UNIMPLEMENTED;  // unhandled/unknowm Message type!
    }
 
