@@ -79,8 +79,14 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGate
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
-printf("ZG UploadNodeSubtree [%s]\n", basePath());
-return B_UNIMPLEMENTED;
+   String relativePath;
+   MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(basePath, &relativePath);
+   if (mtDB) return mtDB->UploadNodeSubtree(relativePath, valuesMsg, flags);
+   else 
+   {
+      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeSubtree():  No database found for path [%s]!\n", basePath());
+      return B_BAD_ARGUMENT;
+   }
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)

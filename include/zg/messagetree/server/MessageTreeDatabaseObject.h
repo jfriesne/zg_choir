@@ -52,6 +52,7 @@ public:
    int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
    status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
+   status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
    status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
 
@@ -65,10 +66,12 @@ private:
    status_t JuniorUpdateAux(const ConstMessageRef & msg);
 
    MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const;
-   status_t HandleUpdateNodeMessage(const Message & msg);
+   MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key);
+   MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags) const;
 
-   MessageRef CreateUpdateNodeIndexMessage(const String & relativePath, char op, uint32 index, const String & key);
-   status_t HandleUpdateNodeIndexMessage(const Message & msg);
+   status_t HandleNodeUpdateMessage(const Message & msg);
+   status_t HandleNodeIndexUpdateMessage(const Message & msg);
+   status_t HandleSubtreeUpdateMessage(const Message & msg);
 
    MessageRef _assembledJuniorMessage;
 
