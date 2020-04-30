@@ -1,0 +1,607 @@
+/* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
+
+#include "zg/SystemDiscoveryClient.h"
+#include "dataio/UDPSocketDataIO.h"
+#include "iogateway/SignalMessageIOGateway.h"
+#include "reflector/StorageReflectConstants.h"   // for PR_COMMAND_PING
+#include "reflector/ReflectServer.h"
+#include "system/DetectNetworkConfigChangesSession.h"
+#include "system/Thread.h"
+#include "util/NetworkUtilityFunctions.h"    // for GetDiscoveryMulticastAddresses()
+
+namespace zg {
+
+class DiscoveryClientManagerSession;
+
+class DiscoverySession : public AbstractReflectSession
+{
+public:
+   DiscoverySession(const IPAddressAndPort & multicastIAP, DiscoveryClientManagerSession * manager)
+      : _multicastIAP(multicastIAP)
+      , _manager(manager)
+   {
+      // empty
+   }
+
+   virtual ~DiscoverySession()
+   {
+      // empty
+   }
+
+   virtual ConstSocketRef CreateDefaultSocket()
+   {
+      _receiveBuffer = GetByteBufferFromPool(4*1024);
+      if (_receiveBuffer())
+      {
+         ConstSocketRef udpSocket = CreateUDPSocket();
+         uint16 retPort;
+         if ((udpSocket())&&(BindUDPSocket(udpSocket, 0, &retPort) == B_NO_ERROR)&&(SetSocketBlockingEnabled(udpSocket, false) == B_NO_ERROR))
+         {
+            if (AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()) != B_NO_ERROR) return ConstSocketRef();
+            return udpSocket;
+         }
+      }
+      return ConstSocketRef();
+   }
+
+   virtual DataIORef CreateDataIO(const ConstSocketRef & s)
+   {
+      UDPSocketDataIO * udpIO = new UDPSocketDataIO(s, false);
+      DataIORef ret(udpIO);
+      (void) udpIO->SetPacketSendDestination(_multicastIAP);
+      return ret;
+   }
+
+   virtual void MessageReceivedFromSession(AbstractReflectSession & /*from*/, const MessageRef & msg, void * /*userData*/)
+   {
+      AddOutgoingMessage(msg);
+   }
+
+   virtual int32 DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
+
+   virtual int32 DoOutput(uint32 maxBytes)
+   {
+      TCHECKPOINT;
+
+      DataIO & udpIO = *GetGateway()()->GetDataIO()();
+      Queue<MessageRef> & oq = GetGateway()()->GetOutgoingMessageQueue();
+      uint32 ret = 0;
+      while((oq.HasItems())&&(ret < maxBytes))
+      {
+         ByteBufferRef bufRef = oq.Head()()->FlattenToByteBuffer();
+         if (bufRef())
+         {
+            const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
+            if (bytesSent > 0) 
+            {
+               ret += bytesSent;
+               if (_debugDiscovery) printf("DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
+            }
+         }
+         oq.RemoveHead();
+      }
+      return ret;
+   }
+
+   virtual void MessageReceivedFromGateway(const muscle::MessageRef&, void*) {/* empty */}
+
+private:
+   const IPAddressAndPort _multicastIAP;
+   DiscoveryClientManagerSession * _manager;
+   
+   ByteBufferRef _receiveBuffer;
+};
+DECLARE_REFTYPES(DiscoverySession);
+
+// This class will set up new DiscoverySessions as necessary when the network config changes.
+class DiscoveryClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
+{
+public:
+   DiscoveryClientManagerSession(DiscoveryImplementation * imp, uint64 pingInterval) 
+      : _imp(imp)
+      , _pingInterval(pingInterval)
+      , _nextPingTime(GetRunTime64())
+      , _updateResultSetPending(false)
+   {
+      // empty
+   }
+
+   virtual AbstractMessageIOGatewayRef CreateGateway()
+   {
+      AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
+      if (ret() == NULL) WARN_OUT_OF_MEMORY;
+      return ret;
+   }
+
+   virtual status_t AttachedToServer()
+   {
+      status_t ret;
+      if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+
+      // I specify a filter on daemon type because I want to avoid getting results from wtrxd
+      _pingMsg = GetMessageFromPool(PR_COMMAND_PING);
+      if (_pingMsg() == NULL) RETURN_OUT_OF_MEMORY;
+      if (_pingMsg()->AddInt32(CUEPROJECT_NAME_DAEMONTYPE, DAEMON_DCUED).IsError(ret)) return ret;
+
+      AddNewDiscoverySessions();
+      return B_NO_ERROR;
+   }
+
+   virtual void AboutToDetachFromServer()
+   {  
+      EndExistingDiscoverySessions();
+      AbstractReflectSession::AboutToDetachFromServer();
+   }
+
+   virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & /*optInterfaceNames*/)
+   {  
+      LogTime(MUSCLE_LOG_DEBUG, "DiscoveryClientManagerSession:  NetworkInterfacesChanged!  Recreating DiscoverySessions...\n");
+      EndExistingDiscoverySessions();
+      AddNewDiscoverySessions();
+   }
+
+   virtual uint64 GetPulseTime(const PulseArgs & args)
+   {
+      return _updateResultSetPending ? args.GetCallbackTime() : muscleMin(_nextPingTime, AbstractReflectSession::GetPulseTime(args));
+   }
+
+   virtual void Pulse(const PulseArgs & args)
+   {
+      const uint64 now = args.GetCallbackTime();
+
+      const int64 lateBy = now-args.GetScheduledTime();
+      if (lateBy >= _pingInterval) 
+      {
+         // If our timing has been thrown way off because of App Nap, then we'll just pretend we got an incoming network 
+         // packet from everybody.  That way we avoid spurious system-is-gone updates due to Apple not waking up our
+         // process at the time(s) we asked it to be awoken.
+         const uint64 expTime = GetExpirationTime(now);
+         for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+            iter.GetValue().Update(iter.GetValue().GetData(), expTime);
+      }
+
+      if (now >= _nextPingTime)
+      {
+         BroadcastToAllSessionsOfType<DiscoverySession>(_pingMsg);
+
+         for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+         {
+            if (now >= iter.GetValue().GetExpirationTime())
+            {
+               (void) _rawDiscoveryResults.Remove(iter.GetKey());  
+               _updateResultSetPending = true;
+            }
+         }
+
+         _nextPingTime = now+_pingInterval;
+      }
+
+      if (_updateResultSetPending)
+      {
+         _updateResultSetPending = false;
+         UpdateResultSet();
+      }
+   }
+
+   virtual void ComputerIsAboutToSleep();
+   virtual void ComputerJustWokeUp();
+
+   void RawDiscoveryResultReceived(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, uint32 serialNumber, const MessageRef & dataMsg)
+   {
+      RawDiscoveryResult * r = _rawDiscoveryResults.GetOrPut(RawDiscoveryKey(localIAP, sourceIAP, serialNumber));
+      if ((r)&&(r->Update(dataMsg, GetExpirationTime(GetRunTime64())) == B_NO_ERROR)&&(_updateResultSetPending == false))
+      {
+         _updateResultSetPending = true;
+         InvalidatePulseTime();
+      }
+   }
+
+   virtual void MessageReceivedFromGateway(const MessageRef &, void *);
+
+private:
+   /** Given a base time at which a packet was received (e.g. as returned by GetRunTime64(), returns the time in the near future when
+     * the source that packet was received from shoudl be expired from the active-sources list, if no further packets are received
+     * from that source.
+     */
+   uint64 GetExpirationTime(uint64 baseTime) const {return (baseTime == MUSCLE_TIME_NEVER) ? baseTime : (baseTime+(3*_pingInterval));}
+
+   void EndExistingDiscoverySessions()
+   {
+      // First, tell any existing DiscoverySessions to go away
+      for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+      {  
+         DiscoverySession * lds = dynamic_cast<DiscoverySession *>(iter.GetValue()());
+         if (lds) lds->EndSession();
+      }
+   }
+
+   void AddNewDiscoverySessions()
+   {
+      // Now set up new DiscoverySessions based on our current network config
+      Queue<IPAddressAndPort> q;
+      if (GetDiscoveryMulticastAddresses(q) == B_NO_ERROR)
+      {
+         for (uint32 i=0; i<q.GetNumItems(); i++)
+         {
+            // FogBugz #5617:  Use a different socket for each IP address, to avoid Mac routing problems
+            status_t ret;
+            DiscoverySessionRef ldsRef(newnothrow DiscoverySession(q[i], this));
+                 if (ldsRef() == NULL) WARN_OUT_OF_MEMORY; 
+            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", q[i].ToString()(), ret());
+         }
+      }
+   }
+
+   Hashtable<String, MessageRef> CalculateCookedResults() const
+   {
+      Hashtable<String, Hashtable<uint32, MessageRef> > systemNameToSerialNumberToInfo;
+
+      // Recompile our results, indexed by system name and serial number
+      for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+      {
+         const MessageRef & result = iter.GetValue().GetData();
+
+         const String * systemName;
+         uint32 serialNumber;
+         if ((result()->FindInt32(CUEPROJECT_NAME_SERIALNUMBER, serialNumber) == B_NO_ERROR)&&
+             (result()->FindString(CUEPROJECT_NAME_SYSTEMNAME, &systemName)   == B_NO_ERROR))
+         {
+            Hashtable<uint32, MessageRef> * systemTable = systemNameToSerialNumberToInfo.GetOrPut(*systemName);
+            if (systemTable) (void) systemTable->Put(serialNumber, result);
+         }
+      }
+ 
+      // Convert results into a set of Messages, one per system
+      Hashtable<String, MessageRef> ret;
+      for (HashtableIterator<String, Hashtable<uint32, MessageRef> > iter(systemNameToSerialNumberToInfo); iter.HasData(); iter++)
+      {
+         MessageRef systemMsg = GetMessageFromPool();
+         if (systemMsg())
+         {
+            for (HashtableIterator<uint32, MessageRef> subIter(iter.GetValue()); subIter.HasData(); subIter++) (void) systemMsg()->AddMessage(CUEPROJECT_NODENAME_MODULEINFO, subIter.GetValue());
+            (void) ret.Put(iter.GetKey(), systemMsg);
+         }
+      }
+
+      return ret;
+   }
+
+   void UpdateResultSet();
+
+   class RawDiscoveryKey
+   {
+   public:
+      RawDiscoveryKey() {/* empty */}
+      RawDiscoveryKey(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, uint32 serialNumber) : _localIAP(localIAP), _sourceIAP(sourceIAP), _serialNumber(serialNumber) {/* empty */}
+
+      bool operator == (const RawDiscoveryKey & rhs) const {return ((_localIAP == rhs._localIAP)&&(_sourceIAP == rhs._sourceIAP)&&(_serialNumber == rhs._serialNumber));}
+      bool operator != (const RawDiscoveryKey & rhs) const {return !(*this == rhs);}
+
+      bool operator < (const RawDiscoveryKey & rhs) const
+      {
+         if (_localIAP  < rhs._localIAP) return true;
+         if (_localIAP == rhs._localIAP)
+         {
+            if (_sourceIAP  < rhs._sourceIAP) return true;
+            if (_sourceIAP == rhs._sourceIAP) return (_serialNumber < rhs._serialNumber);
+         }
+         return false;
+      }
+
+      bool operator > (const RawDiscoveryKey & rhs) const {return ((*this != rhs)&&(!(*this < rhs)));}
+    
+      uint32 HashCode() const {return _localIAP.HashCode() + (3*_sourceIAP.HashCode()) + _serialNumber;}
+
+      String ToString() const {return String("RDK:  local=[%1] source=[%2] serial=[%3]").Arg(_localIAP.ToString()).Arg(_sourceIAP.ToString()).Arg(_serialNumber);}
+
+   private:
+      IPAddressAndPort _localIAP;   // the address-and-port on the local network interface on this machine
+      IPAddressAndPort _sourceIAP;  // the address-and-port on the the remote machine
+      uint32 _serialNumber;         // also serial number, since in the FullVirtualD-Mitri case, the above can all be equal
+   };
+
+   class RawDiscoveryResult
+   {
+   public:
+      RawDiscoveryResult() : _expirationTime(0) {/* empty */}
+      RawDiscoveryResult(const MessageRef & data, uint64 expirationTime) : _data(data), _expirationTime(expirationTime) {/* empty */}
+
+      // Returns B_NO_ERROR if anything actually changed, B_ERROR if nothing changed except our expiration time
+      status_t Update(const MessageRef & newData, uint64 newExpirationTime)
+      {
+         _expirationTime = newExpirationTime;
+         if (_data.IsDeeplyEqualTo(newData)) return B_ERROR;  // nothing is different
+
+         _data = newData;
+         return B_NO_ERROR;
+      }
+
+      const MessageRef & GetData() const {return _data;}
+      uint64 GetExpirationTime() const {return _expirationTime;}
+
+   private:
+      MessageRef _data;
+      uint64 _expirationTime;
+   };
+   Hashtable<RawDiscoveryKey, RawDiscoveryResult> _rawDiscoveryResults;  // IPs -> ModuleInfo
+   Hashtable<String, MessageRef> _reportedCookedResults;  // system-name -> SystemInfo
+
+   DiscoveryImplementation * _imp;
+
+   const uint64 _pingInterval;
+   MessageRef _pingMsg;
+   uint64 _nextPingTime;
+   bool _updateResultSetPending;
+};
+
+int32 DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
+{
+   PacketDataIO & udpIO = *(dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()()));
+
+   uint32 ret = 0;
+   while(ret < maxBytes)
+   {
+      IPAddressAndPort sourceLoc;
+      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc);
+      if (bytesRead > 0)
+      {
+         if (_debugDiscovery) printf("DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
+
+         uint32 serialNumber;
+         MessageRef newDataMsg = GetMessageFromPool(*_receiveBuffer());
+         if ((newDataMsg())
+           &&(newDataMsg()->what == PR_RESULT_PONG)
+           &&(newDataMsg()->FindInt32(CUEPROJECT_NAME_SERIALNUMBER,    serialNumber)         == B_NO_ERROR)
+           &&(newDataMsg()->AddString(CUEPROJECT_NAME_DISCOVERYSOURCE, sourceLoc.ToString()) == B_NO_ERROR))
+              _manager->RawDiscoveryResultReceived(_multicastIAP, sourceLoc, serialNumber, newDataMsg);
+
+         ret += bytesRead;
+      }
+      else break;
+   }
+   return ret;
+}
+
+enum {
+   DISCOVERY_EVENT_TYPE_UPDATE = 0,
+   DISCOVERY_EVENT_TYPE_SLEEP,
+   DISCOVERY_EVENT_TYPE_AWAKE,
+   NUM_DISCOVERY_EVENT_TYPES
+};
+
+class DiscoveryImplementation : private Thread
+{
+public:
+   DiscoveryImplementation(SystemDiscoveryClient & master) : _master(master)
+   {
+      // empty
+   }
+
+   virtual ~DiscoveryImplementation()
+   {
+      Stop();  // paranoia
+   }
+
+   status_t Start() 
+   {
+      Stop();  // paranoia
+      return StartInternalThread();
+   }
+
+   void Stop() 
+   {
+      (void) ShutdownInternalThread();
+      _pendingUpdates.Clear();
+   }
+
+   void GrabUpdates(Hashtable<String, MessageRef> & updates)
+   {
+      MutexGuard mg(_mutex);
+      updates.SwapContents(_pendingUpdates);
+   }
+
+   // callable from any thread
+   void ScheduleDiscoveryUpdate() {_master.RequestCallbackInDispatchThread(1<<DISCOVERY_EVENT_TYPE_UPDATE);}
+
+protected:
+   virtual void InternalThreadEntry()
+   {
+      ReflectServer server;
+
+      // We need to keep track of when the set of available network interfaces changes
+      status_t ret;
+      DetectNetworkConfigChangesSession dnccs;
+      if (server.AddNewSession(AbstractReflectSessionRef(&dnccs, false)).IsError(ret))
+      {
+         LogTime(MUSCLE_LOG_ERROR, "DiscoveryServer:  Couldn't add DetectNetworkChangesSession! [%s]\n", ret());
+         return;
+      }
+
+      // We need to watch our notification-socket to know when it is time to exit
+      DiscoveryClientManagerSession cdms(this, _master._pingInterval);
+      if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
+      {
+         LogTime(MUSCLE_LOG_ERROR, "DiscoveryServer:  Couldn't add DiscoveryClientManagerSession! [%s]\n", ret());
+         return;
+      }
+
+      (void) server.ServerProcessLoop();
+      server.Cleanup();
+   }
+
+   void ReportSystemUpdate(const String & systemName, const MessageRef & msg)
+   {
+      bool sendSignal = false;
+      {
+         MutexGuard mg(_mutex);
+         sendSignal = (_pendingUpdates.Put(systemName, msg) == B_NO_ERROR);
+      }
+      if (sendSignal) ScheduleDiscoveryUpdate();
+   }
+
+   void ReportSleepNotification(bool isAboutToSleep)
+   {
+      const int setBitIdx = isAboutToSleep ? DISCOVERY_EVENT_TYPE_SLEEP : DISCOVERY_EVENT_TYPE_AWAKE;
+      const int clrBitIdx = isAboutToSleep ? DISCOVERY_EVENT_TYPE_AWAKE : DISCOVERY_EVENT_TYPE_SLEEP;
+      _master.RequestCallbackInDispatchThread(1<<setBitIdx, 1<<clrBitIdx);  // the two bits are mutually exclusive
+   }
+
+private:
+   friend class DiscoveryClientManagerSession;
+
+   // called in internal thread
+   status_t HandleMessagesFromOwner()
+   {
+      MessageRef msg;
+      while(WaitForNextMessageFromOwner(msg, 0) >= 0)
+      {
+         if (msg())
+         {
+            printf("DiscoveryClientManagerSession:  Got the following Message from the main thread:\n");
+            msg()->PrintToStream();
+         }
+         else return B_ERROR;  // time for this thread to go away!
+      }
+      return B_NO_ERROR;
+   }
+
+   SystemDiscoveryClient & _master;
+
+   Mutex _mutex;
+   Hashtable<String, MessageRef> _pendingUpdates; // access to this must be serialized via _mutex
+};
+
+void DiscoveryClientManagerSession :: MessageReceivedFromGateway(const MessageRef &, void *)
+{
+   if (_imp->HandleMessagesFromOwner() != B_NO_ERROR) EndServer();
+}
+
+void DiscoveryClientManagerSession :: ComputerIsAboutToSleep() {_imp->ReportSleepNotification(true);}
+void DiscoveryClientManagerSession :: ComputerJustWokeUp()     {_imp->ReportSleepNotification(false);}
+
+void DiscoveryClientManagerSession :: UpdateResultSet()
+{
+   _rawDiscoveryResults.SortByKey();  // try to maintain a consistent ordering, to avoid churn
+   Hashtable<String, MessageRef> newCookedResults = CalculateCookedResults();
+
+   // First, report any systems that have gone missing
+   for (HashtableIterator<String, MessageRef> iter(_reportedCookedResults); iter.HasData(); iter++)
+   {
+      const String & systemName = iter.GetKey();
+      if (newCookedResults.ContainsKey(systemName) == false) _imp->ReportSystemUpdate(systemName, MessageRef());
+   }
+
+   // Then report any systems that are new or that have changed
+   for (HashtableIterator<String, MessageRef> iter(newCookedResults); iter.HasData(); iter++)
+   {
+      const String & systemName  = iter.GetKey();
+      const MessageRef & newInfo = iter.GetValue();
+      const MessageRef * oldInfo = _reportedCookedResults.Get(systemName);
+      if ((oldInfo == NULL)||(oldInfo->IsDeeplyEqualTo(newInfo) == false)) _imp->ReportSystemUpdate(systemName, newInfo);
+   }
+
+   // Finally, adopt the new set
+   _reportedCookedResults.SwapContents(newCookedResults);
+}
+
+SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackProvider * provider) 
+   : ICallbackSubscriber(provider)
+   , _pingInterval(0)
+{
+   _imp = new DiscoveryImplementation(*this);
+}
+
+SystemDiscoveryClient :: ~SystemDiscoveryClient()
+{
+   delete _imp;
+}
+
+status_t SystemDiscoveryClient :: Start(uint64 micros)
+{
+   const uint64 opi = _pingInterval;
+
+   Stop();
+
+   status_t ret;
+   _pingInterval = micros;
+   if (_imp->Start().IsOK(ret)) return B_NO_ERROR;
+
+   _pingInterval = opi;  // roll back!
+   return ret;
+}
+
+void SystemDiscoveryClient :: Stop()
+{
+   _imp->Stop();
+   _pingInterval = 0;
+   _knownInfos.Clear();
+}
+
+// Called in the main thread
+void SystemDiscoveryClient :: MainThreadNotifyAllOfSleepChange(bool isAboutToSleep)
+{
+   for (HashtableIterator<IDiscoveryNotificationTarget *, bool> iter(_targets); iter.HasData(); iter++)
+   {
+      IDiscoveryNotificationTarget * t = iter.GetKey();
+      if (isAboutToSleep) t->ComputerIsAboutToSleep();
+                     else t->ComputerJustWokeUp();
+   }
+}
+
+// Called in the main thread
+void SystemDiscoveryClient :: DispatchCallbacks(uint32 eventTypeBits)
+{
+   if (eventTypeBits & (1<<DISCOVERY_EVENT_TYPE_UPDATE))
+   {
+      Hashtable<String, MessageRef> updates;
+      _imp->GrabUpdates(updates);
+
+      // Notify all the targets of discovery update
+      for (HashtableIterator<IDiscoveryNotificationTarget *, bool> iter(_targets); iter.HasData(); iter++)
+      {
+         IDiscoveryNotificationTarget * target = iter.GetKey();
+
+         bool & isNewTarget = iter.GetValue();
+         if (isNewTarget)
+         {
+            // fill in the new guy on all known updates (except for the ones we're going to cover below anyway)
+            for (HashtableIterator<String, MessageRef> subIter(_knownInfos); subIter.HasData(); subIter++)
+            {
+               const String & systemName = subIter.GetKey();
+               if (updates.ContainsKey(systemName) == false) target->DiscoveryUpdate(systemName, subIter.GetValue());
+            }
+            isNewTarget = false;
+         }
+
+         for (HashtableIterator<String, MessageRef> subIter(updates); subIter.HasData(); subIter++) target->DiscoveryUpdate(subIter.GetKey(), subIter.GetValue());
+      }
+
+      // And finally, update our known-updates table
+      for (HashtableIterator<String, MessageRef> iter(updates); iter.HasData(); iter++) (void) _knownInfos.PutOrRemove(iter.GetKey(), iter.GetValue());
+   }
+
+   if (eventTypeBits & (1<<DISCOVERY_EVENT_TYPE_SLEEP)) MainThreadNotifyAllOfSleepChange(true);
+   if (eventTypeBits & (1<<DISCOVERY_EVENT_TYPE_AWAKE)) MainThreadNotifyAllOfSleepChange(false);
+}
+
+void IDiscoveryNotificationTarget :: SetSystemDiscoveryClient(SystemDiscoveryClient * discoveryModule)
+{
+   if (discoveryModule != _discoveryModule)
+   {
+      if (_discoveryModule) _discoveryModule->UnregisterTarget(this);
+      _discoveryModule = discoveryModule;
+      if (_discoveryModule) _discoveryModule->RegisterTarget(this);
+   }
+}
+
+void SystemDiscoveryClient :: RegisterTarget(IDiscoveryNotificationTarget * newTarget)
+{
+   if (_targets.Put(newTarget, true) == B_NO_ERROR) _imp->ScheduleDiscoveryUpdate(); // make sure the new guys learns ASAP about whatever we already know
+}
+
+void SystemDiscoveryClient :: UnregisterTarget(IDiscoveryNotificationTarget * target) 
+{
+   (void) _targets.Remove(target);
+}
+
+};  // end namespace zg

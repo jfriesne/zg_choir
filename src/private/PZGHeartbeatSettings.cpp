@@ -42,10 +42,11 @@ public:
 };
 
 // Some network interfaces we just shouldn't try to use!
-static bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
+bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
 {
 #ifdef __APPLE__
    if (nii.GetName().StartsWith("utun")) return false;
+   if (nii.GetName().StartsWith("llw"))  return false;
 #else
    (void) nii;  // avoid compiler warning
 #endif

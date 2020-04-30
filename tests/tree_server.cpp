@@ -4,6 +4,8 @@
 #include "util/StringTokenizer.h"
 
 #include "zg/ZGStdinSession.h"
+#include "zg/discovery/server/DiscoveryServerSession.h"
+#include "zg/discovery/server/IDiscoveryServerSessionController.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
@@ -81,7 +83,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 }
 
 // This class implements a database-peer to test out the MessageTreeDatabaseObject class
-class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession
+class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession, public IDiscoveryServerSessionController
 {
 public:
    TestTreeZGPeerSession(const Message & args) : MessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
@@ -96,6 +98,13 @@ public:
       else return false;
 
       return true;  // indicate handled
+   }
+
+   // IDiscoverServerSessionController API
+   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource)
+   {
+      pingMsg()->what = PR_RESULT_PONG;  // just turn it around, for now
+      return 0;  // reply ASAP
    }
 
 protected:
@@ -141,6 +150,10 @@ int main(int argc, char ** argv)
    // Accept incoming TCP connections from clients
    ServerSideMessageTreeSessionFactory sssFactory(zgPeerSession.GetClientTreeGateway());
 
+   // This object will respond to multicast discovery queries sent across the LAN by clients, so that
+   // they can find us without knowing our IP address and port in advance
+   DiscoveryServerSession sdss(true, zgPeerSession);
+
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
 
@@ -164,7 +177,8 @@ int main(int argc, char ** argv)
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
    if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK(ret)))&&
-       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK(ret)))
+       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK(ret))&&
+       (server.AddNewSession(DiscoveryServerSessionRef(&sdss, false)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit

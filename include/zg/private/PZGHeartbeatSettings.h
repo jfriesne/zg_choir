@@ -53,6 +53,9 @@ private:
 };
 DECLARE_REFTYPES(PZGHeartbeatSettings);
 
+/** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's e.g. known to be a special-purpose thing) */
+bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii);
+
 };  // end namespace zg_private
 
 #endif
