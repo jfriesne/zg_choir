@@ -1,7 +1,7 @@
 #ifndef DiscoveryServerSession_h
 #define DiscoveryServerSession_h
 
-#include "zg/discovery/common/DiscoveryConstants.h"
+#include "zg/discovery/common/DiscoveryUtilityFunctions.h"
 #include "reflector/AbstractReflectSession.h"
 
 namespace zg {

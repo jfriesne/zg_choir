@@ -1,6 +1,7 @@
 /* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
 
-#include "zg/SystemDiscoveryClient.h"
+#include "zg/discovery/client/SystemDiscoveryClient.h"
+#include "zg/discovery/common/DiscoveryUtilityFunctions.h"
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/SignalMessageIOGateway.h"
 #include "reflector/StorageReflectConstants.h"   // for PR_COMMAND_PING
@@ -8,6 +9,7 @@
 #include "system/DetectNetworkConfigChangesSession.h"
 #include "system/Thread.h"
 #include "util/NetworkUtilityFunctions.h"    // for GetDiscoveryMulticastAddresses()
+#include "zg/ZGPeerID.h"
 
 namespace zg {
 
@@ -75,7 +77,7 @@ public:
             if (bytesSent > 0) 
             {
                ret += bytesSent;
-               if (_debugDiscovery) printf("DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
+               printf("DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
             }
          }
          oq.RemoveHead();
@@ -97,10 +99,11 @@ DECLARE_REFTYPES(DiscoverySession);
 class DiscoveryClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   DiscoveryClientManagerSession(DiscoveryImplementation * imp, uint64 pingInterval) 
+   DiscoveryClientManagerSession(DiscoveryImplementation * imp, const ConstQueryFilterRef & optFilter, uint64 pingInterval) 
       : _imp(imp)
       , _pingInterval(pingInterval)
       , _nextPingTime(GetRunTime64())
+      , _queryFilter(optFilter)
       , _updateResultSetPending(false)
    {
       // empty
@@ -118,10 +121,9 @@ public:
       status_t ret;
       if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
 
-      // I specify a filter on daemon type because I want to avoid getting results from wtrxd
       _pingMsg = GetMessageFromPool(PR_COMMAND_PING);
       if (_pingMsg() == NULL) RETURN_OUT_OF_MEMORY;
-      if (_pingMsg()->AddInt32(CUEPROJECT_NAME_DAEMONTYPE, DAEMON_DCUED).IsError(ret)) return ret;
+      if (_pingMsg()->CAddArchiveMessage(ZG_DISCOVERY_NAME_FILTER, _queryFilter).IsError(ret)) return ret;
 
       AddNewDiscoverySessions();
       return B_NO_ERROR;
@@ -186,9 +188,9 @@ public:
    virtual void ComputerIsAboutToSleep();
    virtual void ComputerJustWokeUp();
 
-   void RawDiscoveryResultReceived(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, uint32 serialNumber, const MessageRef & dataMsg)
+   void RawDiscoveryResultReceived(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, ZGPeerID peerID, const MessageRef & dataMsg)
    {
-      RawDiscoveryResult * r = _rawDiscoveryResults.GetOrPut(RawDiscoveryKey(localIAP, sourceIAP, serialNumber));
+      RawDiscoveryResult * r = _rawDiscoveryResults.GetOrPut(RawDiscoveryKey(localIAP, sourceIAP, peerID));
       if ((r)&&(r->Update(dataMsg, GetExpirationTime(GetRunTime64())) == B_NO_ERROR)&&(_updateResultSetPending == false))
       {
          _updateResultSetPending = true;
@@ -234,31 +236,31 @@ private:
 
    Hashtable<String, MessageRef> CalculateCookedResults() const
    {
-      Hashtable<String, Hashtable<uint32, MessageRef> > systemNameToSerialNumberToInfo;
+      Hashtable<String, Hashtable<ZGPeerID, MessageRef> > systemNameToPeerIDToInfo;
 
-      // Recompile our results, indexed by system name and serial number
+      // Recompile our results, indexed by system name and peer ID
       for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
       {
          const MessageRef & result = iter.GetValue().GetData();
 
          const String * systemName;
-         uint32 serialNumber;
-         if ((result()->FindInt32(CUEPROJECT_NAME_SERIALNUMBER, serialNumber) == B_NO_ERROR)&&
-             (result()->FindString(CUEPROJECT_NAME_SYSTEMNAME, &systemName)   == B_NO_ERROR))
+         ZGPeerID peerID;
+         if ((result()->FindFlat( ZG_DISCOVERY_NAME_PEERID, peerID).IsOK())&&
+             (result()->FindString(ZG_DISCOVERY_NAME_SYSTEMNAME, &systemName).IsOK()))
          {
-            Hashtable<uint32, MessageRef> * systemTable = systemNameToSerialNumberToInfo.GetOrPut(*systemName);
-            if (systemTable) (void) systemTable->Put(serialNumber, result);
+            Hashtable<ZGPeerID, MessageRef> * systemTable = systemNameToPeerIDToInfo.GetOrPut(*systemName);
+            if (systemTable) (void) systemTable->Put(peerID, result);
          }
       }
  
       // Convert results into a set of Messages, one per system
       Hashtable<String, MessageRef> ret;
-      for (HashtableIterator<String, Hashtable<uint32, MessageRef> > iter(systemNameToSerialNumberToInfo); iter.HasData(); iter++)
+      for (HashtableIterator<String, Hashtable<ZGPeerID, MessageRef> > iter(systemNameToPeerIDToInfo); iter.HasData(); iter++)
       {
          MessageRef systemMsg = GetMessageFromPool();
          if (systemMsg())
          {
-            for (HashtableIterator<uint32, MessageRef> subIter(iter.GetValue()); subIter.HasData(); subIter++) (void) systemMsg()->AddMessage(CUEPROJECT_NODENAME_MODULEINFO, subIter.GetValue());
+            for (HashtableIterator<ZGPeerID, MessageRef> subIter(iter.GetValue()); subIter.HasData(); subIter++) (void) systemMsg()->AddMessage(ZG_DISCOVERY_NAME_PEERINFO, subIter.GetValue());
             (void) ret.Put(iter.GetKey(), systemMsg);
          }
       }
@@ -272,9 +274,9 @@ private:
    {
    public:
       RawDiscoveryKey() {/* empty */}
-      RawDiscoveryKey(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, uint32 serialNumber) : _localIAP(localIAP), _sourceIAP(sourceIAP), _serialNumber(serialNumber) {/* empty */}
+      RawDiscoveryKey(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, ZGPeerID peerID) : _localIAP(localIAP), _sourceIAP(sourceIAP), _peerID(peerID) {/* empty */}
 
-      bool operator == (const RawDiscoveryKey & rhs) const {return ((_localIAP == rhs._localIAP)&&(_sourceIAP == rhs._sourceIAP)&&(_serialNumber == rhs._serialNumber));}
+      bool operator == (const RawDiscoveryKey & rhs) const {return ((_localIAP == rhs._localIAP)&&(_sourceIAP == rhs._sourceIAP)&&(_peerID == rhs._peerID));}
       bool operator != (const RawDiscoveryKey & rhs) const {return !(*this == rhs);}
 
       bool operator < (const RawDiscoveryKey & rhs) const
@@ -283,21 +285,21 @@ private:
          if (_localIAP == rhs._localIAP)
          {
             if (_sourceIAP  < rhs._sourceIAP) return true;
-            if (_sourceIAP == rhs._sourceIAP) return (_serialNumber < rhs._serialNumber);
+            if (_sourceIAP == rhs._sourceIAP) return (_peerID < rhs._peerID);
          }
          return false;
       }
 
       bool operator > (const RawDiscoveryKey & rhs) const {return ((*this != rhs)&&(!(*this < rhs)));}
     
-      uint32 HashCode() const {return _localIAP.HashCode() + (3*_sourceIAP.HashCode()) + _serialNumber;}
+      uint32 HashCode() const {return _localIAP.HashCode() + (3*_sourceIAP.HashCode()) + _peerID.HashCode();}
 
-      String ToString() const {return String("RDK:  local=[%1] source=[%2] serial=[%3]").Arg(_localIAP.ToString()).Arg(_sourceIAP.ToString()).Arg(_serialNumber);}
+      String ToString() const {return String("RDK:  local=[%1] source=[%2] serial=[%3]").Arg(_localIAP.ToString()).Arg(_sourceIAP.ToString()).Arg(_peerID.ToString());}
 
    private:
       IPAddressAndPort _localIAP;   // the address-and-port on the local network interface on this machine
       IPAddressAndPort _sourceIAP;  // the address-and-port on the the remote machine
-      uint32 _serialNumber;         // also serial number, since in the FullVirtualD-Mitri case, the above can all be equal
+      ZGPeerID _peerID;             // also PeerID, since multiple peers can run on the same machine
    };
 
    class RawDiscoveryResult
@@ -323,7 +325,7 @@ private:
       MessageRef _data;
       uint64 _expirationTime;
    };
-   Hashtable<RawDiscoveryKey, RawDiscoveryResult> _rawDiscoveryResults;  // IPs -> ModuleInfo
+   Hashtable<RawDiscoveryKey, RawDiscoveryResult> _rawDiscoveryResults;  // IPs -> PeerInfo
    Hashtable<String, MessageRef> _reportedCookedResults;  // system-name -> SystemInfo
 
    DiscoveryImplementation * _imp;
@@ -331,6 +333,7 @@ private:
    const uint64 _pingInterval;
    MessageRef _pingMsg;
    uint64 _nextPingTime;
+   ConstQueryFilterRef _queryFilter;
    bool _updateResultSetPending;
 };
 
@@ -345,15 +348,15 @@ int32 DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBy
       const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc);
       if (bytesRead > 0)
       {
-         if (_debugDiscovery) printf("DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
+         printf("DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
 
-         uint32 serialNumber;
+         ZGPeerID peerID;
          MessageRef newDataMsg = GetMessageFromPool(*_receiveBuffer());
          if ((newDataMsg())
            &&(newDataMsg()->what == PR_RESULT_PONG)
-           &&(newDataMsg()->FindInt32(CUEPROJECT_NAME_SERIALNUMBER,    serialNumber)         == B_NO_ERROR)
-           &&(newDataMsg()->AddString(CUEPROJECT_NAME_DISCOVERYSOURCE, sourceLoc.ToString()) == B_NO_ERROR))
-              _manager->RawDiscoveryResultReceived(_multicastIAP, sourceLoc, serialNumber, newDataMsg);
+           &&(newDataMsg()->FindFlat( ZG_DISCOVERY_NAME_PEERID, peerID).IsOK())
+           &&(newDataMsg()->AddString(ZG_DISCOVERY_NAME_SOURCE, sourceLoc.ToString()).IsOK()))
+              _manager->RawDiscoveryResultReceived(_multicastIAP, sourceLoc, peerID, newDataMsg);
 
          ret += bytesRead;
       }
@@ -418,7 +421,7 @@ protected:
       }
 
       // We need to watch our notification-socket to know when it is time to exit
-      DiscoveryClientManagerSession cdms(this, _master._pingInterval);
+      DiscoveryClientManagerSession cdms(this, _master._queryFilter, _master._pingInterval);
       if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "DiscoveryServer:  Couldn't add DiscoveryClientManagerSession! [%s]\n", ret());
@@ -504,9 +507,10 @@ void DiscoveryClientManagerSession :: UpdateResultSet()
    _reportedCookedResults.SwapContents(newCookedResults);
 }
 
-SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackProvider * provider) 
-   : ICallbackSubscriber(provider)
+SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, const ConstQueryFilterRef & optFilter) 
+   : ICallbackSubscriber(mechanism)
    , _pingInterval(0)
+   , _queryFilter(optFilter)
 {
    _imp = new DiscoveryImplementation(*this);
 }
@@ -584,13 +588,13 @@ void SystemDiscoveryClient :: DispatchCallbacks(uint32 eventTypeBits)
    if (eventTypeBits & (1<<DISCOVERY_EVENT_TYPE_AWAKE)) MainThreadNotifyAllOfSleepChange(false);
 }
 
-void IDiscoveryNotificationTarget :: SetSystemDiscoveryClient(SystemDiscoveryClient * discoveryModule)
+void IDiscoveryNotificationTarget :: SetDiscoveryClient(SystemDiscoveryClient * discoveryClient)
 {
-   if (discoveryModule != _discoveryModule)
+   if (discoveryClient != _discoveryClient)
    {
-      if (_discoveryModule) _discoveryModule->UnregisterTarget(this);
-      _discoveryModule = discoveryModule;
-      if (_discoveryModule) _discoveryModule->RegisterTarget(this);
+      if (_discoveryClient) _discoveryClient->UnregisterTarget(this);
+      _discoveryClient = discoveryClient;
+      if (_discoveryClient) _discoveryClient->RegisterTarget(this);
    }
 }
 

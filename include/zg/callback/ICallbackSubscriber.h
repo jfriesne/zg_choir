@@ -1,7 +1,7 @@
 #ifndef ICallbackSubscriber_h
 #define ICallbackSubscriber_h
 
-#include "callback/ICallbackMechanism.h"
+#include "zg/callback/ICallbackMechanism.h"
 
 namespace zg {
 

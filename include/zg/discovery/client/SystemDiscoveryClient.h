@@ -1,14 +1,15 @@
 /* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
 
-#ifndef DiscoveryModule_h
-#define DiscoveryModule_h
+#ifndef SystemDiscoveryClient_h
+#define SystemDiscoveryClient_h
 
-#include "callback/ICallbackSubscriber.h"
 #include "message/Message.h"
+#include "regex/QueryFilter.h"
+#include "zg/callback/ICallbackSubscriber.h"
 
 namespace zg {
 
-class DiscoveryModule;
+class SystemDiscoveryClient;
 class DiscoveryImplementation;
 
 /** Interface for an object that wants to be notified about the ZG systems' availability/un-availability */
@@ -16,30 +17,30 @@ class IDiscoveryNotificationTarget
 {
 public:
    /** Constructor
-     * param discoveryModule pointer to the DiscoveryModule to register with, or NULL if you want to call SetDiscoveryModule() explicitely later.
+     * param discoveryClient pointer to the SystemDiscoveryClient to register with, or NULL if you want to call SetDiscoveryClient() explicitely later.
      */
-   IDiscoveryNotificationTarget(DiscoveryModule * discoveryModule) : _discoveryModule(NULL) {SetDiscoveryModule(discoveryModule);}
+   IDiscoveryNotificationTarget(SystemDiscoveryClient * discoveryClient) : _discoveryClient(NULL) {SetDiscoveryClient(discoveryClient);}
 
-   /** Destructor.  Calls SetDiscoveryModule(NULL) to auto-unregister this object from the DiscoveryModule if necessary. */
-   virtual ~IDiscoveryNotificationTarget() {SetDiscoveryModule(NULL);}
+   /** Destructor.  Calls SetDiscoveryClient(NULL) to auto-unregister this object from the SystemDiscoveryClient if necessary. */
+   virtual ~IDiscoveryNotificationTarget() {SetDiscoveryClient(NULL);}
 
-   /** Unregisters this object from any DiscoveryModule it's currently registered to 
-     * (if necessary) and then registers it with (discoveryModule).
-     * @param discoveryModule pointer to the module to register with, or NULL to unregister only.
-     * @note if this IDiscoveryNotificationTarget is already registered with (discoveryModule),
+   /** Unregisters this object from any SystemDiscoveryClient it's currently registered to 
+     * (if necessary) and then registers it with (discoveryClient).
+     * @param discoveryClient pointer to the SystemDiscoveryClient to register with, or NULL to unregister only.
+     * @note if this IDiscoveryNotificationTarget is already registered with (discoveryClient),
      *       then no action is taken.
      */
-   void SetDiscoveryModule(DiscoveryModule * discoveryModule);
+   void SetDiscoveryClient(SystemDiscoveryClient * discoveryClient);
 
-   /** Returns a pointer to the DiscoveryModule we're currently registered with, or NULL
-     * if we aren't currently registered with any DiscoveryModule.
+   /** Returns a pointer to the SystemDiscoveryClient we're currently registered with, or NULL
+     * if we aren't currently registered with any SystemDiscoveryClient.
      */
-   DiscoveryModule * GetDiscoveryModule() const {return _discoveryModule;}
+   SystemDiscoveryClient * GetDiscoveryClient() const {return _discoveryClient;}
 
-   /** Called when updated system-information has become available regarding a particular LCS  system.
-     * @param systemName the name of the LCS  system that this update is describing.
-     * @param optSystemInfo If non-NULL, this contains information about the LCS  system.
-     *                      If NULL, then this update means that the specified LCS  system has gone away.
+   /** Called when updated system-information has become available regarding a particular ZG system.
+     * @param systemName the name of the ZG system that this update is describing.
+     * @param optSystemInfo If non-NULL, this contains information about the ZG system.
+     *                      If NULL, then this update means that the specified ZG system has gone away.
      */
    virtual void DiscoveryUpdate(const String & systemName, const MessageRef & optSystemInfo) = 0;
 
@@ -50,24 +51,28 @@ public:
    virtual void ComputerJustWokeUp() {/* empty */}
 
 private:
-   DiscoveryModule * _discoveryModule;
+   SystemDiscoveryClient * _discoveryClient;
 };
 
-/** This module is a front-end to the LCS  system-discovery logic.
-  * Instantiate one of these to get notifications about what LCS  systems
+/** This object is a front-end to the ZG system-discovery logic.
+  * Instantiate one of these to get notifications about what ZG systems
   * are currently on-line.
   */
-class DiscoveryModule MUSCLE_FINAL_CLASS : public ICallbackSubscriber, public RefCountable
+class SystemDiscoveryClient MUSCLE_FINAL_CLASS : public ICallbackSubscriber, public RefCountable
 {
 public:
    /** Constructor.
-     * @param provider the CallbackProvider we should use to call callback-methods in the main thread
+     * @param mechanism the CallbackMechanism we should use to call callback-methods in the main thread
+     * @param optServerCriteria optional reference to a QueryFilter that describes the criteria regarding
+     *                          what types of server in particular you are interested in.  Servers whose
+     *                          reply-Messages don't match this QueryFilter's criteria will not be included
+     *                          in the discovered-servers-set.  May be NULL if you just want to receive everything.
      * @note be sure to call Start() to start the discovery-thread running!
      */
-   DiscoveryModule(ICallbackProvider * provider);
+   SystemDiscoveryClient(ICallbackMechanism * mechanism, const ConstQueryFilterRef & optServerCriteria);
 
    /** Destructor */
-   ~DiscoveryModule();
+   ~SystemDiscoveryClient();
 
    /** Starts the discovery thread going.
      * @param pingIntervalMicroseconds how many microseconds should elapse between successive pings.
@@ -104,8 +109,9 @@ private:
    Hashtable<String, MessageRef> _knownInfos;
 
    DiscoveryImplementation * _imp;
+   ConstQueryFilterRef _queryFilter;
 };
-DECLARE_REFTYPES(DiscoveryModule);
+DECLARE_REFTYPES(SystemDiscoveryClient);
 
 };  // end namespace zg
 

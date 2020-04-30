@@ -15,17 +15,17 @@ CXXFLAGS = $(CFLAGS) -O3 $(DEFINES)
 
 LFLAGS      =  
 LIBS        = -lpthread
-EXECUTABLES = test_peer tree_server tree_client
+EXECUTABLES = test_peer tree_server tree_client discovery_client
 ZLIBOBJS    = adler32.o deflate.o trees.o zutil.o inflate.o inftrees.o inffast.o crc32.o compress.o gzclose.o gzread.o gzwrite.o gzlib.o
 MUSCLEOBJS  = Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o SocketMultiplexer.o NetworkUtilityFunctions.o SysLog.o PulseNode.o SetupSystem.o ByteBuffer.o ZLibCodec.o SetupSystem.o ByteBufferDataIO.o FileDataIO.o StdinDataIO.o TCPSocketDataIO.o UDPSocketDataIO.o SimulatedMulticastDataIO.o FileDescriptorDataIO.o MiscUtilityFunctions.o QueryFilter.o FilePathInfo.o ReflectServer.o StringMatcher.o ServerComponent.o AbstractReflectSession.o Thread.o Directory.o SignalHandlerSession.o SignalMultiplexer.o PlainTextMessageIOGateway.o DumbReflectSession.o StorageReflectSession.o PathMatcher.o DataNode.o ZLibUtilityFunctions.o DetectNetworkConfigChangesSession.o PacketTunnelIOGateway.o
 REGEXOBJS   = 
 ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o 
 PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
-ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
+ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o DiscoveryUtilityFunctions.o
 ZGTREESERVEROBJS = MessageTreeDatabasePeerSession.o MessageTreeDatabaseObject.o ServerSideMessageTreeSession.o ServerSideMessageUtilityFunctions.o SegmentedStringMatcher.o DiscoveryServerSession.o
-ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o
-
-VPATH = . ../src ../src/private ../src/messagetree/gateway ../src/messagetree/client ../src/messagetree/server ../src/discovery/server $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
+ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o SystemDiscoveryClient.o ICallbackMechanism.o SocketCallbackMechanism.o
+SRCDIR = ../src
+VPATH = . $(SRCDIR) $(SRCDIR)/private $(SRCDIR)/messagetree/gateway $(SRCDIR)/messagetree/client $(SRCDIR)/messagetree/server $(SRCDIR)/discovery/server $(SRCDIR)/discovery/client $(SRCDIR)/discovery/common $(SRCDIR)/callback $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
 
 # if the OS type variable is unset, try to set it using the uname shell command 
 ifeq ($(OSTYPE),) 
@@ -67,6 +67,9 @@ tree_server : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTR
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 tree_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) tree_client.o
+	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
+
+discovery_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) discovery_client.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean :

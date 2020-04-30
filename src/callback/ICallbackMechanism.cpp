@@ -1,5 +1,5 @@
-#include "glue/ICallbackSubscriber.h"
-#include "glue/ICallbackMechanism.h"
+#include "zg/callback/ICallbackSubscriber.h"
+#include "zg/callback/ICallbackMechanism.h"
 
 namespace zg {
 
