@@ -143,17 +143,16 @@ int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*recei
       if (bytesRead > 0)
       {
          const IPAddressAndPort iap(sourceIP, sourcePort);
-         printf("Received " INT32_FORMAT_SPEC " bytes of discovery query data from %s\n", bytesRead, iap.ToString()());
+         LogTime(MUSCLE_LOG_TRACE, "Received " INT32_FORMAT_SPEC " bytes of discovery query data from %s\n", bytesRead, iap.ToString()());
 
          MessageRef msg = GetMessageFromPool();
          if ((msg())&&(msg()->Unflatten(_receiveBuffer()->GetBuffer(), bytesRead) == B_NO_ERROR))
          {
-            //printf("Query Message is: "); msg()->PrintToStream();
-
             const uint64 pongDelayMicros = _master->HandleDiscoveryPing(msg, iap);
             if (pongDelayMicros != MUSCLE_TIME_NEVER)
             {
-               (void) _queuedOutputData.Put(iap, UDPReply(now+pongDelayMicros, msg));
+               const UDPReply * r = _queuedOutputData.Get(iap);
+               (void) _queuedOutputData.Put(iap, UDPReply(muscleMin(r?r->GetSendTime():MUSCLE_TIME_NEVER, (pongDelayMicros>0)?(now+pongDelayMicros):0), msg));
                InvalidatePulseTime(); 
             }
          }
@@ -188,7 +187,7 @@ int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
          if (bytesSent > 0) 
          {
             ret += bytesSent;
-            printf("Sent " INT32_FORMAT_SPEC "/" INT32_FORMAT_SPEC " bytes of Discovery pong to %s\n", bytesSent, bufRef()->GetNumBytes(), replyTarget.ToString()());
+            LogTime(MUSCLE_LOG_TRACE, "Sent " INT32_FORMAT_SPEC "/" INT32_FORMAT_SPEC " bytes of Discovery pong to %s\n", bytesSent, bufRef()->GetNumBytes(), replyTarget.ToString()());
          }
       }
       _outputData.RemoveFirst();

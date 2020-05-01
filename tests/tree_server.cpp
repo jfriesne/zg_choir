@@ -5,7 +5,6 @@
 
 #include "zg/ZGStdinSession.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
-#include "zg/discovery/server/IDiscoveryServerSessionController.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
@@ -45,9 +44,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 {
    // Just so we can see that this is working
    MessageRef peerAttributes = GetMessageFromPool();
-   peerAttributes()->AddString("testing", "attributes");
-   peerAttributes()->AddInt32("some_value", (GetRunTime64()%10000));
-   peerAttributes()->AddFloat("pi", 3.14159f);
+   peerAttributes()->AddString("type", "tree_server");
 
    ZGPeerSettings s("test", NUM_TREE_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
@@ -83,7 +80,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 }
 
 // This class implements a database-peer to test out the MessageTreeDatabaseObject class
-class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession, public IDiscoveryServerSessionController
+class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession
 {
 public:
    TestTreeZGPeerSession(const Message & args) : MessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
@@ -98,13 +95,6 @@ public:
       else return false;
 
       return true;  // indicate handled
-   }
-
-   // IDiscoverServerSessionController API
-   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource)
-   {
-      pingMsg()->what = PR_RESULT_PONG;  // just turn it around, for now
-      return 0;  // reply ASAP
    }
 
 protected:

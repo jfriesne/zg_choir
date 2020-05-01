@@ -46,8 +46,11 @@ int main(int argc, char ** argv)
    CompleteSetupSystem css;     // set up MUSCLE environment
    SocketCallbackMechanism scm; // orchestrates safe calling of callback-methods in the main/user/GUI thread
 
+   AndQueryFilterRef discoFilter(new AndQueryFilter);  // to limit results to only the servers we care about
+   discoFilter()->GetChildren().AddTail(ConstQueryFilterRef(new StringQueryFilter("type", StringQueryFilter::OP_EQUAL_TO, "tree_server")));
+
    status_t ret;
-   SystemDiscoveryClient discoveryClient(&scm, ConstQueryFilterRef());
+   SystemDiscoveryClient discoveryClient(&scm, discoFilter);
    if (discoveryClient.Start().IsOK(ret))
    {
       TestDiscoveryNotificationTarget testTarget(&discoveryClient);

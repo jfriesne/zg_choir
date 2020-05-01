@@ -1,4 +1,5 @@
 #include "zg/ZGPeerSession.h"
+#include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVERY_NAME_*
 #include "zg/private/PZGConstants.h"
 #include "zg/private/PZGHeartbeatSession.h"
 #include "zg/private/PZGNetworkIOSession.h"
@@ -547,6 +548,34 @@ bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB) const
 String PeerInfoToString(const ConstMessageRef & peerInfo)
 {
    return zg_private::PeerInfoToString(peerInfo);
+}
+
+uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & /*pingSource*/)
+{
+   if (pingMsg()->what != PR_COMMAND_PING) return MUSCLE_TIME_NEVER;
+
+   const ZGPeerSettings & s = GetPeerSettings();
+
+   MessageRef pongMsg = GetMessageFromPool(PR_RESULT_PONG);
+   if ((pongMsg() == NULL)
+     | (pongMsg()->AddString( ZG_DISCOVERY_NAME_SYSTEMNAME, s.GetSystemName()).IsError())
+     | (pongMsg()->AddFlat(   ZG_DISCOVERY_NAME_PEERID,     GetLocalPeerID()).IsError())) return MUSCLE_TIME_NEVER;
+
+   if ((pingMsg()->HasName(ZG_DISCOVERY_NAME_TAG))&&(pingMsg()->ShareName(ZG_DISCOVERY_NAME_TAG, *pongMsg()).IsError())) return MUSCLE_TIME_NEVER;
+
+   const Message * peerAttribs = s.GetPeerAttributes()();
+   if (peerAttribs) for (MessageFieldNameIterator fnIter(*peerAttribs); fnIter.HasData(); fnIter++) peerAttribs->ShareName(fnIter.GetFieldName(), *pongMsg());
+
+   // Do any client-specified filtering vs the pong-messages we're about to send back
+   MessageRef qfMsg = pingMsg()->GetMessage(ZG_DISCOVERY_NAME_FILTER);
+   if (qfMsg()) 
+   {
+      QueryFilterRef qfRef = GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg());
+      if ((qfRef())&&(qfRef()->Matches(pongMsg, NULL) == false)) return MUSCLE_TIME_NEVER;  // Nope!  We're not his type
+   }
+
+   pingMsg = pongMsg;
+   return 0;
 }
 
 };  // end namespace zg

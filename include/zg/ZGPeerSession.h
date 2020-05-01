@@ -8,6 +8,7 @@
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/ZGStdinSession.h"               // for ITextCommandReceiver
+#include "zg/discovery/server/IDiscoveryServerSessionController.h"
 
 #include "zg/private/PZGBeaconData.h"
 #include "zg/private/PZGDatabaseState.h"
@@ -25,7 +26,7 @@ namespace zg
 /** This is the class that a user program would typically subclass from
   * and add to a ReflectServer in order to participate in a ZG system.
   */
-class ZGPeerSession : public StorageReflectSession, public ITextCommandReceiver, public INetworkConfigChangesTarget, public INetworkTimeProvider
+class ZGPeerSession : public StorageReflectSession, public ITextCommandReceiver, public INetworkConfigChangesTarget, public INetworkTimeProvider, public IDiscoveryServerSessionController
 {
 public:
    /** Constructor
@@ -298,6 +299,15 @@ protected:
      * @param whichDatabase Index of the database to print out the update-log for, or leave set to -1 to print out the update-logs of all databases.
      */
    void PrintDatabaseUpdateLog(int32 whichDatabase = -1) const;
+
+   /** From the IDiscoveryServerSessionController API:  Given an incoming discovery-ping, returns a
+     * useful output discovery-pong to go back to the client.
+     * @param Message containing the incoming ping
+     * @param pingSource the IP address and port that the ping packet came from
+     * @returns How many microseconds to delay before sinding the pong back out, or MUSCLE_TIME_NEVER to not send any pong back out.
+     * @note on return, (pingMsg) will be updated to point to the appropriate pong-Message instead.
+     */
+   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource);
 
 private:
    void ScheduleSetBeaconData();

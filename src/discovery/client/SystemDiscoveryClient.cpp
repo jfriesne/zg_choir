@@ -77,7 +77,7 @@ public:
             if (bytesSent > 0) 
             {
                ret += bytesSent;
-               printf("DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
+               LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
             }
          }
          oq.RemoveHead();
@@ -188,8 +188,10 @@ public:
    virtual void ComputerIsAboutToSleep();
    virtual void ComputerJustWokeUp();
 
-   void RawDiscoveryResultReceived(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, ZGPeerID peerID, const MessageRef & dataMsg)
+   void RawDiscoveryResultReceived(const IPAddressAndPort & localIAP, const IPAddressAndPort & sourceIAP, ZGPeerID peerID, MessageRef & dataMsg)
    {
+      if ((_queryFilter())&&(_queryFilter()->Matches(dataMsg, NULL) == false)) return;  // just in case the server didn't filter correctly, we'll also filter here
+
       RawDiscoveryResult * r = _rawDiscoveryResults.GetOrPut(RawDiscoveryKey(localIAP, sourceIAP, peerID));
       if ((r)&&(r->Update(dataMsg, GetExpirationTime(GetRunTime64())) == B_NO_ERROR)&&(_updateResultSetPending == false))
       {
@@ -348,7 +350,7 @@ int32 DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBy
       const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc);
       if (bytesRead > 0)
       {
-         printf("DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
+         LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
 
          ZGPeerID peerID;
          MessageRef newDataMsg = GetMessageFromPool(*_receiveBuffer());
@@ -460,7 +462,7 @@ private:
       {
          if (msg())
          {
-            printf("DiscoveryClientManagerSession:  Got the following Message from the main thread:\n");
+            LogTime(MUSCLE_LOG_TRACE, "DiscoveryClientManagerSession:  Got the following Message from the main thread:\n");
             msg()->PrintToStream();
          }
          else return B_ERROR;  // time for this thread to go away!
