@@ -83,7 +83,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 class TestTreeZGPeerSession : public MessageTreeDatabasePeerSession
 {
 public:
-   TestTreeZGPeerSession(const Message & args) : MessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)) {/* empty */}
+   TestTreeZGPeerSession(const Message & args) : MessageTreeDatabasePeerSession(GetTestTreeZGPeerSettings(args)), _acceptPort(0) {/* empty */}
 
    virtual const char * GetTypeName() const {return "TestTreeZGPeer";}
 
@@ -96,6 +96,15 @@ public:
 
       return true;  // indicate handled
    }
+
+   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource)
+   {
+      const uint64 ret = MessageTreeDatabasePeerSession::HandleDiscoveryPing(pingMsg, pingSource);
+      if (ret != MUSCLE_TIME_NEVER) (void) pingMsg()->CAddInt16("port", _acceptPort);  // clients will want to know this!
+      return ret; 
+   }
+
+   void SetAcceptPort(uint16 port) {_acceptPort = port;}  // just so we can tell discovery-clients what port we are listening on
 
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
@@ -114,6 +123,7 @@ protected:
 #endif
 
 private:
+   uint16 _acceptPort;
 };
 
 int main(int argc, char ** argv)
@@ -163,6 +173,7 @@ int main(int argc, char ** argv)
       ret = B_NO_ERROR;  // clear the error-flag
       acceptPort++;
    }
+   zgPeerSession.SetAcceptPort(acceptPort);
    LogTime(MUSCLE_LOG_INFO, "Listening for incoming client TCP connections (from tree_client) on port %u\n", acceptPort);
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
