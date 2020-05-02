@@ -16,13 +16,9 @@ class DiscoveryServerSession : public AbstractReflectSession
 {
 public:
    /** Constructor 
-     * @param watchForInterfaceChangesLocally If true, we'll set up our own WatchForNetworkInterfaceChangesSession
-     *                                        and use it to notify us when the network interfaces set changes.
-     *                                        Otherwise, we'll rely on an outside class to call our NetworkInterfacesChanged()
-     *                                        method at the appropriate times.
      * @param master IDiscoverySessionController to get our pong Messages from.
      */
-   DiscoveryServerSession(bool watchForInterfaceChangesLocally, IDiscoveryServerSessionController & master, uint16 discoveryPort = DEFAULT_ZG_DISCOVERY_PORT);
+   DiscoveryServerSession(IDiscoveryServerSessionController & master, uint16 discoveryPort = DEFAULT_ZG_DISCOVERY_PORT);
 
    /** Destructor */
    virtual ~DiscoveryServerSession();
@@ -56,12 +52,8 @@ public:
    /** Implemented as a no-op (we intercept DoInput() directly instead of relying on an AbstractMessageIOGateway() anyway) */
    virtual void MessageReceivedFromGateway(const muscle::MessageRef&, void*) {/* empty */}
 
-   /** To be called when the current set of network interfaces changed.  If (watchForInterfaceChangesLocally)
-     * was set to true in the ctor, we will call this ourself... otherwise someone else needs to call it.
-     * @param optInterfaceNames if non-empty, contains the names of the interface that changed;
-     *                          if empty, any or all interfaces may have changed
-     */
-   void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames);
+   /** Will be called when the current set of active network interfaces has changed. */
+   virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames);
 
    virtual uint64 GetPulseTime(const PulseArgs & args);
    virtual void Pulse(const PulseArgs & args);
@@ -89,7 +81,6 @@ private:
    };
 #endif
 
-   const bool _useWatcher;
    const uint16 _discoveryPort;
    IDiscoveryServerSessionController * _master;
    Hashtable<IPAddressAndPort, UDPReply> _outputData;  // data ready to be sent out via UDP, ASAP

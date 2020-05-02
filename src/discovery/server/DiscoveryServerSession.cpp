@@ -30,9 +30,8 @@ private:
    DiscoveryServerSession * _master;
 };
 
-DiscoveryServerSession :: DiscoveryServerSession(bool useWatcher, IDiscoveryServerSessionController & master, uint16 discoveryPort)
-   : _useWatcher(useWatcher)
-   , _discoveryPort(discoveryPort)
+DiscoveryServerSession :: DiscoveryServerSession(IDiscoveryServerSessionController & master, uint16 discoveryPort)
+   : _discoveryPort(discoveryPort)
    , _master(&master)
 {
    // empty
@@ -60,15 +59,12 @@ void DiscoveryServerSession :: NetworkInterfacesChanged(const Hashtable<String, 
 
 status_t DiscoveryServerSession :: AttachedToServer()
 {
-   if (_useWatcher)
+   _watchInterfacesSession.SetRef(newnothrow DiscoveryDetectNetworkConfigChangesSession(this));
+   if (_watchInterfacesSession() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
+   if (AddNewSession(_watchInterfacesSession) != B_NO_ERROR)
    {
-      _watchInterfacesSession.SetRef(newnothrow DiscoveryDetectNetworkConfigChangesSession(this));
-      if (_watchInterfacesSession() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
-      if (AddNewSession(_watchInterfacesSession) != B_NO_ERROR)
-      {
-         LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession:  Error adding interfaces-change-notifier session!\n");
-         _watchInterfacesSession.Reset();
-      }
+      LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession:  Error adding interfaces-change-notifier session!\n");
+      _watchInterfacesSession.Reset();
    }
 
    _receiveBuffer = GetByteBufferFromPool(2048);

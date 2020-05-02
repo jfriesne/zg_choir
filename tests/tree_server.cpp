@@ -142,7 +142,7 @@ int main(int argc, char ** argv)
 
    // This object will respond to multicast discovery queries sent across the LAN by clients, so that
    // they can find us without knowing our IP address and port in advance
-   DiscoveryServerSession sdss(true, zgPeerSession);
+   DiscoveryServerSession sdss(zgPeerSession);
 
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
