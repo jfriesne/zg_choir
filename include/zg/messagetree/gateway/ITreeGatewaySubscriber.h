@@ -76,8 +76,8 @@ public:
      */
    virtual void TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName) {(void) nodePath; (void) removedAtIndex; (void) nodeName;}
 
-   /** Called when a "pong" comes back from the server (in response to a previous call to PingServer()).
-     * @param tag the tag-string that you had previously passed to PingServer().
+   /** Called when a "pong" comes back from the server (in response to a previous call to PingTreeServer()).
+     * @param tag the tag-string that you had previously passed to PingTreeServer().
      * Default implementation is a no-op.
      */
    virtual void TreeServerPonged(const String & tag) {(void) tag;}

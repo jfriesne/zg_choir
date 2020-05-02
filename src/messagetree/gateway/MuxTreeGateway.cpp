@@ -1,5 +1,6 @@
 #include "zg/messagetree/gateway/MuxTreeGateway.h"
 #include "reflector/StorageReflectConstants.h"  // for INDEX_OP_*
+#include "util/StringTokenizer.h"
 
 namespace zg {
 
@@ -261,9 +262,23 @@ void MuxTreeGateway :: DoIndexNotificationAux(ITreeGatewaySubscriber * sub, cons
 
 void MuxTreeGateway :: TreeServerPonged(const String & tag)
 {
-   String suffix;
-   ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
-   if (s) s->TreeServerPonged(suffix);
+   if (tag.StartsWith("obss:"))
+   {
+      _allowedCallbacks.Clear();
+      StringTokenizer tok(tag()+5, ",");
+      const char * t;
+      while((t=tok()) != NULL)
+      {
+         ITreeGatewaySubscriber * s = ParseRegistrationID(t);
+         if (s) (void) _allowedCallbacks.PutWithDefault(s);
+      }
+   }
+   else
+   {
+      String suffix;
+      ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
+      if (s) s->TreeServerPonged(suffix);
+   }
 }
 
 void MuxTreeGateway :: TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
@@ -339,8 +354,12 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
             }
          }
       }
-      // TODO:  send obss somehow so that we'll know to filter the immediate results
-      return ITreeGatewaySubscriber::AddTreeSubscription(subscriptionPath, sendFilter, flags);
+
+      status_t ret;
+      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeServer(obss.Prepend("obss:")).IsError(ret))) return ret;  // mark the beginning of our returned results
+      if (ITreeGatewaySubscriber::AddTreeSubscription(subscriptionPath, sendFilter, flags).IsError(ret))   return ret;
+      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeServer("obss:").IsError(ret)))               return ret;  // mark the end of our returned results
+      return ret;
    }
    else return ITreeGatewaySubscriber::RemoveTreeSubscription(subscriptionPath, ConstQueryFilterRef());
 }
@@ -411,8 +430,6 @@ void MuxTreeGateway :: CallbackBatchEnds()
       a->CallbackBatchEnds();
       (void) _needsCallbackBatchEndsCall.RemoveFirst();
    }
-
-   _allowedCallbacks.Clear();
 }
 
 void MuxTreeGateway :: RegisterSubscriber(void * s)
