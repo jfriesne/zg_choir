@@ -19,7 +19,7 @@ public:
    virtual ~ClientSideNetworkTreeGateway();
 
    void SetNetworkConnected(bool isConnected);
-   bool IsNetworkConnect() const {return _isConnected;}
+   bool IsNetworkConnected() const {return _isConnected;}
 
    /**
      * To be called when a reply-Message is received from our server via the TCP connection

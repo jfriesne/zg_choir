@@ -14,11 +14,14 @@ class ITreeGatewaySubscriber;
 class ITreeGateway : public IGateway<ITreeGatewaySubscriber, ITreeGateway>
 {
 public:
+   /** Constructor */
    ITreeGateway() {/* empty */}
+
+   /** Destructor */
    virtual ~ITreeGateway() {/* empty */}
 
 protected:
-   // ITreeGateway function-call API -- mirrors the ITreeGatewaySubscriber function-call API.  See ITreeGatewaySubscriber.h for details
+   // ITreeGateway function-call API -- called by the corresponding methods in the ITreeGatewaySubscriber function-call API.  See ITreeGatewaySubscriber.h for details
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) = 0;
    virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) = 0;
    virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags) = 0;
