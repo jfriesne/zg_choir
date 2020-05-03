@@ -20,7 +20,7 @@ public:
    
    /** Constructor for an IDatabaseObject that is created via ZGDatabasePeerSession::CreateDatabaseObject()
      * @param session pointer to the ZGDatabasePeerSession object that created us, or NULL if we weren't created by a ZGDatabasePeerSession
-     * @param databaseIndex our position within the ZGDatabasePeerSession's databases-list, or -1 if we weren't created by a ZGDatabasePeerSession
+     * @param dbIndex our position within the ZGDatabasePeerSession's databases-list, or -1 if we weren't created by a ZGDatabasePeerSession
      */
    IDatabaseObject(ZGDatabasePeerSession * session, int32 dbIndex) : _session(session), _dbIndex(dbIndex) {/* empty */}
 

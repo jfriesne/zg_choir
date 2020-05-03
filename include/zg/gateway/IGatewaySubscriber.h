@@ -16,7 +16,7 @@ public:
      *                   if you don't want to register right away (in which case you'll probably want
      *                   to call SetGateway() on this object later)
      */
-   IGatewaySubscriber(GatewayType * gateway) : _gateway(NULL) {SetGateway(gateway);}
+   IGatewaySubscriber(GatewayType * optGateway) : _gateway(NULL) {SetGateway(optGateway);}
 
    /** Destructor -- unregisters this subscriber from its gateway */
    virtual ~IGatewaySubscriber() {SetGateway(NULL);}

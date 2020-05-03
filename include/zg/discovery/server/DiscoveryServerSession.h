@@ -17,6 +17,7 @@ class DiscoveryServerSession : public AbstractReflectSession
 public:
    /** Constructor 
      * @param master IDiscoverySessionController to get our pong Messages from.
+     * @param discoveryPort the port that we should listen for incoming discovery-query UDP packets on.  Defaults to DEFAULT_ZG_DISCOVERY_PORT.
      */
    DiscoveryServerSession(IDiscoveryServerSessionController & master, uint16 discoveryPort = DEFAULT_ZG_DISCOVERY_PORT);
 

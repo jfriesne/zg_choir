@@ -174,15 +174,15 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITree
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
-   return PingServerAux(tag, flags, -1);
+   return PingServerAux(tag, -1, flags);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
 {
-   return PingServerAux(tag, flags, whichDB);
+   return PingServerAux(tag, whichDB, flags);
 }
 
-status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, TreeGatewayFlags flags, int32 optWhichDB)
+status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_PING);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
@@ -250,8 +250,8 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       case NTG_COMMAND_PING:
       {
          const int32 whichDB = msg()->GetInt32(NTG_NAME_DBIDX, -1);
-         if (whichDB >= 0) (void) PingTreeSeniorPeer(whichDB, tag, flags);
-                      else (void) PingTreeServer(             tag, flags);
+         if (whichDB >= 0) (void) PingTreeSeniorPeer(tag, whichDB, flags);
+                      else (void) PingTreeServer(    tag,          flags);
       }
       break;
 
@@ -313,7 +313,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: TreeServerPonged(const String & t
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->AddInt32(NTG_NAME_DBIDX, whichDB).IsOK())) SendOutgoingMessageToNetwork(msg);
@@ -347,7 +347,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
       case NTG_REPLY_PONG:
       {
          const int32 dbIdx = msg()->GetInt32(NTG_NAME_DBIDX, -1);
-         if (dbIdx >= 0) TreeSeniorPeerPonged(dbIdx, tag);
+         if (dbIdx >= 0) TreeSeniorPeerPonged(tag, dbIdx);
                     else TreeServerPonged(tag);
       }
       break;

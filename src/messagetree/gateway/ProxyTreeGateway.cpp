@@ -80,9 +80,9 @@ status_t ProxyTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*c
    return ITreeGatewaySubscriber::PingTreeServer(tag, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::PingTreeSeniorPeer(whichDB, tag, flags);
+   return ITreeGatewaySubscriber::PingTreeSeniorPeer(tag, whichDB, flags);
 }
 
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
@@ -127,9 +127,9 @@ void ProxyTreeGateway :: TreeServerPonged(const String & tag)
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeServerPonged(tag);
 }
 
-void ProxyTreeGateway :: TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
+void ProxyTreeGateway :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeSeniorPeerPonged(whichDB, tag);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeSeniorPeerPonged(tag, whichDB);
 }
 
 void ProxyTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

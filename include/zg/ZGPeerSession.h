@@ -302,7 +302,7 @@ protected:
 
    /** From the IDiscoveryServerSessionController API:  Given an incoming discovery-ping, returns a
      * useful output discovery-pong to go back to the client.
-     * @param Message containing the incoming ping
+     * @param pingMsg containing the incoming ping
      * @param pingSource the IP address and port that the ping packet came from
      * @returns How many microseconds to delay before sinding the pong back out, or MUSCLE_TIME_NEVER to not send any pong back out.
      * @note on return, (pingMsg) will be updated to point to the appropriate pong-Message instead.

@@ -67,7 +67,7 @@ public:
          case 'P':
          {
             const String pingTag = tok();
-            if (PingTreeSeniorPeer(0, pingTag).IsOK(ret))   // assuming we want the ping to route through the update-path of database #0, for now 
+            if (PingTreeSeniorPeer(pingTag).IsOK(ret))   // assuming we want the ping to route through the update-path of database #0, for now 
             {
                LogTime(MUSCLE_LOG_INFO, "Sent senior-peer-ping with tag [%s]\n", pingTag());
             }
@@ -209,7 +209,7 @@ public:
       LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeServerPonged(%s)\n", tag());
    }
 
-   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag)
+   virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
    {
       LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeSeniorPeerPonged(" UINT32_FORMAT_SPEC ", %s)\n", whichDB, tag());
    }

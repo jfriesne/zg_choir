@@ -32,7 +32,7 @@ protected:
    virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags);
    virtual status_t TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
-   virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & tag, TreeGatewayFlags flags);
+   virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
    
    // ITreeGatewaySubscriber callback API
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg);
@@ -40,7 +40,7 @@ protected:
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
    virtual void TreeServerPonged(const String & tag);
-   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag);
+   virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
    virtual void TreeGatewayConnectionStateChanged();
 

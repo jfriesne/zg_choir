@@ -60,7 +60,7 @@ public:
 
    /** Called by the upstream gateway to notify this subscriber when an entry has been removed from the node-index of a subscribed-to database node.
      * @param nodePath the session-relative path of the database node in question.
-     * @param insertedAtIndex position from which the entry has been removed (0==first in the index, 1==second in the index, etc)
+     * @param removedAtIndex position from which the entry has been removed (0==first in the index, 1==second in the index, etc)
      * @param nodeName the name of the child node that was removed from the specified position.
      * Default implementation is a no-op.
      */
@@ -73,11 +73,11 @@ public:
    virtual void TreeServerPonged(const String & tag) {(void) tag;}
 
    /** Called when a "pong" comes back from the senior peer (in response to a previous call to PingSeniorPeer()).
-     * @param whichDB index of the ZG database whose database-update mechanisms the senior-peer-ping had travelled through.
      * @param tag the tag-string that was previously passed to PingSeniorPeer().
+     * @param whichDB index of the ZG database whose database-update mechanisms the senior-peer-ping had travelled through.
      * Default implementation is a no-op.
      */
-   virtual void TreeSeniorPeerPonged(uint32 whichDB, const String & tag) {(void) whichDB; (void) tag;}
+   virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB) {(void) tag; (void) whichDB;}
 
    /** Called when the subtree-data Message comes back in response to a previous call to RequestTreeNodeSubtrees().
      * @param tag the tag-string that you had previously passed to RequestTreeNodeSubtrees()
@@ -128,7 +128,7 @@ protected:
    virtual status_t RemoveAllTreeSubscriptions(TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Call this to request a one-shot (i.e. non-persistent) notification of the current state of database nodes matching the specified path.
-     * @param subscriptionPath the session-relative path of the node(s) you wish to query (e.g. "foo/bar/ba*")
+     * @param queryString the session-relative path of the node(s) you wish to query (e.g. "foo/bar/ba*")
      * @param optFilterRef if non-NULL, a reference to a QueryFilter object that the server should use to limit which nodes match the query.
      * @param flags If specified, these flags can influence the behavior of the subscribe operation.  Currently this argument is ignored.
      * @note notifications in response to this query will come in the form of some future calls to TreeNodeUpdated().
@@ -162,7 +162,7 @@ protected:
    virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const char * optBefore = NULL);
 
    /** Request that a subtree of nodes be uploaded to the specified location in the database.
-     * @param nodePath the session-relative path indicating where the root of the subtree should be created.
+     * @param basePath the session-relative path indicating where the root of the subtree should be created.
      * @param valuesMsg a Message containing the contents of the subtree (as previously passed back to you in SubtreesRequestResultReturned())
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
      * @returns B_NO_ERROR on success, or some other error value on failure.
@@ -198,10 +198,11 @@ protected:
      * coming back to you in the form of a call to TreeSeniorPeerPonged(), which is useful if you are trying to synchronize your actions
      * with respect to how a database is being updated system-wide.
      * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding SeniorPeerPonged() callback.
+     * @param whichDB which ZG database index to send the ping Message through.  Defaults to 0.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t PingTreeSeniorPeer(uint32 whichDB, const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t PingTreeSeniorPeer(const String & tag, uint32 whichDB = 0, TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Returns true iff our gateway is currently connected to the upstream database. */
    virtual bool IsTreeGatewayConnected() const;

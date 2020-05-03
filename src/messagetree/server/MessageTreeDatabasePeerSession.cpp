@@ -149,7 +149,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySu
    return B_NO_ERROR;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & tag, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
 {
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("PingSeniorPeer:  Senior peer not available");
 
@@ -279,6 +279,6 @@ void MessageTreeDatabasePeerSession :: HandleSeniorPeerPingMessage(uint32 whichD
    const String * tag          = msg()->GetStringPointer(MTDPS_NAME_TAG);
    const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
    TreeGatewayFlags flags      = msg()->GetFlat<TreeGatewayFlags>(MTDPS_NAME_FLAGS);
-   if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(whichDatabase, *tag);
+   if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(*tag, whichDatabase);
 }
 };  // end namespace zg

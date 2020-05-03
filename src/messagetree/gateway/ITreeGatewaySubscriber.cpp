@@ -53,9 +53,9 @@ status_t ITreeGatewaySubscriber :: PingTreeServer(const String & tag, TreeGatewa
    return GetGateway()->TreeGateway_PingServer(this, tag, flags);
 }
 
-status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(uint32 whichDB, const String & tag, TreeGatewayFlags flags) 
+status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32 whichDB, TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_PingSeniorPeer(this, whichDB, tag, flags);
+   return GetGateway()->TreeGateway_PingSeniorPeer(this, tag, whichDB, flags);
 }
 
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 
