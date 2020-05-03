@@ -62,6 +62,7 @@ void ClientSideNetworkTreeGateway :: SetNetworkConnected(bool isConnected)
    if (isConnected != _isConnected)
    {
       _isConnected = isConnected;
+      GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);
       TreeGatewayConnectionStateChanged();
    }
 }
@@ -227,6 +228,8 @@ QueryFilterRef ServerSideNetworkTreeGatewaySubscriber :: InstantiateQueryFilterA
 
 status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromClient(const MessageRef & msg)
 {
+   GatewaySubscriberCommandBatchGuard<ITreeGatewaySubscriber> cbg(this);  // let everyone know when this Message's processing begins and ends
+
    TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS);
    QueryFilterRef qfRef   = InstantiateQueryFilterAux(*msg(), 0);
    const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
@@ -324,6 +327,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(con
 
 status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
 {
+   GatewayCallbackBatchGuard<ITreeGateway> cbg(this);  // let everyone know when this Message's processing begins and ends
    if (muscleInRange(msg()->what, (uint32)BEGIN_PR_RESULTS, (uint32)END_PR_RESULTS)) return IncomingMuscledMessageReceivedFromServer(msg);
 
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));

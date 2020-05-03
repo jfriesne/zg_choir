@@ -92,14 +92,14 @@ bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
 
 // Begin ITreeGatewaySubscriber callback API
 
-void ProxyTreeGateway :: TreeCallbackBatchBeginning()
+void ProxyTreeGateway :: CallbackBatchBegins()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchBeginning();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) CallBeginCallbackBatch(iter.GetKey());
 }
 
-void ProxyTreeGateway :: TreeCallbackBatchEnding()
+void ProxyTreeGateway :: CallbackBatchEnds()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeCallbackBatchEnding();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) CallEndCallbackBatch(iter.GetKey());
 }
 
 void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & nodeMsg)

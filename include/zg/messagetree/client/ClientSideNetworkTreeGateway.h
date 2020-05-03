@@ -29,7 +29,7 @@ public:
    virtual status_t IncomingTreeMessageReceivedFromServer(const MessageRef & msg);
 
 protected:
-   // IGateway function-call API
+   /** Overridden to send any pending batch-Message out to the network */
    virtual void CommandBatchEnds();
 
    // ITreeGateway function-call API

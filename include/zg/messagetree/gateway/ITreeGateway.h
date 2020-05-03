@@ -35,6 +35,10 @@ protected:
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & tag, TreeGatewayFlags flags) = 0;
    virtual bool TreeGateway_IsGatewayConnected() const = 0;
 
+   // Pass-throughs to private methods on our IGatewaySubscriber class (used to control access to these methods, so that only their gateway can call from them)
+   bool CallBeginCallbackBatch(ITreeGatewaySubscriber * s) {return s->BeginCallbackBatch();}
+   bool CallEndCallbackBatch(  ITreeGatewaySubscriber * s) {return s->EndCallbackBatch();}
+
 private:
    friend class ITreeGatewaySubscriber;
 };

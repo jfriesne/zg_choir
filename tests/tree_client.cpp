@@ -171,14 +171,16 @@ public:
       return true;
    }
 
-   virtual void TreeCallbackBatchBeginning()
+   virtual void CallbackBatchBegins()
    {
-      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeCallbackBatchBeginning)\n");
+      IGatewaySubscriber::CallbackBatchBegins();
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchBegins()\n");
    }
 
-   virtual void TreeCallbackBatchEnding()
+   virtual void CallbackBatchEnds()
    {
-      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeCallbackBatchEnding)\n");
+      IGatewaySubscriber::CallbackBatchEnds();
+      LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchEnds()\n");
    }
 
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)

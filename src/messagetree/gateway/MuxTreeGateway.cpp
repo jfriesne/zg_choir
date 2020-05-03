@@ -412,7 +412,7 @@ void MuxTreeGateway :: EnsureSubscriberInBatchGroup(ITreeGatewaySubscriber * sub
    if (_needsCallbackBatchEndsCall.ContainsKey(sub) == false)
    {
       (void) _needsCallbackBatchEndsCall.PutWithDefault(sub);
-      sub->CallbackBatchBegins();
+      CallBeginCallbackBatch(sub);
    }
 }
 
@@ -423,11 +423,11 @@ void MuxTreeGateway :: CallbackBatchBegins()
 
 void MuxTreeGateway :: CallbackBatchEnds()
 {
-   // Notify everyone that we previously called CallbackBatchBegins() on, that that's all we have for them, for now
+   // Notify only the subscribers that we previously called BeginCallbackBatch() on
    while(_needsCallbackBatchEndsCall.HasItems())
    {
       ITreeGatewaySubscriber * a = *_needsCallbackBatchEndsCall.GetFirstKey();
-      a->CallbackBatchEnds();
+      CallEndCallbackBatch(a);
       (void) _needsCallbackBatchEndsCall.RemoveFirst();
    }
 }

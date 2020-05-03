@@ -23,11 +23,11 @@ public:
    IGateway() : _registrationIDCounter(0) {/* empty */}
    virtual ~IGateway() {MASSERT(_registeredSubscribers.IsEmpty(), "IGateway was destroyed without calling ShutdownGateway() on it first!");}
 
-   virtual bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins();    return ret;}
-   virtual bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();      _commandBatchCounter.Decrement();  return ret;}
+   bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins();    return ret;}
+   bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();      _commandBatchCounter.Decrement();  return ret;}
 
-   virtual bool BeginCallbackBatch() {const bool ret = _callbackBatchCounter.Increment();   if (ret) CallbackBatchBegins(); return ret;}
-   virtual bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds();   _callbackBatchCounter.Decrement(); return ret;}
+   bool BeginCallbackBatch() {const bool ret = _callbackBatchCounter.Increment();   if (ret) CallbackBatchBegins(); return ret;}
+   bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds();   _callbackBatchCounter.Decrement(); return ret;}
 
    bool  IsInCommandBatch() const {return _commandBatchCounter.IsInBatch();}
    bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}
@@ -35,10 +35,14 @@ public:
    virtual void ShutdownGateway() {while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());}
 
 protected:
-   /** Called when our command-batch counter has just gone from 0 to 1. */
+   /** Called when our command-batch counter has just gone from 0 to 1.
+     * Default implementation is a no-op.
+     */
    virtual void CommandBatchBegins() {/* empty */}
 
-   /** Called when our command-batch counter is just about to go from 1 to 0. */
+   /** Called when our command-batch counter is just about to go from 1 to 0.
+     * Default implementation is a no-op.
+     */
    virtual void CommandBatchEnds() {/* empty */}
 
    /** Called when our callback-batch counter has just gone from 0 to 1. */
@@ -80,8 +84,9 @@ private:
 };
 
 // Implemented here to resolve cyclic dependency
-template<class GatewayType> void IGatewaySubscriber<GatewayType>::BeginCommandBatch() {if (_gateway) _gateway->BeginCommandBatch();}
-template<class GatewayType> void IGatewaySubscriber<GatewayType>::EndCommandBatch()   {if (_gateway) _gateway->EndCommandBatch();}
+template<class GatewayType> bool IGatewaySubscriber<GatewayType> :: IsGatewayInCommandBatch() const {return _gateway ? _gateway->IsInCommandBatch() : false;}
+template<class GatewayType> bool IGatewaySubscriber<GatewayType> :: BeginCommandBatch() {return _gateway ? _gateway->BeginCommandBatch() : false;}
+template<class GatewayType> bool IGatewaySubscriber<GatewayType> :: EndCommandBatch()   {return _gateway ? _gateway->EndCommandBatch()   : false;}
 template<class GatewayType> void IGatewaySubscriber<GatewayType> :: SetGateway(GatewayType * optGateway)
 {
    if (optGateway != _gateway)
@@ -90,6 +95,29 @@ template<class GatewayType> void IGatewaySubscriber<GatewayType> :: SetGateway(G
       _gateway = optGateway;
       if (_gateway) _gateway->RegisterSubscriber(this);
    }
+}
+
+template<class GatewayType> bool IGatewaySubscriber<GatewayType>::BeginCallbackBatch()
+{
+   const bool ret = _callbackBatchCounter.Increment();
+   if (ret) 
+   {
+      (void) BeginCommandBatch();   // might as well auto-enter a command-batch when we start the callback batch
+      CallbackBatchBegins();        // that way the user-code doesn't have to remember when to do so
+   } 
+   return ret;
+}
+
+template<class GatewayType> bool IGatewaySubscriber<GatewayType>::EndCallbackBatch()
+{
+   const bool ret = _callbackBatchCounter.IsOutermost();
+   if (ret) 
+   {
+      CallbackBatchEnds();
+      (void) EndCommandBatch();
+   }
+   _callbackBatchCounter.Decrement();
+   return ret;
 }
 
 /** RIAA stack-guard object to begin and end an IGateway's Callback Batch at the appropriate times */

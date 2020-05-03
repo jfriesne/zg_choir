@@ -52,7 +52,11 @@ void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID
 {
    const bool wasFullyAttached = IAmFullyAttached();
    ZGDatabasePeerSession::PeerHasComeOnline(peerID, peerInfo);
-   if ((wasFullyAttached == false)&&(IAmFullyAttached())) ProxyTreeGateway::TreeGatewayConnectionStateChanged();  // notify our subscribers that we're now connected to the database.
+   if ((wasFullyAttached == false)&&(IAmFullyAttached())) 
+   {
+      GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);
+      ProxyTreeGateway::TreeGatewayConnectionStateChanged();  // notify our subscribers that we're now connected to the database.
+   }
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)

@@ -37,7 +37,7 @@ protected:
      */
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase) = 0;
 
-   // Overridden to call PushSubscriptionMessages()
+   /** Overridden to call PushSubscriptionMessages() so that MUSCLE updates will go out in a timely manner */
    virtual void CommandBatchEnds();
 
    /** Given a nodePath, returns the most-closely associated MessageTreeDatabaseObject, or NULL if none matches.

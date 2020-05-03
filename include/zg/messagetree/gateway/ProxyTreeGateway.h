@@ -21,8 +21,6 @@ public:
 
 public:
    // ITreeGatewaySubscriber callback API
-   virtual void TreeCallbackBatchBeginning();
-   virtual void TreeCallbackBatchEnding();
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg);
    virtual void TreeNodeIndexCleared(const String & path);
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
@@ -37,6 +35,10 @@ protected:
    // IGateway function-call API
    virtual void CommandBatchBegins();
    virtual void CommandBatchEnds();
+
+   // IGatewaySubscriber callback API
+   virtual void CallbackBatchBegins();
+   virtual void CallbackBatchEnds();
 
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);

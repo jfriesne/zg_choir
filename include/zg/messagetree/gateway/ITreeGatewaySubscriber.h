@@ -25,7 +25,7 @@ class ITreeGatewaySubscriber : public IGatewaySubscriber<ITreeGateway>
 {
 public:
    /** Constructor
-     * @param optGateway pointer to the ITreeGateway this subscribe should register with.  May be NULL
+     * @param optGateway pointer to the ITreeGateway this subscriber should register with.  May be NULL
      *                   if you don't want to register right away (in which case you'll probably want
      *                   to call SetGateway() on this object later)
      */
@@ -36,16 +36,6 @@ public:
 
 public:
    // ITreeGatewaySubscriber callback API
-
-   /** Called before one or more of the ITreeGatewaySubscriber Callback API's methods is called by the upstream gateway.
-     * Default implementation is a no-op.
-     */
-   virtual void TreeCallbackBatchBeginning() {/* empty */}
-
-   /** Called before one or more of the ITreeGatewaySubscriber Callback API's methods have been called by the upstream gateway.
-     * Default implementation is a no-op.
-     */
-   virtual void TreeCallbackBatchEnding() {/* empty */}
 
    /** Called by the upstream gateway to notify this subscriber about the new current state of a particular subscribed-to database node.
      * @param nodePath the session-relative path of the database node in question.
