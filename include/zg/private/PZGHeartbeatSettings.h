@@ -23,7 +23,7 @@ class PZGHeartbeatSettings : public zg::ZGPeerSettings, public RefCountable
 public:
    PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort);
 
-   uint64 GetSystemNameHash64()      const {return _systemNameHash64;} // _systemName.HashCode64(), precomputed for convenience
+   uint64 GetSystemKey()             const {return _systemKey;}   // (_systemName.HashCode64()+_signature.HashCode64()), precomputed for convenience
    const ZGPeerID & GetLocalPeerID() const {return _localPeerID;} // unique 128-bit ID of our local peer
    uint16 GetDataTCPPort()           const {return _dataTCPPort;} // port that our peer will listen for incoming TCP data connections on
    uint64 GetBirthdateMicros()       const {return _birthdate;}   // the moment at which this state was created (using the local GetRunTime64() clock)
@@ -42,7 +42,7 @@ public:
    Queue<NetworkInterfaceInfo> GetNetworkInterfaceInfos() const;
 
 private:
-   const uint64 _systemNameHash64;
+   const uint64 _systemKey;
    const ZGPeerID _localPeerID; // unique 128-bit ID of our local peer
    const uint16 _dataTCPPort;   // port that our peer will listen for incoming TCP data connections on
    const uint16 _dataUDPPort;   // port that we will be listening for multicast data-payload UDP traffic on

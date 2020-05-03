@@ -25,7 +25,7 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
    peerAttributes()->AddInt32("some_value", (GetRunTime64()%10000));
    peerAttributes()->AddFloat("pi", 3.14159f);
 
-   ZGPeerSettings s("test", NUM_TOY_DATABASES, false);
+   ZGPeerSettings s("test_peer", "test", NUM_TOY_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
 
    String multicastMode;

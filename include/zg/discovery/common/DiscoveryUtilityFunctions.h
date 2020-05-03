@@ -8,8 +8,9 @@ namespace zg {
 
 enum {DEFAULT_ZG_DISCOVERY_PORT = 25672};  /**< Arbitrary default port number to use for ZG's discovery traffic */
 
-#define ZG_DISCOVERY_NAME_PEERID     "pid" /**< Name of field containing a flattened ZGPeerID object */
+#define ZG_DISCOVERY_NAME_SIGNATURE  "sig" /**< Name of string field containing the System's program-signature */
 #define ZG_DISCOVERY_NAME_SYSTEMNAME "sn"  /**< Name of string field containing the System Name */
+#define ZG_DISCOVERY_NAME_PEERID     "pid" /**< Name of field containing a flattened ZGPeerID object */
 #define ZG_DISCOVERY_NAME_FILTER     "flt" /**< Name of Message sub-field containing archived QueryFilter object */
 #define ZG_DISCOVERY_NAME_TAG        "tag" /**< Name of Misc field supplied in ping message, copied to pong verbatim */
 

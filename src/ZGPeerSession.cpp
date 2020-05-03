@@ -558,8 +558,9 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
 
    MessageRef pongMsg = GetMessageFromPool(PR_RESULT_PONG);
    if ((pongMsg() == NULL)
-     | (pongMsg()->AddString( ZG_DISCOVERY_NAME_SYSTEMNAME, s.GetSystemName()).IsError())
-     | (pongMsg()->AddFlat(   ZG_DISCOVERY_NAME_PEERID,     GetLocalPeerID()).IsError())) return MUSCLE_TIME_NEVER;
+     || (pongMsg()->AddString( ZG_DISCOVERY_NAME_SYSTEMNAME, s.GetSystemName()).IsError())
+     || (pongMsg()->AddString( ZG_DISCOVERY_NAME_SIGNATURE,  s.GetSignature()).IsError())
+     || (pongMsg()->AddFlat(   ZG_DISCOVERY_NAME_PEERID,     GetLocalPeerID()).IsError())) return MUSCLE_TIME_NEVER;
 
    if ((pingMsg()->HasName(ZG_DISCOVERY_NAME_TAG))&&(pingMsg()->ShareName(ZG_DISCOVERY_NAME_TAG, *pongMsg()).IsError())) return MUSCLE_TIME_NEVER;
 

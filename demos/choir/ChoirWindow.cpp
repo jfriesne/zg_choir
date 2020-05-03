@@ -25,13 +25,11 @@ namespace choir {
 
 static ZGPeerSettings GetChoirPeerSettings()
 {
-   ZGPeerSettings settings("ZGChoir", NUM_CHOIR_DATABASES, false);
+   ZGPeerSettings settings("ZGChoir", "ZGChoir", NUM_CHOIR_DATABASES, false);
 
    MessageRef msg = GetMessageFromPool();
    if (msg())
    {
-      msg()->AddString("type", "ZGChoir");  // in case we ever go add discovery (not currently added to ZGChoir, but you never know)
-
       // Derive a more-or-less human-readable name-string for this computer, from the hostname
       String lhn = GetLocalHostName();
       lhn = lhn.Substring(0, ".");

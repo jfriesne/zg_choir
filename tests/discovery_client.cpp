@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
    discoFilter()->GetChildren().AddTail(ConstQueryFilterRef(new StringQueryFilter("type", StringQueryFilter::OP_EQUAL_TO, "tree_server")));
 
    status_t ret;
-   SystemDiscoveryClient discoveryClient(&scm, discoFilter);
+   SystemDiscoveryClient discoveryClient(&scm, "*", discoFilter);
    if (discoveryClient.Start().IsOK(ret))
    {
       TestDiscoveryNotificationTarget testTarget(&discoveryClient);

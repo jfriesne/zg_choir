@@ -509,11 +509,14 @@ void DiscoveryClientManagerSession :: UpdateResultSet()
    _reportedCookedResults.SwapContents(newCookedResults);
 }
 
-SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, const ConstQueryFilterRef & optFilter) 
+SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, const String & signaturePattern, const ConstQueryFilterRef & optFilter) 
    : ICallbackSubscriber(mechanism)
    , _pingInterval(0)
-   , _queryFilter(optFilter)
 {
+   ConstQueryFilterRef signatureFilterRef(new StringQueryFilter(ZG_DISCOVERY_NAME_SIGNATURE, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, signaturePattern));
+   if (optFilter()) _queryFilter.SetRef(new AndQueryFilter(signatureFilterRef, optFilter));
+               else _queryFilter = signatureFilterRef;
+
    _imp = new DiscoveryImplementation(*this);
 }
 

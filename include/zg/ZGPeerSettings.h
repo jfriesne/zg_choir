@@ -35,14 +35,16 @@ class ZGPeerSettings
 {
 public:
    /** Constructor. 
+     * @param signature A developer-chosen string identifying the program this object is a part of.  All peers in a system must use the same signature string.
      * @param systemName Name of the system this peer will participate in.  All peers in a system by definition use the same system name.
      * @param numDatabases The number of replicated databases this system should maintain.
      * @param systemIsOnLocalhostOnly If true, we'll send/receive multicast packets on loopback interfaces only.  If false, we'll use all interfaces.
      * @param peerType One of the PEER_TYPE_* values.  Defaults to PEER_TYPE_FULL_PEER, meaning that this peer is willing to handle
      *                 both junior-peer and senior-peer duties, if necessary.
      */
-   ZGPeerSettings(const String & systemName, uint8 numDatabases, bool systemIsOnLocalhostOnly, uint16 peerType = PEER_TYPE_FULL_PEER)
-      : _systemName(systemName)
+   ZGPeerSettings(const String & signature, const String & systemName, uint8 numDatabases, bool systemIsOnLocalhostOnly, uint16 peerType = PEER_TYPE_FULL_PEER)
+      : _signature(signature)
+      , _systemName(systemName)
       , _numDatabases(numDatabases)
       , _systemIsOnLocalhostOnly(systemIsOnLocalhostOnly)
       , _peerType(peerType)
@@ -55,6 +57,9 @@ public:
    {
       // empty
    }
+
+   /** Returns the ZG program signature (as specified in our constructor) */
+   const String & GetSignature()               const {return _signature;}
 
    /** Returns the ZG system's system name (as specified in our constructor) */
    const String & GetSystemName()              const {return _systemName;}
@@ -148,6 +153,7 @@ private:
    friend class zg_private::PZGHeartbeatThreadState;
 #endif
 
+   String _signature;                  // Signature of the ZG program that this code is part of
    String _systemName;                 // Name of the ZG system we are to participate in
    uint8 _numDatabases;                // how many databases we want to maintain
    bool _systemIsOnLocalhostOnly;      // true iff we are simulating the system on a single host

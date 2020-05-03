@@ -9,7 +9,7 @@ namespace zg_private
 
 PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort) 
    : zg::ZGPeerSettings(peerSettings)
-   , _systemNameHash64(GetSystemName().HashCode64())
+   , _systemKey(GetSignature().HashCode64() + GetSystemName().HashCode64())
    , _localPeerID(localPeerID)
    , _dataTCPPort(dataTCPPort)
    , _dataUDPPort(PER_SYSTEM_PORT_DATA)    // hard-coded, for now (maybe configurable later on?)
@@ -25,11 +25,11 @@ PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings
    }
 }
 
-static IPAddress GetMulticastAddressForSystemNameAndPort(const String & systemName, uint16 udpPort)
+static IPAddress GetMulticastAddressForSystemAndPort(const String & signature, const String & systemName, uint16 udpPort)
 {
    IPAddress ip = Inet_AtoN("0000:0000:0001::");
    static const uint64 salt = 531763157;  // arbitrary constant
-   ip.SetLowBits(ip.GetLowBits() + salt + systemName.HashCode64() + udpPort);           // Choose a multicast suffix unique to this system-name+port combo
+   ip.SetLowBits(ip.GetLowBits() + salt + signature.HashCode64() + systemName.HashCode64() + udpPort);
    ip.SetHighBits((ip.GetHighBits()&~(((uint64)0xFFFF)<<48))|(((uint64)(0xFF02))<<48)); // Make the address prefix link-local (ff02::)
    return ip;
 }
@@ -110,7 +110,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
    const char * dataDesc = isForHeartbeats ? "heartbeats" : "data";
    Queue<PacketDataIORef> ret;
    const uint16 udpPort = isForHeartbeats ? _hbUDPPort : _dataUDPPort;
-   const IPAddress multicastAddress = GetMulticastAddressForSystemNameAndPort(GetSystemName(), udpPort);
+   const IPAddress multicastAddress = GetMulticastAddressForSystemAndPort(GetSignature(), GetSystemName(), udpPort);
    Queue<NetworkInterfaceInfo> niis = GetNetworkInterfaceInfos();
    Queue<int> iidxQ;
 

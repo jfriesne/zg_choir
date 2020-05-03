@@ -46,7 +46,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    MessageRef peerAttributes = GetMessageFromPool();
    peerAttributes()->AddString("type", "tree_server");
 
-   ZGPeerSettings s("test", NUM_TREE_DATABASES, false);
+   ZGPeerSettings s("tree_server", "test", NUM_TREE_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
 
    String multicastMode;

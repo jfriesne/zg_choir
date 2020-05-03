@@ -497,7 +497,7 @@ void PZGHeartbeatThreadState :: ReceiveMulticastTraffic(PacketDataIO & dio)
             const ZGPeerID & pid = newHB()->GetSourcePeerID();
             PZGHeartbeatSourceKey source(sourceIAP, pid);
 
-            if (newHB()->GetSystemNameHash64() == _hbSettings()->GetSystemNameHash64())
+            if (newHB()->GetSystemKey() == _hbSettings()->GetSystemKey())
             {
                // See if we can use this heartbeat to compute an estimate of the multicast-packet-round-trip time (from us to him to us)
                const Queue<ConstPZGHeartbeatPeerInfoRef> & opq = newHB()->GetOrderedPeersList();
@@ -546,7 +546,7 @@ void PZGHeartbeatThreadState :: ReceiveMulticastTraffic(PacketDataIO & dio)
                if ((_updateOfficialPeersListPending == false)&&(pid == GetKingmakerPeerID())) ScheduleUpdateOfficialPeersList(false);
                if (pid == GetSeniorPeerID()) ScheduleUpdateToNetworkTimeOffset();
             }
-            else LogTime(MUSCLE_LOG_WARNING, "Incoming HeartbeatPacket from [%s] had wrong systemName hash for system [%s] (" UINT64_FORMAT_SPEC ", expected " UINT64_FORMAT_SPEC ")\n", source.ToString()(), _hbSettings()->GetSystemName()(), newHB()->GetSystemNameHash64(), _hbSettings()->GetSystemNameHash64());
+            else LogTime(MUSCLE_LOG_WARNING, "Incoming HeartbeatPacket from [%s] had wrong systemKey hash for system [%s / %s] (" UINT64_FORMAT_SPEC ", expected " UINT64_FORMAT_SPEC ")\n", source.ToString()(), _hbSettings()->GetSignature()(), _hbSettings()->GetSystemName()(), newHB()->GetSystemKey(), _hbSettings()->GetSystemKey());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't parse incoming heartbeat packet from [%s]\n", sourceIAP.ToString()());
       }
