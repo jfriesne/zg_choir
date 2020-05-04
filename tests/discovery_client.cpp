@@ -5,6 +5,7 @@
 
 #include "zg/ZGStdinSession.h"
 #include "zg/callback/SocketCallbackMechanism.h"
+#include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/client/SystemDiscoveryClient.h"
 
 using namespace zg;

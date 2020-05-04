@@ -1,6 +1,7 @@
 /* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
 
 #include "zg/discovery/client/SystemDiscoveryClient.h"
+#include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/SignalMessageIOGateway.h"
@@ -522,6 +523,7 @@ SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, c
 
 SystemDiscoveryClient :: ~SystemDiscoveryClient()
 {
+   while(_targets.HasItems()) _targets.GetFirstKeyWithDefault()->SetDiscoveryClient(NULL);  // un-register everyone to avoid dangling pointer issues
    delete _imp;
 }
 

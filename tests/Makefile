@@ -23,9 +23,9 @@ ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o
 PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
 ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o DiscoveryUtilityFunctions.o
 ZGTREESERVEROBJS = MessageTreeDatabasePeerSession.o MessageTreeDatabaseObject.o ServerSideMessageTreeSession.o ServerSideMessageUtilityFunctions.o SegmentedStringMatcher.o DiscoveryServerSession.o
-ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o SystemDiscoveryClient.o ICallbackMechanism.o SocketCallbackMechanism.o
+ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o SystemDiscoveryClient.o ICallbackMechanism.o SocketCallbackMechanism.o ClientConnector.o MessageTreeClientConnector.o
 SRCDIR = ../src
-VPATH = . $(SRCDIR) $(SRCDIR)/private $(SRCDIR)/messagetree/gateway $(SRCDIR)/messagetree/client $(SRCDIR)/messagetree/server $(SRCDIR)/discovery/server $(SRCDIR)/discovery/client $(SRCDIR)/discovery/common $(SRCDIR)/callback $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
+VPATH = . $(SRCDIR) $(SRCDIR)/private $(SRCDIR)/messagetree/gateway $(SRCDIR)/messagetree/client $(SRCDIR)/messagetree/server $(SRCDIR)/connector $(SRCDIR)/discovery/server $(SRCDIR)/discovery/client $(SRCDIR)/discovery/common $(SRCDIR)/callback $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
 
 # if the OS type variable is unset, try to set it using the uname shell command 
 ifeq ($(OSTYPE),) 
