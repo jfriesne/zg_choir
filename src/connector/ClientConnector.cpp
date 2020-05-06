@@ -297,6 +297,8 @@ void MonitorOwnerThreadSession :: MessageReceivedFromGateway(const MessageRef &,
 
 ClientConnector :: ClientConnector(ICallbackMechanism * mechanism, const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalCriteria)
    : ICallbackSubscriber(mechanism)
+   , _signaturePattern(signaturePattern)
+   , _systemNamePattern(systemNamePattern)
 {
    ConstQueryFilterRef filterRef(new StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, systemNamePattern));
    if (optAdditionalCriteria()) filterRef.SetRef(new AndQueryFilter(filterRef, optAdditionalCriteria));

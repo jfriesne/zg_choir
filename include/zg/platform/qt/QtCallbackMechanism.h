@@ -1,6 +1,7 @@
 #ifndef QtSocketCallbackMechanism_h
 #define QtSocketCallbackMechanism_h
 
+#include <QSocketNotifier>
 #include "zg/callback/SocketCallbackMechanism.h"
 
 namespace zg {
@@ -9,7 +10,7 @@ namespace zg {
   * in a Qt-specific way that makes it easy to integrate
   * ZG callbacks into a Qt-based GUI program.
   */
-class QtSocketCallbackMechanism : public SocketCallbackMechanism
+class QtSocketCallbackMechanism : public QObject, public SocketCallbackMechanism
 {
 Q_OBJECT
 
@@ -25,7 +26,7 @@ public:
    }
 
    /** Destructor */
-   virtual ~SocketCallbackMechanism()
+   virtual ~QtSocketCallbackMechanism()
    {
       _notifier.setEnabled(false);
    }
@@ -33,6 +34,7 @@ public:
 private slots:
    void NotifierActivated() {DispatchCallbacks();}
 
+private:
    QSocketNotifier _notifier;
 };
 

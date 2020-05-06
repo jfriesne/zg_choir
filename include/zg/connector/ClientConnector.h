@@ -52,6 +52,12 @@ public:
    /** Returns true our TCP connection to the server is currently connected */
    bool IsConnected() const;
 
+   /** Returns the signature--pattern string that was passed in to our constructor. */
+   const String & GetSignaturePattern() const {return _signaturePattern;}
+
+   /** Returns the system-name-pattern string that was passed in to our constructor. */
+   const String & GetSystemNamePattern() const {return _systemNamePattern;}
+
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);
 
@@ -83,6 +89,8 @@ private:
 
    void MessageReceivedFromIOThread(const MessageRef & msg);  // called by I/O thread!
 
+   const String _signaturePattern;
+   const String _systemNamePattern;
    ClientConnectorImplementation * _imp;
 
    Queue<MessageRef> _scratchQueue;

@@ -9,4 +9,6 @@ namespace fridge
    using namespace zg;
 };
 
+#define FRIDGE_PROGRAM_SIGNATURE "Fridge"
+
 #endif

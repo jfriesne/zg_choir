@@ -10,7 +10,7 @@ namespace fridge {
 
 static ZGPeerSettings GetFridgePeerSettings(const String & systemName)
 {
-   return ZGPeerSettings("Fridge", systemName, 1, false);
+   return ZGPeerSettings(FRIDGE_PROGRAM_SIGNATURE, systemName, 1, false);
 }
 
 // This class implements a database-peer to test out the MessageTreeDatabaseObject class

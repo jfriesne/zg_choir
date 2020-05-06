@@ -1,6 +1,7 @@
 #ifndef IDiscoveryNotificationTarget_h
 #define IDiscoveryNotificationTarget_h
 
+#include "message/Message.h"
 #include "zg/ZGNameSpace.h"
 
 namespace zg {
