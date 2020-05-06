@@ -29,7 +29,7 @@ public:
    virtual void TreeGatewayShuttingDown();
 
    // ITextCommandReceiver API
-   virtual bool IsReadyForTextCommands() const {return IsTreeGatewayConnected();}
+   virtual bool IsReadyForTextCommands() const;
    virtual bool TextCommandReceived(const String & textStr);
 };
 

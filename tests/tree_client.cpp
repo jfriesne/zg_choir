@@ -4,7 +4,7 @@
 
 #include "zg/ZGStdinSession.h"
 #include "zg/messagetree/client/ClientSideMessageTreeSession.h"
-#include "zg/test/TestTreeGatewaySubscriber.h"
+#include "zg/messagetree/client/TestTreeGatewaySubscriber.h"
 
 using namespace zg;
 

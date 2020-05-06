@@ -1,4 +1,5 @@
-#include "zg/test/TestTreeGatewaySubscriber.h"
+#include "zg/messagetree/client/TestTreeGatewaySubscriber.h"
+#include "zg/messagetree/gateway/ITreeGateway.h"  // this include is required in order to avoid linker errors(!?)
 #include "util/StringTokenizer.h"
 
 namespace zg {
@@ -13,8 +14,15 @@ TestTreeGatewaySubscriber :: ~TestTreeGatewaySubscriber()
    /* empty */
 }
 
+bool TestTreeGatewaySubscriber :: IsReadyForTextCommands() const 
+{
+   return IsTreeGatewayConnected();
+}
+
 bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 {
+   if (textStr.IsEmpty()) return false;
+
    LogTime(MUSCLE_LOG_INFO, "You typed: [%s]\n", textStr());
 
    StringTokenizer tok(textStr(), " ");
@@ -152,7 +160,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       break;
 
       default:
-         LogTime(MUSCLE_LOG_ERROR, "Sorry, wot?\n");
+         if (*cmd) LogTime(MUSCLE_LOG_ERROR, "Sorry, wot?\n");
          return false;
    }
    return true;
