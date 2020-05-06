@@ -281,4 +281,33 @@ void MessageTreeDatabasePeerSession :: HandleSeniorPeerPingMessage(uint32 whichD
    TreeGatewayFlags flags      = msg()->GetFlat<TreeGatewayFlags>(MTDPS_NAME_FLAGS);
    if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(*tag, whichDatabase);
 }
+
+status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, uint32 & retID)
+{
+   const DataNode * node = GetDataNode(path);
+   if (node == NULL)
+   {
+      // If there is no parent node currently, demand-create it
+      MessageRef emptyRef(GetMessageFromPool());
+      return ((emptyRef())&&(SetDataNode(path, emptyRef) == B_NO_ERROR)) ? GetUnusedNodeID(path, retID) : B_ERROR;
+   }
+
+   const uint32 NUM_NODE_IDS = 100000;  // chosen arbitrarily
+   uint32 nextID = (node->GetMaxKnownChildIDHint()%NUM_NODE_IDS);
+   for (uint32 i=0; i<NUM_NODE_IDS; i++)
+   {
+      char temp[32];
+      muscleSprintf(temp, "I" UINT32_FORMAT_SPEC, nextID);
+      if ((node->HasChild(&temp[1]))||(node->HasChild(temp))) nextID = (nextID+1)%NUM_NODE_IDS;
+      else
+      {
+         retID = nextID;
+         return B_NO_ERROR;
+      }
+   }
+
+   LogTime(MUSCLE_LOG_CRITICALERROR, "GetUnusedNodeID():  Could not find available child ID for node path [%s]!\n", path());
+   return B_ERROR;
+}
+
 };  // end namespace zg

@@ -84,6 +84,7 @@ protected:
 private:
    friend class MessageTreeDatabaseObject;
 
+   status_t GetUnusedNodeID(const String & path, uint32 & retID);
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);
    bool IsInSetupOrTeardown() const {return _inPeerSessionSetupOrTeardown.IsInBatch();}

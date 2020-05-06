@@ -411,7 +411,19 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessage(const Message & ms
    if (optPayload())
    {
       const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);
-      return zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(*path), optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+      String sessionRelativePath = DatabaseSubpathToSessionRelativePath(*path);
+      if ((IsInSeniorDatabaseUpdateContext())&&(sessionRelativePath.EndsWith('/')))
+      {
+         // Client wants us to choose an available node ID
+         sessionRelativePath--;
+
+         status_t ret;
+         uint32 newNodeID;
+         if (zsh->GetUnusedNodeID(sessionRelativePath, newNodeID).IsError(ret)) return ret;
+         char buf[64]; muscleSprintf(buf, "/%s" UINT32_FORMAT_SPEC, flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)?"I":"", newNodeID);
+         sessionRelativePath += buf;
+      }
+      return zsh->SetDataNode(sessionRelativePath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
    }
    else return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
