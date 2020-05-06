@@ -1,5 +1,3 @@
-/* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
-
 #ifndef ClientConnector_h
 #define ClientConnector_h
 
@@ -83,7 +81,14 @@ protected:
 private:
    friend class ClientConnectorImplementation;
 
+   void MessageReceivedFromIOThread(const MessageRef & msg);  // called by I/O thread!
+
    ClientConnectorImplementation * _imp;
+
+   Queue<MessageRef> _scratchQueue;
+
+   Mutex _replyQueueMutex;
+   Queue<MessageRef> _replyQueue;
 };
 DECLARE_REFTYPES(ClientConnector);
 

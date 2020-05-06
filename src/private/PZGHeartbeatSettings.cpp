@@ -44,6 +44,7 @@ public:
 // Some network interfaces we just shouldn't try to use!
 bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
 {
+
 #ifdef __APPLE__
    if (nii.GetName().StartsWith("utun")) return false;
    if (nii.GetName().StartsWith("llw"))  return false;
@@ -51,7 +52,7 @@ bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
    (void) nii;  // avoid compiler warning
 #endif
 
-   return true;
+   return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
 }
 
 Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() const

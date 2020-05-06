@@ -1,5 +1,3 @@
-/* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
-
 #ifndef SystemDiscoveryClient_h
 #define SystemDiscoveryClient_h
 

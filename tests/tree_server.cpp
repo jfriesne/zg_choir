@@ -1,7 +1,6 @@
 #include "reflector/ReflectServer.h"
 #include "system/SetupSystem.h"
 #include "util/MiscUtilityFunctions.h"
-#include "util/StringTokenizer.h"
 
 #include "zg/ZGStdinSession.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
@@ -46,7 +45,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    MessageRef peerAttributes = GetMessageFromPool();
    peerAttributes()->AddString("type", "tree_server");
 
-   ZGPeerSettings s("tree_server", "test", NUM_TREE_DATABASES, false);
+   ZGPeerSettings s("tree_server", "test_tree_system", NUM_TREE_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
 
    String multicastMode;

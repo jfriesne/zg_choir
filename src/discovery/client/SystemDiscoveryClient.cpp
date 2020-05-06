@@ -1,5 +1,3 @@
-/* This file is Copyright 2002 Level Control Systems.  See the included LICENSE.txt file for details. */
-
 #include "zg/discovery/client/SystemDiscoveryClient.h"
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"
@@ -66,6 +64,7 @@ public:
    {
       TCHECKPOINT;
 
+      if (GetGateway()() == NULL) return -1;  // abort sessions that couldn't create a socket
       DataIO & udpIO = *GetGateway()()->GetDataIO()();
       Queue<MessageRef> & oq = GetGateway()()->GetOutgoingMessageQueue();
       uint32 ret = 0;
