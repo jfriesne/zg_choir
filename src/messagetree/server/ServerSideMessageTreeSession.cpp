@@ -27,7 +27,7 @@ status_t ServerSideMessageTreeSession :: AddTreeSubscription(const String & subs
    return ret;
 }
 
-status_t ServerSideMessageTreeSession :: RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ServerSideMessageTreeSession :: RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & /*optFilterRef*/, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg);
@@ -35,7 +35,7 @@ status_t ServerSideMessageTreeSession :: RemoveTreeSubscription(const String & s
    return ret;
 }
 
-status_t ServerSideMessageTreeSession :: RemoveAllTreeSubscriptions(TreeGatewayFlags flags)
+status_t ServerSideMessageTreeSession :: RemoveAllTreeSubscriptions(TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleUnsubscribeAllMessage(cmdMsg);
@@ -43,7 +43,7 @@ status_t ServerSideMessageTreeSession :: RemoveAllTreeSubscriptions(TreeGatewayF
    return ret;
 }
 
-status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg);
@@ -51,7 +51,7 @@ status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & qu
    return ret;
 }
 
-status_t ServerSideMessageTreeSession :: RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
+status_t ServerSideMessageTreeSession :: RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg);

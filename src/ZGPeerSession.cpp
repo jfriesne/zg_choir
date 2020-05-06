@@ -227,7 +227,7 @@ void ZGPeerSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const 
 
    if (iWasSeniorPeer != iAmSeniorPeer) 
    {
-      LogTime(MUSCLE_LOG_INFO, "I am %s the senior peer!\n", IAmTheSeniorPeer()?"now":"no longer");
+      LogTime(MUSCLE_LOG_INFO, "I am %s the senior peer of %s system [%s]!\n", IAmTheSeniorPeer()?"now":"no longer", GetPeerSettings().GetSignature()(), GetPeerSettings().GetSystemName()());
       LocalSeniorPeerStatusChanged();
       ScheduleSetBeaconData();
    }

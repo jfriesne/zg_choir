@@ -234,7 +234,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
    else _checksum += node.CalculateChecksum();
 }
 
-void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key)
+void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & /*node*/, char op, uint32 index, const String & key)
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
@@ -485,6 +485,11 @@ status_t MessageTreeDatabaseObject :: SafeMoveIndexEntries(const String & nodePa
    AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
    if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
    return zsh->MoveIndexEntries(nodePath, optBefore, ConstQueryFilterRef(&andQF, false));
+}
+
+MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeDatabasePeerSession() const 
+{
+   return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());
 }
 
 }; // end namespace zg

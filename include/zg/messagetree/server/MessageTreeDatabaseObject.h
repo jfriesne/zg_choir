@@ -2,10 +2,13 @@
 #define MessageTreeDatabaseObject_h
 
 #include "zg/IDatabaseObject.h"
+#include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"  // for TreeGatewayFlags
 #include "util/NestCount.h"
 
 namespace zg
 {
+
+class MessageTreeDatabasePeerSession;
 
 /** This is a concrete implementation of IDatabaseObject that uses a subtree of the MUSCLE 
   * Message-tree database as the data structure it synchronizes across peers.
@@ -39,7 +42,7 @@ public:
    /** Returns a pointer to the MessageTreeDatabasePeerSession object that created us, or NULL
      * if this object was not created by a MessageTreeDatabasePeerSession.
      */
-   MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const {return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());}
+   MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const;
 
    /** Checks if the given path belongs to this database.
      * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
@@ -68,7 +71,7 @@ private:
    public:
       SafeQueryFilter(const MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj) {/* empty */}
    
-      virtual bool Matches(ConstMessageRef & msg, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
+      virtual bool Matches(ConstMessageRef & /*msg*/, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
       virtual uint32 TypeCode() const {return 0;}
    
    private:

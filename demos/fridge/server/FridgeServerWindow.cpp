@@ -5,18 +5,13 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 
-#include "zg/ZGPeerSettings.h"
-#include "FridgeServer.h"
+#include "FridgeServerWindow.h"
 
 namespace fridge {
 
-static ZGPeerSettings GetFridgePeerSettings()
-{
-   ZGPeerSettings settings("Fridge", "Fridge", 1, false);
-   return settings;
-}
-
-FridgeServerWindow :: FridgeServerWindow() 
+FridgeServerWindow :: FridgeServerWindow(const String & argv0) 
+   : _argv0(argv0)
+   , _childProcessIODevice(NULL)
 {
    setWindowTitle(tr("Fridge Server"));
    setAttribute(Qt::WA_DeleteOnClose);
@@ -41,12 +36,12 @@ FridgeServerWindow :: FridgeServerWindow()
       connect(_stopButton, SIGNAL(clicked()), this, SLOT(StopServer()));
       headerLayout->addWidget(_stopButton);
 
-      QLabel * serverNameLabel = new QLabel(tr("System Name: "));
-      headerLayout->addWidget(serverNameLabel);
+      QLabel * systemNameLabel = new QLabel(tr("System Name: "));
+      headerLayout->addWidget(systemNameLabel);
 
-      _serverName = new QLineEdit;
-      _serverName->setText(tr("Default Fridge"));
-      headerLayout->addWidget(_serverName, 1);
+      _systemName = new QLineEdit;
+      _systemName->setText(tr("Default Fridge"));
+      headerLayout->addWidget(_systemName, 1);
    }
    vbl->addWidget(headerLine);
 
@@ -89,8 +84,8 @@ void FridgeServerWindow :: ClearLog()
 
 void FridgeServerWindow :: CloneServer()
 {
-   FridgeServerWindow * clone = new FridgeServerWindow;
-   clone->_serverName->setText(_serverName->text());
+   FridgeServerWindow * clone = new FridgeServerWindow(_argv0);
+   clone->_systemName->setText(_systemName->text());
    if (_childProcess() != NULL) clone->SetServerRunning(true);
    clone->show();
 }
@@ -99,7 +94,16 @@ void FridgeServerWindow :: UpdateStatus()
 {
    _startButton->setEnabled(_childProcess() == NULL);
    _stopButton->setEnabled( _childProcess() != NULL);
-   _serverName->setReadOnly(_childProcess() != NULL);
+   _systemName->setReadOnly(_childProcess() != NULL);
+}
+
+void FridgeServerWindow :: ReadChildProcessOutput()
+{
+   if (_childProcessIODevice)
+   {
+      _serverOutput->appendPlainText(QString::fromUtf8(_childProcessIODevice->readAll()));
+      if ((_childProcessIODevice->isOpen() == false)||(_childProcessIODevice->atEnd())) SetServerRunning(false);
+   }
 }
 
 void FridgeServerWindow :: SetServerRunning(bool running)
@@ -108,24 +112,44 @@ void FridgeServerWindow :: SetServerRunning(bool running)
    {
       if (running)
       {
-printf("Launch child process!\n");
+         ChildProcessDataIORef cpdioRef(new ChildProcessDataIO(false));
+         cpdioRef()->SetChildProcessShutdownBehavior(true, -1, SecondsToMicros(5));  // wait 5 seconds for the child process to exit voluntarily, then kill him
+
+         Queue<String> argv;
+         argv.AddTail(_argv0);
+         argv.AddTail(String("systemname=%1").Arg(_systemName->text().trimmed().toUtf8().constData()));
+
+         status_t ret;
+         if (cpdioRef()->LaunchChildProcess(argv).IsOK(ret))
+         {
+            _childProcessIODevice = new QDataIODevice(cpdioRef, this);
+            if (_childProcessIODevice->open(QIODevice::ReadWrite)) 
+            {
+               ClearLog();
+               QObject::connect(_childProcessIODevice, SIGNAL(readyRead()), this, SLOT(ReadChildProcessOutput()));
+               _childProcess = cpdioRef;
+            }
+            else 
+            {
+               LogTime(MUSCLE_LOG_CRITICALERROR, "Error, couldn't open QDataIODevice to child process!\n");
+               delete _childProcessIODevice;
+               _childProcessIODevice = NULL;
+            }
+         }
+         else LogTime(MUSCLE_LOG_CRITICALERROR, "Error launching child process! [%s]\n", ret());
       }
-      else _childProcess.Reset();
+      else 
+      {
+         delete _childProcessIODevice;
+         _childProcess.Reset();
+      }
+
+      QPalette p = _serverOutput->palette();
+      p.setColor(QPalette::Base, _childProcess()?Qt::white:Qt::lightGray);
+      _serverOutput->setPalette(p);
 
       UpdateStatus();
    }
 }
 
 }; // end namespace fridge
-
-int main(int argc, char ** argv)
-{
-   using namespace fridge;
-
-   CompleteSetupSystem css;
-   QApplication app(argc, argv);
-
-   FridgeServerWindow * fsw = new FridgeServerWindow;  // must be on the heap since we call setAttribute(Qt::WA_DeleteOnClose) in the FridgeServerWindow constructor
-   fsw->show();
-   return app.exec();
-}

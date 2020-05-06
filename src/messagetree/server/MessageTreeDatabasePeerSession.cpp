@@ -186,7 +186,7 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(Dat
    ZGDatabasePeerSession::NotifySubscribersThatNodeIndexChanged(node, op, index, key);
 }
 
-void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved)
+void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & /*oldData*/, bool isBeingRemoved)
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
    TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), isBeingRemoved?MessageRef():node.GetData());

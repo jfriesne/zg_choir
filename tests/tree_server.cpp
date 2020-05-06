@@ -113,14 +113,6 @@ protected:
       return ret;
    }
 
-#ifdef TEMP_REMOVE
-   virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
-   {
-      printf("Received incoming Message from peer [%s]:\n", fromPeerID.ToString()());
-      msg()->PrintToStream();
-   }
-#endif
-
 private:
    uint16 _acceptPort;
 };

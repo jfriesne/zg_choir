@@ -38,6 +38,7 @@ win32:INCLUDEPATH += $$MUSCLE_DIR/regex/regex
 
 MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/dataio/ByteBufferDataIO.cpp             \
+                 $$MUSCLE_DIR/dataio/ChildProcessDataIO.cpp           \
                  $$MUSCLE_DIR/dataio/FileDataIO.cpp                   \
                  $$MUSCLE_DIR/dataio/StdinDataIO.cpp                  \
                  $$MUSCLE_DIR/dataio/SimulatedMulticastDataIO.cpp     \
@@ -97,6 +98,18 @@ PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGHeartbeatSourceState.cpp  \
               $$ZG_DIR/src/private/PZGHeartbeatThreadState.cpp
 
+SERVER_SOURCES = $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp        \
+                 $$ZG_DIR/src/discovery/server/DiscoveryServerSession.cpp           \
+                 $$ZG_DIR/src/messagetree/gateway/ITreeGatewaySubscriber.cpp        \
+                 $$ZG_DIR/src/messagetree/gateway/DummyTreeGateway.cpp              \
+                 $$ZG_DIR/src/messagetree/gateway/ProxyTreeGateway.cpp              \
+                 $$ZG_DIR/src/messagetree/gateway/MuxTreeGateway.cpp                \
+                 $$ZG_DIR/src/messagetree/gateway/NetworkTreeGateway.cpp            \
+                 $$ZG_DIR/src/messagetree/server/MessageTreeDatabasePeerSession.cpp \
+                 $$ZG_DIR/src/messagetree/server/MessageTreeDatabaseObject.cpp      \
+                 $$ZG_DIR/src/messagetree/server/ServerSideMessageTreeSession.cpp   \
+                 $$ZG_DIR/src/messagetree/server/ServerSideMessageUtilityFunctions.cpp
+
 win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
                         $$MUSCLE_DIR/regex/regex/regerror.c     \
                         $$MUSCLE_DIR/regex/regex/regexec.c      \
@@ -116,12 +129,11 @@ win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
 
 !win32:MUSCLE_SOURCES += $$MUSCLE_DIR/dataio/FileDescriptorDataIO.cpp
 
-mac:OBJECTIVE_SOURCES += disable_app_nap.mm
 mac:LIBS              += -framework Foundation
 
-CHOIR_SOURCES  = FridgeServer.cpp
-CHOIR_INCLUDES = FridgeServer.h
+FRIDGE_SOURCES  = FridgeServerWindow.cpp FridgeServerProcess.cpp main.cpp
+FRIDGE_INCLUDES = FridgeServerWindow.h
 
-SOURCES = $$CHOIR_SOURCES $$MUSCLE_SOURCES $$ZG_SOURCES $$PZG_SOURCES
-HEADERS = $$CHOIR_INCLUDES $$MUSCLE_INCLUDES
+SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$ZG_SOURCES $$PZG_SOURCES $$SERVER_SOURCES
+HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_INCLUDES
 
