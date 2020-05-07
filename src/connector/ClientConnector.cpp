@@ -247,7 +247,7 @@ private:
       }
    }
 
-   virtual status_t MessageReceivedFromOwner(const MessageRef & msgRef, uint32 numLeft)
+   virtual status_t MessageReceivedFromOwner(const MessageRef & msgRef, uint32 /*numLeft*/)
    {
       if (msgRef() == NULL) 
       {
@@ -316,7 +316,7 @@ status_t ClientConnector :: Start(uint64 reconnectTimeMicroseconds) {return _imp
 void ClientConnector :: Stop() {_imp->Stop();}
 bool ClientConnector :: IsActive() const {return _imp->IsActive();}
 
-void ClientConnector :: DispatchCallbacks(uint32 eventTypeBits)
+void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
 {
    // critical section
    {
