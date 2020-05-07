@@ -54,12 +54,8 @@ void FridgeClientCanvas :: paintEvent(QPaintEvent *)
    p.fillRect(rect(), Qt::lightGray);
    for (HashtableIterator<String, MagnetState> iter(_magnets); iter.HasData(); iter++)
    {
-      const String & id     = iter.GetKey();
       const MagnetState & m = iter.GetValue();
-
-      QRect rect = m.GetScreenRect(fm);
-      if (id == _draggingID) rect.translate(_dragCurPos-_dragStartedAt);
-      m.Draw(p, rect);
+      m.Draw(p, m.GetScreenRect(fm));
    }
 }
 
@@ -76,9 +72,9 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
    String clickedOn = GetMagnetAtPoint(e->pos());
    if (clickedOn.HasChars())
    {
-      _draggingID    = clickedOn;
-      _dragStartedAt = e->pos();
-      _dragCurPos    = e->pos();
+      const Point & ulp = _magnets[clickedOn].GetUpperLeftPos();
+      _draggingID = clickedOn;
+      _dragDelta  = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
    }
    else 
    {
@@ -92,12 +88,7 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
 
 void FridgeClientCanvas :: mouseMoveEvent(QMouseEvent * e)
 {
-   if (_draggingID.HasChars())
-   {
-      _dragCurPos = e->pos();
-      update();
-   }
-
+   if (_draggingID.HasChars()) UpdateDraggedMagnetPosition(e->pos());
    e->accept();
 }
 
@@ -105,20 +96,7 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
 {
    if (_draggingID.HasChars())
    {
-      MagnetState * ms = _magnets.Get(_draggingID);
-      if (ms)
-      {
-         // Upload the new/post-drag position of the magnet to the server
-         // Note that I'm cheating a bit here by updating my local state immediately, rather than
-         // waiting to get the feedback from the server that the value has changed there.  I'm cheating
-         // only to avoid a brief flicker of the magnet to its original position during the upload period.
-         const Point oldPos = ms->GetUpperLeftPos();
-         const QPoint delta = (_dragCurPos-_dragStartedAt); 
-         ms->SetUpperLeftPos(Point(oldPos.x()+delta.x(), oldPos.y()+delta.y()));
-
-         status_t ret;
-         if (UploadMagnetState(_draggingID, ms).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload moved magnet, error [%s]\n", ret());
-      }
+      UpdateDraggedMagnetPosition(e->pos());
       _draggingID.Clear();
    }
 
@@ -139,6 +117,20 @@ void FridgeClientCanvas :: leaveEvent(QEvent * e)
    }
 
    e->accept();
+}
+
+void FridgeClientCanvas :: UpdateDraggedMagnetPosition(QPoint mousePos)
+{
+   const MagnetState * ms = _magnets.Get(_draggingID);
+   if (ms)
+   {
+      const QPoint upperLeftPos = (mousePos-_dragDelta);
+      MagnetState newState(*ms);
+      newState.SetUpperLeftPos(Point(upperLeftPos.x(), upperLeftPos.y()));
+
+      status_t ret;
+      if (UploadMagnetState(_draggingID, &newState).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload moved magnet, error [%s]\n", ret());
+   }
 }
 
 status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState)

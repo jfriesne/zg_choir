@@ -34,11 +34,11 @@ private:
    String GetMagnetAtPoint(const QPoint & pt) const;
    status_t UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState);
    String GetNextMagnetWord();
+   void UpdateDraggedMagnetPosition(QPoint mousePos);
 
    Hashtable<String, MagnetState> _magnets;
    String _draggingID;  // if non-empty, we're in the middle of moving a magnet
-   QPoint _dragStartedAt;
-   QPoint _dragCurPos;
+   QPoint _dragDelta;   // mouse-click position minus upper-left position
 
    Queue<String> _magnetWords;
    uint32 _nextMagnetWordIndex;
