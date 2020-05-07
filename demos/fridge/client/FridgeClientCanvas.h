@@ -30,6 +30,8 @@ public:
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
 
+   void ClearMagnets();
+
 private:
    String GetMagnetAtPoint(const QPoint & pt) const;
    status_t UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState);

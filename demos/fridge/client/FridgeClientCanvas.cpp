@@ -8,19 +8,14 @@
 namespace fridge {
 
 static const char * _magnetWordsList[] = {
-   "Foo",
-   "Bar",
-   "Baz",
-   "Blah",
-   "Nerd",
-   "Blorf"
+#include "common_words_list.txt"
 };
 
 FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector) 
    : ITreeGatewaySubscriber(connector)
    , _nextMagnetWordIndex(0)
 {
-   (void) AddTreeSubscription("magnets/*");
+   (void) AddTreeSubscription("magnets/*");   // we need to keep track of where the magnets are on the server
 
    (void) _magnetWords.EnsureSize(ARRAYITEMS(_magnetWordsList));
    for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) (void) _magnetWords.AddTail(_magnetWordsList[i]);
@@ -80,6 +75,8 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
    {
       status_t ret;
       MagnetState newMagnet(Point(e->x(), e->y()), GetNextMagnetWord());
+      const QSize s = newMagnet.GetScreenRect(fontMetrics()).size();
+      newMagnet.SetUpperLeftPos(Point(e->x()-(s.width()/2), e->y()-(s.height()/2)));  // center the new magnet under the mouse pointer
       if (UploadMagnetState(GetEmptyString(), &newMagnet).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload new magnet, error [%s]\n", ret());
    }
 
@@ -179,6 +176,12 @@ String FridgeClientCanvas :: GetNextMagnetWord()
    const String ret = _magnetWords[_nextMagnetWordIndex];
    _nextMagnetWordIndex = (_nextMagnetWordIndex+1)%_magnetWords.GetNumItems();
    return ret;
+}
+
+void FridgeClientCanvas :: ClearMagnets()
+{
+   status_t ret;
+   if (RequestDeleteTreeNodes("magnets/*").IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of all magnets! [%s]\n", ret());
 }
 
 }; // end namespace fridge
