@@ -19,11 +19,17 @@ else (!WIN32)
    endif (APPLE)
 endif (WIN32)
 
-include_directories(include muscle)
-add_subdirectory(muscle)
+include_directories(include submodules/muscle)
+add_subdirectory(submodules/muscle)
 
 file(GLOB ZG_SRCS 
    "./src/*.cpp"
+   "./src/callback/*.cpp"
+   "./src/connector/*.cpp"
+   "./src/discovery/client/*.cpp"
+   "./src/messagetree/client/*.cpp"
+   "./src/messagetree/gateway/*.cpp"
+   "./src/messagetree/server/*.cpp"
    "./src/private/*.cpp"
 ) 
 
