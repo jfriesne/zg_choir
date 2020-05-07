@@ -152,7 +152,7 @@ public:
       const uint64 now = args.GetCallbackTime();
 
       const int64 lateBy = now-args.GetScheduledTime();
-      if (lateBy >= _pingInterval) 
+      if ((lateBy >= 0)&&(((uint64)lateBy) >= _pingInterval))
       {
          // If our timing has been thrown way off because of App Nap, then we'll just pretend we got an incoming network 
          // packet from everybody.  That way we avoid spurious system-is-gone updates due to Apple not waking up our
