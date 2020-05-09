@@ -26,10 +26,8 @@ file(GLOB ZG_SRCS
    "./src/*.cpp"
    "./src/callback/*.cpp"
    "./src/connector/*.cpp"
-   "./src/discovery/client/*.cpp"
-   "./src/messagetree/client/*.cpp"
-   "./src/messagetree/gateway/*.cpp"
-   "./src/messagetree/server/*.cpp"
+   "./src/discovery/*/*.cpp"
+   "./src/messagetree/*/*.cpp"
    "./src/private/*.cpp"
 ) 
 
@@ -41,5 +39,16 @@ if (APPLE)
 endif (APPLE)
 
 add_executable(test_peer ${PROJECT_SOURCE_DIR}/tests/test_peer.cpp)
-
 target_link_libraries(test_peer zg)
+
+add_executable(tree_client ${PROJECT_SOURCE_DIR}/tests/tree_client.cpp)
+target_link_libraries(tree_client zg)
+
+add_executable(tree_server ${PROJECT_SOURCE_DIR}/tests/tree_server.cpp)
+target_link_libraries(tree_server zg)
+
+add_executable(discovery_client ${PROJECT_SOURCE_DIR}/tests/discovery_client.cpp)
+target_link_libraries(discovery_client zg)
+
+add_executable(connector_client ${PROJECT_SOURCE_DIR}/tests/connector_client.cpp)
+target_link_libraries(connector_client zg)
