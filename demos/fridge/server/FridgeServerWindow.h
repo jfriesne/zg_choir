@@ -20,13 +20,19 @@ class FridgeServerWindow : public QMainWindow
 Q_OBJECT
 
 public:
-   /** Default constructor */
+   /** Default constructor
+     * @param argv0 the first entry of the argv[] array that was passed in to main().  (Used when launching a child process)
+     */
    FridgeServerWindow(const String & argv0);
 
    /** Destructor */
    virtual ~FridgeServerWindow();
 
 public slots:
+   /** Launches or killed the child process running the actual server code.
+     * @param running true iff the child process should be running, false if it should not be.
+     * @note this method has no effect if the child process is already in the desired state.
+     */
    void SetServerRunning(bool running);
 
 private slots:

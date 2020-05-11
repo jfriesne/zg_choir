@@ -7,13 +7,18 @@
 
 namespace zg {
 
-/** This class is a StorageReflectSession that functions as a connected client's interface to a
-  * server that is implementing a database.
+/** This class is a StorageReflectSession that functions as one connected client's interface
+  *  to a server that is implementing a database.  It runs inside a ReflectServer inside a server process.
   */
 class ServerSideMessageTreeSession : public StorageReflectSession, public ServerSideNetworkTreeGatewaySubscriber, private INetworkMessageSender
 {
 public:
+   /** Constructor
+     * @param upstreamGateway the ITreeGateway we will access to request database-update operations 
+     */
    ServerSideMessageTreeSession(ITreeGateway * upstreamGateway);
+
+   /** Destructor */
    virtual ~ServerSideMessageTreeSession();
 
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);

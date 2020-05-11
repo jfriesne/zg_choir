@@ -16,7 +16,12 @@ class ITreeGatewaySubscriber;
 class MuxTreeGateway : public ProxyTreeGateway
 {
 public:
+   /** Constructor
+     * @param optUpstreamGateway if non-NULL, this is a pointer to the "upstream" gateway that we will pass our subscribers' request on to, and receive replies back from
+     */
    MuxTreeGateway(ITreeGateway * optUpstreamGateway);
+
+   /** Destructor */
    virtual ~MuxTreeGateway();
 
    virtual void ShutdownGateway();

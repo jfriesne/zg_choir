@@ -213,7 +213,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
 void RosterWidget :: wheelEvent(QWheelEvent * e)
 {
    QWidget::wheelEvent(e);
-   emit WheelTurned(e->delta());
+   emit WheelTurned(e->angleDelta().y());
    e->accept();
 }
 

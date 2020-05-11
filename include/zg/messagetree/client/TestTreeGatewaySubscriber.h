@@ -12,7 +12,12 @@ namespace zg {
 class TestTreeGatewaySubscriber : public ITreeGatewaySubscriber, public ITextCommandReceiver
 {
 public:
+   /** Constructor
+     * @param gateway the ITreeGateway we will use for network access 
+     */
    TestTreeGatewaySubscriber(ITreeGateway * gateway);
+
+   /** Destructor */
    virtual ~TestTreeGatewaySubscriber();
 
    // ITreeGatewaySubscriber API

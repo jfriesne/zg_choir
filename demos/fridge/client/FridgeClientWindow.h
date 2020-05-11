@@ -24,7 +24,9 @@ class FridgeClientWindow : public QMainWindow, public IDiscoveryNotificationTarg
 Q_OBJECT
 
 public:
-   /** Constructor */
+   /** Constructor
+     * @param callbackMechanism the ICallbackMechanim used by the ZG classes to inject method-callbacks into the GUI thread.
+     */
    FridgeClientWindow(ICallbackMechanism * callbackMechanism);
 
    /** Destructor */

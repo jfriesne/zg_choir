@@ -13,8 +13,12 @@ namespace zg {
 class ProxyTreeGateway : public ITreeGateway, public ITreeGatewaySubscriber
 {
 public:
+   /** Constructor
+     * @param optUpstreamGateway if non-NULL, this is a pointer to the "upstream" gateway that we will pass our subscribers' request on to, and receive replies back from
+     */
    ProxyTreeGateway(ITreeGateway * optUpstreamGateway);
 
+   /** Destructor */
    virtual ~ProxyTreeGateway();
 
    virtual void ShutdownGateway();

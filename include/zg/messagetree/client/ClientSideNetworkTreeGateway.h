@@ -16,13 +16,19 @@ public:
      */
    ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender);
 
+   /** Destructor */
    virtual ~ClientSideNetworkTreeGateway();
 
+   /** Called (typically by the MessageTreeClientConnector class) whenever the client connects to the server or disconnects from the server.
+     * @param isConnected true if the TCP connection was just made, or false if it was just severed.
+     */
    void SetNetworkConnected(bool isConnected);
+
+   /** Returns true iff we are currently in TCP-connected mode (as specified by the most recent call to SetNetworkConnected()) */
    bool IsNetworkConnected() const {return _isConnected;}
 
    /**
-     * To be called when a reply-Message is received from our server via the TCP connection
+     * Called (typically by the MessageTreeClientConnector that is managing us) when a reply-Message is received from our server via the TCP connection
      * @param msg the Message that was received
      * @returns B_NO_ERROR if the Message was handled, or B_UNIMPLEMENTED if the Message type was unknown, or some other error on miscellaneous failure.
      */

@@ -8,10 +8,13 @@ namespace zg {
 /** Returns a pointer to a singleton DummyTreeGateway object, which is used to cleanly implement no-ops and return errors on all methods */
 ITreeGateway * GetDummyTreeGateway();
 
-/** Dummy subclass of ITreeGateway; everything is a on-op */
+/** Dummy subclass of ITreeGateway; all methods are implemented as no-ops. */
 class DummyTreeGateway : public ITreeGateway
 {
 public:
+   /** Constructor
+     * @param returnValue the value all of our status_t-returning methods should return.  Defaults to B_UNIMPLEMENTED.
+     */
    DummyTreeGateway(status_t returnValue = B_UNIMPLEMENTED) : _returnValue(returnValue) {/* empty */}
 
 protected:

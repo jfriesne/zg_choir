@@ -14,7 +14,9 @@ class FridgeClientCanvas : public QWidget, public ITreeGatewaySubscriber
 Q_OBJECT
 
 public:
-   /** Constructor */
+   /** Constructor
+     * @param connector the ITreeGateway we should register with and use for our database access
+     */
    FridgeClientCanvas(ITreeGateway * connector);
 
    /** Destructor */
@@ -30,6 +32,7 @@ public:
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
 
+   /** Uploads a request to the server to clear all the magnets from the fridge */
    void ClearMagnets();
 
 private:

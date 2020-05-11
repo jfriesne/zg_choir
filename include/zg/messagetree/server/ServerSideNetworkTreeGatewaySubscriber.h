@@ -13,6 +13,10 @@ class INetworkMessageSender;
 class ServerSideNetworkTreeGatewaySubscriber : public ITreeGatewaySubscriber
 {
 public:
+   /** Constructor
+     * @param upstreamGateway the ITreeGateway we will uses to access database operations
+     * @param messageSender an object we can call SendOutgoingMessageToNetwork() when we want to send a Message back to our client via TCP.
+     */
    ServerSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender);
 
    /**

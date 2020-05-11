@@ -57,10 +57,42 @@ public:
    /** Returns the session-relative path of the root of this database's subtree (without any trailing slash) */
    const String & GetRootPath() const {return _rootNodePathWithoutSlash;}
 
-   status_t UploadNodeValue(const String & path, const MessageRef & optPaylod, TreeGatewayFlags flags, const char * optBefore);
+   /** Sends a request to the senior peer that the specified node-value be uploaded to the message-tree database.
+     * @param path session-relative path of the database node to upload (may be wildcarded, but only if (optPayload) is a NULL reference)
+     * @param optPayload reference to the Message payload you want added/updated at the given path, or a NULL reference if you want 
+     *                   node(s) matching the given path to be deleted.
+     * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
+     * @param optBefore if non-NULL, the name of the sibling node that this node should be placed before, or NULL if you want the
+     *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
+     * @returns B_NO_ERROR on success, or another error code on failure.
+     */
+   status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
+
+   /** Sends a request to the senior peer that the specified node sub-tree be uploaded.
+     * @param path session-relative path indicating where in the message-tree to place the root of the uploaded sub-tree.
+     * @param valuesMsg should contain the subtree to upload.
+     * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
+     * @returns B_NO_ERROR on success, or another error code on failure.
+     */
    status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
+
+   /** Sends a request to remove matching nodes from the database.
+     * @param path session-relative path indicating which node(s) to delete.  May be wildcarded.
+     * @param optFilter if non-NULL, only nodes whose Message-payloaded are matched by this query-filter will be deletes.
+     * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
+     * @returns B_NO_ERROR on success, or another error code on failure.
+     */
    status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
-   status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+
+   /** Sends a request to modify the ordering of the indices of matching nodes in the database.
+     * @param path session-relative path indicating which node(s) to modify the indices of.  May be wildcarded.
+     * @param optBefore if non-NULL, the name of the sibling node that this node should be placed before, or NULL if you want the
+     *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
+     * @param optFilter if non-NULL, only nodes whose Message-payloaded are matched by this query-filter will have their indices modified.
+     * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
+     * @returns B_NO_ERROR on success, or another error code on failure.
+     */
+   status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);

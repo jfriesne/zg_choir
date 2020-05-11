@@ -9,12 +9,15 @@
 namespace zg {
 
 /** This class is a StorageReflectSession that functions as a connected client's interface to a
-  * server that is implementing a database.
+  * server that is implementing a database.  It runs inside a ReflectServer inside a client process.
   */
 class ClientSideMessageTreeSession : public AbstractReflectSession, public MuxTreeGateway, private INetworkMessageSender
 {
 public:
+   /** Default Constructor */
    ClientSideMessageTreeSession();
+
+   /** Destructor */
    virtual ~ClientSideMessageTreeSession();
 
    virtual void AsyncConnectCompleted();

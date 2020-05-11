@@ -31,10 +31,10 @@ static QPixmap RotatePixmap180(const QPixmap & pm)
 {
    QImage img = pm.toImage(); 
    QPoint center = img.rect().center();
-   QMatrix matrix;
-   matrix.translate(center.x(), center.y());
-   matrix.rotate(180);
-   return QPixmap::fromImage(img.transformed(matrix));
+   QTransform transform;
+   transform.translate(center.x(), center.y());
+   transform.rotate(180);
+   return QPixmap::fromImage(img.transformed(transform, Qt::SmoothTransformation));
 }
 
 MusicSheetWidget :: MusicSheetWidget(const INetworkTimeProvider * networkTimeProvider, QWidget * parent) : QWidget(parent), _networkTimeProvider(networkTimeProvider), _ghostChordIndex(MUSCLE_NO_LIMIT), _ghostNoteIndex(MUSCLE_NO_LIMIT), _scrollOffsetX(0), _isFullyAttached(false), _localNotes(0), _allAssignedNotes(0), _seekDraggingIndex(MUSCLE_NO_LIMIT)
