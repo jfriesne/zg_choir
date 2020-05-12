@@ -340,7 +340,11 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
    {
       String temp = _rootNodePathWithoutSlash.IsEmpty() ? path : path.Substring(_rootNodePathWithSlash.Length());
       const uint32 ret = temp.GetNumInstancesOf('/')+1;
-      if (optRetRelativePath) optRetRelativePath->SwapContents(temp);
+      if (optRetRelativePath) 
+      {
+         optRetRelativePath->SwapContents(temp);
+         if ((path.EndsWith('/'))&&(!optRetRelativePath->EndsWith('/'))) *optRetRelativePath += '/';  // for when the user is requesting a new node ID in the db-subtree-root
+      }
       return ret;
    }
    else return -1;

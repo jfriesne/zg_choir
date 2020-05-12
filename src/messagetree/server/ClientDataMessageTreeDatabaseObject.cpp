@@ -20,7 +20,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    status_t ret = MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore);
    if (ret.IsError()) return ret;
 
-   // Update the node in our local MUSCLE database also, so that we can retransmit it later if we need to
+   // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
    return ssmts->SetDataNode(localPath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
 }
 
@@ -75,7 +75,27 @@ String ClientDataMessageTreeDatabaseObject :: GetSharedPathFromLocalPathAux(cons
 void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * clientSession)
 {
    const String sharedPath = GetSharedPathFromLocalPathAux(GetEmptyString(), clientSession);
-   if (sharedPath.HasChars()) (void) MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, ConstQueryFilterRef(), TreeGatewayFlags());
+   if (sharedPath.HasChars())
+   {
+      GatewaySubscriberCommandBatchGuard<ITreeGatewaySubscriber> gcb(clientSession);
+
+      (void) MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, ConstQueryFilterRef(), TreeGatewayFlags());
+
+      // We'll also send a request to delete the parent/IP-address node, but only if it no longer has any session nodes beneath
+      // it.  That way the database won't contain "orphan client IP addresses" with no sessions left in them.
+      int32 lastSlash = sharedPath.LastIndexOf('/');
+      if (lastSlash > 0)
+      {
+         const String ipPath = sharedPath.Substring(0, lastSlash);
+
+         static const ChildCountQueryFilter _noKids(ChildCountQueryFilter::OP_EQUAL_TO, 0);
+         (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath, ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags());
+
+         // And if the grandparent/peer-ID node has also become empty, we can delete that too
+         lastSlash = ipPath.LastIndexOf('/');
+         if (lastSlash > 0) (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath.Substring(0, lastSlash), ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags());
+      }
+   }
 }
 
 }; // end namespace zg
