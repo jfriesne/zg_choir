@@ -1,6 +1,7 @@
 #include "reflector/ReflectServer.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
+#include "zg/messagetree/server/ClientDataMessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
@@ -8,9 +9,15 @@
 
 namespace fridge {
 
+enum {
+   FRIDGE_DB_MAGNETS = 0,  // the set of refrigerator-magnets is stored here (under subtree "magnets/")
+   FRIDGE_DB_CLIENTS,      // the set of currently-connected clients is stored here (under subtree "clients/")
+   NUM_FRIDGE_DBS          // guard value
+};
+
 static ZGPeerSettings GetFridgePeerSettings(const String & systemName)
 {
-   return ZGPeerSettings(FRIDGE_PROGRAM_SIGNATURE, systemName, 1, false);
+   return ZGPeerSettings(FRIDGE_PROGRAM_SIGNATURE, systemName, NUM_FRIDGE_DBS, false);
 }
 
 // This class implements a database-peer to test out the MessageTreeDatabaseObject class
@@ -43,15 +50,27 @@ public:
 protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
-      if (whichDatabase != 0)
+      switch(whichDatabase)
       {
-         LogTime(MUSCLE_LOG_CRITICALERROR, "FridgePeerSession only supports one database, for now\n");
-         return IDatabaseObjectRef();
-      }
+         case FRIDGE_DB_MAGNETS:
+         {
+            IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "magnets"));
+            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            return ret;
+         }
 
-      IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, GetEmptyString()));
-      if (ret() == NULL) WARN_OUT_OF_MEMORY;
-      return ret;
+         case FRIDGE_DB_CLIENTS:
+         {
+            IDatabaseObjectRef ret(newnothrow ClientDataMessageTreeDatabaseObject(this, whichDatabase, "clients"));
+            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            return ret;
+         }
+
+         default:
+            LogTime(MUSCLE_LOG_CRITICALERROR, "FridgePeerSession::CreateDatabaseObject(" UINT32_FORMAT_SPEC "):  Unknown database ID!\n", whichDatabase);
+            return IDatabaseObjectRef();
+         break;
+      }
    }
 
 private:

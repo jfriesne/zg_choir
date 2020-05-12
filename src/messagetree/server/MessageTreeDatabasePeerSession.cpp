@@ -1,5 +1,6 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "zg/messagetree/server/ServerSideMessageUtilityFunctions.h"
 
 namespace zg
@@ -308,6 +309,16 @@ status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, 
 
    LogTime(MUSCLE_LOG_CRITICALERROR, "GetUnusedNodeID():  Could not find available child ID for node path [%s]!\n", path());
    return B_ERROR;
+}
+
+ServerSideMessageTreeSession * MessageTreeDatabasePeerSession :: GetActiveServerSideMessageTreeSession() const
+{
+   for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+   {
+      ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()());
+      if ((ssmts)&&(ssmts->IsInMessageReceivedFromGateway())) return ssmts;
+   }
+   return NULL;
 }
 
 };  // end namespace zg

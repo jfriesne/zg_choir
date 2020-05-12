@@ -105,6 +105,7 @@ SERVER_SOURCES = $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp    
                  $$ZG_DIR/src/messagetree/gateway/ProxyTreeGateway.cpp              \
                  $$ZG_DIR/src/messagetree/gateway/MuxTreeGateway.cpp                \
                  $$ZG_DIR/src/messagetree/gateway/NetworkTreeGateway.cpp            \
+                 $$ZG_DIR/src/messagetree/server/ClientDataMessageTreeDatabaseObject.cpp \
                  $$ZG_DIR/src/messagetree/server/MessageTreeDatabasePeerSession.cpp \
                  $$ZG_DIR/src/messagetree/server/MessageTreeDatabaseObject.cpp      \
                  $$ZG_DIR/src/messagetree/server/ServerSideMessageTreeSession.cpp   \

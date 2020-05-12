@@ -149,7 +149,13 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
 void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
 {
    ITreeGatewaySubscriber::TreeGatewayConnectionStateChanged();
-   if ((IsTreeGatewayConnected() == false)&&(_magnets.HasItems()))
+   if (IsTreeGatewayConnected())
+   {
+      // Upload a note to the client-roster, so that anyone connected to other servers in the same system can know we're online now
+      MessageRef clientInfo = GetMessageFromPool();  // empty is okay for now; someday we could add e.g. the local user's name to this, or etc
+      (void) UploadTreeNodeValue("clients/clientinfo", clientInfo);
+   }
+   else if (_magnets.HasItems())
    {
       _magnets.Clear();
       update();

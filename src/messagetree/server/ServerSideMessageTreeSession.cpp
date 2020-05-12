@@ -16,6 +16,7 @@ ServerSideMessageTreeSession :: ~ServerSideMessageTreeSession()
 
 void ServerSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
 {
+   NestCountGuard ncg(_isInMessageReceivedFromGateway);
    if (IncomingTreeMessageReceivedFromClient(msg) == B_UNIMPLEMENTED) StorageReflectSession::MessageReceivedFromGateway(msg, userData);
 }
 

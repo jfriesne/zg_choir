@@ -4,6 +4,7 @@
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/messagetree/server/ServerSideNetworkTreeGatewaySubscriber.h"
 #include "reflector/StorageReflectSession.h"
+#include "util/NestCount.h"
 
 namespace zg {
 
@@ -23,6 +24,9 @@ public:
 
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
+   /** Returns true iff we are currently executing inside our MessageReceivedFromGateway callback */
+   bool IsInMessageReceivedFromGateway() const {return _isInMessageReceivedFromGateway.IsInBatch();}
+
 protected:
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
 
@@ -34,6 +38,9 @@ protected:
    virtual status_t RemoveAllTreeSubscriptions(TreeGatewayFlags flags = TreeGatewayFlags());
    virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
    virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags = TreeGatewayFlags());
+
+private:
+   NestCount _isInMessageReceivedFromGateway;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSession);
 

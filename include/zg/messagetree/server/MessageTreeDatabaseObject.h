@@ -66,7 +66,7 @@ public:
      *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
+   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
 
    /** Sends a request to the senior peer that the specified node sub-tree be uploaded.
      * @param path session-relative path indicating where in the message-tree to place the root of the uploaded sub-tree.
@@ -74,7 +74,7 @@ public:
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
+   virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
 
    /** Sends a request to remove matching nodes from the database.
      * @param path session-relative path indicating which node(s) to delete.  May be wildcarded.
@@ -82,7 +82,7 @@ public:
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
    /** Sends a request to modify the ordering of the indices of matching nodes in the database.
      * @param path session-relative path indicating which node(s) to modify the indices of.  May be wildcarded.
@@ -92,7 +92,7 @@ public:
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);

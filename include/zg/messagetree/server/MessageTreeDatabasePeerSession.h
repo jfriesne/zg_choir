@@ -11,6 +11,7 @@ namespace zg
 {
 
 class MessageTreeDatabaseObject;
+class ServerSideMessageTreeSession;
 
 /** This is a ZGDatabasePeerSession that has been further specialized to be able to
   * support MUSCLE node-tree database semantics in particular.
@@ -28,6 +29,11 @@ public:
 
    virtual status_t AttachedToServer();
    virtual void AboutToDetachFromServer();
+
+   /** Returns a pointer to the ServerSideMessageTreeSession object whose MessageReceivedFromGateway() callback we
+     * are currently processing, or NULL if we aren't in that context.
+     */
+   ServerSideMessageTreeSession * GetActiveServerSideMessageTreeSession() const;
 
 protected:
    /** This will be called as part of the startup sequence.  It should create
