@@ -8,6 +8,8 @@
 
 namespace zg {
 
+class ClientDataMessageTreeDatabaseObject;
+
 /** This class is a StorageReflectSession that functions as one connected client's interface
   *  to a server that is implementing a database.  It runs inside a ReflectServer inside a server process.
   */
@@ -22,6 +24,7 @@ public:
    /** Destructor */
    virtual ~ServerSideMessageTreeSession();
 
+   virtual void AboutToDetachFromServer();
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
    /** Returns true iff we are currently executing inside our MessageReceivedFromGateway callback */
@@ -40,6 +43,8 @@ protected:
    virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags = TreeGatewayFlags());
 
 private:
+   friend class ClientDataMessageTreeDatabaseObject;
+
    NestCount _isInMessageReceivedFromGateway;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSession);

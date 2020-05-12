@@ -28,7 +28,7 @@ status_t ITreeGatewaySubscriber :: RequestTreeNodeSubtrees(const Queue<String> &
    return GetGateway()->TreeGateway_RequestNodeSubtrees(this, queryStrings, queryFilters, tag, maxDepth, flags);
 }
 
-status_t ITreeGatewaySubscriber :: UploadTreeNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) 
+status_t ITreeGatewaySubscriber :: UploadTreeNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) 
 {
    return GetGateway()->TreeGateway_UploadNodeValue(this, path, optPayload, flags, optBefore);
 }
@@ -43,7 +43,7 @@ status_t ITreeGatewaySubscriber :: RequestDeleteTreeNodes(const String & path, c
    return GetGateway()->TreeGateway_RequestDeleteNodes(this, path, optFilterRef, flags);
 }
 
-status_t ITreeGatewaySubscriber :: RequestMoveTreeIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 
+status_t ITreeGatewaySubscriber :: RequestMoveTreeIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) 
 {
    return GetGateway()->TreeGateway_RequestMoveIndexEntry(this, path, optBefore, optFilterRef, flags);
 }

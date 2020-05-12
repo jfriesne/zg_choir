@@ -1,5 +1,6 @@
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "zg/messagetree/server/ServerSideMessageUtilityFunctions.h"
+#include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 
 namespace zg {
 
@@ -12,6 +13,14 @@ ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upst
 ServerSideMessageTreeSession :: ~ServerSideMessageTreeSession()
 {
    // empty
+}
+
+void ServerSideMessageTreeSession :: AboutToDetachFromServer()
+{
+   MessageTreeDatabasePeerSession * peerSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();
+   if (peerSession) peerSession->ServerSideMessageTreeSessionIsDetaching(this);  // notify the ZGPeer so that any ClientDataMessageTreeDatabaseObjects can remove our shared nodes
+
+   StorageReflectSession::AboutToDetachFromServer();
 }
 
 void ServerSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)

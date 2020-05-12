@@ -55,7 +55,10 @@ public:
    int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
    /** Returns the session-relative path of the root of this database's subtree (without any trailing slash) */
-   const String & GetRootPath() const {return _rootNodePathWithoutSlash;}
+   const String & GetRootPathWithoutSlash() const {return _rootNodePathWithoutSlash;}
+
+   /** Returns the session-relative path of the root of this database's subtree (with a trailing slash) */
+   const String & GetRootPathWithSlash() const {return _rootNodePathWithSlash;}
 
    /** Sends a request to the senior peer that the specified node-value be uploaded to the message-tree database.
      * @param path session-relative path of the database node to upload (may be wildcarded, but only if (optPayload) is a NULL reference)
@@ -66,7 +69,7 @@ public:
      *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
+   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore);
 
    /** Sends a request to the senior peer that the specified node sub-tree be uploaded.
      * @param path session-relative path indicating where in the message-tree to place the root of the uploaded sub-tree.
@@ -92,7 +95,7 @@ public:
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
@@ -120,7 +123,7 @@ private:
    status_t SeniorUpdateAux(const ConstMessageRef & msg);
    status_t JuniorUpdateAux(const ConstMessageRef & msg);
 
-   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const;
+   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) const;
    MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key);
    MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags) const;
 

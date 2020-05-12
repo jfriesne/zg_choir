@@ -6,6 +6,8 @@
 namespace zg
 {
 
+class ServerSideMessageTreeSession;
+
 /** This is a special subclass of MessageTreeDatabaseObject that can be used
   * to hold database state that is bound to a particular client connection.
   * Data posted by the client to this subtree will be tied to the lifetime
@@ -31,13 +33,19 @@ public:
    virtual ~ClientDataMessageTreeDatabaseObject() {/* empty */}
 
    // MessageTreeDatabaseObject API
-   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore);
+   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore);
    virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
    virtual status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
-   virtual status_t RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+
+   /** Called by the ServerSideMessageTreeSession when it is about to detach from the server.
+     * This call allows us to delete any shared nodes that correspond to it.
+     */
+   void ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * clientSession);
 
 private:
-   String GetSharedPathFromLocalPath(const String & localPath) const; // given e.g. "foo/bar", returns "<peerid>/<ipaddress>/<sessionid>/foo/bar", suitable for sharing
+   String GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const; // given e.g. "foo/bar", returns "<peerid>/<ipaddress>/<sessionid>/foo/bar", suitable for sharing
+   String GetSharedPathFromLocalPathAux(const String & localPath, ServerSideMessageTreeSession * ssmts) const;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 

@@ -272,7 +272,7 @@ void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node,
    // TODO IMPLEMENT THIS
 }
 
-status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
+status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
 {
    MessageRef cmdMsg = CreateNodeUpdateMessage(path, optPayload, flags, optBefore);
    return cmdMsg() ? RequestUpdateDatabaseState(cmdMsg) : B_OUT_OF_MEMORY;
@@ -298,7 +298,7 @@ status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, co
    return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
 }
 
-status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path, const char * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
+status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_SENIOR_COMMAND_MOVEINDEXENTRY);
    if (cmdMsg() == NULL) RETURN_OUT_OF_MEMORY;
@@ -307,8 +307,9 @@ status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path,
    if ((optFilter())&&(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()).IsError(ret))) return ret;
 
    ret = cmdMsg()->CAddString(MTDO_NAME_PATH,   path)
-       | cmdMsg()->CAddString(MTDO_NAME_BEFORE, optBefore)
        | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags);
+
+   if (optBefore) ret |= cmdMsg()->CAddString(MTDO_NAME_BEFORE, *optBefore);
 
    return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
 }
@@ -346,15 +347,15 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
 }
 
 // Creates MTDO_COMMAND_UPDATENODEVALUE Messages
-MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore) const
+MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) const
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_COMMAND_UPDATENODEVALUE);
    if (cmdMsg())
    {
-      const status_t ret = cmdMsg()->CAddString( MTDO_NAME_PATH,    path)
-                         | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD, optPayload)
-                         | cmdMsg()->AddFlat(    MTDO_NAME_FLAGS,   flags)
-                         | cmdMsg()->CAddString( MTDO_NAME_BEFORE,  optBefore);
+      status_t ret = cmdMsg()->CAddString( MTDO_NAME_PATH,    path)
+                   | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD, optPayload)
+                   | cmdMsg()->AddFlat(    MTDO_NAME_FLAGS,   flags);
+      if (optBefore) ret |= cmdMsg()->CAddString(MTDO_NAME_BEFORE,  *optBefore);
       if (ret.IsOK()) return cmdMsg;
    }
 

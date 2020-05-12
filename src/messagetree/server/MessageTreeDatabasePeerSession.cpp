@@ -1,3 +1,4 @@
+#include "zg/messagetree/server/ClientDataMessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
@@ -32,9 +33,9 @@ status_t MessageTreeDatabasePeerSession :: AttachedToServer()
       for (uint32 j=0; j<numDBs; j++)
       {
          const MessageTreeDatabaseObject * jdb = dynamic_cast<const MessageTreeDatabaseObject *>(GetDatabaseObject(j));
-         if ((idb)&&(jdb)&&(idb != jdb)&&(idb->GetRootPath() == jdb->GetRootPath()))
+         if ((idb)&&(jdb)&&(idb != jdb)&&(idb->GetRootPathWithoutSlash() == jdb->GetRootPathWithoutSlash()))
          {
-            LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabasePeerSession::AttachedToServer:  Database #" UINT32_FORMAT_SPEC " has the same root-path [%s] as previously added database #" UINT32_FORMAT_SPEC "!\n", i, idb->GetRootPath()(), j);
+            LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabasePeerSession::AttachedToServer:  Database #" UINT32_FORMAT_SPEC " has the same root-path [%s] as previously added database #" UINT32_FORMAT_SPEC "!\n", i, idb->GetRootPathWithoutSlash()(), j);
             return B_LOGIC_ERROR;
          } 
       }
@@ -100,7 +101,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
@@ -132,7 +133,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeG
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
@@ -319,6 +320,16 @@ ServerSideMessageTreeSession * MessageTreeDatabasePeerSession :: GetActiveServer
       if ((ssmts)&&(ssmts->IsInMessageReceivedFromGateway())) return ssmts;
    }
    return NULL;
+}
+
+void MessageTreeDatabasePeerSession :: ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * clientSession)
+{
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++)
+   {
+      ClientDataMessageTreeDatabaseObject * clientDB = dynamic_cast<ClientDataMessageTreeDatabaseObject *>(GetDatabaseObject(i));
+      if (clientDB) clientDB->ServerSideMessageTreeSessionIsDetaching(clientSession);
+   }
 }
 
 };  // end namespace zg

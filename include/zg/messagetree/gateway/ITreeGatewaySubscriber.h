@@ -159,7 +159,7 @@ protected:
      *                  inserted at the front of the index.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const char * optBefore = NULL);
+   virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String * optBefore = NULL);
 
    /** Request that a subtree of nodes be uploaded to the specified location in the database.
      * @param basePath the session-relative path indicating where the root of the subtree should be created.
@@ -185,7 +185,7 @@ protected:
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestMoveTreeIndexEntry(const String & nodePath, const char * optBefore, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestMoveTreeIndexEntry(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Sends a "Ping" message to the local server.
      * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding TreeServerPonged() callback.

@@ -127,15 +127,15 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGa
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const char * optBefore)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODEVALUE);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   const status_t ret = msg()->CAddString( NTG_NAME_PATH,    path) 
-                      | msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload)
-                      | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
-                      | msg()->CAddString( NTG_NAME_BEFORE,  optBefore);
+   status_t ret = msg()->CAddString( NTG_NAME_PATH,    path) 
+                | msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload)
+                | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags);
+   if (optBefore) ret |= msg()->CAddString(NTG_NAME_BEFORE, *optBefore);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
@@ -157,7 +157,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGat
    return HandleBasicCommandAux(NTG_COMMAND_REMOVENODES, path, optFilterRef, flags);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const char * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MOVEINDEXENTRIES);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
@@ -166,8 +166,9 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITree
    if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
 
    ret = msg()->CAddString(NTG_NAME_PATH,   path) 
-       | msg()->CAddString(NTG_NAME_BEFORE, optBefore)
        | msg()->CAddFlat(  NTG_NAME_FLAGS, flags);
+
+   if (optBefore) ret |= msg()->CAddString(NTG_NAME_BEFORE, *optBefore);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
@@ -235,7 +236,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
    MessageRef payload     = msg()->GetMessage(NTG_NAME_PAYLOAD);
-   const char * optBefore = msg()->GetCstr(NTG_NAME_BEFORE);
+   const String * optBefore = msg()->GetStringPointer(NTG_NAME_BEFORE);
 
    switch(msg()->what)
    {
