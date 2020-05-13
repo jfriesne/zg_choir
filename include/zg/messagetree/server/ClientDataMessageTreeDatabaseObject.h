@@ -43,6 +43,11 @@ public:
      */
    void ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * clientSession);
 
+protected:
+   virtual void LocalSeniorPeerStatusChanged();
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
+   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
+
 private:
    String GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const; // given e.g. "foo/bar", returns "<peerid>/<ipaddress>/<sessionid>/foo/bar", suitable for sharing
    String GetSharedPathFromLocalPathAux(const String & localPath, ServerSideMessageTreeSession * ssmts) const;

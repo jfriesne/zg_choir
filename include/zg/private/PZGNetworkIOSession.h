@@ -97,8 +97,8 @@ private:
    friend class PZGHeartbeatSession;
 
    // These methods are called by the PZGHeartbeatSession
-   void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
-   void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+   void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
+   void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
    void SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const ZGPeerID & newSeniorPeerID);
 
    IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;

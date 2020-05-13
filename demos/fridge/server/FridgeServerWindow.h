@@ -1,12 +1,15 @@
 #ifndef FridgeServerWindow_h
 #define FridgeServerWindow_h
 
+#include <QByteArray>
 #include <QMainWindow>
+#include <QTimer>
 
 #include "dataio/ChildProcessDataIO.h"
 #include "common/FridgeNameSpace.h"
 #include "qtsupport/QDataIODevice.h"
 #include "util/String.h"
+#include "zg/ZGPeerID.h"
 
 class QPlainTextEdit;
 class QPushButton;
@@ -42,8 +45,12 @@ private slots:
    void CloneServer();
    void UpdateStatus();
    void ReadChildProcessOutput();
+   void ScheduleUpdateStatus();
 
 private:
+   void ParseTextLinesFromIncomingTextBuffer();
+   void ParseIncomingTextLine(const String & t);
+
    const String _argv0;
 
    QPushButton * _startButton;
@@ -57,6 +64,13 @@ private:
 
    ChildProcessDataIORef _childProcess;
    QDataIODevice * _childProcessIODevice;
+
+   QByteArray _incomingTextBuffer;
+
+   ZGPeerID _peerID;
+   uint16 _port;
+
+   bool _updateStatusPending;
 };
 
 }; // end namespace fridge

@@ -35,8 +35,6 @@ public:
    virtual status_t SaveToArchive(const MessageRef & archive) const;
    virtual uint32 GetCurrentChecksum() const {return _checksum;}
    virtual uint32 CalculateChecksum() const;
-   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
-   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
    virtual String ToString() const;
 
    /** Returns a pointer to the MessageTreeDatabasePeerSession object that created us, or NULL
@@ -100,6 +98,10 @@ public:
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
+protected:
+   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
+   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
+
 private:
    class SafeQueryFilter : public QueryFilter
    {
@@ -107,8 +109,10 @@ private:
       SafeQueryFilter(const MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj) {/* empty */}
    
       virtual bool Matches(ConstMessageRef & /*msg*/, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
-      virtual uint32 TypeCode() const {return 0;}
-   
+      virtual uint32 TypeCode() const {return 0;}  // okay because we never save/restore this type anyway
+      virtual status_t SaveToArchive(Message &) const  {MCRASH("SafeQueryFilter shouldn't be saved to an archive"); return B_UNIMPLEMENTED;}
+      virtual status_t SetFromArchive(const Message &) {MCRASH("SafeQueryFilter shouldn't be set from an archive"); return B_UNIMPLEMENTED;}
+
    private:
       const MessageTreeDatabaseObject * _dbObj;
    };

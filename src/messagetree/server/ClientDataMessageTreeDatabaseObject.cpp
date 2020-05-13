@@ -98,4 +98,44 @@ void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetach
    }
 }
 
+void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
+{
+   MessageTreeDatabaseObject::LocalSeniorPeerStatusChanged();
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer())
+   {
+      // Delete any peerID-nodes for peer-IDs that are not currently on line
+      String nodesToDelete;
+      {
+         const DataNode * dn = GetMessageTreeDatabasePeerSession()->GetDataNode(GetRootPathWithoutSlash());
+         if (dn)
+         {
+            for (DataNodeRefIterator iter = dn->GetChildIterator(); iter.HasData(); iter++)
+            {
+               ZGPeerID pid; pid.FromString(*iter.GetKey());
+               if (GetMessageTreeDatabasePeerSession()->IsPeerOnline(pid) == false) nodesToDelete = nodesToDelete.AppendWord(*iter.GetKey(),",");
+            }
+         }
+      }
+      if (nodesToDelete.HasChars()) MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags());
+      LogTime(MUSCLE_LOG_INFO, "ClientDataMessageTreeDatabaseObject assuming senior-peer status, flushing nodes for offline peers [%s]\n", nodesToDelete());
+
+      // TODO:  Then ask any online junior-peers to re-upload their current content if necessary (?)
+   }
+}
+
+void ClientDataMessageTreeDatabaseObject :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+{
+   MessageTreeDatabaseObject::PeerHasComeOnline(peerID, peerInfo);
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer())
+   {
+printf("Get junior peer [%s] to resync, I guess?\n", peerID.ToString()());
+   }
+}
+
+void ClientDataMessageTreeDatabaseObject :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+{
+   MessageTreeDatabaseObject::PeerHasGoneOffline(peerID, peerInfo);
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) (void) MessageTreeDatabaseObject::RequestDeleteNodes(peerID.ToString(), ConstQueryFilterRef(), TreeGatewayFlags());
+}
+
 }; // end namespace zg

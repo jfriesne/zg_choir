@@ -12,6 +12,8 @@ namespace fridge {
 FridgeServerWindow :: FridgeServerWindow(const String & argv0) 
    : _argv0(argv0)
    , _childProcessIODevice(NULL)
+   , _port(0)
+   , _updateStatusPending(false)
 {
    setWindowTitle(tr("Fridge Server"));
    setAttribute(Qt::WA_DeleteOnClose);
@@ -40,6 +42,7 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
       headerLayout->addWidget(systemNameLabel);
 
       _systemName = new QLineEdit;
+      _systemName->setFocusPolicy(Qt::ClickFocus);
       _systemName->setText(tr("Default Fridge"));
       headerLayout->addWidget(_systemName, 1);
    }
@@ -69,7 +72,7 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
    }
    vbl->addWidget(footerLine);
 
-   UpdateStatus();
+   ScheduleUpdateStatus();
 }
 
 FridgeServerWindow :: ~FridgeServerWindow()
@@ -90,26 +93,85 @@ void FridgeServerWindow :: CloneServer()
    clone->show();
 }
 
+void FridgeServerWindow :: ScheduleUpdateStatus()
+{
+   if (_updateStatusPending == false) 
+   {
+      _updateStatusPending = true; 
+      QTimer::singleShot(0, this, SLOT(UpdateStatus()));
+   }
+}
+
 void FridgeServerWindow :: UpdateStatus()
 {
+   _updateStatusPending = false;
+
    _startButton->setEnabled(_childProcess() == NULL);
    _stopButton->setEnabled( _childProcess() != NULL);
    _systemName->setReadOnly(_childProcess() != NULL);
+
+   QString windowTitle = tr("Fridge Server");
+   if (_childProcess() != NULL)
+   {
+      if (_peerID.IsValid()) windowTitle += tr(" PeerID=%1").arg(_peerID.ToString()());
+      if (_port != 0) windowTitle += tr(" (Port %1)").arg(_port);
+   }
+   else windowTitle += tr(" - Not Running");
+
+   setWindowTitle(windowTitle);
 }
 
 void FridgeServerWindow :: ReadChildProcessOutput()
 {
    if (_childProcessIODevice)
    {
-      _serverOutput->appendPlainText(QString::fromUtf8(_childProcessIODevice->readAll()));
+      _incomingTextBuffer.append(_childProcessIODevice->readAll());
+      ParseTextLinesFromIncomingTextBuffer();
       if ((_childProcessIODevice->isOpen() == false)||(_childProcessIODevice->atEnd())) SetServerRunning(false);
    }
+}
+
+void FridgeServerWindow :: ParseTextLinesFromIncomingTextBuffer()
+{
+   while(true)
+   {
+      const int nextNewlineIdx = _incomingTextBuffer.indexOf('\n');
+      if (nextNewlineIdx >= 0)
+      {
+         String line(_incomingTextBuffer.data(), nextNewlineIdx);
+         line = line.Trim();
+
+         ParseIncomingTextLine(line);
+         _incomingTextBuffer = _incomingTextBuffer.mid(nextNewlineIdx+1);
+      }
+      else break;
+   }
+}
+
+void FridgeServerWindow :: ParseIncomingTextLine(const String & t)
+{
+   printf("t=[%s]\n", t());
+   if (t.Contains("Listening for incoming client TCP connections")) 
+   {
+      const char * onPort = strstr(t(), "on port ");
+      if (onPort) {_port = atoi(onPort+8); ScheduleUpdateStatus();}
+   }
+   else if (t.Contains("Starting up as peer"))
+   {
+      const char * asPeer = strstr(t(), "as peer [");
+      if (asPeer) {_peerID.FromString(asPeer+9); ScheduleUpdateStatus();}
+   }
+
+   _serverOutput->appendPlainText(t());
 }
 
 void FridgeServerWindow :: SetServerRunning(bool running)
 {
    if (running != (_childProcess() != NULL))
    {
+      _peerID = ZGPeerID();
+      _port = 0;
+
       if (running)
       {
          ChildProcessDataIORef cpdioRef(new ChildProcessDataIO(false));
@@ -148,7 +210,7 @@ void FridgeServerWindow :: SetServerRunning(bool running)
       p.setColor(QPalette::Base, _childProcess()?Qt::white:Qt::lightGray);
       _serverOutput->setPalette(p);
 
-      UpdateStatus();
+      ScheduleUpdateStatus();
    }
 }
 

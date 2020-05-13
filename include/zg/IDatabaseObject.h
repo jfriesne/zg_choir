@@ -59,24 +59,6 @@ public:
      */
    virtual uint32 CalculateChecksum() const = 0;
 
-   /** Should update this object's state using the passed-in senior-do-Message (whose semantics
-     * are left up to the subclass to define), and then return a reference to a Message that can
-     * be used later to update the junior copies of this database to the same final state that this
-     * object is now in.  
-     * @param seniorDoMsg a Message containing instructions on how to update this object's state.
-     * @returns on Success, a reference to a Message that can be used to update the junior peers'
-     *          instances of this database to the same state that this object is now in, or
-     *          a NULL reference on failure.
-     */
-   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg) = 0;
-
-   /** Should update this object's state using the passed-in junior-do-Messsage (that was previously
-     * returned by a call to SeniorUpdate() on the senior peer's instance of this object)
-     * @param juniorDoMsg A Message containing instrutions on how to update this object's state.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
-     */ 
-   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg) = 0;
-
    /** Should return this object's state as a human-readable string.
      * This method is only used for debugging purposes (e.g. printing out the state of the database
      * before and after the database is repaired, so the two printouts can be diff'd to see where
@@ -143,12 +125,52 @@ protected:
      */
    bool IsInJuniorDatabaseUpdateContext() const;
 
+   /** Should update this object's state using the passed-in senior-do-Message (whose semantics
+     * are left up to the subclass to define), and then return a reference to a Message that can
+     * be used later to update the junior copies of this database to the same final state that this
+     * object is now in.  
+     * @param seniorDoMsg a Message containing instructions on how to update this object's state.
+     * @returns on Success, a reference to a Message that can be used to update the junior peers'
+     *          instances of this database to the same state that this object is now in, or
+     *          a NULL reference on failure.
+     */
+   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg) = 0;
+
+   /** Should update this object's state using the passed-in junior-do-Messsage (that was previously
+     * returned by a call to SeniorUpdate() on the senior peer's instance of this object)
+     * @param juniorDoMsg A Message containing instrutions on how to update this object's state.
+     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     */ 
+   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg) = 0;
+
+   /** Called when our ZGDatabasePeerSession becomes the senior peer, or stops being the senior peer.
+     * Call GetDatabasePeerSession()->IsSeniorPeer() to find out which.
+     * Default implementation is a no-op.
+     */
+   virtual void LocalSeniorPeerStatusChanged() {/* empty */}
+
+   /** Called when a new ZGPeer has come online.
+     * @param peerID the ID of the newly-online peer.
+     * @param optPeerInfo Optional information about the new peer.  May be a NULL reference if no info is available.
+     * Default implementation is a no-op.
+     */
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo) {(void) peerID; (void) optPeerInfo;}
+
+   /** Called when a previously-online ZGPeer has gone offline.
+     * @param peerID the ID of the newly-offline peer.
+     * @param optPeerInfo information about the departed peer.  May be a NULL reference is no info is available.
+     * Default implementation is a no-op.
+     */
+   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo) {(void) peerID; (void) optPeerInfo;}
+
    // Pass-throughs to the ZGDatabasePeerSession object
    status_t RequestResetDatabaseStateToDefault();
    status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
    status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
 
 private:
+   friend class ZGDatabasePeerSession;
+
    ZGDatabasePeerSession * _session;
    int32 _dbIndex;
 };

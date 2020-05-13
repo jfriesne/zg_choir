@@ -27,6 +27,9 @@ public:
      */
    IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return _databaseObjects[whichDatabase]();}
 
+   /** Overridden to notify our IDatabaseObjects about the change */
+   virtual void LocalSeniorPeerStatusChanged();
+
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return
@@ -43,6 +46,8 @@ protected:
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg);
    virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const;
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
+   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
 
 private:
    Queue<IDatabaseObjectRef> _databaseObjects;

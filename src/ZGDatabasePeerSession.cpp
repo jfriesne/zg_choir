@@ -78,6 +78,30 @@ String ZGDatabasePeerSession :: GetLocalDatabaseContentsAsString(uint32 whichDat
    return GetDatabaseObject(whichDatabase)->ToString();
 }
 
+void ZGDatabasePeerSession :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+{
+   ZGPeerSession::PeerHasGoneOffline(peerID, peerInfo);
+
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->PeerHasGoneOffline(peerID, peerInfo);
+}
+
+void ZGDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
+{
+   ZGPeerSession::PeerHasComeOnline(peerID, peerInfo);
+
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->PeerHasComeOnline(peerID, peerInfo);
+}
+
+void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
+{
+   ZGPeerSession::LocalSeniorPeerStatusChanged();
+
+   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->LocalSeniorPeerStatusChanged();
+}
+
 const IDatabaseObject * IDatabaseObject :: GetDatabaseObject(uint32 whichDatabase) const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();

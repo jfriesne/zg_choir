@@ -250,17 +250,17 @@ protected:
 
    /** Called when a new peer has joined our group.
      * @param peerID The unique ID of the peer who is now online.  (Note that this ID may be our own ID!)
-     * @param peerInfo An optional Message containing some additional information about that peer, if that peer specified
-     *                 any additional information in his ZGPeerSettings object.  May be a NULL reference otherwise.
+     * @param optPeerInfo An optional Message containing some additional information about that peer, if that peer specified
+     *                    any additional information in his ZGPeerSettings object.  May be a NULL reference otherwise.
      */
-   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
 
    /** Called when a peer has left our group.
      * @param peerID The unique ID of the peer who is now offline.
-     * @param peerInfo An optional Message containing some additional information about that peer, if that peer specified
-     *                 any additional information in his ZGPeerSettings object.  May be a NULL reference otherwise.
+     * @param optPeerInfo An optional Message containing some additional information about that peer, if that peer specified
+     *                    any additional information in his ZGPeerSettings object.  May be a NULL reference otherwise.
      */
-   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+   virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
 
    /** Called when the senior peer of our peer group has changed.
      * @param oldSeniorPeerID The unique ID of the peer who was the senior peer but no longer is.  (May be a zero/invalid if there wasn't any senior peer before)

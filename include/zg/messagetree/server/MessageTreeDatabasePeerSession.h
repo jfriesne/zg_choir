@@ -10,6 +10,7 @@
 namespace zg
 {
 
+class ClientDataMessageTreeDatabaseObject;
 class MessageTreeDatabaseObject;
 class ServerSideMessageTreeSession;
 
@@ -66,7 +67,7 @@ protected:
    Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath) const;
 
    // ZGPeerSession API implementation
-   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo);
+   virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
 
    // ITreeGateway API implementation
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
@@ -95,6 +96,7 @@ protected:
 
 private:
    friend class MessageTreeDatabaseObject;
+   friend class ClientDataMessageTreeDatabaseObject;
 
    status_t GetUnusedNodeID(const String & path, uint32 & retID);
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
