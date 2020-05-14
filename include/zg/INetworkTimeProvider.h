@@ -10,6 +10,9 @@ namespace zg
 class INetworkTimeProvider 
 {
 public:
+   /** Virtual destructor, just to keep C++ honest */
+   virtual ~INetworkTimeProvider() {/* empty */}
+
    /** Returns the current time according to the network-time-clock, in microseconds.
      * The intent of this clock is to be the same on all peers in the system.  However, this means that it may occasionally
      * change (break monotonicity) in order to synchronize with the other peers in the system.
