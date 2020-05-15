@@ -103,7 +103,7 @@ int RunFridgeServerProcess(const char * systemName)
    ZGStdinSession stdinSession(fridgePeerSession, true);
 
    // This factory will accept incoming TCP connections from FridgeClients
-   ServerSideMessageTreeSessionFactory sssFactory(fridgePeerSession.GetClientTreeGateway());
+   ServerSideMessageTreeSessionFactory sssFactory(fridgePeerSession.GetClientTreeGateway(), true);
 
    // This object will respond to multicast discovery queries sent across the LAN by clients, so that
    // they can find us without knowing our IP address and port in advance

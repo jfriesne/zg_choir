@@ -3,6 +3,14 @@
 namespace zg
 {
 
+enum {
+   DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT = 1684172915, // 'dbps' 
+};
+
+static const String DBPEERSESSION_NAME_PAYLOAD     = "pay";  // Message field-name
+static const String DBPEERSESSION_NAME_TARGETDBIDX = "tdb";  // int32 field-name
+static const String DBPEERSESSION_NAME_SOURCEDBIDX = "sdb";  // int32 field-name
+
 ZGDatabasePeerSession :: ZGDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGPeerSession(zgPeerSettings)
 {
    // empty
@@ -102,6 +110,47 @@ void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
    for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->LocalSeniorPeerStatusChanged();
 }
 
+status_t ZGDatabasePeerSession :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx)
+{
+   MessageRef wrapperMsg = GetMessageFromPool(DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT);
+   if (wrapperMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret = wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     msg)
+                | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_TARGETDBIDX, targetDBIdx)
+                | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_SOURCEDBIDX, sourceDBIdx);
+   if (ret.IsError()) return ret;
+
+   return targetPeerID.IsValid() ? SendUnicastUserMessageToPeer(targetPeerID, wrapperMsg) : SendUnicastUserMessageToAllPeers(wrapperMsg);
+}
+
+void ZGDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
+{
+   switch(msg()->what)
+   {
+      case DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT:
+      {
+         status_t ret;
+
+         MessageRef payloadMsg;
+         if (msg()->FindMessage(DBPEERSESSION_NAME_PAYLOAD, payloadMsg).IsOK(ret))
+         {
+            const uint32 targetDBIdx = msg()->GetInt32(DBPEERSESSION_NAME_TARGETDBIDX);
+            if (targetDBIdx < _databaseObjects.GetNumItems())
+            {
+               _databaseObjects[targetDBIdx]()->MessageReceivedFromMessageTreeDatabaseObject(payloadMsg, fromPeerID, msg()->GetInt32(DBPEERSESSION_NAME_SOURCEDBIDX));
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "MessageReceivedFromPeer:  invalid target database index " UINT32_FORMAT_SPEC "\n", targetDBIdx);
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "MessageReceivedFromPeer:  Couldn't find payload in DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT Message!  [%s]\n", ret());
+      }
+      break;
+
+      default:
+         ZGPeerSession::MessageReceivedFromPeer(fromPeerID, msg);
+      break;
+   }
+}
+
 const IDatabaseObject * IDatabaseObject :: GetDatabaseObject(uint32 whichDatabase) const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
@@ -172,6 +221,12 @@ bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext() const
 {
    ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
    return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex) : false;
+}
+
+status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB)
+{
+   ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->SendMessageToDatabaseObject(targetPeerID, msg, (optWhichDB>=0)?(uint32)optWhichDB:_dbIndex, _dbIndex) : B_BAD_OBJECT;
 }
 
 };  // end namespace zg

@@ -13,6 +13,7 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
    : _argv0(argv0)
    , _childProcessIODevice(NULL)
    , _port(0)
+   , _clientCount(0)
    , _updateStatusPending(false)
 {
    setWindowTitle(tr("Fridge Server"));
@@ -64,6 +65,12 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
 
       footerLayout->addStretch();
 
+      _peerIDLabel = new QLabel;
+      _peerIDLabel->setAlignment(Qt::AlignCenter); 
+      footerLayout->addWidget(_peerIDLabel); 
+ 
+      footerLayout->addStretch();
+
       _clearButton = new QPushButton(tr("Clear Output"));
       connect(_clearButton, SIGNAL(clicked()), this, SLOT(ClearLog()));
       footerLayout->addWidget(_clearButton); 
@@ -102,6 +109,9 @@ void FridgeServerWindow :: ScheduleUpdateStatus()
    }
 }
 
+static int Mix(int v1, const int v2, float p) {return (int) ((((float)v2)*p)+(((float)v1)*(1.0f-p)));}
+static QColor MixColors(const QColor & c1, const QColor & c2, float p) {return QColor(Mix(c1.red(), c2.red(), p), Mix(c1.green(), c2.green(), p), Mix(c1.blue(), c2.blue(), p));}
+
 void FridgeServerWindow :: UpdateStatus()
 {
    _updateStatusPending = false;
@@ -110,15 +120,24 @@ void FridgeServerWindow :: UpdateStatus()
    _stopButton->setEnabled( _childProcess() != NULL);
    _systemName->setReadOnly(_childProcess() != NULL);
 
-   QString windowTitle = tr("Fridge Server");
-   if (_childProcess() != NULL)
+   const bool isRunning    = (_childProcess() != NULL);
+   const bool isSeniorPeer = ((isRunning)&&(_peerID.IsValid())&&(_seniorPeerID == _peerID));
+   QString windowTitle = isRunning ? (isSeniorPeer ? tr("SENIOR Fridge Server") : tr("Junior Fridge Server")) : tr("Disabled Fridge Server");
+   if (isRunning)
    {
-      if (_peerID.IsValid()) windowTitle += tr(" PeerID=%1").arg(_peerID.ToString()());
-      if (_port != 0) windowTitle += tr(" (Port %1)").arg(_port);
+      if (_port != 0)
+      {
+         if (_clientCount > 0) windowTitle += tr(" (%1 %2 on Port %3)").arg(_clientCount).arg((_clientCount==1)?tr("client"):tr("clients")).arg(_port);
+                          else windowTitle += tr(" (Port %1)").arg(_port);
+      }
    }
-   else windowTitle += tr(" - Not Running");
-
    setWindowTitle(windowTitle);
+
+   _peerIDLabel->setText(isRunning ? (_peerID.IsValid() ? tr("Peer ID:  %1").arg(_peerID.ToString()()) : QString()) : tr("Server stopped"));
+
+   QPalette p = _serverOutput->palette();
+   p.setColor(QPalette::Base, _childProcess()?MixColors(Qt::green,Qt::white,isSeniorPeer?0.90f:1.00f):QColor(Qt::lightGray));
+   _serverOutput->setPalette(p);
 }
 
 void FridgeServerWindow :: ReadChildProcessOutput()
@@ -150,7 +169,6 @@ void FridgeServerWindow :: ParseTextLinesFromIncomingTextBuffer()
 
 void FridgeServerWindow :: ParseIncomingTextLine(const String & t)
 {
-   printf("t=[%s]\n", t());
    if (t.Contains("Listening for incoming client TCP connections")) 
    {
       const char * onPort = strstr(t(), "on port ");
@@ -161,6 +179,16 @@ void FridgeServerWindow :: ParseIncomingTextLine(const String & t)
       const char * asPeer = strstr(t(), "as peer [");
       if (asPeer) {_peerID.FromString(asPeer+9); ScheduleUpdateStatus();}
    }
+   else if ((t.Contains("Senior peer has changed from ["))||(t.Contains("Senior peer has been set to [")))
+   {
+      const char * lastLeftBracket = strrchr(t(), '[');
+      if (lastLeftBracket) {_seniorPeerID.FromString(lastLeftBracket+1); ScheduleUpdateStatus();}
+   }
+   else if (t.Contains("Client at"))
+   {
+           if (t.Contains("has connected to this server"))      {_clientCount++; ScheduleUpdateStatus();}
+      else if (t.Contains("has disconnected from this server")) {_clientCount--; ScheduleUpdateStatus();}
+   }
 
    _serverOutput->appendPlainText(t());
 }
@@ -169,8 +197,10 @@ void FridgeServerWindow :: SetServerRunning(bool running)
 {
    if (running != (_childProcess() != NULL))
    {
-      _peerID = ZGPeerID();
-      _port = 0;
+      _peerID       = ZGPeerID();
+      _seniorPeerID = ZGPeerID();
+      _port         = 0;
+      _clientCount  = 0;
 
       if (running)
       {
@@ -205,10 +235,6 @@ void FridgeServerWindow :: SetServerRunning(bool running)
          delete _childProcessIODevice;
          _childProcess.Reset();
       }
-
-      QPalette p = _serverOutput->palette();
-      p.setColor(QPalette::Base, _childProcess()?Qt::white:Qt::lightGray);
-      _serverOutput->setPalette(p);
 
       ScheduleUpdateStatus();
    }

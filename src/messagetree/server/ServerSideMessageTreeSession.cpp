@@ -15,8 +15,19 @@ ServerSideMessageTreeSession :: ~ServerSideMessageTreeSession()
    // empty
 }
 
+status_t ServerSideMessageTreeSession :: AttachedToServer()
+{
+   status_t ret = StorageReflectSession::AttachedToServer();
+   if (ret.IsError()) return ret;
+
+   if (_logOnAttachAndDetach) LogTime(MUSCLE_LOG_INFO, "ServerSideMessageTreeSession %p:  Client at [%s] has connected to this server.\n", this, GetSessionRootPath()());
+   return ret;
+}
+
 void ServerSideMessageTreeSession :: AboutToDetachFromServer()
 {
+   if (_logOnAttachAndDetach) LogTime(MUSCLE_LOG_INFO, "ServerSideMessageTreeSession %p:  Client at [%s] has disconnected from this server.\n", this, GetSessionRootPath()());
+
    MessageTreeDatabasePeerSession * peerSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();
    if (peerSession) peerSession->ServerSideMessageTreeSessionIsDetaching(this);  // notify the ZGPeer so that any ClientDataMessageTreeDatabaseObjects can remove our shared nodes
 
@@ -69,8 +80,9 @@ status_t ServerSideMessageTreeSession :: RequestTreeNodeSubtrees(const Queue<Str
    return ret;
 }
 
-ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITreeGateway * upstreamGateway)
+ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITreeGateway * upstreamGateway, bool announceClientConnectsAndDisconnects)
    : ITreeGatewaySubscriber(upstreamGateway)
+   , _announceClientConnectsAndDisconnects(announceClientConnectsAndDisconnects)
 {
    // empty
 }
@@ -78,7 +90,12 @@ ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITree
 AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
 {
    ServerSideMessageTreeSessionRef ret(newnothrow ServerSideMessageTreeSession(GetGateway()));
-   if (ret() == NULL) WARN_OUT_OF_MEMORY;
+   if (ret()) 
+   {
+      ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
+   }
+   else WARN_OUT_OF_MEMORY;
+
    return ret;
 }
 

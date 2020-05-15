@@ -24,11 +24,18 @@ public:
    /** Destructor */
    virtual ~ServerSideMessageTreeSession();
 
+   virtual status_t AttachedToServer();
    virtual void AboutToDetachFromServer();
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
    /** Returns true iff we are currently executing inside our MessageReceivedFromGateway callback */
    bool IsInMessageReceivedFromGateway() const {return _isInMessageReceivedFromGateway.IsInBatch();}
+
+   /** If set true, then we will write an informative message to the log from within our AttachedToServer() and AboutToDetachFromServer() methods
+     * @param doLogging true iff logging is desired.
+     * Default state is false.
+     */
+   void SetLogOnAttachAndDetach(bool doLogging) {_logOnAttachAndDetach = doLogging;}
 
 protected:
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
@@ -46,6 +53,7 @@ private:
    friend class ClientDataMessageTreeDatabaseObject;
 
    NestCount _isInMessageReceivedFromGateway;
+   bool _logOnAttachAndDetach;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSession);
 
@@ -53,11 +61,18 @@ DECLARE_REFTYPES(ServerSideMessageTreeSession);
 class ServerSideMessageTreeSessionFactory : public ReflectSessionFactory, public ITreeGatewaySubscriber
 {
 public:
-   ServerSideMessageTreeSessionFactory(ITreeGateway * upstreamGateway);
+   /** Constructor
+     * @param upstreamGateway the ITreeGateway that client connections should use to access the ZG database
+     * @param announceClientConnectsAndDisconnects if true, we'll write to the log whenever a client connects or disconnects.  Defaults to false.
+     */
+   ServerSideMessageTreeSessionFactory(ITreeGateway * upstreamGateway, bool announceClientConnectsAndDisconnects = false);
 
    virtual AbstractReflectSessionRef CreateSession(const String & clientAddress, const IPAddressAndPort & factoryInfo);
 
    virtual bool IsReadyToAcceptSessions() const {return IsTreeGatewayConnected();}
+
+private:
+   bool _announceClientConnectsAndDisconnects;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSessionFactory);
 

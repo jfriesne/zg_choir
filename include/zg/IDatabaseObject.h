@@ -168,6 +168,25 @@ protected:
    status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
    status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
 
+protected:
+   /** Call this method to send a Message to another MessageTreeDatabaseObject.
+     * It will result in MessageReceivedFromMessageTreeDatabaseObject() being called on that object.
+     * @param targetPeerID the ZGPeerID of the peer you want the Mesasge to be sent to.  If an invalid/default-constructed
+     *                     ZGPeerID is specified, then (msg) will be sent to the specified database-object on all known peers.
+     * @param msg the Message you want to send
+     * @param optWhichDB If specified, the index of the database-object you want to send to.  If left unspecified/-1, the Message
+     *                   will be sent to the database-object with the same index as our own database-index.
+     * @returns B_NO_ERROR on success, or another error-code on failure.
+     */
+   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB = -1);
+
+   /** Called when a Message is received from another MessageTreeDatabaseObject.  Default implementation is a no-op.
+     * @param msg the Message that was received.
+     * @param sourcePeer the ZGPeerID of the peer that sent the Message to us
+     * @param sourceDBIdx the database-index of the MessageTreeDatabaseObject that sent us the Message.
+     */
+   virtual void MessageReceivedFromMessageTreeDatabaseObject(const MessageRef & msg, const ZGPeerID & sourcePeer, uint32 sourceDBIdx) {(void) msg; (void) sourcePeer; (void) sourceDBIdx;}
+
 private:
    friend class ZGDatabasePeerSession;
 

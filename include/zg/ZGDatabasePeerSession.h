@@ -48,8 +48,11 @@ protected:
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
    virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
+   virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
 
 private:
+   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx);
+
    Queue<IDatabaseObjectRef> _databaseObjects;
 
    friend class IDatabaseObject;

@@ -11,9 +11,10 @@
 #include "util/String.h"
 #include "zg/ZGPeerID.h"
 
+class QLabel;
+class QLineEdit;
 class QPlainTextEdit;
 class QPushButton;
-class QLineEdit;
 
 namespace fridge {
 
@@ -60,6 +61,7 @@ private:
    QPlainTextEdit * _serverOutput;
 
    QPushButton * _cloneWindowButton;
+   QLabel      * _peerIDLabel;
    QPushButton * _clearButton;
 
    ChildProcessDataIORef _childProcess;
@@ -67,8 +69,10 @@ private:
 
    QByteArray _incomingTextBuffer;
 
+   ZGPeerID _seniorPeerID;
    ZGPeerID _peerID;
    uint16 _port;
+   uint32 _clientCount;
 
    bool _updateStatusPending;
 };

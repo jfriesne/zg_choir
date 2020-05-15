@@ -49,8 +49,11 @@ public:
    /** Returns true if this connector's I/O thread is currently started, or false if it is not. */
    bool IsActive() const;
 
-   /** Returns true our TCP connection to the server is currently connected */
-   bool IsConnected() const;
+   /** Convenience method:  Returns true iff our TCP connection to the server is currently established */
+   bool IsConnected() const {return (_connectedPeerInfo() != NULL);}
+
+   /** Returns a Message containing information about the peer we are currently connected to, or a NULL Message if we aren't currently connected. */
+   MessageRef GetConnectedPeerInfo() const {return _connectedPeerInfo;}
 
    /** Returns the signature--pattern string that was passed in to our constructor. */
    const String & GetSignaturePattern() const {return _signaturePattern;}
@@ -92,6 +95,7 @@ private:
    const String _signaturePattern;
    const String _systemNamePattern;
    ClientConnectorImplementation * _imp;
+   MessageRef _connectedPeerInfo;
 
    Queue<MessageRef> _scratchQueue;
 

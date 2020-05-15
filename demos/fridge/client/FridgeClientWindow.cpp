@@ -8,6 +8,7 @@
 
 #include "FridgeClientCanvas.h"
 #include "FridgeClientWindow.h"
+#include "zg/ZGPeerID.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVERY_NAME_PEERINFO
 
 namespace fridge {
@@ -23,7 +24,6 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
 {
    SetDiscoveryClient(&_discoClient);
 
-   setWindowTitle(tr("Fridge Client"));
    setAttribute(Qt::WA_DeleteOnClose);
    resize(800, 600);
 
@@ -99,6 +99,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
          QBoxLayout * canvasPageLayout = new QBoxLayout(QBoxLayout::TopToBottom, _canvasPage);
 
          _canvas = new FridgeClientCanvas(_connection);
+         connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(UpdateStatus()));
          canvasPageLayout->addWidget(_canvas, 1);
 
          QWidget * buttonsRow = new QWidget;
@@ -156,7 +157,16 @@ void FridgeClientWindow :: UpdateStatus()
    _widgetStack->setCurrentIndex(_connection ? PAGE_MAGNETS : ((_systemsList->count() > 0) ? PAGE_DISCOVERY_LIST : PAGE_DISCOVERY_NO_RESULTS));
 
    QString windowTitle = tr("Fridge Client");
-   if (_connection) windowTitle += tr(" -- Connected to %1").arg(_connection->GetSystemNamePattern()());
+   if ((_connection)&&(_connection->IsConnected()))
+   {
+      ZGPeerID peerID;
+      const Message * peerInfoMsg = _connection->GetConnectedPeerInfo()();
+      if (peerInfoMsg) (void) peerInfoMsg->FindFlat(ZG_DISCOVERY_NAME_PEERID, peerID);
+
+      windowTitle += tr(" -- Connected to %1").arg(_connection->GetSystemNamePattern()());
+      if (peerID.IsValid()) windowTitle += tr(" (Peer ID %1)").arg(peerID.ToString()());
+   }
+
    setWindowTitle(windowTitle);
 
    const bool isPinging  = _discoClient.IsActive();

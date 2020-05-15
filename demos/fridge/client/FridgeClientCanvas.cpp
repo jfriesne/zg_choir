@@ -93,23 +93,17 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
 {
    if (_draggingID.HasChars())
    {
-      UpdateDraggedMagnetPosition(e->pos());
-      _draggingID.Clear();
-   }
-
-   e->accept();
-}
-
-void FridgeClientCanvas :: leaveEvent(QEvent * e)
-{
-   if (_draggingID.HasChars())
-   {
-      MagnetState * ms = _magnets.Get(_draggingID);
-      if (ms)
+      if (rect().contains(e->pos())) UpdateDraggedMagnetPosition(e->pos());
+      else
       {
-         status_t ret;
-         if (UploadMagnetState(_draggingID, NULL).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't remove deleted magnet, error [%s]\n", ret());
+         MagnetState * ms = _magnets.Get(_draggingID);
+         if (ms)
+         {
+            status_t ret;
+            if (UploadMagnetState(_draggingID, NULL).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't remove deleted magnet, error [%s]\n", ret());
+         }
       }
+
       _draggingID.Clear();
    }
 
@@ -160,6 +154,8 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
       _magnets.Clear();
       update();
    }
+
+   emit UpdateWindowStatus();
 }
 
 void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg)

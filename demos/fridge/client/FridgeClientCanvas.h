@@ -26,7 +26,6 @@ public:
    virtual void mousePressEvent(QMouseEvent * e);
    virtual void mouseMoveEvent(QMouseEvent * e);
    virtual void mouseReleaseEvent(QMouseEvent * e);
-   virtual void leaveEvent(QEvent * e);
    
    // ITreeGatewaySubscriber API
    virtual void TreeGatewayConnectionStateChanged();
@@ -34,6 +33,9 @@ public:
 
    /** Uploads a request to the server to clear all the magnets from the fridge */
    void ClearMagnets();
+
+signals:
+   void UpdateWindowStatus();
 
 private:
    String GetMagnetAtPoint(const QPoint & pt) const;

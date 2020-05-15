@@ -330,7 +330,8 @@ void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
       switch(next()->what)
       {
          case CCI_COMMAND_PEERINFO:
-            ConnectionStatusUpdated(next()->GetMessage(CCI_NAME_PAYLOAD));
+            _connectedPeerInfo = next()->GetMessage(CCI_NAME_PAYLOAD);
+            ConnectionStatusUpdated(_connectedPeerInfo);
          break;
 
          case CCI_COMMAND_MESSAGE:
