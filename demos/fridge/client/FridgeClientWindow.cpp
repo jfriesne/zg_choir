@@ -1,11 +1,14 @@
 #include <QApplication>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLayout>
 #include <QListWidget>
 #include <QPushButton>
+#include <QSplitter>
 #include <QStackedWidget>
 #include <QTimer>
 
+#include "FridgeChatView.h"
 #include "FridgeClientCanvas.h"
 #include "FridgeClientWindow.h"
 #include "zg/ZGPeerID.h"
@@ -13,14 +16,24 @@
 
 namespace fridge {
 
+static const char * _defaultNamesList[] = {
+#include "common_names_list.txt"
+};
+
+static const char * GetRandomBabyName()
+{
+   return _defaultNamesList[rand()%ARRAYITEMS(_defaultNamesList)];
+}
+
 class FridgeClientCanvas;
 
 FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism) 
    : IDiscoveryNotificationTarget(NULL)  // can't pass in &_discoClient here, it isn't constructed yet!
    , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE)
-   , _canvasPage(NULL)
+   , _splitter(NULL)
    , _connection(NULL)
    , _canvas(NULL)
+   , _chatView(NULL)
 {
    SetDiscoveryClient(&_discoClient);
 
@@ -40,7 +53,7 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
       QWidget * resultsListPage = new QWidget;
       {
          QBoxLayout * rlpLayout = new QBoxLayout(QBoxLayout::TopToBottom, resultsListPage);
-         rlpLayout->setSpacing(5);
+         rlpLayout->setSpacing(3);
          rlpLayout->addStretch();
 
          QLabel * lab = new QLabel(tr("Choose a Fridge-system to connect to:"));
@@ -78,8 +91,9 @@ void FridgeClientWindow :: ReturnToDiscoveryRequestedAux()
 void FridgeClientWindow :: DeleteConnectionPage()
 {
    if (_canvas)     {delete _canvas;     _canvas     = NULL;}
+   if (_chatView)   {delete _chatView;   _chatView   = NULL;}
    if (_connection) {delete _connection; _connection = NULL;}
-   if (_canvasPage) {delete _canvasPage; _canvasPage = NULL;}  // do this last, as it may be parent of the above
+   if (_splitter)   {delete _splitter;   _splitter   = NULL;}  // do this last, as it may be parent of the above
 }
 
 void FridgeClientWindow :: SystemItemClicked(QListWidgetItem * item)
@@ -88,47 +102,69 @@ void FridgeClientWindow :: SystemItemClicked(QListWidgetItem * item)
    ConnectTo(item->data(Qt::UserRole).toString().toUtf8().constData());
 }
 
+void FridgeClientWindow :: keyPressEvent(QKeyEvent * e)
+{
+   if (_chatView)
+   {
+      _chatView->AcceptKeyPressEventFromWindow(e);
+      e->accept();
+   }
+   else QMainWindow::keyPressEvent(e);
+}
+
 void FridgeClientWindow :: ConnectTo(const String & systemName)
 {
    status_t ret;
    _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism(), FRIDGE_PROGRAM_SIGNATURE, systemName);
    if (_connection->Start().IsOK(ret))
    {
-      _canvasPage = new QWidget;
+      _splitter = new QSplitter(Qt::Vertical);
       {
-         QBoxLayout * canvasPageLayout = new QBoxLayout(QBoxLayout::TopToBottom, _canvasPage);
-
-         _canvas = new FridgeClientCanvas(_connection);
-         connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(UpdateStatus()));
-         canvasPageLayout->addWidget(_canvas, 1);
-
-         QWidget * buttonsRow = new QWidget;
+         QWidget * topPart = new QWidget;
          {
-            QBoxLayout * buttonsRowLayout = new QBoxLayout(QBoxLayout::LeftToRight, buttonsRow);
+            QBoxLayout * topPartLayout = new QBoxLayout(QBoxLayout::TopToBottom, topPart);
+            topPartLayout->setMargin(3);
+            topPartLayout->setSpacing(2);
 
-            buttonsRowLayout->addStretch();
+            _canvas = new FridgeClientCanvas(_connection);
+            connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(UpdateStatus()));
+            topPartLayout->addWidget(_canvas, 1);
+ 
+            QWidget * buttonsRow = new QWidget;
+            {
+               QBoxLayout * buttonsRowLayout = new QBoxLayout(QBoxLayout::LeftToRight, buttonsRow);
+               buttonsRowLayout->setMargin(0);
 
-            QPushButton * cloneButton = new QPushButton(tr("Clone Window"));
-            connect(cloneButton, SIGNAL(clicked()), this, SLOT(CloneWindow()));
-            buttonsRowLayout->addWidget(cloneButton);
-
-            buttonsRowLayout->addStretch();
-           
-            QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
-            connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
-            buttonsRowLayout->addWidget(clearButton);
-
-            buttonsRowLayout->addStretch();
-
-            QPushButton * disconnectButton = new QPushButton(tr("Disconnect"));
-            connect(disconnectButton, SIGNAL(clicked()), this, SLOT(ReturnToDiscoveryRequested()));
-            buttonsRowLayout->addWidget(disconnectButton);
-
-            buttonsRowLayout->addStretch();
+               buttonsRowLayout->addStretch();
+   
+               QPushButton * cloneButton = new QPushButton(tr("Clone Window"));
+               connect(cloneButton, SIGNAL(clicked()), this, SLOT(CloneWindow()));
+               buttonsRowLayout->addWidget(cloneButton);
+   
+               buttonsRowLayout->addStretch();
+              
+               QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
+               connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
+               buttonsRowLayout->addWidget(clearButton);
+   
+               buttonsRowLayout->addStretch();
+   
+               QPushButton * disconnectButton = new QPushButton(tr("Disconnect"));
+               connect(disconnectButton, SIGNAL(clicked()), this, SLOT(ReturnToDiscoveryRequested()));
+               buttonsRowLayout->addWidget(disconnectButton);
+   
+               buttonsRowLayout->addStretch();
+            }
+            topPartLayout->addWidget(buttonsRow);
          }
-         canvasPageLayout->addWidget(buttonsRow);
+         _splitter->addWidget(topPart);
+   
+         _chatView = new FridgeChatView(_connection, GetRandomBabyName());
+         _chatView->setMinimumHeight(100);
+         _splitter->addWidget(_chatView);
       }
-      _widgetStack->addWidget(_canvasPage);
+      _widgetStack->addWidget(_splitter);
+      _splitter->setStretchFactor(0, 2);
    }
    else
    {

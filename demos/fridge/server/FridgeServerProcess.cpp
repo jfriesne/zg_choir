@@ -11,6 +11,7 @@ namespace fridge {
 
 enum {
    FRIDGE_DB_MAGNETS = 0,  // the set of refrigerator-magnets is stored here (under subtree "magnets/")
+   FRIDGE_DB_CHAT,         // chat text (under subtree "chat/", could probably be combined with FRIDGE_DB_MAGNETS if we wanted to)
    FRIDGE_DB_CLIENTS,      // the set of currently-connected clients is stored here (under subtree "clients/")
    NUM_FRIDGE_DBS          // guard value
 };
@@ -66,6 +67,13 @@ protected:
          case FRIDGE_DB_MAGNETS:
          {
             IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "magnets"));
+            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            return ret;
+         }
+
+         case FRIDGE_DB_CHAT:
+         {
+            IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "chat"));
             if (ret() == NULL) WARN_OUT_OF_MEMORY;
             return ret;
          }

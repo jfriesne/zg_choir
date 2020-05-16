@@ -11,11 +11,12 @@
 
 class QListWidget;
 class QListWidgetItem;
-class QPushButton;
+class QSplitter;
 class QStackedWidget;
 
 namespace fridge {
 
+class FridgeChatView;
 class FridgeClientCanvas;
 
 /** This is a demo client that allows the user to mess around with refrigerator-magnets stored on a FridgeServer system */
@@ -33,6 +34,8 @@ public:
    virtual ~FridgeClientWindow();
 
    virtual void DiscoveryUpdate(const String & systemName, const MessageRef & optSystemInfo);
+
+   virtual void keyPressEvent(QKeyEvent * ke);
 
 private slots:
    void CloneWindow();
@@ -61,9 +64,10 @@ private:
 
    // The following widgets get created when the user
    // chooses a system, and destroyed when the user disconnects from it
-   QWidget * _canvasPage;
+   QSplitter * _splitter;
    MessageTreeClientConnector * _connection;
    FridgeClientCanvas * _canvas;
+   FridgeChatView * _chatView;
 };
 
 }; // end namespace fridge

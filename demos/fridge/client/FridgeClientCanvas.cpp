@@ -21,7 +21,6 @@ FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector)
    for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) (void) _magnetWords.AddTail(_magnetWordsList[i]);
 
    // shuffle the deck
-   srand(time(NULL));
    for (uint32 i=0; i<_magnetWords.GetNumItems(); i++)
    {
       const uint32 randIdx = rand()%_magnetWords.GetNumItems();
@@ -143,13 +142,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
 void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
 {
    ITreeGatewaySubscriber::TreeGatewayConnectionStateChanged();
-   if (IsTreeGatewayConnected())
-   {
-      // Upload a note to the client-roster, so that anyone connected to other servers in the same system can know we're online now
-      MessageRef clientInfo = GetMessageFromPool();  // empty is okay for now; someday we could add e.g. the local user's name to this, or etc
-      (void) UploadTreeNodeValue("clients/clientinfo", clientInfo);
-   }
-   else if (_magnets.HasItems())
+   if (_magnets.HasItems())
    {
       _magnets.Clear();
       update();

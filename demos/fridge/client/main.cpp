@@ -6,6 +6,8 @@ int main(int argc, char ** argv)
 {
    using namespace fridge;
 
+   srand(time(NULL));
+
    CompleteSetupSystem css;
    QApplication app(argc, argv);
 
