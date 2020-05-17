@@ -157,10 +157,7 @@ void FridgeServerWindow :: ParseTextLinesFromIncomingTextBuffer()
       const int nextNewlineIdx = _incomingTextBuffer.indexOf('\n');
       if (nextNewlineIdx >= 0)
       {
-         String line(_incomingTextBuffer.data(), nextNewlineIdx);
-         line = line.Trim();
-
-         ParseIncomingTextLine(line);
+         ParseIncomingTextLine(String(_incomingTextBuffer.data(), nextNewlineIdx));
          _incomingTextBuffer = _incomingTextBuffer.mid(nextNewlineIdx+1);
       }
       else break;

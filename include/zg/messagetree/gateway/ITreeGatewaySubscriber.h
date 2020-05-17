@@ -140,12 +140,12 @@ protected:
      * @param queryStrings a set of one or more session-relative paths of the node(s) you wish to download (along with the subtrees of nodes beneath them)
      * @param queryFilters if non-NULL, QueryFilters in this list will be used to limit the nodes selected for download.  The nth (queryFilter) will be applied to the (nth) queryString.
      * @param tag an arbitrary string that can be used to identify this download.  It will be passed back to you, verbatim, in the corresponding SubtreesRequestResultReturned() call.
-     * @param maxDepth The maximum depth of the subtrees to return.  Pass MUSCLE_NO_LIMIT if you want the full subtree, regardless of how deep it goes.
+     * @param maxDepth The maximum depth of the subtrees to return.  Defaults to MUSCLE_NO_LIMIT, which will result in the full subtree being returned, regardless of depth.
      * @param flags If specified, these flags can influence the behavior of the subscribe operation.  Currently this argument is ignored.
      * @note notifications in response to this query will come in the form of some future calls to TreeNodeUpdated().
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth = MUSCLE_NO_LIMIT, TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Request that the given specified payload be uploaded to the database.
      * @param nodePath the session-relative path of the node you wish to upload (e.g. "foo/bar/baz").  May be wildcarded only if (optPayload) is NULL.

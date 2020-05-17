@@ -7,6 +7,7 @@
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/client/SystemDiscoveryClient.h"
 #include "zg/messagetree/client/MessageTreeClientConnector.h"
+#include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 #include "util/String.h"
 
 class QListWidget;
@@ -20,7 +21,7 @@ class FridgeChatView;
 class FridgeClientCanvas;
 
 /** This is a demo client that allows the user to mess around with refrigerator-magnets stored on a FridgeServer system */
-class FridgeClientWindow : public QMainWindow, public IDiscoveryNotificationTarget
+class FridgeClientWindow : public QMainWindow, public IDiscoveryNotificationTarget, public ITreeGatewaySubscriber
 {
 Q_OBJECT
 
@@ -37,6 +38,10 @@ public:
 
    virtual void keyPressEvent(QKeyEvent * ke);
 
+protected:
+   // ITreeGatewaySubscriber API
+   virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
+
 private slots:
    void CloneWindow();
    void UpdateStatus();
@@ -44,6 +49,8 @@ private slots:
    void ReturnToDiscoveryRequestedAux();
    void SystemItemClicked(QListWidgetItem * item);
    void ClearMagnets();
+   void OpenProject();
+   void SaveProject();
 
 private:
    void UpdateGUI();

@@ -55,7 +55,7 @@ status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & arc
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
-   return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePathWithoutSlash, true, true);
+   return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePathWithoutSlash, true);
 }
 
 status_t MessageTreeDatabaseObject :: SaveToArchive(const MessageRef & archive) const

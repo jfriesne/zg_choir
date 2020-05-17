@@ -1,13 +1,16 @@
 #include <QApplication>
+#include <QFileDialog>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLayout>
 #include <QListWidget>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QTimer>
 
+#include "dataio/FileDataIO.h"
 #include "FridgeChatView.h"
 #include "FridgeClientCanvas.h"
 #include "FridgeClientWindow.h"
@@ -29,6 +32,7 @@ class FridgeClientCanvas;
 
 FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism) 
    : IDiscoveryNotificationTarget(NULL)  // can't pass in &_discoClient here, it isn't constructed yet!
+   , ITreeGatewaySubscriber(NULL)
    , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE)
    , _splitter(NULL)
    , _connection(NULL)
@@ -118,6 +122,8 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism(), FRIDGE_PROGRAM_SIGNATURE, systemName);
    if (_connection->Start().IsOK(ret))
    {
+      SetGateway(_connection);
+
       _splitter = new QSplitter(Qt::Vertical);
       {
          QWidget * topPart = new QWidget;
@@ -146,7 +152,21 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
                QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
                connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
                buttonsRowLayout->addWidget(clearButton);
+
+               buttonsRowLayout->addStretch();
+
+               const QChar ellipses = QChar(0x26, 0x20);
+
+               QPushButton * openProjectButton = new QPushButton(tr("Open Project")+ellipses);
+               connect(openProjectButton, SIGNAL(clicked()), this, SLOT(OpenProject()));
+               buttonsRowLayout->addWidget(openProjectButton);
+
+               buttonsRowLayout->addStretch();
    
+               QPushButton * saveProjectButton = new QPushButton(tr("Save Project")+ellipses);
+               connect(saveProjectButton, SIGNAL(clicked()), this, SLOT(SaveProject()));
+               buttonsRowLayout->addWidget(saveProjectButton);
+
                buttonsRowLayout->addStretch();
    
                QPushButton * disconnectButton = new QPushButton(tr("Disconnect"));
@@ -246,6 +266,66 @@ void FridgeClientWindow :: DiscoveryUpdate(const String & systemName, const Mess
    else delete lwi;
 
    UpdateStatus();
+}
+
+void FridgeClientWindow :: SaveProject()
+{
+   // First, download the current state of the magnets.  We'll show the file dialog when the requested subtree arrives.
+   Queue<String> paths;
+   if (paths.AddTail("magnets").IsOK()) (void) RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), "save_project");
+}
+
+#ifdef WIN32
+static inline QString LocalFromQAux(const QString & qs)
+{
+   QString tmp = qs;
+   return tmp.replace('/', '\\');  // FogBugz #5816:  encodeName() doesn't convert slashes back, so we have to do it
+}
+# define LocalFromQ(qs) (QFile::encodeName(LocalFromQAux(qs)).constData())
+#else
+# define LocalFromQ(qs) (QFile::encodeName(qs).constData())
+#endif
+
+void FridgeClientWindow :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
+{
+   if (tag == "save_project")
+   {
+      if (subtreeData())
+      {
+         const QString saveFile = QFileDialog::getSaveFileName(this, tr("Save Magnets Project"), QString(), tr("Magnets File (*.magnets)"));
+         if (saveFile.size() > 0)
+         {
+            FileDataIO fdio(fopen(LocalFromQ(saveFile), "wb"));
+            if (fdio.GetFile())
+            {
+               status_t ret;
+               if (subtreeData()->FlattenToDataIO(fdio, false).IsError(ret)) QMessageBox::critical(this, tr("Project download error"), tr("Error writing data to file [%1] [%2]").arg(saveFile).arg(ret()));
+            }
+            else QMessageBox::critical(this, tr("Project download error"), tr("Error, couldn't write to file [%1]").arg(saveFile));
+         }
+      }
+      else QMessageBox::critical(this, tr("Project download error"), tr("Error, couldn't download magnets project!"));
+   }
+}
+
+void FridgeClientWindow :: OpenProject()
+{
+   const QString openFile = QFileDialog::getOpenFileName(this, tr("Open Magnets Project"), QString(), tr("Magnets File (*.magnets)"));
+   if (openFile.size() > 0)
+   {
+      FileDataIO fdio(fopen(LocalFromQ(openFile), "rb"));
+      if (fdio.GetFile())
+      {
+         status_t ret;
+         MessageRef subtreeData = GetMessageFromPool();
+         if (subtreeData()->UnflattenFromDataIO(fdio, fdio.GetLength()).IsOK(ret))
+         {
+            if (UploadTreeNodeSubtree("magnets", subtreeData).IsError(ret)) QMessageBox::critical(this, tr("Project open error"), tr("Error uploading data from file [%1] [%2]").arg(openFile).arg(ret()));
+         }
+         else QMessageBox::critical(this, tr("Project open error"), tr("Error reading data from file [%1] [%2]").arg(openFile).arg(ret()));
+      }
+      else QMessageBox::critical(this, tr("Project open error"), tr("Error, couldn't open file [%1] for reading").arg(openFile));
+   }
 }
 
 }; // end namespace fridge

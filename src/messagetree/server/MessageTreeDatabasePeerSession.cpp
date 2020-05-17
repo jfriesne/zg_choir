@@ -3,6 +3,7 @@
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "zg/messagetree/server/ServerSideMessageUtilityFunctions.h"
+#include "util/StringTokenizer.h"
 
 namespace zg
 {
@@ -117,7 +118,22 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(basePath, &relativePath);
-   if (mtDB) return mtDB->UploadNodeSubtree(relativePath, valuesMsg, flags);
+   if (mtDB)
+   {
+      // Note that (valuesMsg) is going to contain session-relative data, so we need to dig out the subtree of it that is equal to the root of (mtDB)'s subtree before passing it along
+      status_t ret;
+      MessageRef subMsg = valuesMsg;
+      StringTokenizer tok(mtDB->GetRootPathWithoutSlash()(), "/");
+      const char * t;
+      while((t = tok()) != NULL)
+      {
+         if (subMsg()->FindMessage(t, subMsg).IsError(ret)) return ret;
+         if ((tok.GetRemainderOfString() != NULL)&&(subMsg()->FindMessage(PR_NAME_NODECHILDREN, subMsg).IsError(ret))) return ret;
+      }
+
+      (void) mtDB->RequestDeleteNodes(relativePath, ConstQueryFilterRef(), TreeGatewayFlags());  // we want a full overwrite of the specified subtree, not an add-to
+      return mtDB->UploadNodeSubtree(relativePath, subMsg, flags);
+   }
    else 
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeSubtree():  No database found for path [%s]!\n", basePath());
