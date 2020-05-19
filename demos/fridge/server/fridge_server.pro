@@ -109,7 +109,8 @@ SERVER_SOURCES = $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp    
                  $$ZG_DIR/src/messagetree/server/MessageTreeDatabasePeerSession.cpp \
                  $$ZG_DIR/src/messagetree/server/MessageTreeDatabaseObject.cpp      \
                  $$ZG_DIR/src/messagetree/server/ServerSideMessageTreeSession.cpp   \
-                 $$ZG_DIR/src/messagetree/server/ServerSideMessageUtilityFunctions.cpp
+                 $$ZG_DIR/src/messagetree/server/ServerSideMessageUtilityFunctions.cpp \
+                 $$ZG_DIR/src/messagetree/server/UndoStackMessageTreeDatabaseObject.cpp
 
 win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
                         $$MUSCLE_DIR/regex/regex/regerror.c     \

@@ -99,8 +99,30 @@ public:
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
 protected:
+   // IDatabaseObject API
    virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
+
+   /** Called by MessageTreeNodeUpdated() on the senior peer, when reacting to a MUSCLE node-update.  Returns the MessageRef we should pass on to 
+     * the junior peers.  Default implementation just calls through to CreateNodeUpdateMessage().
+     * @param relativePath path to the node in question, relative to our subtree's root.
+     * @param node reference to the DataNode object being updated
+     * @param oldDataRef the DataNode's previous payload, before this update (may be NULL)
+     * @param isBeingRemoved true iff (node) is being deleted.
+     * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
+     */
+   virtual MessageRef SeniorCreateNodeUpdateMessage(const String & relativePath, const DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved) const;
+
+   /** Called by MessageTreeNodeIndexChanged() on the senior peer, when reacting to a MUSCLE node-index-update.  Returns the MessageRef we should pass on to 
+     * the junior peers.  Default implementation just calls through to CreateNodeIndexUpdateMessage().
+     * @param relativePath path to the node in question, relative to our subtree's root.
+     * @param node reference to the DataNode object being updated
+     * @param op the index-update opcode of the change
+     * @param index the position within the index of the change
+     * @param key the name of the child node in the index
+     * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
+     */
+   virtual MessageRef SeniorCreateNodeIndexUpdateMessage(const String & relativePath, const DataNode & node, char op, uint32 index, const String & key);
 
 private:
    class SafeQueryFilter : public QueryFilter

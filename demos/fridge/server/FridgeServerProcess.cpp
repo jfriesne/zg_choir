@@ -5,6 +5,7 @@
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
+#include "zg/messagetree/server/UndoStackMessageTreeDatabaseObject.h"
 #include "common/FridgeNameSpace.h"
 
 namespace fridge {
@@ -66,7 +67,7 @@ protected:
       {
          case FRIDGE_DB_MAGNETS:
          {
-            IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "magnets"));
+            IDatabaseObjectRef ret(newnothrow UndoStackMessageTreeDatabaseObject(this, whichDatabase, "magnets"));
             if (ret() == NULL) WARN_OUT_OF_MEMORY;
             return ret;
          }

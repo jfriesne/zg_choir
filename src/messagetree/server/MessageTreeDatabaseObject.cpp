@@ -215,7 +215,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
    if (IsInSeniorDatabaseUpdateContext())
    {
       // update our assembled-junior-message so the junior-peers can later replicate what we did here
-      MessageRef juniorMsg = CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
+      MessageRef juniorMsg = SeniorCreateNodeUpdateMessage(relativePath, node, oldDataRef, isBeingRemoved);
       if ((juniorMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, juniorMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!\n", this, isBeingRemoved?"removed":"updated", relativePath());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
@@ -234,11 +234,16 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
    else _checksum += node.CalculateChecksum();
 }
 
-void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & /*node*/, char op, uint32 index, const String & key)
+MessageRef MessageTreeDatabaseObject :: SeniorCreateNodeUpdateMessage(const String & relativePath, const DataNode & node, const MessageRef & /*oldDataRef*/, bool isBeingRemoved) const
+{
+   return CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
+}
+
+void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key)
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      MessageRef cmdMsg = CreateNodeIndexUpdateMessage(relativePath, op, index, key);
+      MessageRef cmdMsg = SeniorCreateNodeIndexUpdateMessage(relativePath, node, op, index, key);
       if ((cmdMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, cmdMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node index update to of [%s]!\n", this, relativePath());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
@@ -254,6 +259,11 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
       case INDEX_OP_ENTRYREMOVED:  _checksum -= key.CalculateChecksum(); break;
       case INDEX_OP_CLEARED:       LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged():  checksum-update for INDEX_OP_CLEARED is not implemented!  (%s)\n", relativePath()); break;  // Dunno how to handle this, and it never gets called anyway
    }
+}
+
+MessageRef MessageTreeDatabaseObject :: SeniorCreateNodeIndexUpdateMessage(const String & relativePath, const DataNode & /*node*/, char op, uint32 index, const String & key)
+{
+   return CreateNodeIndexUpdateMessage(relativePath, op, index, key);
 }
 
 String MessageTreeDatabaseObject :: ToString() const
