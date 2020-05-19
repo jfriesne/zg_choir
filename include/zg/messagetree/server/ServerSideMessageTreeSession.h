@@ -37,6 +37,9 @@ public:
      */
    void SetLogOnAttachAndDetach(bool doLogging) {_logOnAttachAndDetach = doLogging;}
 
+   /** Returns the key-string for the undo-stack this session's commands should be applied to (when using an UndoStackMessageTreeDatabaseObject) */
+   const String & GetUndoKey() const {return _undoKey;}
+
 protected:
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
 
@@ -54,6 +57,8 @@ private:
 
    NestCount _isInMessageReceivedFromGateway;
    bool _logOnAttachAndDetach;
+
+   String _undoKey;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSession);
 

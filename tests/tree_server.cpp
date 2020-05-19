@@ -11,7 +11,7 @@
 using namespace zg;
 
 enum {
-   TREE_DB_COMMAND_SET_DB_STATE = 1953654117, // 'toyd' -- clears the current DB state and then adds the specified key/value pairs
+   TREE_DB_COMMAND_SET_DB_STATE = 1953654117, // 'tree' -- clears the current DB state and then adds the specified key/value pairs
    TREE_DB_COMMAND_PUT_STRINGS,               //        -- adds the specified key/value pairs (overwriting the value of any existing keys that match the new keys)
    TREE_DB_COMMAND_REMOVE_STRINGS,            //        -- removes any key/value pairs whose keys match those found in the Message
    TREE_DB_COMMAND_USER_TEXT,                 //        -- just some chat text to print when received, for testing

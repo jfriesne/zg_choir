@@ -1,11 +1,13 @@
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "zg/messagetree/server/ServerSideMessageUtilityFunctions.h"
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/gateway/TreeConstants.h"  // for TREE_COMMAND_SETUNDOKEY
 
 namespace zg {
 
 ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upstreamGateway)
    : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)
+   , _undoKey("anon")
 {
    // empty
 }
@@ -37,7 +39,19 @@ void ServerSideMessageTreeSession :: AboutToDetachFromServer()
 void ServerSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
 {
    NestCountGuard ncg(_isInMessageReceivedFromGateway);
-   if (IncomingTreeMessageReceivedFromClient(msg) == B_UNIMPLEMENTED) StorageReflectSession::MessageReceivedFromGateway(msg, userData);
+   if (IncomingTreeMessageReceivedFromClient(msg) == B_UNIMPLEMENTED) 
+   {
+      switch(msg()->what)
+      {
+         case TREE_COMMAND_SETUNDOKEY:
+            _undoKey = msg()->GetString(TREE_NAME_UNDOKEY);
+         break;
+
+         default:
+            StorageReflectSession::MessageReceivedFromGateway(msg, userData);
+         break;
+      }
+   }
 }
 
 status_t ServerSideMessageTreeSession :: AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
