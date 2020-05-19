@@ -6,8 +6,6 @@
 namespace zg
 {
 
-class ServerSideMessageTreeSession;
-
 /** This is a special subclass of MessageTreeDatabaseObject that implements
   * a per-client undo/redo stack as part of its operation.  You can use this 
   * if you want to be able to support undo and redo operations as part of
@@ -30,8 +28,15 @@ public:
    virtual ~UndoStackMessageTreeDatabaseObject() {/* empty */}
 
 protected:
-   virtual MessageRef SeniorCreateNodeUpdateMessage(const String & relativePath, const DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved) const;
-   virtual MessageRef SeniorCreateNodeIndexUpdateMessage(const String & relativePath, const DataNode & node, char op, uint32 index, const String & key);
+   // IDatabaseObject API
+   virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
+   virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
+
+   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend);
+   virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend);
+
+private:
+   MessageRef _assembledJuniorUndoMessage;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 

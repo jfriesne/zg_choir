@@ -103,26 +103,29 @@ protected:
    virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
 
-   /** Called by MessageTreeNodeUpdated() on the senior peer, when reacting to a MUSCLE node-update.  Returns the MessageRef we should pass on to 
-     * the junior peers.  Default implementation just calls through to CreateNodeUpdateMessage().
+   /** Called by SeniorUpdate() when it wants to add a set/remove-node action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
+     * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
+     * override this to do more (e.g. to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
      * @param relativePath path to the node in question, relative to our subtree's root.
-     * @param node reference to the DataNode object being updated
-     * @param oldDataRef the DataNode's previous payload, before this update (may be NULL)
-     * @param isBeingRemoved true iff (node) is being deleted.
+     * @param oldPayload the payload that our node had before we made this change (NULL if the node is being created)
+     * @param newPayload the payload that our node has after we make this change (NULL if the node is being destroyed)
+     * @param assemblingMessage the Message we are gathering records into.
+     * @param prepend True iff the filed Message should be prepended to the beginning of (assemblingMessage), or false if it should be appended to the end.
      * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
      */
-   virtual MessageRef SeniorCreateNodeUpdateMessage(const String & relativePath, const DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved) const;
+   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend);
 
-   /** Called by MessageTreeNodeIndexChanged() on the senior peer, when reacting to a MUSCLE node-index-update.  Returns the MessageRef we should pass on to 
-     * the junior peers.  Default implementation just calls through to CreateNodeIndexUpdateMessage().
-     * @param relativePath path to the node in question, relative to our subtree's root.
-     * @param node reference to the DataNode object being updated
+   /** Called by SeniorUpdate() when it wants to add an update-node-index action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
+     * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
+     * override this to do more (e.g. to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
      * @param op the index-update opcode of the change
      * @param index the position within the index of the change
      * @param key the name of the child node in the index
+     * @param assemblingMessage the Message we are gathering records into.
+     * @param prepend True iff the filed Message should be prepended to the beginning of (assemblingMessage), or false if it should be appended to the end.
      * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
      */
-   virtual MessageRef SeniorCreateNodeIndexUpdateMessage(const String & relativePath, const DataNode & node, char op, uint32 index, const String & key);
+   virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend);
 
 private:
    class SafeQueryFilter : public QueryFilter

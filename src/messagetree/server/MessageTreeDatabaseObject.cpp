@@ -210,13 +210,12 @@ bool MessageTreeDatabaseObject :: IsInSetupOrTeardown() const
    return ((zsh)&&(zsh->IsInSetupOrTeardown()));
 }
 
-void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
+void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldPayload, bool isBeingRemoved)
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      // update our assembled-junior-message so the junior-peers can later replicate what we did here
-      MessageRef juniorMsg = SeniorCreateNodeUpdateMessage(relativePath, node, oldDataRef, isBeingRemoved);
-      if ((juniorMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, juniorMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!\n", this, isBeingRemoved?"removed":"updated", relativePath());
+      const status_t ret = SeniorRecordNodeUpdateMessage(relativePath, oldPayload, isBeingRemoved?MessageRef():node.GetData(), _assembledJuniorMessage, false);
+      if (ret.IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!  [%s]\n", this, isBeingRemoved?"removed":"updated", relativePath(), ret());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
    {
@@ -226,25 +225,28 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
 
    // Update our running database-checksum to account for the changes being made to our subtree
         if (isBeingRemoved) _checksum -= node.CalculateChecksum();
-   else if (oldDataRef())
+   else if (oldPayload())
    {
-      _checksum -= oldDataRef()->CalculateChecksum();
+      _checksum -= oldPayload()->CalculateChecksum();
       if (node.GetData()()) _checksum += node.GetData()()->CalculateChecksum();
    }
    else _checksum += node.CalculateChecksum();
 }
 
-MessageRef MessageTreeDatabaseObject :: SeniorCreateNodeUpdateMessage(const String & relativePath, const DataNode & node, const MessageRef & /*oldDataRef*/, bool isBeingRemoved) const
+status_t MessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & /*oldPayload*/, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend)
 {
-   return CreateNodeUpdateMessage(relativePath, isBeingRemoved?MessageRef():node.GetData(), TreeGatewayFlags(), NULL);
+   MessageRef msg = CreateNodeUpdateMessage(relativePath, newPayload, TreeGatewayFlags(), NULL);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   return AssembleBatchMessage(assemblingMessage, msg, prepend);
 }
 
-void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key)
+void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & relativePath, DataNode & /*node*/, char op, uint32 index, const String & key)
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      MessageRef cmdMsg = SeniorCreateNodeIndexUpdateMessage(relativePath, node, op, index, key);
-      if ((cmdMsg() == NULL)||(AssembleBatchMessage(_assembledJuniorMessage, cmdMsg).IsError())) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node index update to of [%s]!\n", this, relativePath());
+      const status_t ret = SeniorRecordNodeIndexUpdateMessage(relativePath, op, index, key, _assembledJuniorMessage, false);
+      if (ret.IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node-index-update to [%s]!  [%s]\n", this, relativePath(), ret());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
    {
@@ -261,9 +263,12 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
    }
 }
 
-MessageRef MessageTreeDatabaseObject :: SeniorCreateNodeIndexUpdateMessage(const String & relativePath, const DataNode & /*node*/, char op, uint32 index, const String & key)
+status_t MessageTreeDatabaseObject :: SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend)
 {
-   return CreateNodeIndexUpdateMessage(relativePath, op, index, key);
+   MessageRef msg = CreateNodeIndexUpdateMessage(relativePath, op, index, key);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   return AssembleBatchMessage(assemblingMessage, msg, prepend);
 }
 
 String MessageTreeDatabaseObject :: ToString() const
