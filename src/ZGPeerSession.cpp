@@ -579,4 +579,14 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
    return 0;
 }
 
+uint64 ZGPeerSession :: GetCurrentDatabaseStateID(uint32 whichDB) const
+{
+   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetCurrentDatabaseStateID() : 0;
+}
+
+ConstMessageRef ZGPeerSession :: GetDatabaseTransactionPayload(uint32 whichDB, uint64 transactionID) const
+{
+   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetDatabaseUpdatePayloadByID(transactionID) : ConstMessageRef();
+}
+
 };  // end namespace zg

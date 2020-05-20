@@ -43,9 +43,12 @@ public:
 
    void BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData);
    ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint64 updateID) const;
+   ConstMessageRef GetDatabaseUpdatePayloadByID(uint64 updateID) const;
 
    bool IsInJuniorDatabaseUpdateContext() const {return _inJuniorDatabaseUpdate.IsInBatch();}
    bool IsInSeniorDatabaseUpdateContext() const {return _inSeniorDatabaseUpdate.IsInBatch();}
+
+   uint64 GetCurrentDatabaseStateID() const {return _localDatabaseStateID;}
 
 private:
    void RescanUpdateLog();

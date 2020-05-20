@@ -309,6 +309,21 @@ protected:
      */
    virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource);
 
+   /** Returns the current state-ID of the locally held database.
+     * @param whichDB index of the database to return the state-ID of
+     * @note returns 0 if (whichDB) isn't a valid database index.
+     */
+   uint64 GetCurrentDatabaseStateID(uint32 whichDB) const;
+
+   /** Returns a read-only reference to the transaction-payload for the given transaction ID in the given database.
+     * Note that this Message contains the instructions to junior peers for how they should update their local database;
+     * it does not contain the instructions sent to the senior peer for creating the update.
+     * @param whichDB index of the database to return a transactio-payload from
+     * @param transactionID the transaction ID to look up
+     * @returns a valid ConstMessageRef on success, or a NULL ConstMessageRef if the given payload could not be found.
+     */
+   ConstMessageRef GetDatabaseTransactionPayload(uint32 whichDB, uint64 transactionID) const;
+
 private:
    void ScheduleSetBeaconData();
    void ShutdownChildSessions();

@@ -229,4 +229,16 @@ status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetP
    return dbps ? dbps->SendMessageToDatabaseObject(targetPeerID, msg, (optWhichDB>=0)?(uint32)optWhichDB:_dbIndex, _dbIndex) : B_BAD_OBJECT;
 }
 
+uint64 IDatabaseObject :: GetCurrentDatabaseStateID() const
+{
+   const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->GetCurrentDatabaseStateID(_dbIndex) : 0;
+}
+
+ConstMessageRef IDatabaseObject :: GetDatabaseTransactionPayload(uint64 transactionID) const
+{
+   const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->GetDatabaseTransactionPayload(_dbIndex, transactionID) : ConstMessageRef();
+}
+
 };  // end namespace zg

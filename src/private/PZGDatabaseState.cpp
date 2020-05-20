@@ -554,4 +554,10 @@ ConstPZGDatabaseUpdateRef PZGDatabaseState :: GetDatabaseUpdateByID(uint64 updat
    else return _updateLog[updateID];
 }
 
+ConstMessageRef PZGDatabaseState :: GetDatabaseUpdatePayloadByID(uint64 updateID) const
+{
+   const ConstPZGDatabaseUpdateRef * dbur = _updateLog.Get(updateID);
+   return dbur ? dbur->GetItemPointer()->GetPayloadBufferAsMessage() : ConstMessageRef();
+}
+
 };  // end namespace zg_private

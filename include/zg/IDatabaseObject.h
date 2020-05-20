@@ -163,6 +163,16 @@ protected:
      */
    virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo) {(void) peerID; (void) optPeerInfo;}
 
+   /** Returns the current state-ID of our local database */
+   uint64 GetCurrentDatabaseStateID() const;
+
+   /** Given a database transactio-ID, returns the Message-payload of the database-update-transaction with that ID.
+     * Note that the returned Message represents the instructions to the junior peers regarding how they should update their local databases.
+     * @param transactionID the database-transaction-ID to query about.
+     * @returns a valid ConstMessageRef on success, or a NULL ConstMessageRef if no update with the given transaction was found.
+     */
+   ConstMessageRef GetDatabaseTransactionPayload(uint64 transactionID) const;
+
    // Pass-throughs to the ZGDatabasePeerSession object
    status_t RequestResetDatabaseStateToDefault();
    status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
