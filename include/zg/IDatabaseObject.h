@@ -174,9 +174,9 @@ protected:
    ConstMessageRef GetDatabaseTransactionPayload(uint64 transactionID) const;
 
    // Pass-throughs to the ZGDatabasePeerSession object
-   status_t RequestResetDatabaseStateToDefault();
-   status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
-   status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
+   virtual status_t RequestResetDatabaseStateToDefault();
+   virtual status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
+   virtual status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
 
 protected:
    /** Call this method to send a Message to another MessageTreeDatabaseObject.

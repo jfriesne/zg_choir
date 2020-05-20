@@ -1,4 +1,6 @@
 #include "zg/messagetree/server/UndoStackMessageTreeDatabaseObject.h"
+#include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
+#include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "reflector/StorageReflectConstants.h"  // for INDEX_OP_*
 
 namespace zg 
@@ -10,6 +12,7 @@ enum {
 };
 static const String UNDOSTACK_NAME_DOMESSAGE   = "_do";
 static const String UNDOSTACK_NAME_UNDOMESSAGE = "_un";
+static const String UNDOSTACK_NAME_UNDOKEY     = "_ky";
 
 UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : MessageTreeDatabaseObject(session, dbIndex, rootNodePath)
@@ -26,7 +29,7 @@ ConstMessageRef UndoStackMessageTreeDatabaseObject :: SeniorUpdate(const ConstMe
    _assembledJuniorUndoMessage.Reset();
 
    MessageRef pairMsg = GetMessageFromPool(UNDOSTACK_COMMAND_MESSAGE_PAIR);
-   if ((pairMsg())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_DOMESSAGE, doMsg).IsOK())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_UNDOMESSAGE, undoMsg).IsOK())) return AddConstToRef(pairMsg);
+   if ((pairMsg())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_DOMESSAGE, doMsg).IsOK())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_UNDOMESSAGE, undoMsg).IsOK())&&(pairMsg()->CAddString(UNDOSTACK_NAME_UNDOKEY, seniorDoMsg()->GetString(UNDOSTACK_NAME_UNDOKEY)).IsOK())) return AddConstToRef(pairMsg);
    else
    {
       LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject::SeniorUpdate():  Unable to assemble Message-pair!\n");
@@ -59,6 +62,24 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeIndexUpdateMessag
 
    // Also prepend the equal-and-opposite undo-action to the beginning of our _assembledJuniorUndoMessage (in case we ever want to undo this action later)
    return MessageTreeDatabaseObject::SeniorRecordNodeIndexUpdateMessage(relativePath, (op == (char)INDEX_OP_ENTRYINSERTED) ? INDEX_OP_ENTRYREMOVED : INDEX_OP_ENTRYINSERTED, index, key, assemblingMessage, !prepend);
+}
+
+status_t UndoStackMessageTreeDatabaseObject :: RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg)
+{
+   status_t ret;
+   return newDatabaseStateMsg()->CAddString(UNDOSTACK_NAME_UNDOKEY, GetActiveClientUndoKey()).IsOK(ret) ? MessageTreeDatabaseObject::RequestReplaceDatabaseState(newDatabaseStateMsg) : ret;
+}
+
+status_t UndoStackMessageTreeDatabaseObject :: RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg)
+{
+   status_t ret;
+   return databaseUpdateMsg()->CAddString(UNDOSTACK_NAME_UNDOKEY, GetActiveClientUndoKey()).IsOK(ret) ? MessageTreeDatabaseObject::RequestUpdateDatabaseState(databaseUpdateMsg) : ret;
+}
+
+const String & UndoStackMessageTreeDatabaseObject :: GetActiveClientUndoKey() const
+{
+   const ServerSideMessageTreeSession * ssmts = GetMessageTreeDatabasePeerSession()->GetActiveServerSideMessageTreeSession();
+   return ssmts ? ssmts->GetUndoKey() : GetEmptyString();
 }
 
 }; // end namespace zg

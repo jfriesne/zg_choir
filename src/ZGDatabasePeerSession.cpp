@@ -56,7 +56,7 @@ ConstMessageRef ZGDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichD
 status_t ZGDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
-   status_t ret = db->JuniorUpdate(juniorDoMsg);
+   const status_t ret = db->JuniorUpdate(juniorDoMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
 }

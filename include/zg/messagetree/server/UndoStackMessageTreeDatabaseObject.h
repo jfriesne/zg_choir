@@ -35,6 +35,13 @@ protected:
    virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend);
    virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend);
 
+   // Overridden to add undo-tags as necessary
+   virtual status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
+   virtual status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
+
+   /** Convenience method:  Returns the undo-identifier-key of the currently active client, or an empty String if unknown */
+   const String & GetActiveClientUndoKey() const;
+
 private:
    MessageRef _assembledJuniorUndoMessage;
 };

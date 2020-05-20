@@ -14,9 +14,10 @@ enum {
    MTDPS_COMMAND_REDO,
 };
 
-static const String MTDPS_NAME_TAG    = "mtp_tag";
-static const String MTDPS_NAME_SOURCE = "mtp_src";
-static const String MTDPS_NAME_FLAGS  = "mtp_flg";
+static const String MTDPS_NAME_TAG     = "mtp_tag";
+static const String MTDPS_NAME_SOURCE  = "mtp_src";
+static const String MTDPS_NAME_FLAGS   = "mtp_flg";
+static const String MTDPS_NAME_UNDOKEY = "mtp_key";
 
 MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGDatabasePeerSession(zgPeerSettings), ProxyTreeGateway(NULL), _muxGateway(this)
 {
@@ -200,7 +201,10 @@ status_t MessageTreeDatabasePeerSession :: SendUndoRedoMessage(uint32 whatCode, 
    MessageRef msg = GetMessageFromPool(whatCode);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   const status_t ret = msg()->CAddString(MTDPS_NAME_TAG, tag);
+   ServerSideMessageTreeSession * ssmts = GetActiveServerSideMessageTreeSession();
+   if (ssmts == NULL) return B_BAD_OBJECT;
+   
+   const status_t ret = msg()->CAddString(MTDPS_NAME_TAG, tag) | msg()->CAddString(MTDPS_NAME_UNDOKEY, ssmts->GetUndoKey());
    return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, msg) : ret;
 }
 
@@ -298,17 +302,17 @@ ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint
       break;
 
       case MTDPS_COMMAND_UPLOADMARKER:
-printf("UploadMarker [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UPLOADMARKER\n");
          return seniorDoMsg;  // TODO REWRITE THIS
       break;
 
       case MTDPS_COMMAND_UNDO:
-printf("Undo [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UNDO\n");
          return seniorDoMsg;  // TODO REWRITE THIS
       break;
 
       case MTDPS_COMMAND_REDO:
-printf("Redo [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_REDO\n");
          return seniorDoMsg;  // TODO REWRITE THIS
       break;
 
@@ -323,8 +327,19 @@ status_t MessageTreeDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whic
    {
       case MTDPS_COMMAND_PINGSENIORPEER:
          HandleSeniorPeerPingMessage(whichDatabase, juniorDoMsg);
-         return B_NO_ERROR;
-      break;
+      return B_NO_ERROR;
+
+      case MTDPS_COMMAND_UPLOADMARKER:
+printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UPLOADMARKER\n");
+      return B_NO_ERROR;
+
+      case MTDPS_COMMAND_UNDO:
+printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UNDO\n");
+      return B_NO_ERROR;
+
+      case MTDPS_COMMAND_REDO:
+printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_REDO\n");
+      return B_NO_ERROR;
 
       default:
          return ZGDatabasePeerSession::JuniorUpdateLocalDatabase(whichDatabase, dbChecksum, juniorDoMsg);

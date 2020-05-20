@@ -216,7 +216,6 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
       }
       break;
 
-
       default:
          MessageTreeDatabaseObject::MessageReceivedFromMessageTreeDatabaseObject(msg, sourcePeer, sourceDBIdx);
       break;
