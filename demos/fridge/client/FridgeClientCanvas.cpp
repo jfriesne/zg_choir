@@ -15,7 +15,7 @@ FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector)
    : ITreeGatewaySubscriber(connector)
    , _nextMagnetWordIndex(0)
 {
-   (void) AddTreeSubscription("magnets/*");   // we need to keep track of where the magnets are on the server
+   (void) AddTreeSubscription("project/magnets/*");   // we need to keep track of where the magnets are on the server
 
    (void) _magnetWords.EnsureSize(ARRAYITEMS(_magnetWordsList));
    for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) (void) _magnetWords.AddTail(_magnetWordsList[i]);
@@ -140,7 +140,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
       if (optMagnetState->SaveToArchive(*msgRef()).IsError(ret)) return ret;
    }
       
-   return UploadTreeNodeValue(optNodeID.Prepend("magnets/"), msgRef);
+   return UploadTreeNodeValue(optNodeID.Prepend("project/magnets/"), msgRef);
 }
 
 void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
@@ -157,9 +157,9 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
 
 void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg)
 {
-   if (nodePath.StartsWith("magnets/"))
+   if (nodePath.StartsWith("project/magnets/"))
    {
-      const String nodeName = nodePath.Substring(8);
+      const String nodeName = nodePath.Substring("/");
       if (optPayloadMsg())
       {
          MagnetState state;
@@ -180,7 +180,7 @@ String FridgeClientCanvas :: GetNextMagnetWord()
 void FridgeClientCanvas :: ClearMagnets()
 {
    status_t ret;
-   if (RequestDeleteTreeNodes("magnets/*").IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of all magnets! [%s]\n", ret());
+   if (RequestDeleteTreeNodes("project/magnets/*").IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of all magnets! [%s]\n", ret());
 }
 
 }; // end namespace fridge

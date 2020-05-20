@@ -284,7 +284,7 @@ void FridgeClientWindow :: SaveProject()
 {
    // First, download the current state of the magnets.  We'll show the file dialog when the requested subtree arrives.
    Queue<String> paths;
-   if (paths.AddTail("magnets").IsOK()) (void) RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), "save_project");
+   if (paths.AddTail("project/magnets").IsOK()) (void) RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), "save_project");
 }
 
 #ifdef WIN32
@@ -332,7 +332,8 @@ void FridgeClientWindow :: OpenProject()
          MessageRef subtreeData = GetMessageFromPool();
          if (subtreeData()->UnflattenFromDataIO(fdio, fdio.GetLength()).IsOK(ret))
          {
-            if (UploadTreeNodeSubtree("magnets", subtreeData).IsError(ret)) QMessageBox::critical(this, tr("Project open error"), tr("Error uploading data from file [%1] [%2]").arg(openFile).arg(ret()));
+subtreeData()->PrintToStream();
+            if (UploadTreeNodeSubtree("project/magnets", subtreeData).IsError(ret)) QMessageBox::critical(this, tr("Project open error"), tr("Error uploading data from file [%1] [%2]").arg(openFile).arg(ret()));
          }
          else QMessageBox::critical(this, tr("Project open error"), tr("Error reading data from file [%1] [%2]").arg(openFile).arg(ret()));
       }
