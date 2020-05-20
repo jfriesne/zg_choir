@@ -33,6 +33,9 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags) = 0;
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags) = 0;
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags) = 0;
+   virtual status_t TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * calledBy, const String & undoMarkerTag, uint32 whichDB) = 0;
+   virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, const String & optTargetUndoMarker, uint32 whichDB) = 0;
+   virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, const String & optTargetRedoMarker, uint32 whichDB) = 0;
    virtual bool TreeGateway_IsGatewayConnected() const = 0;
 
    // Pass-throughs to private methods on our IGatewaySubscriber class (used to control access to these methods, so that only their gateway can call from them)

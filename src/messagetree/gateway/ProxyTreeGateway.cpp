@@ -85,6 +85,21 @@ status_t ProxyTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *
    return ITreeGatewaySubscriber::PingTreeSeniorPeer(tag, whichDB, flags);
 }
 
+status_t ProxyTreeGateway :: TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * /*calledBy*/, const String & undoMarkerTag, uint32 whichDB)
+{
+   return ITreeGatewaySubscriber::UploadUndoMarker(undoMarkerTag, whichDB);
+}
+
+status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+{
+   return ITreeGatewaySubscriber::RequestUndo(optTargetUndoMarker, whichDB);
+}
+
+status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+{
+   return ITreeGatewaySubscriber::RequestUndo(optTargetRedoMarker, whichDB);
+}
+
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
 {
    return ITreeGatewaySubscriber::IsTreeGatewayConnected();

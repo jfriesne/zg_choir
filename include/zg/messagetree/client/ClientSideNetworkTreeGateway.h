@@ -50,6 +50,9 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
+   virtual status_t TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * calledBy, const String & undoMarkerTag, uint32 whichDB);
+   virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, const String & optTargetUndoMarker, uint32 whichDB);
+   virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, const String & optTargetRedoMarker, uint32 whichDB);
    virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
 
 protected:
@@ -60,6 +63,7 @@ private:
    status_t PingServerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags);
    status_t IncomingMuscledMessageReceivedFromServer(const MessageRef & msg);
    status_t ConvertPathToSessionRelative(String & path) const;
+   status_t SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB);
 
    INetworkMessageSender * _messageSender;
    bool _isConnected;

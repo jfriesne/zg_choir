@@ -24,8 +24,9 @@ public:
 
    /** Convenience method:  Returns a read/write pointer to the specified IDatabaseObject that we hold. 
      * @param whichDatabase The index of the database that we need an object to represent.
+     * @returns a pointer to the nth database object, or a NULL pointer if (whichDatabase) isn't a valid database index.
      */
-   IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return _databaseObjects[whichDatabase]();}
+   IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return (whichDatabase < _databaseObjects.GetNumItems()) ? _databaseObjects[whichDatabase]() : NULL;}
 
    /** Overridden to notify our IDatabaseObjects about the change */
    virtual void LocalSeniorPeerStatusChanged();

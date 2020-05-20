@@ -10,6 +10,9 @@ namespace zg
 
 enum {
    MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp' 
+   MTDPS_COMMAND_UPLOADMARKER,
+   MTDPS_COMMAND_UNDO,
+   MTDPS_COMMAND_REDO,
 };
 
 static const String MTDPS_NAME_TAG    = "mtp_tag";
@@ -180,6 +183,30 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, seniorPingMsg) : ret;
 }
 
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * /*calledBy*/, const String & undoMarkerTag, uint32 whichDB)
+{
+   return SendUndoRedoMessage(MTDPS_COMMAND_UPLOADMARKER, undoMarkerTag, whichDB);
+}
+
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+{
+   return SendUndoRedoMessage(MTDPS_COMMAND_UNDO, optTargetUndoMarker, whichDB);
+}
+
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+{
+   return SendUndoRedoMessage(MTDPS_COMMAND_REDO, optTargetRedoMarker, whichDB);
+}
+
+status_t MessageTreeDatabasePeerSession :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
+{
+   MessageRef msg = GetMessageFromPool(whatCode);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   const status_t ret = msg()->CAddString(MTDPS_NAME_TAG, tag);
+   return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, msg) : ret;
+}
+
 void MessageTreeDatabasePeerSession :: CommandBatchEnds()
 {
    ProxyTreeGateway::CommandBatchEnds();
@@ -271,6 +298,21 @@ ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint
       case MTDPS_COMMAND_PINGSENIORPEER:
          HandleSeniorPeerPingMessage(whichDatabase, seniorDoMsg);
          return seniorDoMsg;
+      break;
+
+      case MTDPS_COMMAND_UPLOADMARKER:
+printf("UploadMarker [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+         return seniorDoMsg;  // TODO REWRITE THIS
+      break;
+
+      case MTDPS_COMMAND_UNDO:
+printf("Undo [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+         return seniorDoMsg;  // TODO REWRITE THIS
+      break;
+
+      case MTDPS_COMMAND_REDO:
+printf("Redo [%s]\n", seniorDoMsg()->GetString(MTDPS_NAME_TAG)());
+         return seniorDoMsg;  // TODO REWRITE THIS
       break;
 
       default:

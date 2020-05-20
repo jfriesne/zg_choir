@@ -204,6 +204,34 @@ protected:
      */
    virtual status_t PingTreeSeniorPeer(const String & tag, uint32 whichDB = 0, TreeGatewayFlags flags = TreeGatewayFlags());
 
+   /** Uploads an "undo-marker" string to the database.  This tag can later on be passed to RequestUndo() as a way to indicate
+     * how far to unwind the undo-stack.  (For example, if the user is about to drag a control from one position to another in a
+     * continuous manner, you might want to upload an undo-marker before the drag starts, so that an undo-operation afterwards
+     * can undo the entire drag and not just the most recent mouse-event)
+     * @param undoMarkerTag an arbitrary string that you might want to reference later. 
+     * @param whichDB index of the database to place the marker into.  This database must be implemented via a 
+     *                UndoStackMessageTreeDatabaseObject, of the redo request will be ignored.  Defaults to zero.
+     */
+   virtual status_t UploadUndoMarker(const String & undoMarkerTag, uint32 whichDB = 0);
+
+   /** Request an "undo" of a previously uploaded database change.
+     * @param optTargetUndoMarker if specified, the server will try to undo back to the point in the undo-stack where this marker-string is found.
+     *                            If left empty, OTOH, the server will only try to undo the most recent transaction uploaded by the requesting client.
+     *                            This string may contain wildcards if you prefer to match against a pattern of undo-marker-strings.
+     * @param whichDB index of the database to which should perform the undo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
+     *                of the undo request will be ignored.  Defaults to zero.
+     */
+   virtual status_t RequestUndo(const String & optTargetUndoMarker = GetEmptyString(), uint32 whichDB = 0);
+
+   /** Request a "redo" of a previously un-dnoe database change.
+     * @param optTargetUndoMarker if specified, the server will try to redo forward to the point in the redo-stack where this marker-string is found.
+     *                            If left empty, OTOH, the server will only try to redo the most recently un-done transaction uploaded by the requesting client.
+     *                            This string may contain wildcards if you prefer to match against a pattern of undo-marker-strings.
+     * @param whichDB index of the database to which should perform the redo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
+     *                of the redo request will be ignored.  Defaults to zero.
+     */
+   virtual status_t RequestRedo(const String & optTargetRedoMarker = GetEmptyString(), uint32 whichDB = 0);
+
    /** Returns true iff our gateway is currently connected to the upstream database. */
    virtual bool IsTreeGatewayConnected() const;
 

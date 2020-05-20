@@ -58,6 +58,21 @@ status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32
    return GetGateway()->TreeGateway_PingSeniorPeer(this, tag, whichDB, flags);
 }
 
+status_t ITreeGatewaySubscriber :: UploadUndoMarker(const String & undoMarkerTag, uint32 whichDB)
+{
+   return GetGateway()->TreeGateway_UploadUndoMarker(this, undoMarkerTag, whichDB);
+}
+
+status_t ITreeGatewaySubscriber :: RequestUndo(const String & optTargetUndoMarker, uint32 whichDB)
+{
+   return GetGateway()->TreeGateway_RequestUndo(this, optTargetUndoMarker, whichDB);
+}
+
+status_t ITreeGatewaySubscriber :: RequestRedo(const String & optTargetRedoMarker, uint32 whichDB)
+{
+   return GetGateway()->TreeGateway_RequestRedo(this, optTargetRedoMarker, whichDB);
+}
+
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 
 {
    return GetGateway()->TreeGateway_IsGatewayConnected();

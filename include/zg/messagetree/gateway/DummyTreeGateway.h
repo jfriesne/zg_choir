@@ -30,6 +30,9 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber *, const String &, const String *, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
+   virtual status_t TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
+   virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
+   virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual bool TreeGateway_IsGatewayConnected() const {return false;}
 
 private:

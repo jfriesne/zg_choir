@@ -21,6 +21,9 @@ enum {
    NTG_COMMAND_UPLOADNODESUBTREE,
    NTG_COMMAND_REMOVENODES,
    NTG_COMMAND_MOVEINDEXENTRIES,
+   NTG_COMMAND_UPLOADMARKER,
+   NTG_COMMAND_UNDO,
+   NTG_COMMAND_REDO,
 };
 
 // Reply-codes for Messages sent from server to client
@@ -194,6 +197,30 @@ status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, int32
    return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
+status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * /*calledBy*/, const String & undoMarkerTag, uint32 whichDB)
+{
+   return SendUndoRedoMessage(NTG_COMMAND_UPLOADMARKER, undoMarkerTag, whichDB);
+}
+
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+{
+   return SendUndoRedoMessage(NTG_COMMAND_UNDO, optTargetUndoMarker, whichDB);
+}
+
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+{
+   return SendUndoRedoMessage(NTG_COMMAND_REDO, optTargetRedoMarker, whichDB);
+}
+
+status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
+{
+   MessageRef msg = GetMessageFromPool(whatCode);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   const status_t ret = msg()->CAddString(NTG_NAME_TAG, tag) | msg()->CAddInt32(NTG_NAME_INDEX, whichDB);
+   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+}
+
 status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(what);
@@ -272,6 +299,10 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
          (void) RequestTreeNodeSubtrees(queryStrings, queryFilters, tag, msg()->GetInt32(NTG_NAME_MAXDEPTH, MUSCLE_NO_LIMIT), flags);
       }
       break;
+
+      case NTG_COMMAND_UPLOADMARKER: (void) UploadUndoMarker(tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_UNDO:         (void) RequestUndo(     tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_REDO:         (void) RequestRedo(     tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
 
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!
