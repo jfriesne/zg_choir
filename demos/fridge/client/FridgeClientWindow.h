@@ -12,6 +12,7 @@
 
 class QListWidget;
 class QListWidgetItem;
+class QPushButton;
 class QSplitter;
 class QStackedWidget;
 
@@ -51,6 +52,8 @@ private slots:
    void ClearMagnets();
    void OpenProject();
    void SaveProject();
+   void Undo();
+   void Redo();
 
 private:
    void UpdateGUI();
@@ -75,6 +78,9 @@ private:
    MessageTreeClientConnector * _connection;
    FridgeClientCanvas * _canvas;
    FridgeChatView * _chatView;
+
+   QPushButton * _undoButton;
+   QPushButton * _redoButton;
 };
 
 }; // end namespace fridge

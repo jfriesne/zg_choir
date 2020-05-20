@@ -155,6 +155,18 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
 
                buttonsRowLayout->addStretch();
 
+               _undoButton = new QPushButton(tr("Undo"));
+               connect(_undoButton, SIGNAL(clicked()), this, SLOT(Undo()));
+               buttonsRowLayout->addWidget(_undoButton);
+
+               buttonsRowLayout->addStretch();
+
+               _redoButton = new QPushButton(tr("Redo"));
+               connect(_redoButton, SIGNAL(clicked()), this, SLOT(Redo()));
+               buttonsRowLayout->addWidget(_redoButton);
+
+               buttonsRowLayout->addStretch();
+
                const QChar ellipses = QChar(0x26, 0x20);
 
                QPushButton * openProjectButton = new QPushButton(tr("Open Project")+ellipses);
@@ -326,6 +338,16 @@ void FridgeClientWindow :: OpenProject()
       }
       else QMessageBox::critical(this, tr("Project open error"), tr("Error, couldn't open file [%1] for reading").arg(openFile));
    }
+}
+
+void FridgeClientWindow :: Undo()
+{
+   (void) RequestUndo("*");
+}
+
+void FridgeClientWindow :: Redo()
+{
+   (void) RequestRedo("*");
 }
 
 }; // end namespace fridge

@@ -69,6 +69,8 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       const Point & ulp = _magnets[clickedOn].GetUpperLeftPos();
       _draggingID = clickedOn;
       _dragDelta  = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
+
+      (void) UploadUndoMarker("begin_magnet_drag");
    }
    else 
    {
@@ -104,6 +106,8 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
       }
 
       _draggingID.Clear();
+
+      (void) UploadUndoMarker("end_magnet_drag");
    }
 
    e->accept();
