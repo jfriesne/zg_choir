@@ -204,22 +204,29 @@ protected:
      */
    virtual status_t PingTreeSeniorPeer(const String & tag, uint32 whichDB = 0, TreeGatewayFlags flags = TreeGatewayFlags());
 
-   /** Uploads an "undo-marker" string to the database.  This tag can later on be passed to RequestUndo() as a way to indicate
-     * how far to unwind the undo-stack.  (For example, if the user is about to drag a control from one position to another in a
-     * continuous manner, you might want to upload an undo-marker before the drag starts, so that an undo-operation afterwards
-     * can undo the entire drag and not just the most recent mouse-event)
-     * @param undoMarkerTag an arbitrary string that you might want to reference later. 
-     * @param whichDB index of the database to place the marker into.  This database must be implemented via a 
-     *                UndoStackMessageTreeDatabaseObject, of the redo request will be ignored.  Defaults to zero.
+   /** Tells the database that an undoable sequence of changes is about to be uploaded.
+     * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply
+     *                         yet, you can pass an empty String here and specify a string later on in your EndUndoSequence() call.
+     * @param whichDB index of the database the undo-sequence should be uploaded into.  This database must be implemented via a 
+     *                UndoStackMessageTreeDatabaseObject.  Defaults to zero.
      */
-   virtual status_t UploadUndoMarker(const String & undoMarkerTag, uint32 whichDB = 0);
+   virtual status_t BeginUndoSequence(const String & optSequenceLabel = GetEmptyString(), uint32 whichDB = 0);
+
+   /** Tells the database that an undoable sequence of changes has been completely uploaded.
+     * @param optSequenceLabel An optional user-readable label describing the undo-operation that was completed.
+     *                         If non-empty, this string will be used instead of the string that was earlier passed to BeginUndoSequence().
+     * @param whichDB index of the database the undo-sequence was uploaded into.  This database must be implemented via a 
+     *                UndoStackMessageTreeDatabaseObject.  Defaults to zero.
+     * @note this method must be called exactly once for each call to BeginUndoSequence().
+     */
+   virtual status_t EndUndoSequence(const String & optSequenceLabel = GetEmptyString(), uint32 whichDB = 0);
 
    /** Request an "undo" of a previously uploaded database change.
      * @param optTargetUndoMarker if specified, the server will try to undo back to the point in the undo-stack where this marker-string is found.
      *                            If left empty, OTOH, the server will only try to undo the most recent transaction uploaded by the requesting client.
      *                            This string may contain wildcards if you prefer to match against a pattern of undo-marker-strings.
      * @param whichDB index of the database to which should perform the undo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
-     *                of the undo request will be ignored.  Defaults to zero.
+     *                or the undo request will be ignored.  Defaults to zero.
      */
    virtual status_t RequestUndo(const String & optTargetUndoMarker = GetEmptyString(), uint32 whichDB = 0);
 
@@ -228,7 +235,7 @@ protected:
      *                            If left empty, OTOH, the server will only try to redo the most recently un-done transaction uploaded by the requesting client.
      *                            This string may contain wildcards if you prefer to match against a pattern of undo-marker-strings.
      * @param whichDB index of the database to which should perform the redo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
-     *                of the redo request will be ignored.  Defaults to zero.
+     *                or the redo request will be ignored.  Defaults to zero.
      */
    virtual status_t RequestRedo(const String & optTargetRedoMarker = GetEmptyString(), uint32 whichDB = 0);
 

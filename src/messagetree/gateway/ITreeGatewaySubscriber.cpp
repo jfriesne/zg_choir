@@ -58,9 +58,14 @@ status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32
    return GetGateway()->TreeGateway_PingSeniorPeer(this, tag, whichDB, flags);
 }
 
-status_t ITreeGatewaySubscriber :: UploadUndoMarker(const String & undoMarkerTag, uint32 whichDB)
+status_t ITreeGatewaySubscriber :: BeginUndoSequence(const String & optSequenceLabel, uint32 whichDB)
 {
-   return GetGateway()->TreeGateway_UploadUndoMarker(this, undoMarkerTag, whichDB);
+   return GetGateway()->TreeGateway_BeginUndoSequence(this, optSequenceLabel, whichDB);
+}
+
+status_t ITreeGatewaySubscriber :: EndUndoSequence(const String & optSequenceLabel, uint32 whichDB)
+{
+   return GetGateway()->TreeGateway_EndUndoSequence(this, optSequenceLabel, whichDB);
 }
 
 status_t ITreeGatewaySubscriber :: RequestUndo(const String & optTargetUndoMarker, uint32 whichDB)

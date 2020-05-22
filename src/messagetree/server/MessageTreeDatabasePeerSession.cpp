@@ -9,7 +9,8 @@ namespace zg
 
 enum {
    MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp' 
-   MTDPS_COMMAND_UPLOADMARKER,
+   MTDPS_COMMAND_BEGINSEQUENCE,
+   MTDPS_COMMAND_ENDSEQUENCE,
    MTDPS_COMMAND_UNDO,
    MTDPS_COMMAND_REDO,
 };
@@ -181,9 +182,14 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, seniorPingMsg) : ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * /*calledBy*/, const String & undoMarkerTag, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
-   return SendUndoRedoMessage(MTDPS_COMMAND_UPLOADMARKER, undoMarkerTag, whichDB);
+   return SendUndoRedoMessage(MTDPS_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
+}
+
+status_t MessageTreeDatabasePeerSession :: TreeGateway_EndUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
+{
+   return SendUndoRedoMessage(MTDPS_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
@@ -301,8 +307,13 @@ ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint
          return seniorDoMsg;
       break;
 
-      case MTDPS_COMMAND_UPLOADMARKER:
-printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UPLOADMARKER\n");
+      case MTDPS_COMMAND_BEGINSEQUENCE:
+printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_BEGINSEQUENCE\n");
+         return seniorDoMsg;  // TODO REWRITE THIS
+      break;
+
+      case MTDPS_COMMAND_ENDSEQUENCE:
+printf("MessageTreeDatabasePeerSession::SeniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_ENDSEQUENCE\n");
          return seniorDoMsg;  // TODO REWRITE THIS
       break;
 
@@ -329,8 +340,12 @@ status_t MessageTreeDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whic
          HandleSeniorPeerPingMessage(whichDatabase, juniorDoMsg);
       return B_NO_ERROR;
 
-      case MTDPS_COMMAND_UPLOADMARKER:
-printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_UPLOADMARKER\n");
+      case MTDPS_COMMAND_BEGINSEQUENCE:
+printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_BEGINSEQUENCE\n");
+      return B_NO_ERROR;
+
+      case MTDPS_COMMAND_ENDSEQUENCE:
+printf("MessageTreeDatabasePeerSession::JuniorUpdateLocalDatabase():  TODO:  Implement handler for MTDPS_COMMAND_ENDSEQUENCE\n");
       return B_NO_ERROR;
 
       case MTDPS_COMMAND_UNDO:

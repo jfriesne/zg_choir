@@ -332,7 +332,9 @@ void FridgeClientWindow :: OpenProject()
          MessageRef subtreeData = GetMessageFromPool();
          if (subtreeData()->UnflattenFromDataIO(fdio, fdio.GetLength()).IsOK(ret))
          {
+            (void) BeginUndoSequence(String("Open Project [%1]").Arg(openFile.toUtf8().constData()));
             if (UploadTreeNodeSubtree("project/magnets", subtreeData).IsError(ret)) QMessageBox::critical(this, tr("Project open error"), tr("Error uploading data from file [%1] [%2]").arg(openFile).arg(ret()));
+            (void) EndUndoSequence();
          }
          else QMessageBox::critical(this, tr("Project open error"), tr("Error reading data from file [%1] [%2]").arg(openFile).arg(ret()));
       }

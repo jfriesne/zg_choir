@@ -81,7 +81,8 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
-   virtual status_t TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * calledBy, const String & undoMarkerTag, uint32 whichDB);
+   virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
+   virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, const String & optTargetUndoMarker, uint32 whichDB);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, const String & optTargetRedoMarker, uint32 whichDB);
    virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}

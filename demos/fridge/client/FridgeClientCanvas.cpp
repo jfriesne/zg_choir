@@ -66,11 +66,13 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
    String clickedOn = GetMagnetAtPoint(e->pos());
    if (clickedOn.HasChars())
    {
-      const Point & ulp = _magnets[clickedOn].GetUpperLeftPos();
+      const MagnetState & magnet = _magnets[clickedOn];
+
+      const Point & ulp = magnet.GetUpperLeftPos();
       _draggingID = clickedOn;
       _dragDelta  = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
 
-      (void) UploadUndoMarker("begin_magnet_drag");
+      (void) BeginUndoSequence(String("Move Magnet [%1]").Arg(magnet.GetText()));
    }
    else 
    {
@@ -78,7 +80,9 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       MagnetState newMagnet(Point(e->x(), e->y()), GetNextMagnetWord());
       const QSize s = newMagnet.GetScreenRect(fontMetrics()).size();
       newMagnet.SetUpperLeftPos(Point(e->x()-(s.width()/2), e->y()-(s.height()/2)));  // center the new magnet under the mouse pointer
+      (void) BeginUndoSequence(String("Create Magnet [%1]").Arg(newMagnet.GetText()));
       if (UploadMagnetState(GetEmptyString(), &newMagnet).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload new magnet, error [%s]\n", ret());
+      (void) EndUndoSequence();
    }
 
    e->accept(); 
@@ -107,7 +111,7 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
 
       _draggingID.Clear();
 
-      (void) UploadUndoMarker("end_magnet_drag");
+      (void) EndUndoSequence();
    }
 
    e->accept();

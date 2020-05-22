@@ -222,5 +222,4 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
    }
 }
 
-
 }; // end namespace zg

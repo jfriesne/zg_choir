@@ -21,7 +21,8 @@ enum {
    NTG_COMMAND_UPLOADNODESUBTREE,
    NTG_COMMAND_REMOVENODES,
    NTG_COMMAND_MOVEINDEXENTRIES,
-   NTG_COMMAND_UPLOADMARKER,
+   NTG_COMMAND_BEGINSEQUENCE,
+   NTG_COMMAND_ENDSEQUENCE,
    NTG_COMMAND_UNDO,
    NTG_COMMAND_REDO,
 };
@@ -197,9 +198,14 @@ status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, int32
    return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadUndoMarker(ITreeGatewaySubscriber * /*calledBy*/, const String & undoMarkerTag, uint32 whichDB)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_UPLOADMARKER, undoMarkerTag, whichDB);
+   return SendUndoRedoMessage(NTG_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
+}
+
+status_t ClientSideNetworkTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
+{
+   return SendUndoRedoMessage(NTG_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
@@ -300,9 +306,10 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       }
       break;
 
-      case NTG_COMMAND_UPLOADMARKER: (void) UploadUndoMarker(tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
-      case NTG_COMMAND_UNDO:         (void) RequestUndo(     tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
-      case NTG_COMMAND_REDO:         (void) RequestRedo(     tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_BEGINSEQUENCE: (void) BeginUndoSequence(tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_ENDSEQUENCE:   (void) EndUndoSequence(  tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_UNDO:          (void) RequestUndo(      tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_REDO:          (void) RequestRedo(      tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
 
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!
