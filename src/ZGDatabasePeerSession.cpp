@@ -235,10 +235,16 @@ uint64 IDatabaseObject :: GetCurrentDatabaseStateID() const
    return dbps ? dbps->GetCurrentDatabaseStateID(_dbIndex) : 0;
 }
 
-ConstMessageRef IDatabaseObject :: GetDatabaseTransactionPayload(uint64 transactionID) const
+bool IDatabaseObject :: UpdateLogContainsUpdate(uint64 transactionID) const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
-   return dbps ? dbps->GetDatabaseTransactionPayload(_dbIndex, transactionID) : ConstMessageRef();
+   return dbps ? dbps->UpdateLogContainsUpdate(_dbIndex, transactionID) : 0;
+}
+
+ConstMessageRef IDatabaseObject :: GetUpdatePayload(uint64 transactionID) const
+{
+   const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
+   return dbps ? dbps->GetUpdatePayload(_dbIndex, transactionID) : ConstMessageRef();
 }
 
 };  // end namespace zg

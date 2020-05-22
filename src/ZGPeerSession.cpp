@@ -584,7 +584,12 @@ uint64 ZGPeerSession :: GetCurrentDatabaseStateID(uint32 whichDB) const
    return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetCurrentDatabaseStateID() : 0;
 }
 
-ConstMessageRef ZGPeerSession :: GetDatabaseTransactionPayload(uint32 whichDB, uint64 transactionID) const
+bool ZGPeerSession :: UpdateLogContainsUpdate(uint32 whichDB, uint64 transactionID) const
+{
+   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].UpdateLogContainsUpdate(transactionID) : 0;
+}
+
+ConstMessageRef ZGPeerSession :: GetUpdatePayload(uint32 whichDB, uint64 transactionID) const
 {
    return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetDatabaseUpdatePayloadByID(transactionID) : ConstMessageRef();
 }

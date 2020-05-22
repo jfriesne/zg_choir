@@ -2,6 +2,7 @@
 #define UndoStackMessageTreeDatabaseObject_h
 
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "util/NestCount.h"
 
 namespace zg
 {
@@ -60,7 +61,12 @@ protected:
    const String & GetActiveClientUndoKey() const;
 
 private:
+   friend class ObsoleteSequencesQueryFilter;
+
+   status_t SeniorMessageTreeUpdateAux(const ConstMessageRef & msg);
+
    MessageRef _assembledJuniorUndoMessage;
+   NestCount _seniorMessageTreeUpdateNestCount;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 

@@ -19,7 +19,9 @@ enum {
 
 static ZGPeerSettings GetFridgePeerSettings(const String & systemName)
 {
-   return ZGPeerSettings(FRIDGE_PROGRAM_SIGNATURE, systemName, NUM_FRIDGE_DBS, false);
+   ZGPeerSettings settings(FRIDGE_PROGRAM_SIGNATURE, systemName, NUM_FRIDGE_DBS, false);
+   settings.SetMaximumUpdateLogSizeForDatabase(FRIDGE_DB_PROJECT, 256*1024);  // setting it small just to make it easier to test undo-handling
+   return settings; 
 }
 
 // This class implements a database-peer to test out the MessageTreeDatabaseObject class

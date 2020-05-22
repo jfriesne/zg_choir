@@ -48,6 +48,7 @@ public:
    bool IsInJuniorDatabaseUpdateContext() const {return _inJuniorDatabaseUpdate.IsInBatch();}
    bool IsInSeniorDatabaseUpdateContext() const {return _inSeniorDatabaseUpdate.IsInBatch();}
 
+   bool UpdateLogContainsUpdate(uint64 tid) const {return _updateLog.ContainsKey(tid);}
    uint64 GetCurrentDatabaseStateID() const {return _localDatabaseStateID;}
 
 private:

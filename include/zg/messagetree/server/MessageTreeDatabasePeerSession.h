@@ -101,6 +101,7 @@ protected:
 private:
    friend class MessageTreeDatabaseObject;
    friend class ClientDataMessageTreeDatabaseObject;
+   friend class UndoStackMessageTreeDatabaseObject;
 
    status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB);
    status_t GetUnusedNodeID(const String & path, uint32 & retID);
