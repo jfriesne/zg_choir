@@ -80,10 +80,10 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
 {
    GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
 
-   const status_t ret = SeniorUpdateAux(seniorDoMsg);
+   const status_t ret = SeniorMessageTreeUpdate(seniorDoMsg);
    if (ret.IsError())
    {
-      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdate():  SeniorUpdateAux() failed! [%s]\n", ret());
+      LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdate():  SeniorMessageTreeUpdate() failed! [%s]\n", ret());
       return ConstMessageRef();
    }
 
@@ -94,7 +94,7 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
    return juniorMsg;
 }
 
-status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & msg)
+status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessageRef & msg)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
@@ -105,7 +105,7 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       {
          status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (SeniorUpdateAux(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (SeniorMessageTreeUpdate(subMsg).IsError(ret)) return ret;
       }
       break;
 
@@ -145,7 +145,7 @@ status_t MessageTreeDatabaseObject :: SeniorUpdateAux(const ConstMessageRef & ms
       break;
 
       default:
-         LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdateAux():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
+         LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorMessageTreeUpdate():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
          return B_UNIMPLEMENTED;
    }
 
@@ -157,7 +157,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & junio
    GatewaySubscriberCommandBatchGuard<ITreeGateway> batchGuard(GetMessageTreeDatabasePeerSession());  // so that MessageTreeDatabasePeerSession::CommandBatchEnds() will call PushSubscriptionMessages() when we're done
 
    status_t ret;
-   if (JuniorUpdateAux(juniorDoMsg).IsError(ret))
+   if (JuniorMessageTreeUpdate(juniorDoMsg).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorUpdate():  JuniorUpdate() failed! [%s]\n", ret());
       return ret;
@@ -166,7 +166,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & junio
    return B_NO_ERROR;
 }
 
-status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & msg)
+status_t MessageTreeDatabaseObject :: JuniorMessageTreeUpdate(const ConstMessageRef & msg)
 {
    switch(msg()->what)
    {
@@ -174,7 +174,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
       {
          status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (JuniorUpdateAux(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (JuniorMessageTreeUpdate(subMsg).IsError(ret)) return ret;
       }
       break;
 
@@ -187,7 +187,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
       break;
 
       case MTDO_COMMAND_UPDATESUBTREE:
-         LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabaseObject::JuniorUpdateAux():  MTDO_COMMAND_UPDATESUBTREE shouldn't be used in a junior-peer context!\n");
+         LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabaseObject::JuniorMessageTreeUpdate():  MTDO_COMMAND_UPDATESUBTREE shouldn't be used in a junior-peer context!\n");
       return B_BAD_ARGUMENT;
 
       case MTDO_COMMAND_INSERTINDEXENTRY:
@@ -196,7 +196,7 @@ status_t MessageTreeDatabaseObject :: JuniorUpdateAux(const ConstMessageRef & ms
       break;
 
       default:
-         LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorUpdateAux():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
+         LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorMessageTreeUpdate():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
          msg()->PrintToStream();
       return B_UNIMPLEMENTED;
    }
@@ -465,7 +465,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    }
    else 
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "JuniorUpdateAux:  Couldn't find node for path [%s] to update node-index!\n", path?path->Cstr():NULL);
+      LogTime(MUSCLE_LOG_CRITICALERROR, "HandleNodeIndexUpdateMessage:  Couldn't find node for path [%s] to update node-index!\n", path?path->Cstr():NULL);
       return B_DATA_NOT_FOUND;
    }
 }

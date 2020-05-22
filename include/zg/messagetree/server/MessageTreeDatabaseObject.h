@@ -127,6 +127,20 @@ protected:
      */
    virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend);
 
+   /** Called by SeniorUpdate() when it needs to handle an individual sub-Message in the senior-update context
+     * @param msg the sub-Message to handle
+     * @returns B_NO_ERROR on success, or another error-code on failure.
+     * @note the default implementation handles the standard Message-Tree functionality, but subclasses can override this to provide more handling if they want to.
+     */
+   virtual status_t SeniorMessageTreeUpdate(const ConstMessageRef & msg);
+
+   /** Called by SeniorUpdate() when it needs to handle an individual sub-Message in the junior-update context
+     * @param msg the sub-Message to handle
+     * @returns B_NO_ERROR on success, or another error-code on failure.
+     * @note the default implementation handles the standard Message-Tree functionality, but subclasses can override this to provide more handling if they want to.
+     */
+   virtual status_t JuniorMessageTreeUpdate(const ConstMessageRef & msg);
+
 private:
    class SafeQueryFilter : public QueryFilter
    {
@@ -149,9 +163,6 @@ private:
    status_t SafeRemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false);
    status_t SafeMoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef);
 
-   status_t SeniorUpdateAux(const ConstMessageRef & msg);
-   status_t JuniorUpdateAux(const ConstMessageRef & msg);
-
    MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) const;
    MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key);
    MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags) const;
@@ -159,6 +170,8 @@ private:
    status_t HandleNodeUpdateMessage(const Message & msg);
    status_t HandleNodeIndexUpdateMessage(const Message & msg);
    status_t HandleSubtreeUpdateMessage(const Message & msg);
+
+   status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB);
 
    MessageRef _assembledJuniorMessage;
 

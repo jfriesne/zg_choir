@@ -102,7 +102,7 @@ private:
    friend class MessageTreeDatabaseObject;
    friend class ClientDataMessageTreeDatabaseObject;
 
-   status_t SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB);
+   status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB);
    status_t GetUnusedNodeID(const String & path, uint32 & retID);
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);

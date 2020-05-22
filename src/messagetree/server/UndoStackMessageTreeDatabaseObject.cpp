@@ -6,18 +6,26 @@
 namespace zg 
 {
 
-// UndoStackMessageTreeDatabaseObject will store its transactions as do/undo Message-pairs
-enum {
-   UNDOSTACK_COMMAND_MESSAGE_PAIR = 1970168943 // 'undo' 
-};
 static const String UNDOSTACK_NAME_DOMESSAGE   = "_do";
 static const String UNDOSTACK_NAME_UNDOMESSAGE = "_un";
-static const String UNDOSTACK_NAME_UNDOKEY     = "_ky";
+static const String UNDOSTACK_NAME_UNDOKEY     = "key";
+static const String UNDOSTACK_NAME_LABEL       = "lab";
 
 UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : MessageTreeDatabaseObject(session, dbIndex, rootNodePath)
 {
    // empty
+}
+
+status_t UndoStackMessageTreeDatabaseObject :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel)
+{
+   MessageRef msg = GetMessageFromPool(whatCode);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if (msg()->CAddString(UNDOSTACK_NAME_LABEL, optSequenceLabel).IsError(ret)) return ret;
+
+   return RequestUpdateDatabaseState(msg);
 }
 
 ConstMessageRef UndoStackMessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
@@ -34,6 +42,36 @@ ConstMessageRef UndoStackMessageTreeDatabaseObject :: SeniorUpdate(const ConstMe
    {
       LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject::SeniorUpdate():  Unable to assemble Message-pair!\n");
       return ConstMessageRef();
+   }
+}
+
+status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessageRef & msg)
+{
+   switch(msg()->what)
+   {
+      case UNDOSTACK_COMMAND_BEGINSEQUENCE: case UNDOSTACK_COMMAND_ENDSEQUENCE:
+      {
+         const String & clientKey = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
+         const String & label     = *(msg()->GetStringPointer(UNDOSTACK_NAME_LABEL,   &GetEmptyString()));
+         const bool isBegin       = (msg()->what == UNDOSTACK_COMMAND_BEGINSEQUENCE);
+
+printf("isBegin=%i clientKey=[%s] label=[%s]\n", isBegin, clientKey(), label());
+         return B_NO_ERROR;
+      }
+      break;
+
+      case UNDOSTACK_COMMAND_UNDO:
+printf("UndoStackMessageTreeDatabaseObject::SeniorMessageTreeUpdate():  TODO:  Implement handler for UNDOSTACK_COMMAND_UNDO\n");
+         return B_UNIMPLEMENTED;
+      break;
+
+      case UNDOSTACK_COMMAND_REDO:
+printf("UndoStackMessageTreeDatabaseObject::SeniorMessageTreeUpdate():  TODO:  Implement handler for UNDOSTACK_COMMAND_REDO\n");
+         return B_UNIMPLEMENTED;
+      break;
+
+      default:
+         return MessageTreeDatabaseObject::SeniorMessageTreeUpdate(msg);
    }
 }
 

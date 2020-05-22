@@ -184,7 +184,9 @@ String FridgeClientCanvas :: GetNextMagnetWord()
 void FridgeClientCanvas :: ClearMagnets()
 {
    status_t ret;
+   (void) BeginUndoSequence("Clear Magnets");
    if (RequestDeleteTreeNodes("project/magnets/*").IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of all magnets! [%s]\n", ret());
+   (void) EndUndoSequence();
 }
 
 }; // end namespace fridge
