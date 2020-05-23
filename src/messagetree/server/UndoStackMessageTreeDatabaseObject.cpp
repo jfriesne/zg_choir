@@ -11,10 +11,12 @@ static const String UNDOSTACK_NAME_UNDOMESSAGE     = "_un";
 static const String UNDOSTACK_NAME_UNDOKEY         = "key";
 static const String UNDOSTACK_NAME_LABEL           = "lab";
 static const String UNDOSTACK_NAME_CURRENTSEQUENCE = "cur";
-static const String UNDOSTACK_NAME_AFTERLASTDBID   = "ald";
+static const String UNDOSTACK_NAME_STARTDBID       = "sid";
+static const String UNDOSTACK_NAME_AFTERLASTDBID   = "eid";
 
 static const String UNDOSTACK_NODENAME_UNDO = "undo";
 static const String UNDOSTACK_NODENAME_REDO = "redo";
+static const String UNDOSTACK_NODENAME_TOP  = "top";
 
 
 UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
@@ -59,11 +61,12 @@ public:
 
    virtual uint32 TypeCode() const {return 0;}  // don't care
 
-   virtual bool Matches(ConstMessageRef &, const DataNode * optNode) const
+   virtual bool Matches(ConstMessageRef & msg, const DataNode * optNode) const
    {
       if (optNode == NULL) return true;
 
-      const uint64 nodeNameVal = Atoull(optNode->GetNodeName()());
+      const String & nodeName = optNode->GetNodeName();
+      const uint64 nodeNameVal = (nodeName == UNDOSTACK_NODENAME_TOP) ? msg()->GetInt64(UNDOSTACK_NAME_STARTDBID) : Atoull(nodeName());
       return ((nodeNameVal != _curDBID)&&(_master->UpdateLogContainsUpdate(nodeNameVal) == false));
    }
 
@@ -134,6 +137,10 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                // Also record in the client-node what our current sequence-ID is
                (void) newClientPayload()->RemoveName(UNDOSTACK_NAME_CURRENTSEQUENCE);
                if (newClientPayload()->AddInt64(UNDOSTACK_NAME_CURRENTSEQUENCE, startDBID).IsError(ret)) return ret;
+
+               // Also update the "top" node, so that clients that only want to display the current top-of-stack don't have to subscribe to the whole folder
+               MessageRef topPayload = GetLightweightCopyOfMessageFromPool(*seqPayload());
+               if ((topPayload())&&(topPayload()->AddInt64(UNDOSTACK_NAME_STARTDBID, startDBID).IsOK())) (void) mtdps->SetDataNode(nodePath + "/" + UNDOSTACK_NODENAME_TOP, topPayload);
             }
          }
          else if (seqNestCount > 1) seqNestCount--;
@@ -165,6 +172,10 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   }
 
                   seqNode->SetData(newSeqMsg, mtdps, false);
+
+                  // Also update the "top" node, so that clients that only want to display the current top-of-stack don't have to subscribe to the whole folder
+                  MessageRef topPayload = GetLightweightCopyOfMessageFromPool(*newSeqMsg());
+                  if ((topPayload())&&(topPayload()->AddInt64(UNDOSTACK_NAME_STARTDBID, Atoull(seqNode->GetNodeName()())).IsOK())) (void) mtdps->SetDataNode(nodePath + "/" + UNDOSTACK_NODENAME_TOP, topPayload);
                }
                else LogTime(MUSCLE_LOG_WARNING, "UndoStackMessageTreeDatabaseObject::SeniorMessageTreeUpdate:  Couldn't find sequence-node at [%s] in UNDOSTACK_COMMAND_ENDSEQUENCE!\n", seqPath());
             }

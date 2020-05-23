@@ -98,20 +98,26 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
 {
    if (_draggingID.HasChars())
    {
+      String changeUndoLabel;
+
       if (rect().contains(e->pos())) UpdateDraggedMagnetPosition(e->pos());
       else
       {
-         MagnetState * ms = _magnets.Get(_draggingID);
+         const MagnetState * ms = _magnets.Get(_draggingID);
          if (ms)
          {
             status_t ret;
-            if (UploadMagnetState(_draggingID, NULL).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't remove deleted magnet, error [%s]\n", ret());
+            if (UploadMagnetState(_draggingID, NULL).IsOK(ret))
+            {
+               changeUndoLabel = String("Remove Magnet [%1]").Arg(ms->GetText());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Couldn't remove deleted magnet, error [%s]\n", ret());
          }
       }
 
       _draggingID.Clear();
 
-      (void) EndUndoSequence();
+      (void) EndUndoSequence(changeUndoLabel);
    }
 
    e->accept();

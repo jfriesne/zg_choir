@@ -38,6 +38,9 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
    , _connection(NULL)
    , _canvas(NULL)
    , _chatView(NULL)
+   , _undoButton(NULL)
+   , _redoButton(NULL)
+   , _updateStatusPending(false)
 {
    SetDiscoveryClient(&_discoClient);
 
@@ -72,12 +75,21 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
       _widgetStack->addWidget(resultsListPage);
    }
 
-   UpdateStatus();
+   ScheduleUpdateStatus();
 }
 
 FridgeClientWindow :: ~FridgeClientWindow()
 {
    DeleteConnectionPage();
+}
+
+void FridgeClientWindow :: ScheduleUpdateStatus()
+{
+   if (_updateStatusPending == false)
+   {
+      _updateStatusPending = true;
+      QTimer::singleShot(0, this, SLOT(UpdateStatus()));
+   }
 }
 
 void FridgeClientWindow :: ReturnToDiscoveryRequested()
@@ -89,11 +101,19 @@ void FridgeClientWindow :: ReturnToDiscoveryRequested()
 void FridgeClientWindow :: ReturnToDiscoveryRequestedAux()
 {
    DeleteConnectionPage();
-   UpdateStatus();
+   ScheduleUpdateStatus();
 }
 
 void FridgeClientWindow :: DeleteConnectionPage()
 {
+   _undoStackTopPath.Clear();
+   _undoStackTop.Reset();
+   _undoButton = NULL;
+
+   _redoStackTopPath.Clear();
+   _redoStackTop.Reset();
+   _redoButton = NULL;
+
    if (_canvas)     {delete _canvas;     _canvas     = NULL;}
    if (_chatView)   {delete _chatView;   _chatView   = NULL;}
    if (_connection) {delete _connection; _connection = NULL;}
@@ -132,62 +152,67 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
             topPartLayout->setMargin(3);
             topPartLayout->setSpacing(2);
 
-            _canvas = new FridgeClientCanvas(_connection);
-            connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(UpdateStatus()));
-            topPartLayout->addWidget(_canvas, 1);
- 
-            QWidget * buttonsRow = new QWidget;
+            QWidget * topButtonsRow = new QWidget;
             {
-               QBoxLayout * buttonsRowLayout = new QBoxLayout(QBoxLayout::LeftToRight, buttonsRow);
-               buttonsRowLayout->setMargin(0);
-
-               buttonsRowLayout->addStretch();
-   
-               QPushButton * cloneButton = new QPushButton(tr("Clone Window"));
-               connect(cloneButton, SIGNAL(clicked()), this, SLOT(CloneWindow()));
-               buttonsRowLayout->addWidget(cloneButton);
-   
-               buttonsRowLayout->addStretch();
-              
-               QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
-               connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
-               buttonsRowLayout->addWidget(clearButton);
-
-               buttonsRowLayout->addStretch();
+               QBoxLayout * tbrLayout = new QBoxLayout(QBoxLayout::LeftToRight, topButtonsRow);
+               tbrLayout->setMargin(0);
 
                _undoButton = new QPushButton(tr("Undo"));
                connect(_undoButton, SIGNAL(clicked()), this, SLOT(Undo()));
-               buttonsRowLayout->addWidget(_undoButton);
+               tbrLayout->addWidget(_undoButton);
 
-               buttonsRowLayout->addStretch();
+               tbrLayout->addStretch();
 
                _redoButton = new QPushButton(tr("Redo"));
                connect(_redoButton, SIGNAL(clicked()), this, SLOT(Redo()));
-               buttonsRowLayout->addWidget(_redoButton);
+               tbrLayout->addWidget(_redoButton);
+            }
+            topPartLayout->addWidget(topButtonsRow);
 
-               buttonsRowLayout->addStretch();
+            _canvas = new FridgeClientCanvas(_connection);
+            connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(ScheduleUpdateStatus()));
+            topPartLayout->addWidget(_canvas, 1);
+ 
+            QWidget * bottomButtonsRow = new QWidget;
+            {
+               QBoxLayout * bbrLayout = new QBoxLayout(QBoxLayout::LeftToRight, bottomButtonsRow);
+               bbrLayout->setMargin(0);
+
+               bbrLayout->addStretch();
+   
+               QPushButton * cloneButton = new QPushButton(tr("Clone Window"));
+               connect(cloneButton, SIGNAL(clicked()), this, SLOT(CloneWindow()));
+               bbrLayout->addWidget(cloneButton);
+   
+               bbrLayout->addStretch();
+              
+               QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
+               connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
+               bbrLayout->addWidget(clearButton);
+
+               bbrLayout->addStretch();
 
                const QChar ellipses = QChar(0x26, 0x20);
 
                QPushButton * openProjectButton = new QPushButton(tr("Open Project")+ellipses);
                connect(openProjectButton, SIGNAL(clicked()), this, SLOT(OpenProject()));
-               buttonsRowLayout->addWidget(openProjectButton);
+               bbrLayout->addWidget(openProjectButton);
 
-               buttonsRowLayout->addStretch();
+               bbrLayout->addStretch();
    
                QPushButton * saveProjectButton = new QPushButton(tr("Save Project")+ellipses);
                connect(saveProjectButton, SIGNAL(clicked()), this, SLOT(SaveProject()));
-               buttonsRowLayout->addWidget(saveProjectButton);
+               bbrLayout->addWidget(saveProjectButton);
 
-               buttonsRowLayout->addStretch();
+               bbrLayout->addStretch();
    
                QPushButton * disconnectButton = new QPushButton(tr("Disconnect"));
                connect(disconnectButton, SIGNAL(clicked()), this, SLOT(ReturnToDiscoveryRequested()));
-               buttonsRowLayout->addWidget(disconnectButton);
+               bbrLayout->addWidget(disconnectButton);
    
-               buttonsRowLayout->addStretch();
+               bbrLayout->addStretch();
             }
-            topPartLayout->addWidget(buttonsRow);
+            topPartLayout->addWidget(bottomButtonsRow);
          }
          _splitter->addWidget(topPart);
    
@@ -197,6 +222,12 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
       }
       _widgetStack->addWidget(_splitter);
       _splitter->setStretchFactor(0, 2);
+
+      _undoStackTopPath = String("project/undo/%1/top").Arg(_connection->GetUndoKey());  // so we can update the label of the Undo button appropriately
+      AddTreeSubscription(_undoStackTopPath);
+
+      _redoStackTopPath = String("project/redo/%1/top").Arg(_connection->GetUndoKey());  // so we can update the label of the Redo button appropriately
+      AddTreeSubscription(_redoStackTopPath);
    }
    else
    {
@@ -205,7 +236,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
       _connection = NULL;
    }
 
-   UpdateStatus();
+   ScheduleUpdateStatus();
 }
 
 void FridgeClientWindow :: ClearMagnets()
@@ -222,6 +253,7 @@ void FridgeClientWindow :: CloneWindow()
 
 void FridgeClientWindow :: UpdateStatus()
 {
+   _updateStatusPending = false;
    _widgetStack->setCurrentIndex(_connection ? PAGE_MAGNETS : ((_systemsList->count() > 0) ? PAGE_DISCOVERY_LIST : PAGE_DISCOVERY_NO_RESULTS));
 
    QString windowTitle = tr("Fridge Client");
@@ -247,6 +279,19 @@ void FridgeClientWindow :: UpdateStatus()
          if (_discoClient.Start().IsError(ret)) LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't start SystemDiscoveryClient! [%s]\n", ret());
       }
       else _discoClient.Stop();
+   }
+
+   UpdateUndoRedoButton(_undoButton, _undoStackTop);
+   UpdateUndoRedoButton(_redoButton, _redoStackTop);
+}
+
+void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef)
+{
+   if (button)
+   {
+      button->setEnabled(msgRef() != NULL);
+      if (msgRef()) button->setText(tr("Undo %1").arg(msgRef()->GetCstr("lab", "???")));
+               else button->setText(tr("Undo"));
    }
 }
 
@@ -277,7 +322,7 @@ void FridgeClientWindow :: DiscoveryUpdate(const String & systemName, const Mess
    }
    else delete lwi;
 
-   UpdateStatus();
+   ScheduleUpdateStatus();
 }
 
 void FridgeClientWindow :: SaveProject()
@@ -317,6 +362,20 @@ void FridgeClientWindow :: SubtreesRequestResultReturned(const String & tag, con
          }
       }
       else QMessageBox::critical(this, tr("Project download error"), tr("Error, couldn't download magnets project!"));
+   }
+}
+
+void FridgeClientWindow :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg)
+{
+   if (nodePath == _undoStackTopPath)
+   {
+      _undoStackTop = optPayloadMsg;
+      ScheduleUpdateStatus();
+   }
+   else if (nodePath == _redoStackTopPath)
+   {
+      _redoStackTop = optPayloadMsg;
+      ScheduleUpdateStatus();
    }
 }
 

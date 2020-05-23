@@ -41,11 +41,13 @@ public:
 
 protected:
    // ITreeGatewaySubscriber API
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
 private slots:
    void CloneWindow();
    void UpdateStatus();
+   void ScheduleUpdateStatus();
    void ReturnToDiscoveryRequested();
    void ReturnToDiscoveryRequestedAux();
    void SystemItemClicked(QListWidgetItem * item);
@@ -59,6 +61,7 @@ private:
    void UpdateGUI();
    void DeleteConnectionPage();
    void ConnectTo(const String & systemName);
+   void UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef);
 
    enum {
       PAGE_DISCOVERY_NO_RESULTS = 0,
@@ -81,6 +84,14 @@ private:
 
    QPushButton * _undoButton;
    QPushButton * _redoButton;
+
+   String _undoStackTopPath;  // e.g. "project/undo/<KEY>/top", only when we're connected
+   MessageRef _undoStackTop;  // current Message held by the server at (_undoStackTopPath)
+
+   String _redoStackTopPath;  // e.g. "project/redo/<KEY>/top", only when we're connected
+   MessageRef _redoStackTop;  // current Message held by the server at (_redoStackTopPath)
+
+   bool _updateStatusPending;
 };
 
 }; // end namespace fridge
