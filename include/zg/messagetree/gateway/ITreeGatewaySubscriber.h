@@ -14,6 +14,7 @@ class ITreeGateway;
 enum {
    TREE_GATEWAY_FLAG_INDEXED = 0,  /**< If set, the uploaded node should be added to it's parent's ordered-nodes index. */
    TREE_GATEWAY_FLAG_NOREPLY,      /**< If set, no initial reply is desired */
+   TREE_GATEWAY_FLAG_INTERIM,      /**< If set, this update is considered idempotent and can therefore be skipped when performing an undo or redo operation */
    NUM_TREE_GATEWAY_FLAGS          /**< Guard value */
 };
 DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);

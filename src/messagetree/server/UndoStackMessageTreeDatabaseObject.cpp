@@ -218,6 +218,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   }
 
                   // Do the actual undo
+                  NestCountGuard ncg(GetInUndoRedoContextNestCount());
                   for (uint64 transID=seqEndTrans; transID >= seqStartID; transID--)
                   {
                      ConstMessageRef payload = GetUpdatePayload(transID);

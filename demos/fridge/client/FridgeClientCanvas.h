@@ -42,9 +42,9 @@ signals:
 
 private:
    String GetMagnetAtPoint(const QPoint & pt) const;
-   status_t UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState);
+   status_t UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState, bool isInterimUpdate);
    String GetNextMagnetWord();
-   void UpdateDraggedMagnetPosition(QPoint mousePos);
+   void UpdateDraggedMagnetPosition(QPoint mousePos, bool isInterimUpdate);
 
    Hashtable<String, MagnetState> _magnets;
    String _draggingID;  // if non-empty, we're in the middle of moving a magnet
@@ -52,6 +52,8 @@ private:
 
    Queue<String> _magnetWords;
    uint32 _nextMagnetWordIndex;
+
+   bool _firstMouseMove;
 };
 
 }; // end namespace fridge

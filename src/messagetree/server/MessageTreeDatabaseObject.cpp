@@ -240,7 +240,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
 
 status_t MessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & /*oldPayload*/, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend)
 {
-   MessageRef msg = CreateNodeUpdateMessage(relativePath, newPayload, TreeGatewayFlags(), NULL);
+   MessageRef msg = CreateNodeUpdateMessage(relativePath, newPayload, _interimUpdateNestCount.IsInBatch()?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags(), NULL);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
    return AssembleBatchMessage(assemblingMessage, msg, prepend);
@@ -428,11 +428,23 @@ MessageRef MessageTreeDatabaseObject :: CreateNodeIndexUpdateMessage(const Strin
 // Handles MTDO_COMMAND_UPDATENODEVALUE Messages
 status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessage(const Message & msg)
 {
+   const TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+   const bool isInterimUpdate   = flags.IsBitSet(TREE_GATEWAY_FLAG_INTERIM);
+   if ((isInterimUpdate)&&(_inUndoRedoContextNestCount.IsInBatch())) return B_NO_ERROR;
+
+   if (isInterimUpdate) _interimUpdateNestCount.Increment();
+   const status_t ret = HandleNodeUpdateMessageAux(msg, flags);
+   if (isInterimUpdate) _interimUpdateNestCount.Decrement();
+   return ret;
+}
+
+status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message & msg, TreeGatewayFlags flags)
+{
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
    MessageRef optPayload  = msg.GetMessage(MTDO_NAME_PAYLOAD);
-   TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
    const String * path    = msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
+
    if (optPayload())
    {
       const String * optBefore = msg.GetStringPointer(MTDO_NAME_BEFORE);

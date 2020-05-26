@@ -14,6 +14,7 @@ static const char * _magnetWordsList[] = {
 FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector) 
    : ITreeGatewaySubscriber(connector)
    , _nextMagnetWordIndex(0)
+   , _firstMouseMove(false)
 {
    (void) AddTreeSubscription("project/magnets/*");   // we need to keep track of where the magnets are on the server
 
@@ -69,10 +70,11 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       const MagnetState & magnet = _magnets[clickedOn];
 
       const Point & ulp = magnet.GetUpperLeftPos();
-      _draggingID = clickedOn;
-      _dragDelta  = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
+      _draggingID     = clickedOn;
+      _dragDelta      = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
+      _firstMouseMove = true;
 
-      (void) BeginUndoSequence(String("Move Magnet [%1]").Arg(magnet.GetText()));
+      (void) BeginUndoSequence(String("Move Magnet \"%1\"").Arg(magnet.GetText()));
    }
    else 
    {
@@ -80,8 +82,8 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       MagnetState newMagnet(Point(e->x(), e->y()), GetNextMagnetWord());
       const QSize s = newMagnet.GetScreenRect(fontMetrics()).size();
       newMagnet.SetUpperLeftPos(Point(e->x()-(s.width()/2), e->y()-(s.height()/2)));  // center the new magnet under the mouse pointer
-      (void) BeginUndoSequence(String("Create Magnet [%1]").Arg(newMagnet.GetText()));
-      if (UploadMagnetState(GetEmptyString(), &newMagnet).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload new magnet, error [%s]\n", ret());
+      (void) BeginUndoSequence(String("Create Magnet \"%1\"").Arg(newMagnet.GetText()));
+      if (UploadMagnetState(GetEmptyString(), &newMagnet, false).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload new magnet, error [%s]\n", ret());
       (void) EndUndoSequence();
    }
 
@@ -90,7 +92,11 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
 
 void FridgeClientCanvas :: mouseMoveEvent(QMouseEvent * e)
 {
-   if (_draggingID.HasChars()) UpdateDraggedMagnetPosition(e->pos());
+   if (_draggingID.HasChars()) 
+   {
+      UpdateDraggedMagnetPosition(e->pos(), !_firstMouseMove);
+      _firstMouseMove = false;
+   }
    e->accept();
 }
 
@@ -100,16 +106,16 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
    {
       String changeUndoLabel;
 
-      if (rect().contains(e->pos())) UpdateDraggedMagnetPosition(e->pos());
+      if (rect().contains(e->pos())) UpdateDraggedMagnetPosition(e->pos(), false);
       else
       {
          const MagnetState * ms = _magnets.Get(_draggingID);
          if (ms)
          {
             status_t ret;
-            if (UploadMagnetState(_draggingID, NULL).IsOK(ret))
+            if (UploadMagnetState(_draggingID, NULL, false).IsOK(ret))
             {
-               changeUndoLabel = String("Remove Magnet [%1]").Arg(ms->GetText());
+               changeUndoLabel = String("Remove Magnet \"%1\"").Arg(ms->GetText());
             }
             else LogTime(MUSCLE_LOG_ERROR, "Couldn't remove deleted magnet, error [%s]\n", ret());
          }
@@ -123,7 +129,7 @@ void FridgeClientCanvas :: mouseReleaseEvent(QMouseEvent * e)
    e->accept();
 }
 
-void FridgeClientCanvas :: UpdateDraggedMagnetPosition(QPoint mousePos)
+void FridgeClientCanvas :: UpdateDraggedMagnetPosition(QPoint mousePos, bool isInterimUpdate)
 {
    const MagnetState * ms = _magnets.Get(_draggingID);
    if (ms)
@@ -133,11 +139,11 @@ void FridgeClientCanvas :: UpdateDraggedMagnetPosition(QPoint mousePos)
       newState.SetUpperLeftPos(Point(upperLeftPos.x(), upperLeftPos.y()));
 
       status_t ret;
-      if (UploadMagnetState(_draggingID, &newState).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload moved magnet, error [%s]\n", ret());
+      if (UploadMagnetState(_draggingID, &newState, isInterimUpdate).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't upload moved magnet, error [%s]\n", ret());
    }
 }
 
-status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState)
+status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState, bool isInterimUpdate)
 {
    MessageRef msgRef;
 
@@ -150,7 +156,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
       if (optMagnetState->SaveToArchive(*msgRef()).IsError(ret)) return ret;
    }
       
-   return UploadTreeNodeValue(optNodeID.Prepend("project/magnets/"), msgRef);
+   return UploadTreeNodeValue(optNodeID.Prepend("project/magnets/"), msgRef, isInterimUpdate?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags());
 }
 
 void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
@@ -161,6 +167,12 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
       _magnets.Clear();
       update();
    }
+
+   // This is here only to make sure that the project/magnets node exists; everything will still work without this line, since the
+   // node will get auto-created when necessary, but if it gets auto-created during an undo-able operation, it will get auto-deleted 
+   // during the corresponding undo operation, which I'd prefer to avoid if possible.
+   // A more elegant solution might be to include the magnets node in the FRIDGE_DB_PROJECT's default state, but this will do for now.
+   if (IsTreeGatewayConnected()) (void) UploadTreeNodeValue("project/magnets", GetMessageFromPool());
 
    emit UpdateWindowStatus();
 }

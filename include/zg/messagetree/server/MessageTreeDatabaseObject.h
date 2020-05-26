@@ -141,6 +141,14 @@ protected:
      */
    virtual status_t JuniorMessageTreeUpdate(const ConstMessageRef & msg);
 
+   /** When called from within a SeniorUpdate() or JuniorUpdate() context, returns true iff the update we're currently
+     * handling was tagged with the TREE_GATEWAY_FLAG_INTERIM (and can therefore be skipped when performing an undo or redo)
+     */
+   bool IsHandlingInterimUpdate() const {return _interimUpdateNestCount.IsInBatch();}
+
+   /** Returns a reference to a NestCount that can be adjusted to indicate when we're operating in the context of an undo or redo operation */
+   NestCount & GetInUndoRedoContextNestCount() {return _inUndoRedoContextNestCount;}
+
 private:
    class SafeQueryFilter : public QueryFilter
    {
@@ -168,12 +176,16 @@ private:
    MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags) const;
 
    status_t HandleNodeUpdateMessage(const Message & msg);
+   status_t HandleNodeUpdateMessageAux(const Message & msg, TreeGatewayFlags flags);
    status_t HandleNodeIndexUpdateMessage(const Message & msg);
    status_t HandleSubtreeUpdateMessage(const Message & msg);
 
    status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB);
 
    MessageRef _assembledJuniorMessage;
+   NestCount _interimUpdateNestCount;
+
+   NestCount _inUndoRedoContextNestCount;
 
    const String _rootNodePathWithoutSlash;
    const String _rootNodePathWithSlash;
