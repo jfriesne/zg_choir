@@ -460,6 +460,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
          char buf[64]; muscleSprintf(buf, "/%s" UINT32_FORMAT_SPEC, flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)?"I":"", newNodeID);
          sessionRelativePath += buf;
       }
+//printf("   SetDataNode [%s] -> %p (%s) (indexed=%i optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore?optBefore->Cstr():NULL);
       return zsh->SetDataNode(sessionRelativePath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
    }
    else return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
@@ -479,6 +480,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    {
       if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) node->InsertIndexEntryAt(index, zsh, key?*key:GetEmptyString());
                                                 else node->RemoveIndexEntryAt(index, zsh);
+//printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node->GetIndex()->GetNumItems());
       return B_NO_ERROR;
    }
    else 

@@ -53,6 +53,15 @@ ConstMessageRef UndoStackMessageTreeDatabaseObject :: SeniorUpdate(const ConstMe
    }
 }
 
+void UndoStackMessageTreeDatabaseObject :: SetToDefaultState()
+{
+   MessageTreeDatabaseObject::SetToDefaultState();  // clear any existing nodes
+
+   status_t ret;
+   if (SetDataNode(UNDOSTACK_NODENAME_UNDO, GetMessageFromPool()).IsError(ret)) LogTime(MUSCLE_LOG_CRITICALERROR, "UndoStackMessageTreeDatabaseObject::SetToDefaultState():  Couldn't set undo node!  [%s]\n", ret());
+   if (SetDataNode(UNDOSTACK_NODENAME_REDO, GetMessageFromPool()).IsError(ret)) LogTime(MUSCLE_LOG_CRITICALERROR, "UndoStackMessageTreeDatabaseObject::SetToDefaultState():  Couldn't set redo node!  [%s]\n", ret());
+}
+
 status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessageRef & msg)
 {
    NestCountGuard ncg(_seniorMessageTreeUpdateNestCount);

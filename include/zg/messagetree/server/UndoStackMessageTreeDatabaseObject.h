@@ -44,6 +44,8 @@ public:
      */
    status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel);
 
+   virtual void SetToDefaultState();
+
 protected:
    // IDatabaseObject API
    virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
