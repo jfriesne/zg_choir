@@ -63,13 +63,31 @@ public:
    void SetAcceptPort(uint16 port) {_acceptPort = port;}  // just so we can tell discovery-clients what port we are listening on
 
 protected:
+   // Same as an UndoStackMessageTreeDatabaseObject, but creates the "magnets" node as part of the SetToDefaultState() method
+   class MagnetsMessageTreeDatabaseObject : public UndoStackMessageTreeDatabaseObject
+   {
+   public:
+      MagnetsMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) : UndoStackMessageTreeDatabaseObject(session, dbIndex, rootNodePath)
+      {
+         // empty
+      }
+
+      virtual void SetToDefaultState()
+      {
+         UndoStackMessageTreeDatabaseObject::SetToDefaultState();  // clear any existing nodes
+
+         status_t ret;
+         if (SetDataNode("magnets", GetMessageFromPool()).IsError(ret)) LogTime(MUSCLE_LOG_CRITICALERROR, "MagnetsMessageTreeDatabaseObject::SetToDefaultState():  Couldn't set magnets node! [%s]\n", ret());
+      }
+   };
+
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
       switch(whichDatabase)
       {
          case FRIDGE_DB_PROJECT:
          {
-            IDatabaseObjectRef ret(newnothrow UndoStackMessageTreeDatabaseObject(this, whichDatabase, "project"));
+            IDatabaseObjectRef ret(newnothrow MagnetsMessageTreeDatabaseObject(this, whichDatabase, "project"));
             if (ret() == NULL) WARN_OUT_OF_MEMORY;
             return ret;
          }

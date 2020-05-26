@@ -90,6 +90,10 @@ status_t ZGPeerSession :: AttachedToServer()
    ScheduleSetBeaconData();
 
    LogTime(MUSCLE_LOG_INFO, "Starting up as peer [%s]\n", GetLocalPeerID().ToString()());
+
+   // Make sure all of our databases are in their expected default states
+   for (uint32 i=0; i<_databases.GetNumItems(); i++) _databases[i].ResetLocalDatabaseToDefaultState();
+
    return B_NO_ERROR;
 }
 

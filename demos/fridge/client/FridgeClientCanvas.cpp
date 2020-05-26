@@ -168,12 +168,6 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
       update();
    }
 
-   // This is here only to make sure that the project/magnets node exists; everything will still work without this line, since the
-   // node will get auto-created when necessary, but if it gets auto-created during an undo-able operation, it will get auto-deleted 
-   // during the corresponding undo operation, which I'd prefer to avoid if possible.
-   // A more elegant solution might be to include the magnets node in the FRIDGE_DB_PROJECT's default state, but this will do for now.
-   if (IsTreeGatewayConnected()) (void) UploadTreeNodeValue("project/magnets", GetMessageFromPool());
-
    emit UpdateWindowStatus();
 }
 

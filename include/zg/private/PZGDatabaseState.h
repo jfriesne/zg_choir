@@ -51,6 +51,8 @@ public:
    bool UpdateLogContainsUpdate(uint64 tid) const {return _updateLog.ContainsKey(tid);}
    uint64 GetCurrentDatabaseStateID() const {return _localDatabaseStateID;}
 
+   void ResetLocalDatabaseToDefaultState();
+
 private:
    void RescanUpdateLog();
    status_t AddDatabaseUpdateToUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);

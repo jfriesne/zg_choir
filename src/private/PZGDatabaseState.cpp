@@ -99,6 +99,11 @@ void PZGDatabaseState :: SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp
    _master->ScheduleSetBeaconData();
 }
 
+void PZGDatabaseState :: ResetLocalDatabaseToDefaultState()
+{
+   _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
+}
+
 // Note:  This method gets called only from within ZGPeerSession.cpp, and that code will make sure that
 // this method gets called only in the correct context (e.g. it will make sure not to call
 // PZG_PEER_COMMAND_RESET_SENIOR_DATABASE when we're running on a junior peer, etc)
@@ -116,7 +121,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          const uint64 startTime = GetRunTime64();
          {
             NestCountGuard ncg(_inSeniorDatabaseUpdate);
-            (void) _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
+            _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
          }
          SeniorUpdateCompleted(dbUp, startTime, ConstMessageRef());
          return B_NO_ERROR;

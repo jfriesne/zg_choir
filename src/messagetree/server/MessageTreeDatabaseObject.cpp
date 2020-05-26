@@ -542,4 +542,10 @@ MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeData
    return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());
 }
 
+status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, bool allowOverwriteData, bool allowCreateNode, bool quiet, bool addToIndex, const String *optInsertBefore)
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, allowOverwriteData, allowCreateNode, quiet, addToIndex, optInsertBefore) : B_BAD_OBJECT;
+}
+
 }; // end namespace zg
