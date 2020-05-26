@@ -169,6 +169,8 @@ void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const Messag
 {
    if (nodePath.StartsWith("project/magnets/"))
    {
+      const bool hadMagnets = HasMagnets();
+
       const String nodeName = nodePath.Substring("/");
       if (optPayloadMsg())
       {
@@ -176,6 +178,8 @@ void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const Messag
          if ((state.SetFromArchive(*optPayloadMsg()).IsOK())&&(_magnets.Put(nodeName, state).IsOK())) update();
       }
       else if (_magnets.Remove(nodeName).IsOK()) update();
+
+      if (HasMagnets() != hadMagnets) emit UpdateWindowStatus();  // so the window class can enable or disable the "Clear Magnets" button
    }
 }
 

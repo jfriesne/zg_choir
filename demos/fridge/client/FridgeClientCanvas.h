@@ -34,6 +34,9 @@ public:
    /** Uploads a request to the server to clear all the magnets from the fridge */
    void ClearMagnets();
 
+   /** Returns true iff there are any magnets present on the refrigerator door */
+   bool HasMagnets() const {return _magnets.HasItems();}
+
 signals:
    void UpdateWindowStatus();
 

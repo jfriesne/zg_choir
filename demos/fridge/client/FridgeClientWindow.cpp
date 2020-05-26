@@ -38,6 +38,7 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
    , _connection(NULL)
    , _canvas(NULL)
    , _chatView(NULL)
+   , _clearButton(NULL)
    , _undoButton(NULL)
    , _redoButton(NULL)
    , _updateStatusPending(false)
@@ -114,6 +115,8 @@ void FridgeClientWindow :: DeleteConnectionPage()
    _redoStackTop.Reset();
    _redoButton = NULL;
 
+   _clearButton = NULL;
+
    if (_canvas)     {delete _canvas;     _canvas     = NULL;}
    if (_chatView)   {delete _chatView;   _chatView   = NULL;}
    if (_connection) {delete _connection; _connection = NULL;}
@@ -186,9 +189,9 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    
                bbrLayout->addStretch();
               
-               QPushButton * clearButton = new QPushButton(tr("Clear Magnets"));
-               connect(clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
-               bbrLayout->addWidget(clearButton);
+               _clearButton = new QPushButton(tr("Clear Magnets"));
+               connect(_clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
+               bbrLayout->addWidget(_clearButton);
 
                bbrLayout->addStretch();
 
@@ -223,10 +226,10 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
       _widgetStack->addWidget(_splitter);
       _splitter->setStretchFactor(0, 2);
 
-      _undoStackTopPath = String("project/undo/%1/top").Arg(_connection->GetUndoKey());  // so we can update the label of the Undo button appropriately
+      _undoStackTopPath = String("project/undo/%1").Arg(_connection->GetUndoKey());  // so we can update the label of the Undo button appropriately
       AddTreeSubscription(_undoStackTopPath);
 
-      _redoStackTopPath = String("project/redo/%1/top").Arg(_connection->GetUndoKey());  // so we can update the label of the Redo button appropriately
+      _redoStackTopPath = String("project/redo/%1").Arg(_connection->GetUndoKey());  // so we can update the label of the Redo button appropriately
       AddTreeSubscription(_redoStackTopPath);
    }
    else
@@ -281,17 +284,19 @@ void FridgeClientWindow :: UpdateStatus()
       else _discoClient.Stop();
    }
 
-   UpdateUndoRedoButton(_undoButton, _undoStackTop);
-   UpdateUndoRedoButton(_redoButton, _redoStackTop);
+   UpdateUndoRedoButton(_undoButton, _undoStackTop, tr("Undo"));
+   UpdateUndoRedoButton(_redoButton, _redoStackTop, tr("Redo"));
+
+   if (_clearButton) _clearButton->setEnabled(_canvas->HasMagnets());
 }
 
-void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef)
+void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb)
 {
    if (button)
    {
       button->setEnabled(msgRef() != NULL);
-      if (msgRef()) button->setText(tr("Undo %1").arg(msgRef()->GetCstr("lab", "???")));
-               else button->setText(tr("Undo"));
+      if (msgRef()) button->setText(tr("%1 %2").arg(verb).arg(msgRef()->GetCstr("lab", "???")));
+               else button->setText(verb);
    }
 }
 

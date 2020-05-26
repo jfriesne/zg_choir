@@ -61,7 +61,7 @@ private:
    void UpdateGUI();
    void DeleteConnectionPage();
    void ConnectTo(const String & systemName);
-   void UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef);
+   void UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb);
 
    enum {
       PAGE_DISCOVERY_NO_RESULTS = 0,
@@ -82,6 +82,7 @@ private:
    FridgeClientCanvas * _canvas;
    FridgeChatView * _chatView;
 
+   QPushButton * _clearButton;
    QPushButton * _undoButton;
    QPushButton * _redoButton;
 

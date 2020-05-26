@@ -121,6 +121,11 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          return HandleSubtreeUpdateMessage(*msg());
       break;
 
+      case MTDO_COMMAND_INSERTINDEXENTRY:
+      case MTDO_COMMAND_REMOVEINDEXENTRY:
+         return HandleNodeIndexUpdateMessage(*msg());
+      break;
+
       case MTDO_SENIOR_COMMAND_REQUESTDELETENODES:
       {
          MessageRef qfMsg;
@@ -456,7 +461,8 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    const String * key  = msg.GetStringPointer(MTDO_NAME_KEY);
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   DataNode * node = zsh->GetDataNode(DatabaseSubpathToSessionRelativePath(path?*path:GetEmptyString()));
+   const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path?*path:GetEmptyString());
+   DataNode * node = zsh->GetDataNode(sessionRelativePath);
    if (node) 
    {
       if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) node->InsertIndexEntryAt(index, zsh, key?*key:GetEmptyString());
@@ -465,7 +471,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    }
    else 
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "HandleNodeIndexUpdateMessage:  Couldn't find node for path [%s] to update node-index!\n", path?path->Cstr():NULL);
+      LogTime(MUSCLE_LOG_CRITICALERROR, "HandleNodeIndexUpdateMessage:  Couldn't find node for path [%s] to update node-index!\n", sessionRelativePath());
       return B_DATA_NOT_FOUND;
    }
 }
