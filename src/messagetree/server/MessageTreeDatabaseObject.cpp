@@ -47,7 +47,7 @@ MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSe
 
 void MessageTreeDatabaseObject :: SetToDefaultState()
 {
-   (void) SafeRemoveDataNodes(_rootNodePathWithoutSlash);
+   (void) RemoveDataNodes(_rootNodePathWithoutSlash);
 }
 
 status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & archive)
@@ -133,7 +133,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          const String * path          = msg()->GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+         return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
       }
       break;
 
@@ -145,7 +145,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          const String * optBefore     = msg()->GetStringPointer(MTDO_NAME_BEFORE);
          ConstQueryFilterRef qfRef    = (msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         SafeMoveIndexEntries(DatabaseSubpathToSessionRelativePath(*path), optBefore, qfRef);
+         MoveIndexEntries(DatabaseSubpathToSessionRelativePath(*path), optBefore, qfRef);
       }
       break;
 
@@ -463,7 +463,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 //printf("   SetDataNode [%s] -> %p (%s) (indexed=%i optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore?optBefore->Cstr():NULL);
       return zsh->SetDataNode(sessionRelativePath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
    }
-   else return SafeRemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+   else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
 
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
@@ -480,7 +480,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    {
       if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) node->InsertIndexEntryAt(index, zsh, key?*key:GetEmptyString());
                                                 else node->RemoveIndexEntryAt(index, zsh);
-//printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node->GetIndex()->GetNumItems());
+//printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node?node->GetIndex()->GetNumItems():666);
       return B_NO_ERROR;
    }
    else 
@@ -515,8 +515,8 @@ bool MessageTreeDatabaseObject :: IsNodeInThisDatabase(const DataNode & dn) cons
    return ((zsh)&&(zsh->GetDatabaseForNodePath(dn.GetNodePath(), NULL) == this));
 }
 
-// Like StorageReflectSession::SafeRemoveDataNodes(), except it is careful not to remove data nodes that aren't part of our own database
-status_t MessageTreeDatabaseObject :: SafeRemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef, bool quiet)
+// Like StorageReflectSession::RemoveDataNodes(), except it is careful not to remove data nodes that aren't part of our own database
+status_t MessageTreeDatabaseObject :: RemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef, bool quiet)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
@@ -528,7 +528,7 @@ status_t MessageTreeDatabaseObject :: SafeRemoveDataNodes(const String & nodePat
 }
 
 // Like StorageReflectSession::MoveIndexEntries(), except it is careful not to modify the indices of any data nodes that aren't part of our own database
-status_t MessageTreeDatabaseObject :: SafeMoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef)
+status_t MessageTreeDatabaseObject :: MoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;

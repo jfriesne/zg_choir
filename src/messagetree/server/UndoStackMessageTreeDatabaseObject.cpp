@@ -108,16 +108,16 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
       case UNDOSTACK_COMMAND_BEGINSEQUENCE: case UNDOSTACK_COMMAND_ENDSEQUENCE:
       {
          const String & clientKey   = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
-         const String nodePath      = GetRootPathWithSlash() + UNDOSTACK_NODENAME_UNDO + "/" + (clientKey.HasChars() ? clientKey : "default");
+         const String undoNodePath  = GetRootPathWithSlash() + UNDOSTACK_NODENAME_UNDO + "/" + (clientKey.HasChars() ? clientKey : "default");
          const bool isBeginSequence = (msg()->what == UNDOSTACK_COMMAND_BEGINSEQUENCE);
 
          status_t ret;
          MessageTreeDatabasePeerSession * mtdps = GetMessageTreeDatabasePeerSession();
-         DataNode * clientNode = mtdps->GetDataNode(nodePath);
+         DataNode * clientNode = mtdps->GetDataNode(undoNodePath);
          if ((clientNode == NULL)&&(isBeginSequence))
          {
-            if (mtdps->SetDataNode(nodePath, GetMessageFromPool(0)).IsError(ret)) return ret;  // demand-create an undo-status-node for this client
-            clientNode = mtdps->GetDataNode(nodePath);
+            if (mtdps->SetDataNode(undoNodePath, GetMessageFromPool(0)).IsError(ret)) return ret;  // demand-create an undo-status-node for this client
+            clientNode = mtdps->GetDataNode(undoNodePath);
          }
          if (clientNode == NULL) return B_BAD_ARGUMENT;
 
@@ -128,6 +128,10 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
          {
             if (oldClientPayload.what == 0)
             {
+               // Begining a new undoable-sequence always clears the redo stack
+               const String redoNodePath = GetRootPathWithSlash() + UNDOSTACK_NODENAME_REDO + "/" + (clientKey.HasChars() ? clientKey : "default");
+               if (RemoveDataNodes(redoNodePath).IsError(ret)) return ret;
+
                // Entering the first level of undo-sequence nesting -- create a new undo-sequence child node for this client
                MessageRef seqPayload = GetMessageFromPool(1);  // 1 because we've started the first level of nesting
                if (seqPayload() == NULL) RETURN_OUT_OF_MEMORY;
@@ -139,9 +143,9 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                if (seqPayload()->AddInt64(UNDOSTACK_NAME_STARTDBID, startDBID).IsError(ret)) return ret;
 
                uint32 newNodeID;
-               if (mtdps->GetUnusedNodeID(nodePath, newNodeID).IsError(ret)) return ret;
+               if (mtdps->GetUnusedNodeID(undoNodePath, newNodeID).IsError(ret)) return ret;
 
-               const String seqPath = nodePath + String("/I%1").Arg(newNodeID);
+               const String seqPath = undoNodePath + String("/I%1").Arg(newNodeID);
                if (mtdps->SetDataNode(seqPath, seqPayload, true, true, false, true).IsError(ret)) return ret;
 
                newClientPayload = seqPayload;  // for clients who just want to track the latest state by subscribing to their per-client node
@@ -169,7 +173,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
             if (seqPayload() == NULL) RETURN_OUT_OF_MEMORY;
 
             // Exiting the last level of undo-sequence nesting -- gotta finalize the undo-sequence child node
-            const uint64 afterLastDBID = GetCurrentDatabaseStateID();  // not +1, for some reason?
+            const uint64 afterLastDBID = GetCurrentDatabaseStateID()+1;  // +1 because the db transaction we are part of hasn't been included in the database yet
             if (seqPayload()->AddInt64(UNDOSTACK_NAME_ENDDBID, afterLastDBID).IsError(ret)) return ret;
 
             const String * label = msg()->GetStringPointer(UNDOSTACK_NAME_LABEL);
@@ -205,7 +209,6 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
          const String & clientKey  = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
          const String fromNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_REDO : UNDOSTACK_NODENAME_UNDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
          const String destNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_UNDO : UNDOSTACK_NODENAME_REDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
-printf("isRedo=%i fromNodePath=[%s] destNodePath=[%s]\n", isRedo, fromNodePath(), destNodePath());
 
          MessageTreeDatabasePeerSession * mtdps = GetMessageTreeDatabasePeerSession();
          DataNode * fromClientNode = mtdps->GetDataNode(fromNodePath);
@@ -234,7 +237,6 @@ printf("isRedo=%i fromNodePath=[%s] destNodePath=[%s]\n", isRedo, fromNodePath()
                   for (uint64 transID=seqEndID; transID>=seqStartID; transID--)
                   {
                      ConstMessageRef payload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
-printf("     transID=%llu (seqStartID=%llu seqEndID=%llu) payload=%p\n", isRedo ? (seqStartID+(seqEndID-transID)) : transID, seqStartID, seqEndID, payload());
                      if (payload())
                      {
                         const String * nextKey = payload()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString());

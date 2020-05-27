@@ -160,7 +160,24 @@ protected:
      *                        If NULL, the new node will be appended to the end of the index.  If (addToIndex) is false, this argument is ignored.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-     virtual status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, bool allowOverwriteData=true, bool allowCreateNode=true, bool quiet=false, bool addToIndex=false, const String *optInsertBefore=NULL); 
+   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, bool allowOverwriteData=true, bool allowCreateNode=true, bool quiet=false, bool addToIndex=false, const String *optInsertBefore=NULL); 
+
+   /** Pass-through to StorageReflectSession::RemoveDataNodes() on our MessageTreeDatabasePeerSession object
+     * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
+     * @param filterRef optional ConstQueryFilter to restrict which nodes that match (nodePath) actually get removed
+     * @param quiet If set to true, subscribers won't be updated regarding this change to the database.
+     * @return B_NO_ERROR on success, or an error code on failure.
+     */
+   status_t RemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false);
+
+   /** Pass-through to StorageReflectSession::MoveIndexEntries() on our MessageTreeDatabasePeerSession object
+     * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
+     * @param optBefore if non-NULL, the moved nodes in the index will be moved to just before the node with this name.  If NULL, they'll be moved to the end of the index.
+     * @param filterRef If non-NULL, we'll use the given QueryFilter object to filter out our result set.
+     *                  Only nodes whose Messages match the QueryFilter will have their parent-nodes' index modified.  Default is a NULL reference.
+     * @return B_NO_ERROR on success, or an error code on failure.
+     */
+   status_t MoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef);
 
 private:
    class SafeQueryFilter : public QueryFilter
@@ -181,8 +198,6 @@ private:
    bool IsNodeInThisDatabase(const DataNode & node) const;
    String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;}
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
-   status_t SafeRemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false);
-   status_t SafeMoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef);
 
    MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) const;
    MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key);

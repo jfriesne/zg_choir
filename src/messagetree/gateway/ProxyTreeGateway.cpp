@@ -102,7 +102,7 @@ status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*
 
 status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return ITreeGatewaySubscriber::RequestUndo(whichDB);
+   return ITreeGatewaySubscriber::RequestRedo(whichDB);
 }
 
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
