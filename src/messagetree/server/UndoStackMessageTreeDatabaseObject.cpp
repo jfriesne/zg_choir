@@ -198,70 +198,87 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
       }
       break;
 
-      case UNDOSTACK_COMMAND_UNDO:
+      case UNDOSTACK_COMMAND_UNDO: case UNDOSTACK_COMMAND_REDO:
       {
-         const String & clientKey   = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
-         const String nodePath      = GetRootPathWithSlash() + UNDOSTACK_NODENAME_UNDO + "/" + (clientKey.HasChars() ? clientKey : "default");
+         const bool isRedo         = (msg()->what == UNDOSTACK_COMMAND_REDO);
+         const char * desc         = isRedo ? "redo" : "undo";
+         const String & clientKey  = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
+         const String fromNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_REDO : UNDOSTACK_NODENAME_UNDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
+         const String destNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_UNDO : UNDOSTACK_NODENAME_REDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
+printf("isRedo=%i fromNodePath=[%s] destNodePath=[%s]\n", isRedo, fromNodePath(), destNodePath());
 
          MessageTreeDatabasePeerSession * mtdps = GetMessageTreeDatabasePeerSession();
-         DataNode * clientNode = mtdps->GetDataNode(nodePath);
-         if (clientNode)
+         DataNode * fromClientNode = mtdps->GetDataNode(fromNodePath);
+         if (fromClientNode)
          {
-            const Queue<DataNodeRef> * indexQ = clientNode->GetIndex();
+            const Queue<DataNodeRef> * indexQ = fromClientNode->GetIndex();
             if ((indexQ)&&(indexQ->HasItems()))
             {
-               DataNodeRef undoSeq      = indexQ->Tail();
-               const Message & undoData = *undoSeq()->GetData()();
-               const uint64 seqStartID  = undoData.GetInt64(UNDOSTACK_NAME_STARTDBID);
-               const uint64 seqEndTrans = undoData.GetInt64(UNDOSTACK_NAME_ENDDBID);
-               if (seqEndTrans > seqStartID)
+               MessageRef payload      = indexQ->Tail()()->GetData();
+               const uint64 seqStartID = payload()->GetInt64(UNDOSTACK_NAME_STARTDBID);
+               const uint64 seqEndID   = payload()->GetInt64(UNDOSTACK_NAME_ENDDBID);
+               if (seqEndID >= seqStartID)
                {
                   // Paranoia:  first, let's make sure all of the referenced states actually exist in the transaction-log.  If they don't, then there's little point trying
-                  for (uint64 transID=seqEndTrans; transID >= seqStartID; transID--)
+                  for (uint64 transID=seqEndID; transID >= seqStartID; transID--)
                   {
                      if (UpdateLogContainsUpdate(transID) == false)
                      {
-                        LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (undo=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, nodePath(), seqEndTrans, seqStartID);
+                        LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (%s=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, fromNodePath(), desc, seqEndID, seqStartID);
                         return B_BAD_OBJECT;
                      }
                   }
 
-                  // Do the actual undo
+                  // Do the actual undo (or redo)
                   NestCountGuard ncg(GetInUndoRedoContextNestCount());
-                  for (uint64 transID=seqEndTrans; transID >= seqStartID; transID--)
+                  for (uint64 transID=seqEndID; transID>=seqStartID; transID--)
                   {
-                     ConstMessageRef payload = GetUpdatePayload(transID);
+                     ConstMessageRef payload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
+printf("     transID=%llu (seqStartID=%llu seqEndID=%llu) payload=%p\n", isRedo ? (seqStartID+(seqEndID-transID)) : transID, seqStartID, seqEndID, payload());
                      if (payload())
                      {
-                        const String * undoKey = payload()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString());
-                        if (*undoKey == clientKey)  // only undo actions that were uploaded by our own client!
+                        const String * nextKey = payload()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString());
+                        if (*nextKey == clientKey)  // only undo or redo actions that were uploaded by our own client!
                         {
                            status_t ret;
-                           MessageRef undoMsg;
-                           if ((payload()->FindMessage(UNDOSTACK_NAME_UNDOMESSAGE, undoMsg).IsOK())&&(SeniorMessageTreeUpdateAux(undoMsg).IsError(ret))) return ret;
+                           MessageRef subMsg;
+                           if ((payload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK())&&(SeniorMessageTreeUpdateAux(subMsg).IsError(ret))) return ret;
                         }
                      }
                      else
                      {
-                        LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (undo=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, nodePath(), seqEndTrans, seqStartID);
+                        LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (%s=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, fromNodePath(), desc, seqEndID, seqStartID);
                         return B_BAD_OBJECT;
                      }
                   }
 
+                  // Demand-allocate a dest-client-node
+                  status_t ret;
+                  DataNode * destClientNode = mtdps->GetDataNode(destNodePath);
+                  if (destClientNode == NULL)
+                  {
+                     if (mtdps->SetDataNode(destNodePath, GetMessageFromPool(0)).IsError(ret)) return ret;  // demand-create a dest-status-node for this client
+                     destClientNode = mtdps->GetDataNode(destNodePath);
+                  }
+                  if (destClientNode == NULL) return B_BAD_OBJECT;
+
+                  // And finally, add the new dest-child to the dest-client-node
+                  uint32 newNodeID;
+                  if (mtdps->GetUnusedNodeID(destNodePath, newNodeID).IsError(ret)) return ret;
+
+                  const String destSeqPath = destNodePath + String("/I%1").Arg(newNodeID);
+                  if (mtdps->SetDataNode(destSeqPath, payload, true, true, false, true).IsError(ret)) return ret;
+
+                  destClientNode->SetData(payload, mtdps, false);  // notify programs that are tracking the top of the dest-stack
                   return B_NO_ERROR;
                }
             }
-            else LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Client node at [%s] has no undo-sequence nodes in its index!\n", nodePath());
+            else LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Client node at [%s] has no %s-sequence nodes in its index!\n", fromNodePath(), desc);
          }
-         else LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Couldn't find client node at [%s] for undo operation!\n", nodePath());
+         else LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Couldn't find client node at [%s] for %s operation!\n", fromNodePath(), desc);
 
          return B_BAD_OBJECT;
       }
-      break;
-
-      case UNDOSTACK_COMMAND_REDO:
-printf("UndoStackMessageTreeDatabaseObject::SeniorMessageTreeUpdate():  TODO:  Implement handler for UNDOSTACK_COMMAND_REDO\n");
-         return B_UNIMPLEMENTED;
       break;
 
       default:
