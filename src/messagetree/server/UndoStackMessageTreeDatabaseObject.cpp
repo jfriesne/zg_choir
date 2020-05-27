@@ -232,6 +232,14 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                      }
                   }
 
+                  // For a redo, pop the redo-operation off of the source/redo)-stack (not necessary for an undo)
+                  status_t ret;
+                  if (isRedo)
+                  {
+                     if (fromClientNode->RemoveChild(indexQ->Tail()()->GetNodeName(), mtdps, true, NULL).IsError(ret)) return ret;
+                     if (fromClientNode->GetNumChildren() == 0) fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
+                  }
+
                   // Do the actual undo (or redo)
                   NestCountGuard ncg(GetInUndoRedoContextNestCount());
                   for (uint64 transID=seqEndID; transID>=seqStartID; transID--)
@@ -255,7 +263,6 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   }
 
                   // Demand-allocate a dest-client-node
-                  status_t ret;
                   DataNode * destClientNode = mtdps->GetDataNode(destNodePath);
                   if (destClientNode == NULL)
                   {
