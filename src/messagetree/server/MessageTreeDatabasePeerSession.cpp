@@ -221,6 +221,7 @@ void MessageTreeDatabasePeerSession :: CommandBatchEnds()
 
 void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
 {
+//printf("NotifySubscribersThatNodeChanged node=[%s] payload=%p isBeingRemoved=%i\n", node.GetNodePath()(), node.GetData()(), isBeingRemoved);
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
    if (mtDB) mtDB->MessageTreeNodeUpdated(relativePath, node, oldDataRef, isBeingRemoved);
@@ -230,6 +231,7 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode
 
 void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
 {
+//printf("NotifySubscribersThatNodeIndexChanged node=[%s] op=%c index=%u key=[%s]\n", node.GetNodePath()(), op, index, key());
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
    if (mtDB) mtDB->MessageTreeNodeIndexChanged(relativePath, node, op, index, key);

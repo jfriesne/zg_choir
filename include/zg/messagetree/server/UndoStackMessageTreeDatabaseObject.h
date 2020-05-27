@@ -59,6 +59,9 @@ protected:
    virtual status_t RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg);
    virtual status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
 
+   // Overridden to skip updating nodes in the "undo" and "redo" folders doing an undo or redo operation (we'll handle that manually, instead)
+   virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const;
+
    /** Convenience method:  Returns the undo-identifier-key of the currently active client, or an empty String if unknown */
    const String & GetActiveClientUndoKey() const;
 
@@ -69,6 +72,8 @@ private:
 
    MessageRef _assembledJuniorUndoMessage;
    NestCount _seniorMessageTreeUpdateNestCount;
+
+   NestCount _inUndoRedoContextNestCount;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 

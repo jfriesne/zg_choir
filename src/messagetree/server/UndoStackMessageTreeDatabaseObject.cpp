@@ -16,8 +16,9 @@ static const String UNDOSTACK_NAME_ENDDBID         = "eid";
 
 static const String UNDOSTACK_NODENAME_UNDO = "undo";
 static const String UNDOSTACK_NODENAME_REDO = "redo";
-static const String UNDOSTACK_NODENAME_TOP  = "top";
 
+static const String UNDOSTACK_NODENAME_UNDO_SLASH = UNDOSTACK_NODENAME_UNDO + '/';
+static const String UNDOSTACK_NODENAME_REDO_SLASH = UNDOSTACK_NODENAME_REDO + '/';
 
 UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
    : MessageTreeDatabaseObject(session, dbIndex, rootNodePath)
@@ -214,6 +215,8 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
          DataNode * fromClientNode = mtdps->GetDataNode(fromNodePath);
          if (fromClientNode)
          {
+            status_t ret;
+
             const Queue<DataNodeRef> * indexQ = fromClientNode->GetIndex();
             if ((indexQ)&&(indexQ->HasItems()))
             {
@@ -232,25 +235,16 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                      }
                   }
 
-                  // For a redo, pop the redo-operation off of the source/redo)-stack (not necessary for an undo)
-                  status_t ret;
-                  if (isRedo)
-                  {
-                     if (fromClientNode->RemoveChild(indexQ->Tail()()->GetNodeName(), mtdps, true, NULL).IsError(ret)) return ret;
-                     if (fromClientNode->GetNumChildren() == 0) fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
-                  }
-
                   // Do the actual undo (or redo)
-                  NestCountGuard ncg(GetInUndoRedoContextNestCount());
                   for (uint64 transID=seqEndID; transID>=seqStartID; transID--)
                   {
+                     NestCountGuard ncg(_inUndoRedoContextNestCount);
                      ConstMessageRef payload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
                      if (payload())
                      {
                         const String * nextKey = payload()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString());
                         if (*nextKey == clientKey)  // only undo or redo actions that were uploaded by our own client!
                         {
-                           status_t ret;
                            MessageRef subMsg;
                            if ((payload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK())&&(SeniorMessageTreeUpdateAux(subMsg).IsError(ret))) return ret;
                         }
@@ -262,6 +256,14 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                      }
                   }
 
+                  // pop the operation off of the source-stack, and delete the source-client node if the source-stack is now empty
+                  if (fromClientNode->RemoveChild(indexQ->Tail()()->GetNodeName(), mtdps, true, NULL).IsError(ret)) return ret;
+                  if (fromClientNode->GetNumChildren() > 0)
+                  {
+                     fromClientNode->SetData(indexQ->Tail()()->GetData(), mtdps, false);  // notify programs that are tracking the top of the source-stack
+                  }
+                  else fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
+
                   // Demand-allocate a dest-client-node
                   DataNode * destClientNode = mtdps->GetDataNode(destNodePath);
                   if (destClientNode == NULL)
@@ -271,7 +273,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   }
                   if (destClientNode == NULL) return B_BAD_OBJECT;
 
-                  // And finally, add the new dest-child to the dest-client-node
+                  // And finally, push the operation to the top of the dest-stack
                   uint32 newNodeID;
                   if (mtdps->GetUnusedNodeID(destNodePath, newNodeID).IsError(ret)) return ret;
 
@@ -338,6 +340,19 @@ const String & UndoStackMessageTreeDatabaseObject :: GetActiveClientUndoKey() co
 {
    const ServerSideMessageTreeSession * ssmts = GetMessageTreeDatabasePeerSession()->GetActiveServerSideMessageTreeSession();
    return ssmts ? ssmts->GetUndoKey() : GetEmptyString();
+}
+
+bool UndoStackMessageTreeDatabaseObject :: IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const
+{  
+   if (_inUndoRedoContextNestCount.IsInBatch() == false) return true;  // always handle everything when outside of an "undo" or "redo" op
+
+   // No need to execute interim-updates (e.g. updates generated during the middle of a mouse-drag) 
+   // when doing an undo or a redo, since they are intended to be idempotent wrt the updates that came
+   // before or after them.
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_INTERIM)) return false;
+
+   // Don't touch the undo or redo stacks during and undo or redo!
+   return !((path.StartsWith(UNDOSTACK_NODENAME_UNDO_SLASH))||(path.StartsWith(UNDOSTACK_NODENAME_REDO_SLASH)));
 }
 
 }; // end namespace zg

@@ -141,13 +141,18 @@ protected:
      */
    virtual status_t JuniorMessageTreeUpdate(const ConstMessageRef & msg);
 
+   /** Used to decide whether or not to handle a given MTD_COMMAND_* update Message.
+     * Used as a hook by the UndoStackMessageTreeDatabaseObject subclass to filter out undesirable meta-data updates
+     * when executing an "undo" or a "redo" operation.  Default implementation just always returns true.
+     * @param path the node-path specified by the update-message
+     * @param flags the TreeGatewayFlags specified by the update-message
+     */
+   virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const {(void) path; (void) flags; return true;}
+
    /** When called from within a SeniorUpdate() or JuniorUpdate() context, returns true iff the update we're currently
      * handling was tagged with the TREE_GATEWAY_FLAG_INTERIM (and can therefore be skipped when performing an undo or redo)
      */
    bool IsHandlingInterimUpdate() const {return _interimUpdateNestCount.IsInBatch();}
-
-   /** Returns a reference to a NestCount that can be adjusted to indicate when we're operating in the context of an undo or redo operation */
-   NestCount & GetInUndoRedoContextNestCount() {return _inUndoRedoContextNestCount;}
 
    /** Pass-through to StorageReflectSession::SetDataNode() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.
@@ -212,8 +217,6 @@ private:
 
    MessageRef _assembledJuniorMessage;
    NestCount _interimUpdateNestCount;
-
-   NestCount _inUndoRedoContextNestCount;
 
    const String _rootNodePathWithoutSlash;
    const String _rootNodePathWithSlash;

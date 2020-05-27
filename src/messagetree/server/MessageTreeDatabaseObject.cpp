@@ -429,9 +429,9 @@ MessageRef MessageTreeDatabaseObject :: CreateNodeIndexUpdateMessage(const Strin
 status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessage(const Message & msg)
 {
    const TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-   const bool isInterimUpdate   = flags.IsBitSet(TREE_GATEWAY_FLAG_INTERIM);
-   if ((isInterimUpdate)&&(_inUndoRedoContextNestCount.IsInBatch())) return B_NO_ERROR;
+   if (IsOkayToHandleUpdateMessage(msg.GetString(MTDO_NAME_PATH), flags) == false) return B_NO_ERROR;
 
+   const bool isInterimUpdate = flags.IsBitSet(TREE_GATEWAY_FLAG_INTERIM);
    if (isInterimUpdate) _interimUpdateNestCount.Increment();
    const status_t ret = HandleNodeUpdateMessageAux(msg, flags);
    if (isInterimUpdate) _interimUpdateNestCount.Decrement();
@@ -469,12 +469,14 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
 status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message & msg)
 {
-   const String * path = msg.GetStringPointer(MTDO_NAME_PATH);
-   const int32 index   = msg.GetInt32(MTDO_NAME_INDEX);
-   const String * key  = msg.GetStringPointer(MTDO_NAME_KEY);
+   const String * pPath = msg.GetStringPointer(MTDO_NAME_PATH);
+   const int32 index    = msg.GetInt32(MTDO_NAME_INDEX);
+   const String * key   = msg.GetStringPointer(MTDO_NAME_KEY);
+   const String & path  = pPath ? *pPath : GetEmptyString();
+   if (IsOkayToHandleUpdateMessage(path, TreeGatewayFlags()) == false) return B_NO_ERROR;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path?*path:GetEmptyString());
+   const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path);
    DataNode * node = zsh->GetDataNode(sessionRelativePath);
    if (node) 
    {
