@@ -189,14 +189,14 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_EndUndoSequence(ITreeGate
    return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_UNDO, optTargetUndoMarker, whichDB);
+   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_UNDO, GetEmptyString(), whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_REDO, optTargetRedoMarker, whichDB);
+   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_REDO, GetEmptyString(), whichDB);
 }
 
 status_t MessageTreeDatabasePeerSession :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB)

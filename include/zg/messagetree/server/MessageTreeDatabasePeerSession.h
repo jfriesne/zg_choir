@@ -83,8 +83,8 @@ protected:
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
-   virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, const String & optTargetUndoMarker, uint32 whichDB);
-   virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, const String & optTargetRedoMarker, uint32 whichDB);
+   virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
+   virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
    virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
 
    // StorageReflectSession API implementation

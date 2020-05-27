@@ -68,14 +68,14 @@ status_t ITreeGatewaySubscriber :: EndUndoSequence(const String & optSequenceLab
    return GetGateway()->TreeGateway_EndUndoSequence(this, optSequenceLabel, whichDB);
 }
 
-status_t ITreeGatewaySubscriber :: RequestUndo(const String & optTargetUndoMarker, uint32 whichDB)
+status_t ITreeGatewaySubscriber :: RequestUndo(uint32 whichDB)
 {
-   return GetGateway()->TreeGateway_RequestUndo(this, optTargetUndoMarker, whichDB);
+   return GetGateway()->TreeGateway_RequestUndo(this, whichDB);
 }
 
-status_t ITreeGatewaySubscriber :: RequestRedo(const String & optTargetRedoMarker, uint32 whichDB)
+status_t ITreeGatewaySubscriber :: RequestRedo(uint32 whichDB)
 {
-   return GetGateway()->TreeGateway_RequestRedo(this, optTargetRedoMarker, whichDB);
+   return GetGateway()->TreeGateway_RequestRedo(this, whichDB);
 }
 
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const 

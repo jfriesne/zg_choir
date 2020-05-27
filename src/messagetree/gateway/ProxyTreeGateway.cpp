@@ -95,14 +95,14 @@ status_t ProxyTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewaySubscriber 
    return ITreeGatewaySubscriber::EndUndoSequence(optSequenceLabel, whichDB);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return ITreeGatewaySubscriber::RequestUndo(optTargetUndoMarker, whichDB);
+   return ITreeGatewaySubscriber::RequestUndo(whichDB);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return ITreeGatewaySubscriber::RequestUndo(optTargetRedoMarker, whichDB);
+   return ITreeGatewaySubscriber::RequestUndo(whichDB);
 }
 
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const

@@ -208,14 +208,14 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewa
    return SendUndoRedoMessage(NTG_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetUndoMarker, uint32 whichDB)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_UNDO, optTargetUndoMarker, whichDB);
+   return SendUndoRedoMessage(NTG_COMMAND_UNDO, GetEmptyString(), whichDB);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, const String & optTargetRedoMarker, uint32 whichDB)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_REDO, optTargetRedoMarker, whichDB);
+   return SendUndoRedoMessage(NTG_COMMAND_REDO, GetEmptyString(), whichDB);
 }
 
 status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
@@ -269,17 +269,18 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
    MessageRef payload     = msg()->GetMessage(NTG_NAME_PAYLOAD);
-   const String * optBefore = msg()->GetStringPointer(NTG_NAME_BEFORE);
+   const String * optB4 = msg()->GetStringPointer(NTG_NAME_BEFORE);
+   const int32 index      = msg()->GetInt32(NTG_NAME_INDEX);
 
    switch(msg()->what)
    {
-      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,     flags);            break;
-      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,     flags);            break;
-      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,     flags);            break;
-      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,     flags);            break;
-      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload,   flags);            break;
-      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optBefore, qfRef, flags);     break;
-      case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload,   flags, optBefore); break;
+      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,   flags);        break;
+      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,   flags);        break;
+      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags);        break;
+      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,   flags);        break;
+      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload, flags);        break;
+      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optB4,   qfRef, flags); break;
+      case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload, flags, optB4); break;
 
       case NTG_COMMAND_PING:
       {
@@ -306,10 +307,10 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       }
       break;
 
-      case NTG_COMMAND_BEGINSEQUENCE: (void) BeginUndoSequence(tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
-      case NTG_COMMAND_ENDSEQUENCE:   (void) EndUndoSequence(  tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
-      case NTG_COMMAND_UNDO:          (void) RequestUndo(      tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
-      case NTG_COMMAND_REDO:          (void) RequestRedo(      tag, msg()->GetInt32(NTG_NAME_INDEX)); break;
+      case NTG_COMMAND_BEGINSEQUENCE: (void) BeginUndoSequence(tag, index); break;
+      case NTG_COMMAND_ENDSEQUENCE:   (void) EndUndoSequence(  tag, index); break;
+      case NTG_COMMAND_UNDO:          (void) RequestUndo(           index); break;
+      case NTG_COMMAND_REDO:          (void) RequestRedo(           index); break;
 
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!

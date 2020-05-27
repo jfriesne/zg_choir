@@ -408,12 +408,12 @@ void FridgeClientWindow :: OpenProject()
 
 void FridgeClientWindow :: Undo()
 {
-   (void) RequestUndo("*");
+   (void) RequestUndo();
 }
 
 void FridgeClientWindow :: Redo()
 {
-   (void) RequestRedo("*");
+   (void) RequestRedo();
 }
 
 }; // end namespace fridge
