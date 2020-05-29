@@ -22,9 +22,10 @@ FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector)
    for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) (void) _magnetWords.AddTail(_magnetWordsList[i]);
 
    // shuffle the deck
+   unsigned seed = time(NULL);
    for (uint32 i=0; i<_magnetWords.GetNumItems(); i++)
    {
-      const uint32 randIdx = rand()%_magnetWords.GetNumItems();
+      const uint32 randIdx = rand_r(&seed)%_magnetWords.GetNumItems();
       if (i != randIdx)
       {
          String & s1 = _magnetWords[i];

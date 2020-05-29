@@ -23,9 +23,9 @@ static const char * _defaultNamesList[] = {
 #include "common_names_list.txt"
 };
 
-static const char * GetRandomBabyName()
+static const char * GetRandomBabyName(unsigned * seed)
 {
-   return _defaultNamesList[rand()%ARRAYITEMS(_defaultNamesList)];
+   return _defaultNamesList[rand_r(seed)%ARRAYITEMS(_defaultNamesList)];
 }
 
 class FridgeClientCanvas;
@@ -219,7 +219,8 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
          }
          _splitter->addWidget(topPart);
    
-         _chatView = new FridgeChatView(_connection, GetRandomBabyName());
+         unsigned seed = time(NULL);
+         _chatView = new FridgeChatView(_connection, GetRandomBabyName(&seed));
          _chatView->setMinimumHeight(100);
          _splitter->addWidget(_chatView);
       }

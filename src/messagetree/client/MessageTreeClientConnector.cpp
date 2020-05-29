@@ -7,8 +7,10 @@ MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * me
    : ClientConnector(mechanism, signaturePattern, systemNamePattern, optAdditionalCriteria)
    , MuxTreeGateway(NULL)  // gotta pass NULL here since _networkGateway hasn't been constructed yet
    , _networkGateway(this)
-   , _undoKey(String("uk%1").Arg(GetCurrentTime64() + GetRunTime64() + ((uintptr)this) + ((uint64)rand()) + (((uint64)rand())<<32)))
 {
+   unsigned seed = time(NULL);
+   _undoKey = String("uk%1").Arg(GetCurrentTime64() + GetRunTime64() + ((uintptr)this) + ((uint64)rand_r(&seed)) + (((uint64)rand_r(&seed))<<32));
+
    MuxTreeGateway::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
 }
 

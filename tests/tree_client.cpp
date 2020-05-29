@@ -28,7 +28,6 @@ public:
          EndServer();  // tell our local ReflectServer::ServerProcessLoop() call to return so that this client process can exit cleanly
       }
    }
-
 };
 
 int main(int argc, char ** argv)

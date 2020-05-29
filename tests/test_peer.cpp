@@ -64,6 +64,7 @@ class TestZGPeerSession : public ZGPeerSession
 public:
    TestZGPeerSession(const Message & args) 
       : ZGPeerSession(GetTestZGPeerSettings(args))
+      , _seed(time(NULL))
       , _autoUpdateDelay(0)
       , _nextAutoUpdateTime(MUSCLE_TIME_NEVER)
       , _nextPrintNetworkTimeTime(MUSCLE_TIME_NEVER)
@@ -349,10 +350,10 @@ private:
 
    void SendRandomDatabaseUpdateRequest()
    {
-      int r = rand() % 50;
+      int r = rand_r(&_seed) % 50;
 
       String s;
-      switch(rand()%2)
+      switch(rand_r(&_seed))%2)
       {
          case 0:  s = String("%1=%1").Arg(r);  break;
          case 1:  s = String("del %1").Arg(r); break;
@@ -367,6 +368,7 @@ private:
 
    Hashtable<String, String> _toyDatabases[NUM_TOY_DATABASES];
 
+   unsigned _seed;
    uint64 _autoUpdateDelay;
    uint64 _nextAutoUpdateTime;
    uint64 _nextPrintNetworkTimeTime;

@@ -43,7 +43,6 @@ private:
    };
    OrderedValuesHashtable<String, MessageRef, CompareMessageRefFunctor> _clientRoster;
    bool _updateDisplayPending;
-
 };
 
 }; // end namespace fridge
