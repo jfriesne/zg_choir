@@ -353,7 +353,7 @@ private:
       int r = rand_r(&_seed) % 50;
 
       String s;
-      switch(rand_r(&_seed))%2)
+      switch(rand_r(&_seed)%2)
       {
          case 0:  s = String("%1=%1").Arg(r);  break;
          case 1:  s = String("del %1").Arg(r); break;
