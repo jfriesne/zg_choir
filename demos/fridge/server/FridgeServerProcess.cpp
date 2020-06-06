@@ -141,7 +141,7 @@ int RunFridgeServerProcess(const char * systemName)
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
 
-   // Bind to a TCP port to accept incoming connections on
+   // Allocate a TCP port to accept incoming client connections on
    status_t ret;
    uint16 acceptPort;
    if (server.PutAcceptFactory(0, ReflectSessionFactoryRef(&sssFactory, false), invalidIP, &acceptPort).IsError(ret))
@@ -150,6 +150,7 @@ int RunFridgeServerProcess(const char * systemName)
       return exitCode;
    }
    fridgePeerSession.SetAcceptPort(acceptPort);
+
    LogTime(MUSCLE_LOG_INFO, "Listening for incoming client TCP connections (from FridgeClient) on port %u\n", acceptPort);
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
