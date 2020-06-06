@@ -31,7 +31,9 @@ PZGUnicastSession :: ~PZGUnicastSession()
 
 status_t PZGUnicastSession :: AttachedToServer()
 {
-   if (AbstractReflectSession::AttachedToServer() != B_NO_ERROR) return B_ERROR;
+   status_t ret;
+   if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+
    RegisterMyself();
 
    // Do this now, so that it will definitely be the first Message we send after we are connected
@@ -135,13 +137,15 @@ status_t PZGUnicastSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBack
 {
    if (_backorders.ContainsKey(ubok)) return B_NO_ERROR;  // semi-paranoia:  if it's already on back-order, no need to ask again
 
-   if (_backorders.PutWithDefault(ubok) == B_NO_ERROR)
+   status_t ret;
+   if (_backorders.PutWithDefault(ubok).IsOK(ret))
    {
       MessageRef msg = GetMessageFromPool(PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER);
-      if ((msg())&&(msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID, ubok.GetDatabaseIndex()) == B_NO_ERROR)&&(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()) == B_NO_ERROR)&&(AddOutgoingMessage(msg) == B_NO_ERROR)) return B_NO_ERROR;
+      if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+      if ((msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID, ubok.GetDatabaseIndex()).IsOK(ret))&&(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()).IsOK(ret))&&(AddOutgoingMessage(msg).IsOK(ret))) return B_NO_ERROR;
       (void) _backorders.Remove(ubok);  // roll back!
    }
-   return B_ERROR;
+   return ret;
 }
 
 };  // end namespace zg_private

@@ -162,7 +162,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    if (_multicastDataIOs.IsEmpty()) return B_ERROR;  // nothing to send to?
 
    PZGHeartbeatPacketWithMetaDataRef hbRef = GetHeartbeatPacketWithMetaDataFromPool();
-   if (hbRef() == NULL) return B_ERROR;
+   if (hbRef() == NULL) RETURN_OUT_OF_MEMORY;
 
    if (hbRef()) hbRef()->Initialize(*_hbSettings(), MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
 
@@ -180,14 +180,15 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       }
    }
 
-   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false) != B_NO_ERROR) {WARN_OUT_OF_MEMORY; return B_ERROR;}
+   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false) != B_NO_ERROR) RETURN_OUT_OF_MEMORY;
    hb.Flatten(_rawScratchBuf.GetBuffer());
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down
-   if (_zlibCodec.Deflate(_rawScratchBuf, true, _deflatedScratchBuf, HB_HEADER_SIZE) != B_NO_ERROR)
+   status_t ret;
+   if (_zlibCodec.Deflate(_rawScratchBuf, true, _deflatedScratchBuf, HB_HEADER_SIZE).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "Couldn't deflate outgoing heartbeat data!\n");
-      return B_ERROR;
+      return ret;
    }
 
    // If the UDPSocketDataIO was replaced, then we need to generate new tag-IDs for the new one

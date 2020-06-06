@@ -14,16 +14,18 @@ void PZGBeaconData :: Flatten(uint8 *buffer) const
 
 status_t PZGBeaconData :: Unflatten(const uint8 *buf, uint32 size)
 {
-   if (size < sizeof(uint32)) return B_ERROR;
+   if (size < sizeof(uint32)) return B_BAD_DATA;
 
    const uint32 itemFlatSize = PZGDatabaseStateInfo::FlattenedSize();
    const uint32 newNumItems  = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   if (size < (newNumItems*itemFlatSize)) return B_ERROR;
+   if (size < (newNumItems*itemFlatSize)) return B_BAD_DATA;
 
-   if (_dbis.EnsureSize(newNumItems, true) != B_NO_ERROR) return B_ERROR;
+   status_t ret;
+   if (_dbis.EnsureSize(newNumItems, true).IsError(ret)) return ret;
+
    for (uint32 i=0; i<newNumItems; i++)
    {
-      if (_dbis[i].Unflatten(buf, itemFlatSize) != B_NO_ERROR) return B_ERROR;
+      if (_dbis[i].Unflatten(buf, itemFlatSize).IsError(ret)) return ret;
       buf += itemFlatSize; size -= itemFlatSize;
    }
    return B_NO_ERROR;

@@ -24,8 +24,10 @@ AbstractMessageIOGatewayRef PZGThreadedSession :: CreateGateway()
 
 status_t PZGThreadedSession :: AttachedToServer()
 {
-   if (AbstractReflectSession::AttachedToServer() != B_NO_ERROR) return B_ERROR;
-   if (GetOwnerWakeupSocket() == NULL) return B_ERROR;  // paranoia?
+   status_t ret;
+   if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+
+   if (GetOwnerWakeupSocket() == NULL) return B_BAD_OBJECT;  // paranoia?
    return StartInternalThread();
 }
 

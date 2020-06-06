@@ -105,14 +105,14 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
    if (size < staticBytesNeeded)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Got short buffer for step A (" UINT32_FORMAT_SPEC " < " UINT32_FORMAT_SPEC ")\n", size, staticBytesNeeded);
-      return B_ERROR;
+      return B_BAD_DATA;
    }
 
    const uint32 typeCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
    if (typeCode != PZG_HEARTBEAT_PACKET_TYPE_CODE)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Got unexpected heartbeat typecode " UINT32_FORMAT_SPEC "\n", typeCode);
-      return B_ERROR;
+      return B_BAD_DATA;
    }
 
    const uint32 peerIDFlatSize   = ZGPeerID::FlattenedSize();
@@ -129,14 +129,18 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
    /* skip the currently-unused reserved field, for now */                        buf += sizeof(uint16); size -= sizeof(uint16);
 
    _orderedPeersList.Clear();
-   if (_orderedPeersList.EnsureSize(opListItemCount) != B_NO_ERROR) return B_ERROR;
+
+   status_t ret;
+   if (_orderedPeersList.EnsureSize(opListItemCount).IsError(ret)) return ret;
+
    for (uint32 i=0; i<opListItemCount; i++)
    {
        PZGHeartbeatPeerInfoRef newPIRef = GetPZGHeartbeatPeerInfoFromPool();
-       if ((newPIRef() == NULL)||(newPIRef()->Unflatten(buf, size) != B_NO_ERROR)) return B_ERROR;
+       if (newPIRef() == NULL) RETURN_OUT_OF_MEMORY;
+       if (newPIRef()->Unflatten(buf, size).IsError(ret)) return ret;
 
        const uint32 actualPISize = newPIRef()->FlattenedSize();
-       if (actualPISize > size) return B_ERROR;  // wtf?
+       if (actualPISize > size) return B_BAD_DATA;  // wtf?
        buf  += actualPISize;
        size -= actualPISize;
 
@@ -148,10 +152,10 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
       if (attribBufSize > size)
       {
          LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  attribBufSize too large!  (" UINT32_FORMAT_SPEC " > " UINT32_FORMAT_SPEC ")\n", attribBufSize, size);
-         return B_ERROR;
+         return B_BAD_DATA;
       }
       _peerAttributesBuf = GetByteBufferFromPool(attribBufSize, buf);
-      if (_peerAttributesBuf() == NULL) return B_ERROR;
+      if (_peerAttributesBuf() == NULL) RETURN_OUT_OF_MEMORY;
    }
    else _peerAttributesBuf.Reset();
 

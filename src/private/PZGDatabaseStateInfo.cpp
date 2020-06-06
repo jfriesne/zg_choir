@@ -37,7 +37,7 @@ void PZGDatabaseStateInfo :: Flatten(uint8 *buffer) const
 
 status_t PZGDatabaseStateInfo :: Unflatten(const uint8 *buf, uint32 size)
 {
-   if (size < FlattenedSize()) return B_ERROR;
+   if (size < FlattenedSize()) return B_BAD_DATA;
 
    _currentDatabaseStateID = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf)); buf += sizeof(uint64);
    _oldestDatabaseIDInLog  = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf)); buf += sizeof(uint64);

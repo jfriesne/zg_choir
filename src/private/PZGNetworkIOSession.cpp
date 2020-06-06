@@ -70,11 +70,12 @@ public:
    {
       if (size >= FlattenedSize())
       {
-         if (_peerID.Unflatten(buffer, size) != B_NO_ERROR) return B_ERROR;
+         status_t ret;
+         if (_peerID.Unflatten(buffer, size).IsError(ret)) return ret;
          _messageID = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer+_peerID.FlattenedSize()));
          return B_NO_ERROR;
       }
-      else return B_ERROR;
+      else return B_BAD_DATA;
    }
 
    uint32 HashCode() const {return CalculateChecksum();}
@@ -181,26 +182,27 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
 status_t PZGNetworkIOSession :: AttachedToServer()
 {
    PZGUnicastSessionFactoryRef unicastTCPFactoryRef(newnothrow PZGUnicastSessionFactory(this));
-   if (unicastTCPFactoryRef() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
+   if (unicastTCPFactoryRef() == NULL) RETURN_OUT_OF_MEMORY;
 
+   status_t ret;
    uint16 tcpAcceptPort;
-   if (PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort) != B_NO_ERROR) return B_ERROR;
+   if (PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort).IsError(ret)) return ret;
 
    _hbSettings.SetRef(newnothrow PZGHeartbeatSettings(_peerSettings, _localPeerID, tcpAcceptPort));
-   if (_hbSettings() == NULL) {WARN_OUT_OF_MEMORY; (void) RemoveAcceptFactory(tcpAcceptPort); return B_ERROR;}
+   if (_hbSettings() == NULL) {(void) RemoveAcceptFactory(tcpAcceptPort); RETURN_OUT_OF_MEMORY;}
    LogTime(MUSCLE_LOG_DEBUG, "This peer's ZGPeerID is:  [%s]\n", GetLocalPeerID().ToString()());
 
    DetectNetworkConfigChangesSessionRef dnccSessionRef(newnothrow DetectNetworkConfigChangesSession);
-   if (dnccSessionRef() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
-   if (AddNewSession(dnccSessionRef) != B_NO_ERROR) 
+   if (dnccSessionRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (AddNewSession(dnccSessionRef).IsError(ret))
    {
-      LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession!\n");
+      LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession! [%s]\n", ret());
       ShutdownChildSessions(); 
-      return B_ERROR;
+      return ret;
    }
    _dnccSession = dnccSessionRef;
 
-   if (SetupHeartbeatSession() != B_NO_ERROR) {ShutdownChildSessions(); return B_ERROR;}
+   if (SetupHeartbeatSession().IsError(ret)) {ShutdownChildSessions(); return ret;}
 
    return PZGThreadedSession::AttachedToServer();
 }
@@ -208,11 +210,13 @@ status_t PZGNetworkIOSession :: AttachedToServer()
 status_t PZGNetworkIOSession :: SetupHeartbeatSession()
 {
    PZGHeartbeatSessionRef hbSessionRef(newnothrow PZGHeartbeatSession(_hbSettings, this));
-   if (hbSessionRef() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
-   if (AddNewSession(hbSessionRef) != B_NO_ERROR) 
+   if (hbSessionRef() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if (AddNewSession(hbSessionRef).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add heartbeat session!\n");
-      return B_ERROR;
+      return ret;
    }
    _hbSession = hbSessionRef;
    return B_NO_ERROR;
@@ -533,14 +537,15 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & 
          if (iter.GetKey() == GetLocalPeerID()) continue;
       }
       
-      if (SendUnicastMessageToPeer(iter.GetKey(), msg) != B_NO_ERROR) return B_ERROR;
+      status_t ret;
+      if (SendUnicastMessageToPeer(iter.GetKey(), msg).IsError(ret)) return ret;
    }
    return B_NO_ERROR;
 }
 
 status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID, const MessageRef & msg)
 {
-   if (_hbSettings() == NULL) return B_ERROR;  // paranoia
+   if (_hbSettings() == NULL) return B_BAD_OBJECT;  // paranoia
 
    if (peerID == GetLocalPeerID())
    {
@@ -645,14 +650,14 @@ void PZGNetworkIOSession :: UnicastMessageReceivedFromPeer(const ZGPeerID & remo
 
 status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
 {
-   if (_hbSettings() == NULL) return B_ERROR;  // paranoia
+   if (_hbSettings() == NULL) return B_BAD_OBJECT;  // paranoia
 
    const ZGPeerID & peerID = ubok.GetTargetPeerID();
    if (peerID == GetLocalPeerID())
    {
       // I don't think there is any reason to ever want to do this, so I'm not going to implement it for now --jaf
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::RequestBackOrderFromSeniorPeer:  Requesting a back order from myself isn't implemented, and shouldn't be necessary.\n");
-      return B_ERROR;
+      return B_UNIMPLEMENTED;
    }
    else
    {

@@ -31,7 +31,7 @@ status_t ZGDatabasePeerSession :: AttachedToServer()
       else
       {
          LogTime(MUSCLE_LOG_CRITICALERROR, "ZGDatabasePeerSession::AttachedToServer:  CreateDatabaseObject() failed for database #" UINT32_FORMAT_SPEC ", aborting startup!\n", i);
-         return B_ERROR;
+         return B_LOGIC_ERROR;
       }
    }
 

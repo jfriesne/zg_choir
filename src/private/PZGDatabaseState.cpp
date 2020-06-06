@@ -41,8 +41,12 @@ void PZGDatabaseState :: ScheduleLogContentsRescan()
 
 status_t PZGDatabaseState :: AddDatabaseUpdateToUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp)
 {
+   if (dbUp() == NULL) return B_BAD_ARGUMENT;
+
    const bool logWasEmpty = _updateLog.IsEmpty();
-   if ((dbUp() == NULL)||(_updateLog.Put(dbUp()->GetUpdateID(), dbUp) != B_NO_ERROR)) return B_ERROR;
+
+   status_t ret;
+   if (_updateLog.Put(dbUp()->GetUpdateID(), dbUp).IsError(ret)) return ret;
 
    const ConstByteBufferRef & payloadBuf = dbUp()->GetPayloadBuffer();
    if (payloadBuf()) _totalPayloadBytesInLog += payloadBuf()->GetNumBytes();
@@ -115,8 +119,10 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
       case PZG_PEER_COMMAND_RESET_SENIOR_DATABASE:
       {
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_RESET, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) return B_ERROR;
-         if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
+         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
+
+         status_t ret;
+         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
 
          const uint64 startTime = GetRunTime64();
          {
@@ -134,32 +140,28 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          if (userDBStateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to replace senior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_ERROR;
+            return B_BAD_DATA;
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) return B_ERROR;
+         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
 
-         if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
+         status_t ret;
+         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
 
          const uint64 startTime = GetRunTime64();
-         status_t ret;
          {
             NestCountGuard ncg(_inSeniorDatabaseUpdate);
             ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
          }
      
-         if (ret.IsOK())
-         {
-            SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg);
-            return B_NO_ERROR;
-         }
+         if (ret.IsOK()) SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg);
          else
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state! [%s]\n", _whichDatabase, ret());
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
-            return B_ERROR;
          }
+         return ret;
       }
       break;
 
@@ -169,13 +171,14 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          if (userDBUpdateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update senior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_ERROR;
+            return B_BAD_DATA;
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_UPDATE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) return B_ERROR;
+         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
 
-         if (AddDatabaseUpdateToUpdateLog(dbUp) != B_NO_ERROR) return B_ERROR;
+         status_t ret;
+         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
 
          const uint64 startTime = GetRunTime64();
          ConstMessageRef juniorMsg;
@@ -193,7 +196,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state!\n", _whichDatabase);
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
-            return B_ERROR;
+            return B_LOGIC_ERROR;
          }
       }
       break;
@@ -202,16 +205,20 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
       {
          if (optDBUp())
          {
-            if (AddDatabaseUpdateToUpdateLog(optDBUp) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  Unable to add junior update to update log!\n");
+            status_t ret;
+            if (AddDatabaseUpdateToUpdateLog(optDBUp).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  Unable to add junior update to update log! [%s]\n", ret());
+            return ret;
          } 
          else LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  No PZGDatabaseUpdate provided in Message " UINT32_FORMAT_SPEC "\n", msg()->what);
       }
-      return B_ERROR;
+      break;
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  Unknown what code in Message " UINT32_FORMAT_SPEC "\n", msg()->what);
-      return B_ERROR;
+      break;
    }
+
+   return B_UNIMPLEMENTED;
 }
 
 void PZGDatabaseState :: Pulse(const PulseArgs & args)
@@ -334,12 +341,13 @@ status_t PZGDatabaseState :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackO
 {
    if (_backorders.ContainsKey(ubok)) return B_NO_ERROR;  // paranoia:  it's already on order, no need to ask again
 
-   if (_backorders.PutWithDefault(ubok) == B_NO_ERROR)
+   status_t ret;
+   if (_backorders.PutWithDefault(ubok).IsOK(ret))
    {
-      if (_master->RequestBackOrderFromSeniorPeer(ubok) == B_NO_ERROR) return B_NO_ERROR;
+      if (_master->RequestBackOrderFromSeniorPeer(ubok).IsOK(ret)) return B_NO_ERROR;
       (void) _backorders.Remove(ubok);  // roll back!
    }
-   return B_ERROR;
+   return ret;
 }
 
 status_t PZGDatabaseState :: RequestFullDatabaseResendFromSeniorPeer()
@@ -359,16 +367,19 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdate(const PZGDatabaseUpdate
    {
       // This should be unnecessary since the calling code's logic should have already guaranteed this, but I'm paranoid
       LogTime(MUSCLE_LOG_ERROR, "Error, junior update #" UINT64_FORMAT_SPEC " isn't the right update to advance current state " UINT64_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC "\n", _dbChecksum, _whichDatabase, dbUp.GetPreUpdateDBChecksum(), newDatabaseStateID);
-      return B_ERROR;
+      return B_BAD_OBJECT;
    }
    if (_dbChecksum != dbUp.GetPreUpdateDBChecksum())
    {
       LogTime(MUSCLE_LOG_ERROR, "Error, DB checksum " UINT32_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC " doesn't match required pre-update DB checksum " UINT32_FORMAT_SPEC " for junior update #" UINT64_FORMAT_SPEC "\n", _dbChecksum, _whichDatabase, dbUp.GetPreUpdateDBChecksum(), newDatabaseStateID);
       String dbContents = _master->GetLocalDatabaseContentsAsString(_whichDatabase);
       if (dbContents.HasChars()) printf("Mismatched Local pre-update state was:\n%s\n", dbContents());
-      return B_ERROR;
+      return B_BAD_OBJECT;
    }
-   if (JuniorExecuteDatabaseUpdateAux(dbUp) != B_NO_ERROR) return B_ERROR;
+
+   status_t ret;
+   if (JuniorExecuteDatabaseUpdateAux(dbUp).IsError(ret)) return ret;
+
    if (_dbChecksum != dbUp.GetPostUpdateDBChecksum())
    {
       LogTime(MUSCLE_LOG_ERROR, "Error, DB checksum " UINT32_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC " doesn't match required post-update DB checksum " UINT32_FORMAT_SPEC " for junior update #" UINT64_FORMAT_SPEC "\n", _dbChecksum, _whichDatabase, dbUp.GetPostUpdateDBChecksum(), newDatabaseStateID);
@@ -376,7 +387,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdate(const PZGDatabaseUpdate
       if (dbContents.HasChars()) printf("Mismatched Local post-update state was:\n%s\n", dbContents());
 
       _printDatabaseStatesComparisonOnNextReplace = true;  // so we can more easily debug what went wrong
-      return B_ERROR;
+      return B_BAD_OBJECT;
    }
 
    _localDatabaseStateID = newDatabaseStateID;
@@ -394,7 +405,8 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdat
       if (dbStr.HasChars()) printf("Contents of database #" UINT32_FORMAT_SPEC " before the DB-replace are:\n\n%s\n", _whichDatabase, dbStr());
    }
 
-   if (JuniorExecuteDatabaseUpdateAux(dbUp) != B_NO_ERROR) return B_ERROR;
+   status_t ret;
+   if (JuniorExecuteDatabaseUpdateAux(dbUp).IsError(ret)) return ret;
 
    if (doPrints)
    {
@@ -407,7 +419,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdat
    if (_dbChecksum != dbUp.GetPostUpdateDBChecksum())
    {
       LogTime(MUSCLE_LOG_ERROR, "Error, DB checksum " UINT32_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC " doesn't match required post-replace DB checksum " UINT32_FORMAT_SPEC " for junior replace #" UINT64_FORMAT_SPEC "\n", _dbChecksum, _whichDatabase, dbUp.GetPostUpdateDBChecksum(), newDatabaseStateID);
-      return B_ERROR;
+      return B_BAD_OBJECT;
    }
 
    _localDatabaseStateID = newDatabaseStateID;
@@ -432,7 +444,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          if (userDBStateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message available to replace junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_ERROR;
+            return B_BAD_OBJECT;
          }
 
          status_t ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
@@ -446,17 +458,17 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          if (userDBUpdateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_ERROR;
+            return B_BAD_OBJECT;
          }
 
-         status_t ret = _master->JuniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
+         const status_t ret = _master->JuniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
          dbUp.UncachePayloadBufferAsMessage();  // might as well free up the memory, now that we've executed it we won't need the Message again
          return ret;
       }
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::JuniorExecuteDatabaseUpdateAux:  Unknown update type code " UINT32_FORMAT_SPEC "\n", dbUp.GetUpdateType());
-      return B_ERROR;
+      return B_UNIMPLEMENTED;
    }
 }
 

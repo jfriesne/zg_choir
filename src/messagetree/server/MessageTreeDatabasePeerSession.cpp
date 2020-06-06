@@ -359,7 +359,7 @@ status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, 
    }
 
    LogTime(MUSCLE_LOG_CRITICALERROR, "GetUnusedNodeID():  Could not find available child ID for node path [%s]!\n", path());
-   return B_ERROR;
+   return B_ERROR("Node IDs exhausted");
 }
 
 ServerSideMessageTreeSession * MessageTreeDatabasePeerSession :: GetActiveServerSideMessageTreeSession() const

@@ -141,11 +141,10 @@ int RunFridgeServerProcess(const char * systemName)
    // This object implements the standard MUSCLE event loop and network services
    ReflectServer server;
 
-   // Since we want to be able to run multiple servers at once, we'll keep trying to bind to a port until
-   // we find one that's open.
+   // Bind to a TCP port to accept incoming connections on
    status_t ret;
    uint16 acceptPort;
-   while(server.PutAcceptFactory(0, ReflectSessionFactoryRef(&sssFactory, false), invalidIP, &acceptPort).IsError(ret))
+   if (server.PutAcceptFactory(0, ReflectSessionFactoryRef(&sssFactory, false), invalidIP, &acceptPort).IsError(ret))
    {
       LogTime(MUSCLE_LOG_WARNING, "Couldn't bind to a TCP port to accept incoming connections, exiting!\n");
       return exitCode;

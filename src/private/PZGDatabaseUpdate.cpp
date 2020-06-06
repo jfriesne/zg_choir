@@ -105,24 +105,26 @@ void PZGDatabaseUpdate :: Flatten(uint8 *buffer) const
 
 status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
 {
-   if (size < FlattenedSizeNotIncludingPayload()) return B_ERROR;  // buffer is too short for us to use!
+   if (size < FlattenedSizeNotIncludingPayload()) return B_BAD_DATA;  // buffer is too short for us to use!
 
    const uint32 typeCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
    if (typeCode != PZG_DATABASE_UPDATE_TYPE_CODE)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdate::Unflatten():  Got unexpected update typecode " UINT32_FORMAT_SPEC "\n", typeCode);
-      return B_ERROR;
+      return B_BAD_DATA;
    }
 
    _updateBuf.Reset();
    _updateMsg.Reset();
+
+   status_t ret;
 
    _updateType = *buf++; size--;
    (void) buf++;         size--;  // skip the reserved/padding byte
    _databaseIndex           = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    _seniorElapsedTimeMillis = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    /* reserved 16-bit field is here; maybe we'll do something with it someday */ buf += sizeof(uint16); size -= sizeof(uint16);
-   if (_sourcePeerID.Unflatten(buf, size) != B_NO_ERROR) return B_ERROR;         /* buf/size advancement on next line to avoid compiler warning */
+   if (_sourcePeerID.Unflatten(buf, size).IsError(ret)) return ret;              /* buf/size advancement on next line to avoid compiler warning */
                                                                                  buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
    _updateID                = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
    _preUpdateDBChecksum     = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
@@ -130,19 +132,19 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    const uint32 chk         = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
 
    const uint32 dataSize = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf));    buf += sizeof(uint32); size -= sizeof(uint32);
-   if (size < dataSize) return B_ERROR;  // truncated buffer, oh no!
+   if (size < dataSize) return B_BAD_DATA;  // truncated buffer, oh no!
 
    if (dataSize > 0)  // 0 data is taken to mean a NULL/empty buffer (we don't distinguish between the two)
    {
       _updateBuf = GetByteBufferFromPool(dataSize, buf);
-      if (_updateBuf() == NULL) return B_ERROR;
+      if (_updateBuf() == NULL) RETURN_OUT_OF_MEMORY;
    }
 
    const uint32 myChk = CalculateChecksum();
    if (chk != myChk)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdate::Unflatten():  Bad checksum!  Expected " UINT32_FORMAT_SPEC", got " UINT32_FORMAT_SPEC "\n", myChk, chk);
-      return B_ERROR;
+      return B_BAD_DATA;
    }
 
    return B_NO_ERROR;

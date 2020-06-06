@@ -60,15 +60,17 @@ void DiscoveryServerSession :: NetworkInterfacesChanged(const Hashtable<String, 
 status_t DiscoveryServerSession :: AttachedToServer()
 {
    _watchInterfacesSession.SetRef(newnothrow DiscoveryDetectNetworkConfigChangesSession(this));
-   if (_watchInterfacesSession() == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
-   if (AddNewSession(_watchInterfacesSession) != B_NO_ERROR)
+   if (_watchInterfacesSession() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if (AddNewSession(_watchInterfacesSession).IsError(ret))
    {
-      LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession:  Error adding interfaces-change-notifier session!\n");
+      LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession:  Error adding interfaces-change-notifier session! [%s]\n", ret());
       _watchInterfacesSession.Reset();
    }
 
    _receiveBuffer = GetByteBufferFromPool(2048);
-   return (_receiveBuffer()) ? AbstractReflectSession::AttachedToServer() : B_ERROR;
+   return _receiveBuffer() ? AbstractReflectSession::AttachedToServer() : B_OUT_OF_MEMORY;
 }
 
 void DiscoveryServerSession :: AboutToDetachFromServer()
