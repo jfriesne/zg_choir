@@ -54,7 +54,7 @@ public:
             if (dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()()) != NULL) numConnectedFridgeClients++;
 
          // Have FridgeServers with lots of connected clients respond a bit slower, so that new FridgeClients will tend
-         // to connect to the less-loaded FridgeServers to encoursage some rough load-balancing.
+         // to connect to the less-loaded FridgeServers to encourage some rough load-balancing.
          ret = muscleClamp((int64) numConnectedFridgeClients*MillisToMicros(10), (int64)0, (int64)MillisToMicros(200));
       }
       return ret;
