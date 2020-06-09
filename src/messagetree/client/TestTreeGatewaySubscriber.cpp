@@ -51,7 +51,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'p':
       {
          const String pingTag = tok();
-         if (PingTreeServer(pingTag).IsOK(ret)) 
+         if (PingTreeLocalPeer(pingTag).IsOK(ret)) 
          {
             LogTime(MUSCLE_LOG_INFO, "Sent server-ping with tag [%s]\n", pingTag());
          }
@@ -199,9 +199,9 @@ void TestTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path,
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), removedAtIndex, nodeName());
 }
 
-void TestTreeGatewaySubscriber :: TreeServerPonged(const String & tag)
+void TestTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeServerPonged(%s)\n", tag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeLocalPeerPonged(%s)\n", tag());
 }
 
 void TestTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)

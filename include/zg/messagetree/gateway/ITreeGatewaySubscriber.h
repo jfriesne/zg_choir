@@ -67,11 +67,11 @@ public:
      */
    virtual void TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName) {(void) nodePath; (void) removedAtIndex; (void) nodeName;}
 
-   /** Called when a "pong" comes back from the server (in response to a previous call to PingTreeServer()).
-     * @param tag the tag-string that you had previously passed to PingTreeServer().
+   /** Called when a "pong" comes back from the server this client is directly connected to (in response to a previous call to PingTreeLocalPeer()).
+     * @param tag the tag-string that you had previously passed to PingTreeLocalPeer().
      * Default implementation is a no-op.
      */
-   virtual void TreeServerPonged(const String & tag) {(void) tag;}
+   virtual void TreeLocalPeerPonged(const String & tag) {(void) tag;}
 
    /** Called when a "pong" comes back from the senior peer (in response to a previous call to PingSeniorPeer()).
      * @param tag the tag-string that was previously passed to PingSeniorPeer().
@@ -188,12 +188,12 @@ protected:
      */
    virtual status_t RequestMoveTreeIndexEntry(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
 
-   /** Sends a "Ping" message to the local server.
-     * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding TreeServerPonged() callback.
+   /** Sends a "Ping" message to the server this client is directly connected to.
+     * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding TreeLocalPeerPonged() callback.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t PingTreeServer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t PingTreeLocalPeer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Sends a "Ping" message to the senior peer.  This Ping message will go through the entire ZG-database-update meat-grinder before 
      * coming back to you in the form of a call to TreeSeniorPeerPonged(), which is useful if you are trying to synchronize your actions

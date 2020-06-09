@@ -177,17 +177,17 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITree
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
-   return PingServerAux(tag, -1, flags);
+   return PingLocalPeerAux(tag, -1, flags);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
 {
-   return PingServerAux(tag, whichDB, flags);
+   return PingLocalPeerAux(tag, whichDB, flags);
 }
 
-status_t ClientSideNetworkTreeGateway :: PingServerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: PingLocalPeerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_PING);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
@@ -286,7 +286,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       {
          const int32 whichDB = msg()->GetInt32(NTG_NAME_DBIDX, -1);
          if (whichDB >= 0) (void) PingTreeSeniorPeer(tag, whichDB, flags);
-                      else (void) PingTreeServer(    tag,          flags);
+                      else (void) PingTreeLocalPeer( tag,          flags);
       }
       break;
 
@@ -347,7 +347,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 wha
    if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, idx).IsOK())&&(msg()->CAddString(NTG_NAME_NAME, nodeName).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeServerPonged(const String & tag)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
@@ -388,7 +388,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
       {
          const int32 dbIdx = msg()->GetInt32(NTG_NAME_DBIDX, -1);
          if (dbIdx >= 0) TreeSeniorPeerPonged(tag, dbIdx);
-                    else TreeServerPonged(tag);
+                    else TreeLocalPeerPonged(tag);
       }
       break;
 
@@ -484,7 +484,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
       break;
 
       case PR_RESULT_PONG:
-         TreeServerPonged(msg()->GetString(NTG_NAME_TAG));
+         TreeLocalPeerPonged(msg()->GetString(NTG_NAME_TAG));
       break;
 
       default:

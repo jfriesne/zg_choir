@@ -28,7 +28,7 @@ protected:
    virtual status_t TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber *, const String &, const String *, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
-   virtual status_t TreeGateway_PingServer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
+   virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}

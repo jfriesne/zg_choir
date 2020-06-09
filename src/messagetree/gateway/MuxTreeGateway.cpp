@@ -160,9 +160,9 @@ status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * 
    return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags, optBefore);
 }
 
-status_t MuxTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
+status_t MuxTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
-   return _isConnected ? ITreeGatewaySubscriber::PingTreeServer(PrependRegistrationIDPrefix(calledBy, tag), flags) : B_BAD_OBJECT;
+   return _isConnected ? ITreeGatewaySubscriber::PingTreeLocalPeer(PrependRegistrationIDPrefix(calledBy, tag), flags) : B_BAD_OBJECT;
 }
 
 status_t MuxTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
@@ -260,7 +260,7 @@ void MuxTreeGateway :: DoIndexNotificationAux(ITreeGatewaySubscriber * sub, cons
    }
 }
 
-void MuxTreeGateway :: TreeServerPonged(const String & tag)
+void MuxTreeGateway :: TreeLocalPeerPonged(const String & tag)
 {
    if (tag.StartsWith("obss:"))
    {
@@ -277,7 +277,7 @@ void MuxTreeGateway :: TreeServerPonged(const String & tag)
    {
       String suffix;
       ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
-      if (s) s->TreeServerPonged(suffix);
+      if (s) s->TreeLocalPeerPonged(suffix);
    }
 }
 
@@ -356,9 +356,9 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
       }
 
       status_t ret;
-      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeServer(obss.Prepend("obss:")).IsError(ret))) return ret;  // mark the beginning of our returned results
+      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeLocalPeer(obss.Prepend("obss:")).IsError(ret))) return ret;  // mark the beginning of our returned results
       if (ITreeGatewaySubscriber::AddTreeSubscription(subscriptionPath, sendFilter, flags).IsError(ret))   return ret;
-      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeServer("obss:").IsError(ret)))               return ret;  // mark the end of our returned results
+      if ((obss.HasChars())&&(ITreeGatewaySubscriber::PingTreeLocalPeer("obss:").IsError(ret)))               return ret;  // mark the end of our returned results
       return ret;
    }
    else return ITreeGatewaySubscriber::RemoveTreeSubscription(subscriptionPath, ConstQueryFilterRef());

@@ -160,9 +160,9 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITr
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false) TreeServerPonged(tag);
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false) TreeLocalPeerPonged(tag);
    return B_NO_ERROR;
 }
 

@@ -48,9 +48,9 @@ status_t ITreeGatewaySubscriber :: RequestMoveTreeIndexEntry(const String & path
    return GetGateway()->TreeGateway_RequestMoveIndexEntry(this, path, optBefore, optFilterRef, flags);
 }
 
-status_t ITreeGatewaySubscriber :: PingTreeServer(const String & tag, TreeGatewayFlags flags) 
+status_t ITreeGatewaySubscriber :: PingTreeLocalPeer(const String & tag, TreeGatewayFlags flags) 
 {
-   return GetGateway()->TreeGateway_PingServer(this, tag, flags);
+   return GetGateway()->TreeGateway_PingLocalPeer(this, tag, flags);
 }
 
 status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32 whichDB, TreeGatewayFlags flags) 

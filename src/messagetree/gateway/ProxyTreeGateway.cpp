@@ -75,9 +75,9 @@ status_t ProxyTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubsc
    return ITreeGatewaySubscriber::RequestMoveTreeIndexEntry(path, optBefore, optFilterRef, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_PingServer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
 {
-   return ITreeGatewaySubscriber::PingTreeServer(tag, flags);
+   return ITreeGatewaySubscriber::PingTreeLocalPeer(tag, flags);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, uint32 whichDB, TreeGatewayFlags flags)
@@ -142,9 +142,9 @@ void ProxyTreeGateway :: TreeNodeIndexEntryRemoved(const String & nodePath, uint
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryRemoved(nodePath, removedAtIndex, nodeName);
 }
 
-void ProxyTreeGateway :: TreeServerPonged(const String & tag)
+void ProxyTreeGateway :: TreeLocalPeerPonged(const String & tag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeServerPonged(tag);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeLocalPeerPonged(tag);
 }
 
 void ProxyTreeGateway :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
