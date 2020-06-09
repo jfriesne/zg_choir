@@ -66,6 +66,26 @@ protected:
      */
    Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath) const;
 
+   /** Called after an ITreeGatewaySubscriber somewhere has called SendMessageToTreeSeniorPeer().
+     * @param fromPeerID the ID of the ZGPeer that the subscriber is directly connected to
+     * @param payload the Message that the subscriber sent to us
+     * @param whichDB the database-object index that the subscriber indicated the Message is related to
+     * @param tag a tag-string that can be used to route replies back to the originating subscriber, if desired.
+     * @note Default implementation just calls through to the MessageReceivedFromTreeGatewaySubscriber() method of the
+     *       specified MessageTreeDatabaseObject, or logs an error message if the specified MessageTreeDatabaseObject doesn't exist.
+     */
+   virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, uint32 whichDB, const String & tag);
+
+   /** Call this to send a Message back to an ITreeGatewaySubscriber (e.g. in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
+     * @param toPeerID the ID of the ZGPeer that the subscriber is directly connected to
+     * @param tag the tag-String to use to direct the Message to the correct subscriber (as was previously passed in to MessageReceivedFromTreeGatewaySubscriber())
+     * @param payload the Message to send to the subscriber
+     * @param optWhichDB optional index of the database-object that this reply is coming from.  
+     *                   Pass in -1 if the reply Message isn't meant to be associated with a particular database-object.
+     * @returns B_NO_ERROR on success, or an error code on failure.
+     */
+   status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload, int32 optWhichDB);
+
    // ZGPeerSession API implementation
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
 
@@ -81,6 +101,7 @@ protected:
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * calledBy, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
+   virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const MessageRef & msg, uint32 whichDB, const String & tag);
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
@@ -97,6 +118,7 @@ protected:
    // ZGPeerSession API implementation
    virtual ConstMessageRef SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg);
    virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg);
+   virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
 
 private:
    friend class MessageTreeDatabaseObject;

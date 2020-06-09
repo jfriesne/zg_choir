@@ -552,4 +552,15 @@ status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const
    return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, allowOverwriteData, allowCreateNode, quiet, addToIndex, optInsertBefore) : B_BAD_OBJECT;
 }
 
+void MessageTreeDatabaseObject :: MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag)
+{
+   LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject #" UINT32_FORMAT_SPEC ":  MessageReceivedFromTreeGatewaySubscriber():  Unhandled Message (what=" UINT32_FORMAT_SPEC ", fromPeerID=[%s], tag=[%s])\n", GetDatabaseIndex(), payload()->what, fromPeerID.ToString()(), tag());
+}
+
+status_t MessageTreeDatabaseObject :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload)
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->SendMessageToTreeGatewaySubscriber(toPeerID, tag, payload, GetDatabaseIndex()) : B_BAD_OBJECT;
+}
+
 }; // end namespace zg

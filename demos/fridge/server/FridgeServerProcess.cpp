@@ -6,9 +6,22 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "zg/messagetree/server/UndoStackMessageTreeDatabaseObject.h"
-#include "common/FridgeNameSpace.h"
+#include "common/FridgeConstants.h"
 
 namespace fridge {
+
+static const char * _magnetWordsList[] = {
+#include "common_words_list.txt"
+};
+
+static String GetNextRandomMagnetWord()
+{
+   static uint32 _nextMagnetWordIndex = 0;
+
+   const String ret = _magnetWordsList[_nextMagnetWordIndex];
+   _nextMagnetWordIndex = (_nextMagnetWordIndex+1)%ARRAYITEMS(_magnetWordsList);
+   return ret;
+}
 
 enum {
    FRIDGE_DB_PROJECT = 0,  // the project info (including undo/redo state, and the current state of the refrigerator-magnets is stored here under "project")
@@ -79,6 +92,29 @@ protected:
          status_t ret;
          if (SetDataNode("magnets", GetMessageFromPool()).IsError(ret)) LogTime(MUSCLE_LOG_CRITICALERROR, "MagnetsMessageTreeDatabaseObject::SetToDefaultState():  Couldn't set magnets node! [%s]\n", ret());
       }
+
+      virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag)
+      {
+         switch(payload()->what)
+         {
+            case FRIDGE_COMMAND_GETRANDOMWORD:
+            {
+               payload()->what = FRIDGE_REPLY_RANDOMWORD;  // we'll just send the command-Message back as the reply, so that the caller gets back any fields he sent us
+
+               status_t ret;
+               if ((payload()->AddString(FRIDGE_NAME_WORD, GetNextRandomMagnetWord()).IsError(ret)) ||
+                   (SendMessageToTreeGatewaySubscriber(fromPeerID, tag, payload).IsError(ret)))
+               {
+                  LogTime(MUSCLE_LOG_ERROR, "MagnetsMessageTreeDatabaseObject:  Error sending random-word reply to subscriber at [%s] [%s] [%s]\n", fromPeerID.ToString()(), tag(), ret());
+               }
+            }
+            break;
+
+            default:
+               UndoStackMessageTreeDatabaseObject::MessageReceivedFromTreeGatewaySubscriber(fromPeerID, payload, tag);
+            break;
+         }
+      }
    };
 
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
@@ -120,6 +156,12 @@ private:
 int RunFridgeServerProcess(const char * systemName)
 {
    int exitCode = 10;
+
+   // shuffle the words list into a random order
+   {
+      unsigned seed = time(NULL);
+      for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) muscleSwap(_magnetWordsList[i], _magnetWordsList[rand_r(&seed)%ARRAYITEMS(_magnetWordsList)]);
+   }
 
    // This object is required by the MUSCLE library;
    // it does various system-specific startup and shutdown tasks

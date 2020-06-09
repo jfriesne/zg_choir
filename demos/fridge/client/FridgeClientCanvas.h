@@ -30,6 +30,7 @@ public:
    // ITreeGatewaySubscriber API
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
+   virtual void MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload);
 
    /** Uploads a request to the server to clear all the magnets from the fridge */
    void ClearMagnets();
@@ -43,15 +44,12 @@ signals:
 private:
    String GetMagnetAtPoint(const QPoint & pt) const;
    status_t UploadMagnetState(const String & optNodeID, const MagnetState * optMagnetState, bool isInterimUpdate);
-   String GetNextMagnetWord();
    void UpdateDraggedMagnetPosition(QPoint mousePos, bool isInterimUpdate);
+   void UploadNewMagnet(int x, int y, const String & word);
 
    Hashtable<String, MagnetState> _magnets;
    String _draggingID;  // if non-empty, we're in the middle of moving a magnet
    QPoint _dragDelta;   // mouse-click position minus upper-left position
-
-   Queue<String> _magnetWords;
-   uint32 _nextMagnetWordIndex;
 
    bool _firstMouseMove;
 };

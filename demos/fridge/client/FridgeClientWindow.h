@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 
-#include "common/FridgeNameSpace.h"
+#include "common/FridgeConstants.h"
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/client/SystemDiscoveryClient.h"
 #include "zg/messagetree/client/MessageTreeClientConnector.h"

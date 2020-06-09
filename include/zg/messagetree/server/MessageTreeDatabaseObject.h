@@ -98,6 +98,22 @@ public:
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
+   /** Called after an ITreeGatewaySubscriber somewhere has called SendMessageToTreeSeniorPeer().
+     * @param fromPeerID the ID of the ZGPeer that the subscriber is directly connected to
+     * @param payload the Message that the subscriber sent to us
+     * @param tag a tag-string that can be used to route replies back to the originating subscriber, if desired.
+     * @note Default implementation just prints an error to the log saying that the Message wasn't handled.  
+     */
+   virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag);
+
+   /** Call this to send a Message back to an ITreeGatewaySubscriber (e.g. in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
+     * @param toPeerID the ID of the ZGPeer that the subscriber is directly connected to
+     * @param tag the tag-String to use to direct the Message to the correct subscriber (as was previously passed in to MessageReceivedFromTreeGatewaySubscriber())
+     * @param payload the Message to send to the subscriber
+     * @returns B_NO_ERROR on success, or an error code on failure.
+     */
+   virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload); 
+     
 protected:
    // IDatabaseObject API
    virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);

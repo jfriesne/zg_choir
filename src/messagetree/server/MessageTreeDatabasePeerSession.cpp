@@ -10,12 +10,16 @@ namespace zg
 
 enum {
    MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp' 
+   MTDPS_COMMAND_MESSAGETOSENIORPEER,
+   MTDPS_COMMAND_MESSAGEFROMSENIORPEER,
 };
 
 static const String MTDPS_NAME_TAG     = "mtp_tag";
 static const String MTDPS_NAME_SOURCE  = "mtp_src";
 static const String MTDPS_NAME_FLAGS   = "mtp_flg";
 static const String MTDPS_NAME_UNDOKEY = "mtp_key";
+static const String MTDPS_NAME_PAYLOAD = "mtp_pay";
+static const String MTDPS_NAME_WHICHDB = "mtp_dbi";
 
 MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSettings & zgPeerSettings) : ZGDatabasePeerSession(zgPeerSettings), ProxyTreeGateway(NULL), _muxGateway(this)
 {
@@ -173,10 +177,24 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    MessageRef seniorPingMsg = GetMessageFromPool(MTDPS_COMMAND_PINGSENIORPEER);
    if (seniorPingMsg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   status_t ret = seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag)
-                | seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID())
-                | seniorPingMsg()->CAddFlat(MTDPS_NAME_FLAGS,  flags);
+   const status_t ret = seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag)
+                      | seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID())
+                      | seniorPingMsg()->CAddFlat(MTDPS_NAME_FLAGS,  flags);
    return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, seniorPingMsg) : ret;
+}
+
+status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & msg, uint32 whichDB, const String & tag)
+{
+   if (GetSeniorPeerID().IsValid() == false) return B_ERROR("SendMessageToSeniorPeer:  Senior peer not available");
+
+   MessageRef seniorCommandMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSENIORPEER);
+   if (seniorCommandMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   const status_t ret = seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg)
+                      | seniorCommandMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())
+                      | seniorCommandMsg()->CAddInt32( MTDPS_NAME_WHICHDB, whichDB)
+                      | seniorCommandMsg()->CAddString(MTDPS_NAME_TAG,     tag);
+   return ret.IsOK() ? SendUnicastUserMessageToPeer(GetSeniorPeerID(), seniorCommandMsg) : ret;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
@@ -380,6 +398,66 @@ void MessageTreeDatabasePeerSession :: ServerSideMessageTreeSessionIsDetaching(S
       ClientDataMessageTreeDatabaseObject * clientDB = dynamic_cast<ClientDataMessageTreeDatabaseObject *>(GetDatabaseObject(i));
       if (clientDB) clientDB->ServerSideMessageTreeSessionIsDetaching(clientSession);
    }
+}
+
+void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
+{
+   switch(msg()->what)
+   {
+      case MTDPS_COMMAND_MESSAGETOSENIORPEER:
+         if (IAmTheSeniorPeer())
+         {
+            MessageRef payload          = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
+            const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
+            const uint32 whichDB        = msg()->GetInt32(MTDPS_NAME_WHICHDB);
+            const String & tag          = *(msg()->GetStringPointer(MTDPS_NAME_TAG, &GetEmptyString()));
+            if (payload())
+            {
+               MessageReceivedFromTreeGatewaySubscriber(sourcePeerID, payload, whichDB, tag);
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but I am not the senior peer!\n", GetLocalPeerID().ToString()()); 
+      break;
+
+      case MTDPS_COMMAND_MESSAGEFROMSENIORPEER:
+      {
+         MessageRef payload          = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
+         //const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
+         const uint32 whichDB        = msg()->GetInt32(MTDPS_NAME_WHICHDB);
+         const String & tag          = *(msg()->GetStringPointer(MTDPS_NAME_TAG, &GetEmptyString()));
+         if (payload())
+         {
+            MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
+      }
+      break;
+
+      default:
+         ZGDatabasePeerSession::MessageReceivedFromPeer(fromPeerID, msg);
+      break;
+   }
+}
+
+void MessageTreeDatabasePeerSession :: MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, uint32 whichDB, const String & tag)
+{
+   // Default implementation will try to pass the Message on to one of our Database objects
+   MessageTreeDatabaseObject * db = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(whichDB));
+   if (db) db->MessageReceivedFromTreeGatewaySubscriber(fromPeerID, payload, tag);
+      else LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::MessageReceivedFromTreeGatewaySubscriber:  Database #" UINT32_FORMAT_SPEC " is not a MessageTreeDatabaseObject!\n");
+}
+
+status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload, int32 optWhichDB)
+{
+   MessageRef replyMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGEFROMSENIORPEER);
+   if (replyMsg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   const status_t ret = replyMsg()->AddMessage(MTDPS_NAME_PAYLOAD, payload)
+                      | replyMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())
+                      | replyMsg()->CAddInt32( MTDPS_NAME_WHICHDB, optWhichDB)
+                      | replyMsg()->CAddString(MTDPS_NAME_TAG,     tag);
+   return ret.IsOK() ? SendUnicastUserMessageToPeer(toPeerID, replyMsg) : ret;
 }
 
 };  // end namespace zg

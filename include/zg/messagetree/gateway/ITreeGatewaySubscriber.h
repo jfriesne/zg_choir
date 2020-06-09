@@ -73,12 +73,20 @@ public:
      */
    virtual void TreeLocalPeerPonged(const String & tag) {(void) tag;}
 
-   /** Called when a "pong" comes back from the senior peer (in response to a previous call to PingSeniorPeer()).
-     * @param tag the tag-string that was previously passed to PingSeniorPeer().
+   /** Called when a "pong" comes back from the senior peer (in response to a previous call to PingTreeSeniorPeer()).
+     * @param tag the tag-string that was previously passed to PingTreeSeniorPeer().
      * @param whichDB index of the ZG database whose database-update mechanisms the senior-peer-ping had travelled through.
      * Default implementation is a no-op.
      */
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB) {(void) tag; (void) whichDB;}
+
+   /** Called when a Message is received from the Senior Peer (typically in response to our previous call to SendMessageToTreeSeniorPeer())
+     * @param optWhichDB index of the database the reply is coming from, or -1 if it is coming the the MessageTreePeerSession itself.
+     * @param tag the tag-String that we previously passed in to SendMessageToTreeSeniorPeer()
+     * @param payload the payload Message that the senior peer is sending to us.
+     * Default implementation is a no-op.
+     */
+   virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload) {(void) optWhichDB; (void) tag; (void) payload;}
 
    /** Called when the subtree-data Message comes back in response to a previous call to RequestTreeNodeSubtrees().
      * @param tag the tag-string that you had previously passed to RequestTreeNodeSubtrees()
@@ -204,6 +212,20 @@ protected:
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
    virtual status_t PingTreeSeniorPeer(const String & tag, uint32 whichDB = 0, TreeGatewayFlags flags = TreeGatewayFlags());
+
+   /** Sends a user-specified Message to the senior peer.  This Message will result in a call to the MessageReceivedFromSubscriber()
+     * callback-method the MessageTreeDatabasePeerSession object on the senior peer.  The default implementation of
+     * MessageReceivedFromSubscriber() will then forward the call to the appropriate MessageTreeDatabaseObject, based on (whichDB)
+     * @param msg the Message to send.
+     * @param whichDB which ZG database index to forward Message to.  Defaults to 0.
+     * @param tag optional arbitrary tag-string that will be passed back to any corresponding MessageReceivedFromTreeSeniorPeer() callbacks
+     *            that are later called on this object, if/when the senior peer replies to your Message.
+     * @returns B_NO_ERROR on success, or some other error value on failure.
+     * @note the default zg_choir server-side code doesn't do anything useful with the Messages it receives this way, so this
+     *       functionality is useful only when you've overridden MessageReceivedFromSubscriber() in a subclass on the server,
+     *       with some code that reacts appropriately to the incoming Messages.
+     */
+   virtual status_t SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB = 0, const String & tag = GetEmptyString());
 
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply

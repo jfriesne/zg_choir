@@ -25,6 +25,7 @@ enum {
    NTG_COMMAND_ENDSEQUENCE,
    NTG_COMMAND_UNDO,
    NTG_COMMAND_REDO,
+   NTG_COMMAND_MESSAGETOSENIORPEER,
 };
 
 // Reply-codes for Messages sent from server to client
@@ -35,6 +36,7 @@ enum {
    NTG_REPLY_INDEXENTRYREMOVED,
    NTG_REPLY_PONG,
    NTG_REPLY_SUBTREES,
+   NTG_REPLY_MESSAGEFROMSENIORPEER
 };
 
 static const String NTG_NAME_PATH        = "ntg_pth";
@@ -46,7 +48,6 @@ static const String NTG_NAME_MAXDEPTH    = "ntg_max";
 static const String NTG_NAME_BEFORE      = "ntg_b4";
 static const String NTG_NAME_INDEX       = "ntg_idx";
 static const String NTG_NAME_NAME        = "ntg_nam";
-static const String NTG_NAME_DBIDX       = "ntg_dbi";
 
 ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
    : ProxyTreeGateway(NULL)
@@ -193,9 +194,20 @@ status_t ClientSideNetworkTreeGateway :: PingLocalPeerAux(const String & tag, in
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
    status_t ret;
-   if (msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
-   if (msg()->CAddInt32(NTG_NAME_DBIDX, optWhichDB, -1).IsError(ret)) return ret;
-   return msg()->AddString(NTG_NAME_TAG, tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+   if (msg()->CAddFlat(     NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
+   if (msg()->CAddInt32(    NTG_NAME_INDEX, optWhichDB).IsError(ret)) return ret;
+   return msg()->CAddString(NTG_NAME_TAG,   tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+}
+
+status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & userMsg, uint32 whichDB, const String & tag)
+{
+   MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSENIORPEER);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if (msg()->AddMessage(   NTG_NAME_PAYLOAD, userMsg).IsError(ret)) return ret;
+   if (msg()->CAddInt32(    NTG_NAME_INDEX,   whichDB).IsError(ret)) return ret;
+   return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
@@ -284,9 +296,8 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
 
       case NTG_COMMAND_PING:
       {
-         const int32 whichDB = msg()->GetInt32(NTG_NAME_DBIDX, -1);
-         if (whichDB >= 0) (void) PingTreeSeniorPeer(tag, whichDB, flags);
-                      else (void) PingTreeLocalPeer( tag,          flags);
+         if (index >= 0) (void) PingTreeSeniorPeer(tag, index, flags);
+                    else (void) PingTreeLocalPeer( tag,      flags);
       }
       break;
 
@@ -311,6 +322,10 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       case NTG_COMMAND_ENDSEQUENCE:   (void) EndUndoSequence(  tag, index); break;
       case NTG_COMMAND_UNDO:          (void) RequestUndo(           index); break;
       case NTG_COMMAND_REDO:          (void) RequestRedo(           index); break;
+
+      case NTG_COMMAND_MESSAGETOSENIORPEER:
+         (void) SendMessageToTreeSeniorPeer(payload, index, tag);
+      break;
 
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!
@@ -356,7 +371,13 @@ void ServerSideNetworkTreeGatewaySubscriber :: TreeLocalPeerPonged(const String 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->AddInt32(NTG_NAME_DBIDX, whichDB).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, whichDB).IsOK())) SendOutgoingMessageToNetwork(msg);
+}
+
+void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
+{
+   MessageRef msg = GetMessageFromPool(NTG_REPLY_MESSAGEFROMSENIORPEER);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, whichDB).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
@@ -385,11 +406,12 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
       case NTG_REPLY_SUBTREES:           SubtreesRequestResultReturned(tag, payload); break;
 
       case NTG_REPLY_PONG:
-      {
-         const int32 dbIdx = msg()->GetInt32(NTG_NAME_DBIDX, -1);
-         if (dbIdx >= 0) TreeSeniorPeerPonged(tag, dbIdx);
-                    else TreeLocalPeerPonged(tag);
-      }
+         if (idx >= 0) TreeSeniorPeerPonged(tag, idx);
+                  else TreeLocalPeerPonged(tag);
+      break;
+
+      case NTG_REPLY_MESSAGEFROMSENIORPEER: 
+         MessageReceivedFromTreeSeniorPeer(idx, tag, payload);
       break;
 
       default:

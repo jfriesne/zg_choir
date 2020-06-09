@@ -29,6 +29,7 @@ public:
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
    virtual void TreeLocalPeerPonged(const String & tag);
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB);
+   virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeGatewayShuttingDown();

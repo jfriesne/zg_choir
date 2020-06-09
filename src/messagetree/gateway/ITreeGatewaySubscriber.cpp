@@ -58,6 +58,11 @@ status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32
    return GetGateway()->TreeGateway_PingSeniorPeer(this, tag, whichDB, flags);
 }
 
+status_t ITreeGatewaySubscriber :: SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB, const String & optTag) 
+{
+   return GetGateway()->TreeGateway_SendMessageToSeniorPeer(this, msg, whichDB, optTag);
+}
+
 status_t ITreeGatewaySubscriber :: BeginUndoSequence(const String & optSequenceLabel, uint32 whichDB)
 {
    return GetGateway()->TreeGateway_BeginUndoSequence(this, optSequenceLabel, whichDB);

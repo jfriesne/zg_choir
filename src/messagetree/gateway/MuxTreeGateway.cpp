@@ -170,6 +170,11 @@ status_t MuxTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * c
    return _isConnected ? ITreeGatewaySubscriber::PingTreeSeniorPeer(PrependRegistrationIDPrefix(calledBy, tag), whichDB, flags) : B_BAD_OBJECT;
 }
 
+status_t MuxTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const MessageRef & msg, uint32 whichDB, const String & tag)
+{
+   return _isConnected ? ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
+}
+
 // Begin ITreeGatewaySubscriber callback API
 
 void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & nodeMsg)
@@ -286,6 +291,13 @@ void MuxTreeGateway :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
    String suffix;
    ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
    if (s) s->TreeSeniorPeerPonged(suffix, whichDB);
+}
+
+void MuxTreeGateway :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
+{
+   String suffix;
+   ITreeGatewaySubscriber * s = ParseRegistrationIDPrefix(tag, suffix);
+   if (s) s->MessageReceivedFromTreeSeniorPeer(whichDB, suffix, payload);
 }
 
 void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
