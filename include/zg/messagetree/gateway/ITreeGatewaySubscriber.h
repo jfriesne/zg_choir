@@ -20,6 +20,7 @@ enum {
 DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);
 
 class ITreeGateway;
+class GatewaySubscriberUndoBatchGuard;
 
 /** Abstract base class for objects that want to connect to an ITreeGateway as downstream clients */
 class ITreeGatewaySubscriber : public IGatewaySubscriber<ITreeGateway>
@@ -261,6 +262,32 @@ protected:
 
 private:
    friend class ITreeGateway;
+   friend class GatewaySubscriberUndoBatchGuard;
+};
+
+/** RIAA stack-guard object to begin and end an ITreeGatewaySubscriber's Undo Batch at the appropriate times */
+class GatewaySubscriberUndoBatchGuard : public NotCopyable
+{
+public:
+   /**
+    * Constructor
+    * @param sub pointer to the subscriber object to call BeginUndo() on
+    */
+   GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* sub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _sub(sub), _label(label), _whichDB(whichDB)
+   {
+      _sub->BeginUndoSequence(label, whichDB);
+   }
+    
+   /**
+    * Destructor
+    * Calls EndUndoSequence on the subscriber object
+    */
+   ~GatewaySubscriberUndoBatchGuard() {_sub->EndUndoSequence(_label, _whichDB);}
+    
+private:
+   ITreeGatewaySubscriber * _sub;
+   const String & _label;
+   const uint32 _whichDB;
 };
 
 };  // end namespace zg
