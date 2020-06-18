@@ -286,7 +286,7 @@ public:
     
 private:
    ITreeGatewaySubscriber * _sub;
-   const String & _label;
+   const String _label;
    const uint32 _whichDB;
 };
 
