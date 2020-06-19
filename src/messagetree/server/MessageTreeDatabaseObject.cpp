@@ -461,7 +461,10 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
          sessionRelativePath += buf;
       }
 //printf("   SetDataNode [%s] -> %p (%s) (indexed=%i optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore?optBefore->Cstr():NULL);
-      return zsh->SetDataNode(sessionRelativePath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+      SetDataNodeFlags sdnFlags;
+      if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
+      if (flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)) sdnFlags.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
+      return zsh->SetDataNode(sessionRelativePath, optPayload, sdnFlags, optBefore);
    }
    else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(*path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
@@ -502,7 +505,9 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
    const String * path    = msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
    if (payload())
    {
-      return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(*path), true, false, MUSCLE_NO_LIMIT, NULL, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+      SetDataNodeFlags sdnFlags;
+      if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
+      return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(*path), true, sdnFlags);
    }
    else 
    {
@@ -546,10 +551,10 @@ MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeData
    return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());
 }
 
-status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, bool allowOverwriteData, bool allowCreateNode, bool quiet, bool addToIndex, const String *optInsertBefore)
+status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags, const String *optInsertBefore)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, allowOverwriteData, allowCreateNode, quiet, addToIndex, optInsertBefore) : B_BAD_OBJECT;
+   return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, flags, optInsertBefore) : B_BAD_OBJECT;
 }
 
 void MessageTreeDatabaseObject :: MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag)

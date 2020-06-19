@@ -29,7 +29,10 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    if (ret.IsError()) return ret;
 
    // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
-   return ssmts->SetDataNode(localPath, optPayload, true, true, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore);
+   SetDataNodeFlags sdnFlags;
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)) sdnFlags.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
+   return ssmts->SetDataNode(localPath, optPayload, sdnFlags, optBefore);
 }
 
 status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
@@ -42,7 +45,9 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String &
    if (ret.IsError()) return ret;
 
    // Upload the subtree in our local MUSCLE database also, so that we can retransmit it later if we need to
-   return ssmts->RestoreNodeTreeFromMessage(*valuesMsg(), localPath, true, false, MUSCLE_NO_LIMIT, NULL, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+   SetDataNodeFlags sdnFlags;
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
+   return ssmts->RestoreNodeTreeFromMessage(*valuesMsg(), localPath, true, sdnFlags);
 }
 
 status_t ClientDataMessageTreeDatabaseObject :: RequestDeleteNodes(const String & localPath, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)

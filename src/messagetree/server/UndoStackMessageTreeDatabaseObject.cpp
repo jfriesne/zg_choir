@@ -147,7 +147,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                if (mtdps->GetUnusedNodeID(undoNodePath, newNodeID).IsError(ret)) return ret;
 
                const String seqPath = undoNodePath + String("/I%1").Arg(newNodeID);
-               if (mtdps->SetDataNode(seqPath, seqPayload, true, true, false, true).IsError(ret)) return ret;
+               if (mtdps->SetDataNode(seqPath, seqPayload, SetDataNodeFlags(SETDATANODE_FLAG_ADDTOINDEX)).IsError(ret)) return ret;
 
                newClientPayload = seqPayload;  // for clients who just want to track the latest state by subscribing to their per-client node
             }
@@ -278,7 +278,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   if (mtdps->GetUnusedNodeID(destNodePath, newNodeID).IsError(ret)) return ret;
 
                   const String destSeqPath = destNodePath + String("/I%1").Arg(newNodeID);
-                  if (mtdps->SetDataNode(destSeqPath, payload, true, true, false, true).IsError(ret)) return ret;
+                  if (mtdps->SetDataNode(destSeqPath, payload, SetDataNodeFlags(SETDATANODE_FLAG_ADDTOINDEX)).IsError(ret)) return ret;
 
                   destClientNode->SetData(payload, mtdps, false);  // notify programs that are tracking the top of the dest-stack
                   return B_NO_ERROR;

@@ -3,6 +3,7 @@
 
 #include "zg/IDatabaseObject.h"
 #include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"  // for TreeGatewayFlags
+#include "reflector/StorageReflectSession.h"  // for SetDataNodeFlags
 #include "util/NestCount.h"
 
 namespace zg
@@ -173,15 +174,12 @@ protected:
    /** Pass-through to StorageReflectSession::SetDataNode() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.
      * @param dataMsgRef The value to set the node to
-     * @param allowOverwriteData Indicates whether existing node-data may be overwritten.  If false, the method will fail if the specified node already exists.
-     * @param allowCreateNode indicates whether new nodes may be created.  (If false, the method will fail if any node in the specified node path doesn't already exist)
-     * @param quiet If set to true, subscribers won't be updated regarding this change to the database.
-     * @param addToIndex If set to true, this node will be inserted under its parent as a new indexed node, rather than doing the regular add/replace bit.
+     * @param flags list of SETDATANODE_FLAG_* values to affect our behavior.  Defaults to no-bits-set.
      * @param optInsertBefore If (addToIndex) is true, this may be the name of the node to insert this new node before in the index.
      *                        If NULL, the new node will be appended to the end of the index.  If (addToIndex) is false, this argument is ignored.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, bool allowOverwriteData=true, bool allowCreateNode=true, bool quiet=false, bool addToIndex=false, const String *optInsertBefore=NULL); 
+   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String *optInsertBefore=NULL); 
 
    /** Pass-through to StorageReflectSession::RemoveDataNodes() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
