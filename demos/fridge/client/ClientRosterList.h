@@ -8,6 +8,8 @@
 
 namespace fridge {
 
+class FridgeChatView;
+
 /** This view shows a list of the currently-online clients' names */
 class ClientRosterList : public QListWidget, public ITreeGatewaySubscriber
 {
@@ -16,8 +18,9 @@ Q_OBJECT
 public:
    /** Constructor
      * @param connector the ITreeGateway we should register with and use for our database access
+     * @param fcv Pointer to the FridgeChatView that created us, just so we can get our local user's name from it when necessary
      */
-   ClientRosterList(ITreeGateway * connector);
+   ClientRosterList(ITreeGateway * connector, const FridgeChatView * fcv);
 
    /** Destructor */
    virtual ~ClientRosterList();
@@ -30,6 +33,8 @@ public:
 private slots:
    void SetUpdateDisplayPending() {_updateDisplayPending = true;}
    void FlushUpdateDisplay() {if (_updateDisplayPending) {_updateDisplayPending = false; UpdateDisplay();}}
+   void ShowContextMenu(const QPoint &);
+   void PingUser();
 
 private:
    void UpdateDisplay();
@@ -43,6 +48,9 @@ private:
    };
    OrderedValuesHashtable<String, MessageRef, CompareMessageRefFunctor> _clientRoster;
    bool _updateDisplayPending;
+
+   String _pingTargetPath;  // used during PingUser() calls
+   const FridgeChatView * _fcv;
 };
 
 }; // end namespace fridge

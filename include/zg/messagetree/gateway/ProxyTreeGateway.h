@@ -32,6 +32,7 @@ public:
    virtual void TreeLocalPeerPonged(const String & tag);
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB);
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload);
+   virtual void MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeGatewayShuttingDown();
@@ -58,6 +59,7 @@ protected:
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
    virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const MessageRef & msg, uint32 whichDB, const String & tag);
+   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const String & tag);
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);

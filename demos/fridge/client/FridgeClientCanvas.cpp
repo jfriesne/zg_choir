@@ -79,6 +79,7 @@ void FridgeClientCanvas :: MessageReceivedFromTreeSeniorPeer(int32 /*whichDB*/, 
          const Point p = payload()->GetPoint("pos");
          UploadNewMagnet(muscleRintf(p.x()), muscleRintf(p.y()), payload()->GetString(FRIDGE_NAME_WORD));
       }
+      break;
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "FridgeClientCanvas:  Unknown reply Message from server!\n");

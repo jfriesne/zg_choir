@@ -89,6 +89,16 @@ public:
      */
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload) {(void) optWhichDB; (void) tag; (void) payload;}
 
+   /** Called when a Message is received from another ITreeGatewaySubscriber.
+     * @param fromPath a string that you can pass to SendMessageToSubscriber() to send a reply back to the ITreeGatewaySubscriber that send this Message to you.
+     * @param payload the payload Message that the senior peer is sending to us.
+     * @param tag an optional arbitrary string that the sender included with this Message in order to help categorize it.
+     * Default implementation is a no-op.
+     */
+   virtual void MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag) {
+printf("m3 this=%p [%s]\n", this, typeid(*this).name());
+(void) fromPath; (void) payload; (void) tag;}
+
    /** Called when the subtree-data Message comes back in response to a previous call to RequestTreeNodeSubtrees().
      * @param tag the tag-string that you had previously passed to RequestTreeNodeSubtrees()
      * @param subtreeData a Message containing the subtree data, or a NULL Message if the query failed for some readon.
@@ -220,13 +230,31 @@ protected:
      * @param msg the Message to send.
      * @param whichDB which ZG database index to forward Message to.  Defaults to 0.
      * @param tag optional arbitrary tag-string that will be passed back to any corresponding MessageReceivedFromTreeSeniorPeer() callbacks
-     *            that are later called on this object, if/when the senior peer replies to your Message.
+     *            that are later called on this object, if/when the senior peer replies to your Message.  Defaults to an empty String.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      * @note the default zg_choir server-side code doesn't do anything useful with the Messages it receives this way, so this
      *       functionality is useful only when you've overridden MessageReceivedFromSubscriber() in a subclass on the server,
      *       with some code that reacts appropriately to the incoming Messages.
      */
    virtual status_t SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB = 0, const String & tag = GetEmptyString());
+
+   /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects.
+     * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
+     *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-path-string (as was passed to you by a previous
+     *                      call to MessageReceivedFromSubscriber().  In the former case, your (msg) will be sent to all
+     *                      ITreeGatewaySubscribers that are currently subscribed any of the nodes specified by the path (wildcards
+     *                      are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber identified
+     *                      by the subscriber-path-string.
+     *                      represented by that string.
+     * @param msg the Message object to send.
+     * @param tag optional, arbitrary tag-string that will be passed to MessageReceivedFromSubscriber() on the receiving ITreeGatewaySubscriber objects
+     *            Defaults to an empty String.
+     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @note as an optimization, node-paths passed in to the (subscriberPath) argument that match only nodes that within 
+     *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
+     *       being forwarded only to subscribers on the peers matching those nodes.
+     */
+   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const String & tag = GetEmptyString());
 
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply

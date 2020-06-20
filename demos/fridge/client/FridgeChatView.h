@@ -38,6 +38,8 @@ public:
 
    void AcceptKeyPressEventFromWindow(QKeyEvent * e);
 
+   QString GetLocalUserName() const;
+
 private slots:
    void SetUpdateDisplayPending() {_updateDisplayPending = true;}
    void FlushUpdateDisplay() {if (_updateDisplayPending) {_updateDisplayPending = false; UpdateDisplay();}}

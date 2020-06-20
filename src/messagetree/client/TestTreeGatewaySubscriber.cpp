@@ -215,6 +215,12 @@ void TestTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichD
    payload()->PrintToStream();
 }
 
+void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+{
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(fromPath=[%s] tag=[%s])\n", fromPath(), tag());
+   payload()->PrintToStream();
+}
+
 void TestTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p)\n", tag(), subtreeData());

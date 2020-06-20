@@ -51,7 +51,7 @@ FridgeChatView :: FridgeChatView(ITreeGateway * connector, const QString & initi
    }
    hbl->addWidget(leftWidget, 1);
 
-   _clientRosterList = new ClientRosterList(connector);
+   _clientRosterList = new ClientRosterList(connector, this);
    connect(_clientRosterList, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this, SLOT(UserNameDoubleClicked(QListWidgetItem *)));
    _clientRosterList->setFixedWidth(100);
    hbl->addWidget(_clientRosterList);
@@ -160,6 +160,11 @@ void FridgeChatView :: AcceptKeyPressEventFromWindow(QKeyEvent * e)
 void FridgeChatView :: UserNameDoubleClicked(QListWidgetItem * item)
 {
    (void) UploadNewChatLine(item->text());
+}
+
+QString FridgeChatView :: GetLocalUserName() const 
+{
+   return _userName->text();
 }
 
 }; // end namespace fridge

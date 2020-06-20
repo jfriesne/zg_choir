@@ -31,6 +31,7 @@ protected:
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber *, const MessageRef &, uint32, const String &) {return _returnValue;}
+   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber *, const String &, const MessageRef &, const String &) {return _returnValue;}
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber *, uint32) {return _returnValue;}

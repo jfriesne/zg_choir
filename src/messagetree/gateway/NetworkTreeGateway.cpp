@@ -26,6 +26,7 @@ enum {
    NTG_COMMAND_UNDO,
    NTG_COMMAND_REDO,
    NTG_COMMAND_MESSAGETOSENIORPEER,
+   NTG_COMMAND_MESSAGETOSUBSCRIBER,
 };
 
 // Reply-codes for Messages sent from server to client
@@ -36,7 +37,8 @@ enum {
    NTG_REPLY_INDEXENTRYREMOVED,
    NTG_REPLY_PONG,
    NTG_REPLY_SUBTREES,
-   NTG_REPLY_MESSAGEFROMSENIORPEER
+   NTG_REPLY_MESSAGEFROMSENIORPEER,
+   NTG_REPLY_MESSAGEFROMSUBSCRIBER
 };
 
 static const String NTG_NAME_PATH        = "ntg_pth";
@@ -210,6 +212,17 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITr
    return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
+status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & userMsg, const String & tag)
+{
+   MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSUBSCRIBER);
+   if (msg() == NULL) RETURN_OUT_OF_MEMORY;
+
+   status_t ret;
+   if (msg()->CAddString(   NTG_NAME_PATH,    path).IsError(ret)) return ret;
+   if (msg()->AddMessage(   NTG_NAME_PAYLOAD, userMsg).IsError(ret)) return ret;
+   return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+}
+
 status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
    return SendUndoRedoMessage(NTG_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
@@ -327,6 +340,10 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
          (void) SendMessageToTreeSeniorPeer(payload, index, tag);
       break;
 
+      case NTG_COMMAND_MESSAGETOSUBSCRIBER:
+         (void) SendMessageToSubscriber(path, payload, tag);
+      break;
+
       default:
          return B_UNIMPLEMENTED;  // unhandled/unknown Message type!
    }
@@ -380,6 +397,13 @@ void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, whichDB).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
+void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+{
+printf("   m1 %p\n", this);
+   MessageRef msg = GetMessageFromPool(NTG_REPLY_MESSAGEFROMSUBSCRIBER);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddString(NTG_NAME_PATH, fromPath).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
+}
+
 void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_SUBTREES);
@@ -412,6 +436,11 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
 
       case NTG_REPLY_MESSAGEFROMSENIORPEER: 
          MessageReceivedFromTreeSeniorPeer(idx, tag, payload);
+      break;
+
+      case NTG_REPLY_MESSAGEFROMSUBSCRIBER: 
+printf("   m2 %p [%s] [%s] %p\n", this, path(), tag(), payload());
+         MessageReceivedFromSubscriber(path, payload, tag);
       break;
 
       default:

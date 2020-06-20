@@ -90,6 +90,11 @@ status_t ProxyTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySub
    return ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, tag);
 }
 
+status_t ProxyTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const String & tag)
+{
+   return ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, tag);
+}
+
 status_t ProxyTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
    return ITreeGatewaySubscriber::BeginUndoSequence(optSequenceLabel, whichDB);
@@ -160,6 +165,11 @@ void ProxyTreeGateway :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB
 void ProxyTreeGateway :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
 {
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
+}
+
+void ProxyTreeGateway :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+{
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(fromPath, payload, tag);
 }
 
 void ProxyTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
