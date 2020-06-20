@@ -35,16 +35,18 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case '?':
       {
          LogTime(MUSCLE_LOG_INFO, "tree_client command set is as follows:\n");
-         LogTime(MUSCLE_LOG_INFO, "  p <tag>      -- Ping the client's local server with the given tag-string\n"); 
-         LogTime(MUSCLE_LOG_INFO, "  P <tag>      -- Ping the senior peer with the given tag-string\n"); 
-         LogTime(MUSCLE_LOG_INFO, "  s dbs/db_0/x -- set a DataNode at the given path\n");
-         LogTime(MUSCLE_LOG_INFO, "  d dbs/db_0/* -- delete one or more nodes or node-subtrees\n");
-         LogTime(MUSCLE_LOG_INFO, "  g dbs/db_*/* -- submit a one-time query for the current state of nodes matching this path\n");
-         LogTime(MUSCLE_LOG_INFO, "  G dbs/db_0   -- submit a one-time query for the node-subtree at the given path\n");
-         LogTime(MUSCLE_LOG_INFO, "  S dbs/db_*/* -- subscribe to nodes matching this path\n");
-         LogTime(MUSCLE_LOG_INFO, "  U dbs/**/*   -- unsubscribe from nodes matching this path\n");
-         LogTime(MUSCLE_LOG_INFO, "  Z            -- unsubscribe from all this client's subscriptions\n");
-         LogTime(MUSCLE_LOG_INFO, "  ?            -- print this text\n");
+         LogTime(MUSCLE_LOG_INFO, "  p <tag>       -- Ping the client's local server with the given tag-string\n"); 
+         LogTime(MUSCLE_LOG_INFO, "  P <tag>       -- Ping the senior peer with the given tag-string\n"); 
+         LogTime(MUSCLE_LOG_INFO, "  s dbs/db_0/x  -- set a DataNode at the given path\n");
+         LogTime(MUSCLE_LOG_INFO, "  d dbs/db_0/*  -- delete one or more nodes or node-subtrees\n");
+         LogTime(MUSCLE_LOG_INFO, "  g dbs/db_*/*  -- submit a one-time query for the current state of nodes matching this path\n");
+         LogTime(MUSCLE_LOG_INFO, "  G dbs/db_0    -- submit a one-time query for the node-subtree at the given path\n");
+         LogTime(MUSCLE_LOG_INFO, "  i dbs/ [I5]   -- insert an indexed-node under the given parent node (optionally provide name of node to insert before)\n");
+         LogTime(MUSCLE_LOG_INFO, "  m dbs/I5 [I2] -- move an indexed-node to a new position within its parent-node's index-list\n");
+         LogTime(MUSCLE_LOG_INFO, "  S dbs/db_*/*  -- subscribe to nodes matching this path\n");
+         LogTime(MUSCLE_LOG_INFO, "  U dbs/**/*    -- unsubscribe from nodes matching this path\n");
+         LogTime(MUSCLE_LOG_INFO, "  Z             -- unsubscribe from all this client's subscriptions\n");
+         LogTime(MUSCLE_LOG_INFO, "  ?             -- print this text\n");
       }
       break;
 
@@ -81,6 +83,36 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
             LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s]\n", path());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error uploading Message to relative path [%s] (%s)\n", path(), ret());
+      }
+      break;
+
+      case 'i':
+      {
+         const String path = tok();
+       
+         MessageRef payloadMsg = GetMessageFromPool(1234);
+         payloadMsg()->AddString("This indexed node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
+
+         const String optBefore = tok();
+
+         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), &optBefore).IsOK(ret))
+         {
+            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s])\n", path(), optBefore.HasChars()?optBefore():NULL);
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Error uploading indexed Message to relative path [%s] (before [%s]) (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
+      }
+      break;
+
+      case 'm':
+      {
+         const String path      = tok();
+         const String optBefore = tok();
+
+         if (RequestMoveTreeIndexEntry(path, &optBefore).IsOK(ret))
+         {
+            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s])\n", path(), optBefore.HasChars()?optBefore():NULL);
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Error moving indexed-node [%s] to before [%s] (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
       }
       break;
 
