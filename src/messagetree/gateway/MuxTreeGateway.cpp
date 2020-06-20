@@ -1,5 +1,6 @@
 #include "zg/messagetree/gateway/MuxTreeGateway.h"
 #include "reflector/StorageReflectConstants.h"  // for INDEX_OP_*
+#include "regex/SegmentedStringMatcher.h"
 #include "util/StringTokenizer.h"
 
 namespace zg {
@@ -215,7 +216,8 @@ void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscr
    if (msgRef())
    {
       EnsureSubscriberInBatchGroup(sub);
-      (void) subInfo._receivedPaths.PutWithDefault(path);
+      (void) subInfo._receivedPaths.Put(path, path.GetNumInstancesOf('/')+1);
+printf(" PUT [%s] -> %u\n", path(), path.GetNumInstancesOf('/')+1);
       sub->TreeNodeUpdated(path, msgRef);
    }
    else if (subInfo._receivedPaths.Remove(path) == B_NO_ERROR)
@@ -305,18 +307,27 @@ void MuxTreeGateway :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const St
    if (s) s->MessageReceivedFromTreeSeniorPeer(whichDB, suffix, payload);
 }
 
-void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
-printf("MUXGATEWAY::MessageReceivedFromSubscriber fromPath=[%s] tag=[%s]\n", fromPath(), tag());
-payload()->PrintToStream();
+   const uint32 numPathSegments = nodePath.GetNumInstancesOf('/')+1;
+   const SegmentedStringMatcher ssm(nodePath);
 
-#ifdef TODO_IMPLEMENT_THIS
+   // This might be inefficient in some cases -- perhaps there is a better way to do this?  -jaf
+   Hashtable<ITreeGatewaySubscriber *, String> matchingSubscribers;  // subscriber -> matching-node-path
    for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
    {
-      ITreeGatewaySubscriber * sub = iter.GetKey();
       TreeSubscriberInfo * subInfo = iter.GetValue()();
-   }      
-#endif
+      for (HashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
+      {
+         if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey()())))
+         {
+            (void) matchingSubscribers.Put(iter.GetKey(), subIter.GetKey());
+            break;
+         }
+      }
+   }
+
+   for (HashtableIterator<ITreeGatewaySubscriber *, String> iter(matchingSubscribers); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(iter.GetValue(), payload, returnAddress);
 }
 
 void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

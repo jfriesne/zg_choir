@@ -397,11 +397,10 @@ void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer
    if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, whichDB).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+void ServerSideNetworkTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
-printf("   m1 %p\n", this);
    MessageRef msg = GetMessageFromPool(NTG_REPLY_MESSAGEFROMSUBSCRIBER);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->CAddString(NTG_NAME_PATH, fromPath).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, returnAddress).IsOK())&&(msg()->CAddString(NTG_NAME_PATH, nodePath).IsOK())&&(msg()->AddMessage(NTG_NAME_PAYLOAD, payload).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

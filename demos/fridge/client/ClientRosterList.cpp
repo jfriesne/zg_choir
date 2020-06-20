@@ -31,7 +31,6 @@ void ClientRosterList :: TreeNodeUpdated(const String & nodePath, const MessageR
    {
       if (optPayloadMsg())
       {
-printf("ClientRosterNodePath=[%s]\n", nodePath());
          (void) _clientRoster.Put(nodePath, optPayloadMsg);
          SetUpdateDisplayPending();
       }
@@ -102,13 +101,33 @@ enum {
 
 void ClientRosterList :: PingUser()
 {
-printf("PING [%s]\n", _pingTargetPath());
-
    MessageRef pingMsg = GetMessageFromPool(CLIENT_ROSTER_COMMAND_PING);
    if ((pingMsg())&&(pingMsg()->AddString("from", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK()))
    {
       if (_pingTargetPath.HasChars()) (void) SendMessageToSubscriber(_pingTargetPath.WithSuffix("/").WithSuffix("crl_target"), pingMsg);
                                  else (void) SendMessageToSubscriber("clients/*/*/*/clientinfo/crl_target", pingMsg);  // broadcast ping!
+   }
+}
+
+void ClientRosterList :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
+{
+   status_t ret;
+   switch(payload()->what)
+   {
+      case CLIENT_ROSTER_COMMAND_PING:
+printf("RECEIVED PING nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress()); payload()->PrintToStream();
+         payload()->what = CLIENT_ROSTER_COMMAND_PONG;   // turn it around and send it back as a pong
+         if (SendMessageToSubscriber(returnAddress, payload).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't send pong!  [%s]\n", ret());
+      break;
+
+      case CLIENT_ROSTER_COMMAND_PONG:
+printf("RECEIVED PONG nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress()); payload()->PrintToStream();
+      break;
+
+      default:
+         LogTime(MUSCLE_LOG_ERROR, "cSendMessageToSubscriber::MessageReceivedFromSubscriber():  Unknown Message received!  nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress());
+         payload()->PrintToStream();
+      break;
    }
 }
 

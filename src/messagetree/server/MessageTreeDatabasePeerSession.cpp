@@ -244,30 +244,44 @@ int MessageTreeDatabasePeerSession :: GetPerClientPeerIDsCallback(DataNode & nod
    }
 }
 
+static ZGPeerID GetPeerIDFromReturnAddress(const String & path)
+{
+   if (path.StartsWith('{'))
+   {
+      const int32 rightBraceIdx = path.IndexOf('}');
+      if (rightBraceIdx >= 0)
+      {
+         ZGPeerID ret;
+         ret.FromString(path.Substring(1, rightBraceIdx));
+         return ret;
+      }
+   }
+   return ZGPeerID();  // failure
+}
+ 
+
 // Note:  If this method returns an error-code, that means we should send to all peers
 status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const String & path, Hashtable<ZGPeerID, Void> & retPeerIDs)
 {
-   status_t ret;
-
-   if (1)  // TODO:  test the string to see if it is a return-tag or a node-path -- for now I'll only implement the node-path logic
+   const ZGPeerID peerID = GetPeerIDFromReturnAddress(path);
+   if (peerID.IsValid())
    {
-printf("k1\n");
+      // path is something like "{f01898e8e4810001:fa4c50daa9eb}:_3_:_4_:" -- we'll use this to route it back to exactly one ITreeGatewaySubscriber
+      return retPeerIDs.PutWithDefault(peerID);      
+   }
+   else
+   {
+      // path is e.g. "foo/bar/baz*" -- we want to send the Message on to any ITreeGatewaySubscribers who are subscribed to any of the nodes matching the path
       const bool isGlobal = path.StartsWith('/');
 
+      status_t ret;
       NodePathMatcher matcher;
       if (matcher.PutPathString(isGlobal?path.Substring(1):path, ConstQueryFilterRef()).IsError(ret)) return ret;
 
       GetPerClientPeerIDsCallbackArgs args(retPeerIDs);
       (void) matcher.DoTraversal((PathMatchCallback) GetPerClientPeerIDsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &args);
-printf("k2 %u %i\n", retPeerIDs.GetNumItems(), args._sendToAll);
       return args._sendToAll ? B_ERROR : B_NO_ERROR;
    }
-   else
-   {
-printf("IMPLEMENT RETURN-TAG LOGIC HERE!\n");
-   }
-
-   return ret;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const String & tag)
@@ -547,18 +561,27 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
          const String & tag  = *(msg()->GetStringPointer(MTDPS_NAME_TAG,  &GetEmptyString()));
          if (payload())
          {
-printf("  path=[%s] tag=[%s]\n", path(), tag());
-payload()->PrintToStream();
-            // We want to forward this Message on to any local clients that are subscribed to any nodes matched by (path)
-            const bool isGlobal = path.StartsWith('/');
+            const ZGPeerID targetPeerID = GetPeerIDFromReturnAddress(path);
+            if (targetPeerID.IsValid())
+            {
+printf("ZZZ [%s]\n", targetPeerID.ToString()());
+               if (targetPeerID == GetLocalPeerID())
+               {
+               }
+               else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER addressed to peer [%s]!\n", GetLocalPeerID().ToString()(), targetPeerID.ToString()()); 
+            }
+            else
+            {
+               // We want to forward this Message on to any local clients that are subscribed to any nodes matched by (path)
+               const bool isGlobal = path.StartsWith('/');
 
-            NodePathMatcher matcher;
-            (void) matcher.PutPathString(isGlobal?path.Substring(1):path, ConstQueryFilterRef());
+               NodePathMatcher matcher;
+               (void) matcher.PutPathString(isGlobal?path.Substring(1):path, ConstQueryFilterRef());
 
-            Hashtable<ServerSideMessageTreeSession *, Void> subscribedSessions;
-            (void) matcher.DoTraversal((PathMatchCallback) GetSubscribedSessionsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &subscribedSessions);
-printf("   NUM SUBSCRIBED SESSIONS = %u\n", subscribedSessions.GetNumItems());
-            for (HashtableIterator<ServerSideMessageTreeSession *, Void> iter(subscribedSessions); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(path, payload, tag);
+               Hashtable<ServerSideMessageTreeSession *, Void> subscribedSessions;
+               (void) matcher.DoTraversal((PathMatchCallback) GetSubscribedSessionsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &subscribedSessions);
+               for (HashtableIterator<ServerSideMessageTreeSession *, Void> iter(subscribedSessions); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(path, payload, tag);
+            }
          }
          else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
       }

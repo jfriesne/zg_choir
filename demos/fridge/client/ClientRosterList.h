@@ -27,6 +27,7 @@ public:
 
    // ITreeGatewaySubscriber API
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
+   virtual void MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void CallbackBatchEnds();
 

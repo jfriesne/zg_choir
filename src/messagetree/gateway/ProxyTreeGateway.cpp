@@ -167,9 +167,9 @@ void ProxyTreeGateway :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const 
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
 }
 
-void ProxyTreeGateway :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+void ProxyTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(fromPath, payload, tag);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(nodePath, payload, returnAddress);
 }
 
 void ProxyTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

@@ -247,9 +247,9 @@ void TestTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichD
    payload()->PrintToStream();
 }
 
-void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag)
+void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(fromPath=[%s] tag=[%s])\n", fromPath(), tag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(nodePath=[%s] returnAddress=[%s])\n", nodePath(), returnAddress());
    payload()->PrintToStream();
 }
 

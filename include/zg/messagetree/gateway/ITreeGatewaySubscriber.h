@@ -90,14 +90,15 @@ public:
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload) {(void) optWhichDB; (void) tag; (void) payload;}
 
    /** Called when a Message is received from another ITreeGatewaySubscriber.
-     * @param fromPath a string that you can pass to SendMessageToSubscriber() to send a reply back to the ITreeGatewaySubscriber that send this Message to you.
+     * @param nodePath Node-path of a node that this ITreeGatewaySubscriber is subscribed to, that was matched by the sender
+     *                 of this Message as a way to route the Message to this ITreeGatewaySubscriber.  May be empty if this
+     *                 Message was sent using a replyTag rather than via node-path-matching.
      * @param payload the payload Message that the senior peer is sending to us.
-     * @param tag an optional arbitrary string that the sender included with this Message in order to help categorize it.
+     * @param returnAddress A String that can be passed to SendMessageToSubscriber()'s (subscriberPath) argument instead of
+     *                      a node-path string, if you just want to reply directly to the sender of this Message.
      * Default implementation is a no-op.
      */
-   virtual void MessageReceivedFromSubscriber(const String & fromPath, const MessageRef & payload, const String & tag) {
-printf("m3 this=%p [%s]\n", this, typeid(*this).name());
-(void) fromPath; (void) payload; (void) tag;}
+   virtual void MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress) {(void) nodePath; (void) payload; (void) returnAddress;}
 
    /** Called when the subtree-data Message comes back in response to a previous call to RequestTreeNodeSubtrees().
      * @param tag the tag-string that you had previously passed to RequestTreeNodeSubtrees()
@@ -238,7 +239,7 @@ protected:
      */
    virtual status_t SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB = 0, const String & tag = GetEmptyString());
 
-   /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects.
+   /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects in the system.
      * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
      *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-path-string (as was passed to you by a previous
      *                      call to MessageReceivedFromSubscriber().  In the former case, your (msg) will be sent to all
@@ -246,15 +247,16 @@ protected:
      *                      are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber identified
      *                      by the subscriber-path-string.
      *                      represented by that string.
-     * @param msg the Message object to send.
-     * @param tag optional, arbitrary tag-string that will be passed to MessageReceivedFromSubscriber() on the receiving ITreeGatewaySubscriber objects
-     *            Defaults to an empty String.
+     * @param msg the Message to send to one or more other ITreeGatewaySubscribers.
+     * @param returnAddress Optional string to form part of the return-address that will be passed to the receivers of the Message.
+     *                      In general you want to just leave this at its default value; it is here to support routing during 
+     *                      intermediate stages of the Message-sending process.
      * @returns B_NO_ERROR on success, or B_ERROR on failure.
      * @note as an optimization, node-paths passed in to the (subscriberPath) argument that match only nodes that within 
      *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
      *       being forwarded only to subscribers on the peers matching those nodes.
      */
-   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const String & tag = GetEmptyString());
+   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const String & returnAddress = GetEmptyString());
 
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply
