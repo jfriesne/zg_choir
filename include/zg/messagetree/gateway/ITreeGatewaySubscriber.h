@@ -81,7 +81,7 @@ public:
      */
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB) {(void) tag; (void) whichDB;}
 
-   /** Called when a Message is received from the Senior Peer (typically in response to our previous call to SendMessageToTreeSeniorPeer())
+   /** Called when a Message has been received from the Senior Peer (typically in response to an earlier call by this object to SendMessageToTreeSeniorPeer())
      * @param optWhichDB index of the database the reply is coming from, or -1 if it is coming the the MessageTreePeerSession itself.
      * @param tag the tag-String that we previously passed in to SendMessageToTreeSeniorPeer()
      * @param payload the payload Message that the senior peer is sending to us.
@@ -89,10 +89,10 @@ public:
      */
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload) {(void) optWhichDB; (void) tag; (void) payload;}
 
-   /** Called when a Message is received from another ITreeGatewaySubscriber.
+   /** Called when a Message has been received from another ITreeGatewaySubscriber.
      * @param nodePath Node-path of a node that this ITreeGatewaySubscriber is subscribed to, that was matched by the sender
      *                 of this Message as a way to route the Message to this ITreeGatewaySubscriber.  May be empty if this
-     *                 Message was sent using a replyTag rather than via node-path-matching.
+     *                 Message was sent to use via our return-address string rather than via node-path-matching.
      * @param payload the payload Message that the senior peer is sending to us.
      * @param returnAddress A String that can be passed to SendMessageToSubscriber()'s (subscriberPath) argument instead of
      *                      a node-path string, if you just want to reply directly to the sender of this Message.
@@ -241,17 +241,17 @@ protected:
 
    /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects in the system.
      * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
-     *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-path-string (as was passed to you by a previous
+     *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-return-address (as was passed to you by a previous
      *                      call to MessageReceivedFromSubscriber().  In the former case, your (msg) will be sent to all
-     *                      ITreeGatewaySubscribers that are currently subscribed any of the nodes specified by the path (wildcards
-     *                      are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber identified
-     *                      by the subscriber-path-string.
+     *                      ITreeGatewaySubscribers that are currently subscribed to at least one of the nodes matched by the path 
+     *                      (wildcards in the path are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber 
+     *                      identified by the subscriber-return-address.
      *                      represented by that string.
      * @param msg the Message to send to one or more other ITreeGatewaySubscribers.
      * @param returnAddress Optional string to form part of the return-address that will be passed to the receivers of the Message.
-     *                      In general you want to just leave this at its default value; it is here to support routing during 
+     *                      In general you want to just leave this at its default value; it is here primarily to support routing during 
      *                      intermediate stages of the Message-sending process.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      * @note as an optimization, node-paths passed in to the (subscriberPath) argument that match only nodes that within 
      *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
      *       being forwarded only to subscribers on the peers matching those nodes.
