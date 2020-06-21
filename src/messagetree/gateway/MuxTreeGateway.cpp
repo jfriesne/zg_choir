@@ -217,7 +217,6 @@ void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscr
    {
       EnsureSubscriberInBatchGroup(sub);
       (void) subInfo._receivedPaths.Put(path, path.GetNumInstancesOf('/')+1);
-printf(" PUT [%s] -> %u\n", path(), path.GetNumInstancesOf('/')+1);
       sub->TreeNodeUpdated(path, msgRef);
    }
    else if (subInfo._receivedPaths.Remove(path) == B_NO_ERROR)
@@ -307,27 +306,46 @@ void MuxTreeGateway :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const St
    if (s) s->MessageReceivedFromTreeSeniorPeer(whichDB, suffix, payload);
 }
 
+// Returns true iff (path) is a string like "_4_:" or "_4_:_5_:" or "_4_:_5_:_6_:foo" or etc
+static bool IsReturnAddress(const String & path)
+{
+   return ((path.StartsWith('_'))
+        && (muscleInRange(path()[1], '0', '9'))
+        && (path.StartsWith(String("_%1_:").Arg(atoi(path()+1)))));
+}
+
 void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
    const uint32 numPathSegments = nodePath.GetNumInstancesOf('/')+1;
    const SegmentedStringMatcher ssm(nodePath);
 
-   // This might be inefficient in some cases -- perhaps there is a better way to do this?  -jaf
-   Hashtable<ITreeGatewaySubscriber *, String> matchingSubscribers;  // subscriber -> matching-node-path
-   for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+   if (IsReturnAddress(nodePath))
    {
-      TreeSubscriberInfo * subInfo = iter.GetValue()();
-      for (HashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
+      String suffix;
+      ITreeGatewaySubscriber * sub = ParseRegistrationIDPrefix(nodePath, suffix);
+      if (sub) sub->MessageReceivedFromSubscriber(suffix, payload, returnAddress);
+   }
+   else
+   {
+      // This might be inefficient in some cases -- perhaps there is a better way to do this?  -jaf
+      Hashtable<ITreeGatewaySubscriber *, String> matchingSubscribers;  // subscriber -> matching-node-path
+      for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
       {
-         if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey()())))
+         TreeSubscriberInfo * subInfo = iter.GetValue()();
+         if (subInfo)
          {
-            (void) matchingSubscribers.Put(iter.GetKey(), subIter.GetKey());
-            break;
+            for (HashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
+            {
+               if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey()())))
+               {
+                  (void) matchingSubscribers.Put(iter.GetKey(), subIter.GetKey());
+                  break;
+               }
+            }
          }
       }
+      for (HashtableIterator<ITreeGatewaySubscriber *, String> iter(matchingSubscribers); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(iter.GetValue(), payload, returnAddress);
    }
-
-   for (HashtableIterator<ITreeGatewaySubscriber *, String> iter(matchingSubscribers); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(iter.GetValue(), payload, returnAddress);
 }
 
 void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

@@ -244,15 +244,16 @@ int MessageTreeDatabasePeerSession :: GetPerClientPeerIDsCallback(DataNode & nod
    }
 }
 
-static ZGPeerID GetPeerIDFromReturnAddress(const String & path)
+static ZGPeerID GetPeerIDFromReturnAddress(const String & path, String * optRetSuffix)
 {
    if (path.StartsWith('{'))
    {
-      const int32 rightBraceIdx = path.IndexOf('}');
+      const int32 rightBraceIdx = path.IndexOf("}:");
       if (rightBraceIdx >= 0)
       {
          ZGPeerID ret;
          ret.FromString(path.Substring(1, rightBraceIdx));
+         if (optRetSuffix) *optRetSuffix = path.Substring(rightBraceIdx+2);  // +1 for the right-brace, and +1 for the colon
          return ret;
       }
    }
@@ -263,7 +264,7 @@ static ZGPeerID GetPeerIDFromReturnAddress(const String & path)
 // Note:  If this method returns an error-code, that means we should send to all peers
 status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const String & path, Hashtable<ZGPeerID, Void> & retPeerIDs)
 {
-   const ZGPeerID peerID = GetPeerIDFromReturnAddress(path);
+   const ZGPeerID peerID = GetPeerIDFromReturnAddress(path, NULL);
    if (peerID.IsValid())
    {
       // path is something like "{f01898e8e4810001:fa4c50daa9eb}:_3_:_4_:" -- we'll use this to route it back to exactly one ITreeGatewaySubscriber
@@ -561,12 +562,13 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
          const String & tag  = *(msg()->GetStringPointer(MTDPS_NAME_TAG,  &GetEmptyString()));
          if (payload())
          {
-            const ZGPeerID targetPeerID = GetPeerIDFromReturnAddress(path);
+            String suffix;  // will contain everything but the {peerID}:
+            const ZGPeerID targetPeerID = GetPeerIDFromReturnAddress(path, &suffix);
             if (targetPeerID.IsValid())
             {
-printf("ZZZ [%s]\n", targetPeerID.ToString()());
                if (targetPeerID == GetLocalPeerID())
                {
+                  MessageReceivedFromSubscriber(suffix, payload, tag);
                }
                else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER addressed to peer [%s]!\n", GetLocalPeerID().ToString()(), targetPeerID.ToString()()); 
             }

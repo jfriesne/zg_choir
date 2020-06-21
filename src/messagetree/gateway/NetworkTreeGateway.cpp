@@ -438,7 +438,6 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
       break;
 
       case NTG_REPLY_MESSAGEFROMSUBSCRIBER: 
-printf("   m2 %p [%s] [%s] %p\n", this, path(), tag(), payload());
          MessageReceivedFromSubscriber(path, payload, tag);
       break;
 

@@ -52,6 +52,7 @@ private slots:
    void ReturnToDiscoveryRequestedAux();
    void SystemItemClicked(QListWidgetItem * item);
    void ClearMagnets();
+   void ClearChat();
    void OpenProject();
    void SaveProject();
    void Undo();
@@ -82,7 +83,9 @@ private:
    FridgeClientCanvas * _canvas;
    FridgeChatView * _chatView;
 
-   QPushButton * _clearButton;
+   QPushButton * _clearMagnetsButton;
+   QPushButton * _clearChatButton;
+
    QPushButton * _undoButton;
    QPushButton * _redoButton;
 

@@ -38,7 +38,8 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
    , _connection(NULL)
    , _canvas(NULL)
    , _chatView(NULL)
-   , _clearButton(NULL)
+   , _clearMagnetsButton(NULL)
+   , _clearChatButton(NULL)
    , _undoButton(NULL)
    , _redoButton(NULL)
    , _updateStatusPending(false)
@@ -115,7 +116,8 @@ void FridgeClientWindow :: DeleteConnectionPage()
    _redoStackTop.Reset();
    _redoButton = NULL;
 
-   _clearButton = NULL;
+   _clearMagnetsButton = NULL;
+   _clearChatButton    = NULL;
 
    if (_canvas)     {delete _canvas;     _canvas     = NULL;}
    if (_chatView)   {delete _chatView;   _chatView   = NULL;}
@@ -189,12 +191,17 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    
                bbrLayout->addStretch();
               
-               _clearButton = new QPushButton(tr("Clear Magnets"));
-               connect(_clearButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
-               bbrLayout->addWidget(_clearButton);
+               _clearMagnetsButton = new QPushButton(tr("Clear Magnets"));
+               connect(_clearMagnetsButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
+               bbrLayout->addWidget(_clearMagnetsButton);
 
                bbrLayout->addStretch();
 
+               _clearChatButton = new QPushButton(tr("Clear Chat"));
+               connect(_clearChatButton, SIGNAL(clicked()), this, SLOT(ClearChat()));
+               bbrLayout->addWidget(_clearChatButton);
+
+               bbrLayout->addStretch();
                const QChar ellipses = QChar(0x26, 0x20);
 
                QPushButton * openProjectButton = new QPushButton(tr("Open Project")+ellipses);
@@ -248,6 +255,11 @@ void FridgeClientWindow :: ClearMagnets()
    if (_canvas) _canvas->ClearMagnets();
 }
 
+void FridgeClientWindow :: ClearChat()
+{
+   if (_chatView) _chatView->ClearChat();
+}
+
 void FridgeClientWindow :: CloneWindow()
 {
    FridgeClientWindow * clone = new FridgeClientWindow(_discoClient.GetCallbackMechanism());
@@ -288,7 +300,7 @@ void FridgeClientWindow :: UpdateStatus()
    UpdateUndoRedoButton(_undoButton, _undoStackTop, tr("Undo"));
    UpdateUndoRedoButton(_redoButton, _redoStackTop, tr("Redo"));
 
-   if (_clearButton) _clearButton->setEnabled(_canvas->HasMagnets());
+   if (_clearMagnetsButton) _clearMagnetsButton->setEnabled(_canvas->HasMagnets());
 }
 
 void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb)

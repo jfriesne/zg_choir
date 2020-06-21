@@ -53,6 +53,7 @@ FridgeChatView :: FridgeChatView(ITreeGateway * connector, const QString & initi
 
    _clientRosterList = new ClientRosterList(connector, this);
    connect(_clientRosterList, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this, SLOT(UserNameDoubleClicked(QListWidgetItem *)));
+   connect(_clientRosterList, SIGNAL(AddChatMessage(const QString &)), this, SLOT(UploadNewChatLine(const QString &)));
    _clientRosterList->setFixedWidth(100);
    hbl->addWidget(_clientRosterList);
 

@@ -40,17 +40,19 @@ public:
 
    QString GetLocalUserName() const;
 
+public slots:
+   void ClearChat();
+
 private slots:
    void SetUpdateDisplayPending() {_updateDisplayPending = true;}
    void FlushUpdateDisplay() {if (_updateDisplayPending) {_updateDisplayPending = false; UpdateDisplay();}}
    void UploadNewUserName();
    void UploadNewChatLine();
-   void ClearChat();
    void UserNameDoubleClicked(QListWidgetItem *);
+   status_t UploadNewChatLine(const QString & chatText);
  
 private:
    void UpdateDisplay();
-   status_t UploadNewChatLine(const QString & chatText);
 
    struct CompareChatTextEntriesFunctor
    {

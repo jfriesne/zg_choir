@@ -102,7 +102,7 @@ enum {
 void ClientRosterList :: PingUser()
 {
    MessageRef pingMsg = GetMessageFromPool(CLIENT_ROSTER_COMMAND_PING);
-   if ((pingMsg())&&(pingMsg()->AddString("from", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK()))
+   if ((pingMsg())&&(pingMsg()->AddString("user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK()))
    {
       if (_pingTargetPath.HasChars()) (void) SendMessageToSubscriber(_pingTargetPath.WithSuffix("/").WithSuffix("crl_target"), pingMsg);
                                  else (void) SendMessageToSubscriber("clients/*/*/*/clientinfo/crl_target", pingMsg);  // broadcast ping!
@@ -115,13 +115,14 @@ void ClientRosterList :: MessageReceivedFromSubscriber(const String & nodePath, 
    switch(payload()->what)
    {
       case CLIENT_ROSTER_COMMAND_PING:
-printf("RECEIVED PING nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress()); payload()->PrintToStream();
+         emit AddChatMessage(tr("Received Ping from [%1] at [%2]").arg(payload()->GetCstr("user")).arg(returnAddress()));
          payload()->what = CLIENT_ROSTER_COMMAND_PONG;   // turn it around and send it back as a pong
+         (void) payload()->ReplaceString(true, "user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody");
          if (SendMessageToSubscriber(returnAddress, payload).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't send pong!  [%s]\n", ret());
       break;
 
       case CLIENT_ROSTER_COMMAND_PONG:
-printf("RECEIVED PONG nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress()); payload()->PrintToStream();
+         emit AddChatMessage(tr("Received Pong from [%1] at [%2]").arg(payload()->GetCstr("user")).arg(returnAddress()));
       break;
 
       default:

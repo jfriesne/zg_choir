@@ -31,6 +31,9 @@ public:
    virtual void TreeGatewayConnectionStateChanged();
    virtual void CallbackBatchEnds();
 
+signals:
+   void AddChatMessage(const QString & text);
+
 private slots:
    void SetUpdateDisplayPending() {_updateDisplayPending = true;}
    void FlushUpdateDisplay() {if (_updateDisplayPending) {_updateDisplayPending = false; UpdateDisplay();}}
