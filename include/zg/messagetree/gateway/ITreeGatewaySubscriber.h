@@ -290,6 +290,12 @@ protected:
    /** Returns true iff our gateway is currently connected to the upstream database. */
    virtual bool IsTreeGatewayConnected() const;
 
+   /** Returns a Message containing various information about the server we are currently connected to.
+     * (in particular this Message will contain the ZG_PARAMETER_NAME_* fields listed in TreeConstants.h)
+     * @note this method will return a NULL ConstMessageRef if called when we are not currently connected to a server!
+     */
+   virtual ConstMessageRef GetGestaltMessage() const;
+
 private:
    friend class ITreeGateway;
    friend class GatewaySubscriberUndoBatchGuard;

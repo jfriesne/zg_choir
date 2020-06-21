@@ -49,6 +49,7 @@ status_t MessageTreeDatabasePeerSession :: AttachedToServer()
       }
    }
 
+   _gestaltMessage = GetEffectiveParameters();
    return ret;
 }
 
@@ -613,6 +614,11 @@ status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(co
                       | replyMsg()->CAddInt32( MTDPS_NAME_WHICHDB, optWhichDB)
                       | replyMsg()->CAddString(MTDPS_NAME_TAG,     tag);
    return ret.IsOK() ? SendUnicastUserMessageToPeer(toPeerID, replyMsg) : ret;
+}
+
+ConstMessageRef MessageTreeDatabasePeerSession :: TreeGateway_GetGestaltMessage() const
+{
+   return _gestaltMessage;
 }
 
 };  // end namespace zg

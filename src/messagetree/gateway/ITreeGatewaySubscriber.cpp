@@ -93,4 +93,9 @@ bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const
    return GetGateway()->TreeGateway_IsGatewayConnected();
 }
 
+ConstMessageRef ITreeGatewaySubscriber :: GetGestaltMessage() const
+{
+   return GetGateway()->TreeGateway_GetGestaltMessage();
+}
+
 };

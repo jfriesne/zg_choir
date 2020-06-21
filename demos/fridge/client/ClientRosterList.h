@@ -2,6 +2,7 @@
 #define ClientRosterList_h
 
 #include <QListWidget>
+#include <QTimer>
 
 #include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 #include "common/FridgeNameSpace.h"
@@ -39,9 +40,11 @@ private slots:
    void FlushUpdateDisplay() {if (_updateDisplayPending) {_updateDisplayPending = false; UpdateDisplay();}}
    void ShowContextMenu(const QPoint &);
    void PingUser();
+   void ClearColors();
 
 private:
    void UpdateDisplay();
+   void FlagUser(const QString & key, bool isPong);
 
    struct CompareMessageRefFunctor
    {
@@ -55,6 +58,9 @@ private:
 
    String _pingTargetPath;  // used during PingUser() calls
    const FridgeChatView * _fcv;
+
+   String _localClientInfoNodePath;
+   QTimer _clearColorsTimer;
 };
 
 }; // end namespace fridge

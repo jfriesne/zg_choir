@@ -53,6 +53,7 @@ private:
    ClientSideNetworkTreeGateway _networkGateway;
 
    String _undoKey;
+   bool _expectingParameters;
 };
 DECLARE_REFTYPES(MessageTreeClientConnector);
 

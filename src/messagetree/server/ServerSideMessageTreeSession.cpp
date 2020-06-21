@@ -94,6 +94,22 @@ status_t ServerSideMessageTreeSession :: RequestTreeNodeSubtrees(const Queue<Str
    return ret;
 }
 
+void ServerSideMessageTreeSession :: AddApplicationSpecificParametersToParametersResultMessage(Message & parameterResultsMsg) const
+{
+   StorageReflectSession::AddApplicationSpecificParametersToParametersResultMessage(parameterResultsMsg);
+
+   const ZGPeerSession * zps = FindFirstSessionOfType<ZGPeerSession>();
+   if (zps)
+   {
+      const ZGPeerSettings & settings = zps->GetPeerSettings();
+      (void) parameterResultsMsg.AddString(ZG_PARAMETER_NAME_PEERID,       zps->GetLocalPeerID().ToString());
+      (void) parameterResultsMsg.AddString(ZG_PARAMETER_NAME_SIGNATURE,    settings.GetSignature());
+      (void) parameterResultsMsg.AddString(ZG_PARAMETER_NAME_SYSTEMNAME,   settings.GetSystemName());
+      (void) parameterResultsMsg.CAddMessage(ZG_PARAMETER_NAME_ATTRIBUTES, CastAwayConstFromRef(settings.GetPeerAttributes()));
+      (void) parameterResultsMsg.AddInt8(ZG_PARAMETER_NAME_NUMDBS,         settings.GetNumDatabases());
+   }
+}
+
 ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITreeGateway * upstreamGateway, bool announceClientConnectsAndDisconnects)
    : ITreeGatewaySubscriber(upstreamGateway)
    , _announceClientConnectsAndDisconnects(announceClientConnectsAndDisconnects)

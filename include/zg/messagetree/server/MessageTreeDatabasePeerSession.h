@@ -108,6 +108,7 @@ protected:
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
    virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
+   virtual ConstMessageRef TreeGateway_GetGestaltMessage() const;
 
    // StorageReflectSession API implementation
    virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
@@ -142,6 +143,8 @@ private:
 
    MuxTreeGateway _muxGateway;
    NestCount _inPeerSessionSetupOrTeardown;
+
+   ConstMessageRef _gestaltMessage;
 };
 DECLARE_REFTYPES(MessageTreeDatabasePeerSession);
 

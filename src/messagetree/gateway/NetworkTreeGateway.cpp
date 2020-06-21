@@ -71,6 +71,7 @@ void ClientSideNetworkTreeGateway :: SetNetworkConnected(bool isConnected)
       _isConnected = isConnected;
       GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);
       TreeGatewayConnectionStateChanged();
+      if (_isConnected == false) SetParameters(MessageRef());  // no sense keeping parameters around from a TCP connection we no longer have
    }
 }
 
@@ -265,6 +266,11 @@ status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, cons
          (msg()->CAddFlat(   NTG_NAME_FLAGS, flags));
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+}
+
+void ClientSideNetworkTreeGateway :: SetParameters(const MessageRef & parameters)
+{  
+   _parameters = parameters;
 }
 
 ServerSideNetworkTreeGatewaySubscriber :: ServerSideNetworkTreeGatewaySubscriber(ITreeGateway * upstreamGateway, INetworkMessageSender * messageSender)

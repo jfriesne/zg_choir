@@ -120,6 +120,11 @@ bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
    return ITreeGatewaySubscriber::IsTreeGatewayConnected();
 }
 
+ConstMessageRef ProxyTreeGateway :: TreeGateway_GetGestaltMessage() const
+{
+   return ITreeGatewaySubscriber::GetGestaltMessage();
+}
+
 // Begin ITreeGatewaySubscriber callback API
 
 void ProxyTreeGateway :: CallbackBatchBegins()

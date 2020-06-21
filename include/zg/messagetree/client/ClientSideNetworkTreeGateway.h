@@ -6,6 +6,7 @@
 namespace zg {
 
 class INetworkMessageSender;
+class MessageTreeClientConnector;
 
 /** This gateway is intended to be run on a client; its methods are implemented to create the appropriate Message objects and send them to the server over TCP.  */
 class ClientSideNetworkTreeGateway : public ProxyTreeGateway
@@ -57,20 +58,25 @@ protected:
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
    virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
+   virtual ConstMessageRef TreeGateway_GetGestaltMessage() const {return _parameters;}
 
 protected:
    status_t SendOutgoingMessageToNetwork(const MessageRef & msgRef);
 
 private:
+   friend class MessageTreeClientConnector;
+
    status_t HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    status_t PingLocalPeerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags);
    status_t IncomingMuscledMessageReceivedFromServer(const MessageRef & msg);
    status_t ConvertPathToSessionRelative(String & path) const;
    status_t SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB);
+   void SetParameters(const MessageRef & parameters);  // called by our MessageTreeClientConnector on connect and disconnect
 
    INetworkMessageSender * _messageSender;
    bool _isConnected;
    MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
+   ConstMessageRef _parameters;
 };
 
 };  // end namespace zg

@@ -41,6 +41,7 @@ public:
    const String & GetUndoKey() const {return _undoKey;}
 
 protected:
+   virtual void AddApplicationSpecificParametersToParametersResultMessage(Message & parameterResultsMsg) const;
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
 
    // These are overridden here so that we can tap directly into the MUSCLE-level subscription mechanisms

@@ -37,6 +37,7 @@ protected:
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber *, uint32) {return _returnValue;}
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber *, uint32) {return _returnValue;}
    virtual bool TreeGateway_IsGatewayConnected() const {return false;}
+   virtual ConstMessageRef TreeGateway_GetGestaltMessage() const {return ConstMessageRef();}
 
 private:
    const status_t _returnValue;

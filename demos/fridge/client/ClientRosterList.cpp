@@ -3,6 +3,8 @@
 #include "ClientRosterList.h"
 #include "FridgeChatView.h"
 #include "zg/messagetree/gateway/ITreeGateway.h"  // this include is required in order to avoid linker errors(!?)
+#include "zg/messagetree/gateway/TreeConstants.h" // for ZG_PARAMETER_NAME_*
+#include "reflector/StorageReflectConstants.h"    // for PR_NAME_SESSION_ROOT
 
 namespace fridge {
 
@@ -11,11 +13,15 @@ ClientRosterList :: ClientRosterList(ITreeGateway * connector, const FridgeChatV
    , _updateDisplayPending(false)
    , _fcv(fcv)
 {
+   setSelectionMode(NoSelection);
+
+   _clearColorsTimer.setSingleShot(true);
+   connect(&_clearColorsTimer, SIGNAL(timeout()), this, SLOT(ClearColors()));
+
    setContextMenuPolicy(Qt::CustomContextMenu);
    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(ShowContextMenu(const QPoint &)));
 
-   (void) AddTreeSubscription("clients/*/*/*/clientinfo");  // *'s are for:  peerID, clientIPAddress, sessionID
-   (void) AddTreeSubscription("clients/*/*/*/clientinfo/crl_target");  // just so we can get MessageReceivedFromSubscriber() callbacks when someone targets our crl_target node
+   (void) AddTreeSubscription("clients/*/*/*/clientinfo");  // subscribe to all clientinfo nodes (*'s are for:  any ZGPeerID, any clientIPAddress, any sessionID)
 }
 
 ClientRosterList :: ~ClientRosterList()
@@ -41,8 +47,23 @@ void ClientRosterList :: TreeNodeUpdated(const String & nodePath, const MessageR
 void ClientRosterList :: TreeGatewayConnectionStateChanged()
 {
    ITreeGatewaySubscriber::TreeGatewayConnectionStateChanged();
+
+   if (_localClientInfoNodePath.HasChars())
+   {
+      (void) RemoveTreeSubscription(_localClientInfoNodePath+"/crl_target");  // remove old crl_target subscription, it's obsolete because our sessionID has changed now
+      _localClientInfoNodePath.Clear();
+   }
+
    if (IsTreeGatewayConnected()) 
    {
+      ConstMessageRef gestaltMsg = GetGestaltMessage();
+      if (gestaltMsg()) 
+      {
+         // Subscribe to our client's own crl_target node just so that when someone calls SendMessageToSubscriber() on it, we'll get the Message
+         _localClientInfoNodePath = String("clients/%1%2/clientinfo").Arg(gestaltMsg()->GetString(ZG_PARAMETER_NAME_PEERID)).Arg(gestaltMsg()->GetString(PR_NAME_SESSION_ROOT));
+         (void) AddTreeSubscription(_localClientInfoNodePath+"/crl_target");
+      }
+
       _clientRoster.Clear();
       FlushUpdateDisplay();
 
@@ -102,7 +123,9 @@ enum {
 void ClientRosterList :: PingUser()
 {
    MessageRef pingMsg = GetMessageFromPool(CLIENT_ROSTER_COMMAND_PING);
-   if ((pingMsg())&&(pingMsg()->AddString("user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK()))
+   if ((pingMsg())
+    && (pingMsg()->AddString("user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK())
+    && (pingMsg()->AddString("key",  _localClientInfoNodePath).IsOK()))
    {
       if (_pingTargetPath.HasChars()) (void) SendMessageToSubscriber(_pingTargetPath.WithSuffix("/").WithSuffix("crl_target"), pingMsg);
                                  else (void) SendMessageToSubscriber("clients/*/*/*/clientinfo/crl_target", pingMsg);  // broadcast ping!
@@ -111,24 +134,59 @@ void ClientRosterList :: PingUser()
 
 void ClientRosterList :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
+   const QString fromUserName = payload()->GetString("user", "???")();
+   const QString fromUserKey  = payload()->GetString("key")();
+
    status_t ret;
    switch(payload()->what)
    {
       case CLIENT_ROSTER_COMMAND_PING:
-         emit AddChatMessage(tr("Received Ping from [%1] at [%2]").arg(payload()->GetCstr("user")).arg(returnAddress()));
+      {
+         FlagUser(fromUserKey, false);
+         emit AddChatMessage(tr("Received Ping from [%1] at [%2]").arg(fromUserName).arg(returnAddress()));
          payload()->what = CLIENT_ROSTER_COMMAND_PONG;   // turn it around and send it back as a pong
          (void) payload()->ReplaceString(true, "user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody");
+         (void) payload()->ReplaceString(true, "key",  _localClientInfoNodePath);
          if (SendMessageToSubscriber(returnAddress, payload).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Couldn't send pong!  [%s]\n", ret());
+      }
       break;
 
       case CLIENT_ROSTER_COMMAND_PONG:
-         emit AddChatMessage(tr("Received Pong from [%1] at [%2]").arg(payload()->GetCstr("user")).arg(returnAddress()));
+         FlagUser(fromUserKey, true);
+         emit AddChatMessage(tr("Received Pong from [%1] at [%2]").arg(fromUserName).arg(returnAddress()));
       break;
 
       default:
-         LogTime(MUSCLE_LOG_ERROR, "cSendMessageToSubscriber::MessageReceivedFromSubscriber():  Unknown Message received!  nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress());
+         LogTime(MUSCLE_LOG_ERROR, "ClientRosterList::MessageReceivedFromSubscriber():  Unknown Message received!  nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress());
          payload()->PrintToStream();
       break;
+   }
+}
+
+// Sets the text-color of a given user's name to red or blue, and restarts the timer to clear it in 250mS
+void ClientRosterList :: FlagUser(const QString & key, bool isPong)
+{
+   for (int i=0; i<count(); i++)
+   {
+      QListWidgetItem * lwi = item(i);
+      if (lwi->data(Qt::UserRole).toString() == key)
+      {
+         lwi->setBackground(isPong ? Qt::blue : Qt::red);
+         lwi->setForeground(Qt::white);
+         _clearColorsTimer.stop();
+         _clearColorsTimer.start(500);
+         break;
+      }
+   }
+}
+
+void ClientRosterList :: ClearColors()
+{
+   for (int i=0; i<count(); i++)
+   {
+      QListWidgetItem * lwi = item(i);
+      lwi->setBackground(palette().brush(QPalette::Base));
+      lwi->setForeground(palette().brush(QPalette::Text));
    }
 }
 
