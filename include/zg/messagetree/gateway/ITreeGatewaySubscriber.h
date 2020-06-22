@@ -248,6 +248,9 @@ protected:
      *                      identified by the subscriber-return-address.
      *                      represented by that string.
      * @param msg the Message to send to one or more other ITreeGatewaySubscribers.
+     * @param optFilterRef an optional reference to a QueryFilter object to use to filter which nodes will be matched by (subscriberPath).
+     *                     If non-NULL, only nodes whose payloads match the QueryFilter's criteria will be considered when deciding whom
+     *                     to forward (msg) to.  Note that this argument is ignored if (subscriberPath) is a return-address String.
      * @param returnAddress Optional string to form part of the return-address that will be passed to the receivers of the Message.
      *                      In general you want to just leave this at its default value; it is here primarily to support routing during 
      *                      intermediate stages of the Message-sending process.
@@ -256,7 +259,7 @@ protected:
      *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
      *       being forwarded only to subscribers on the peers matching those nodes.
      */
-   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const String & returnAddress = GetEmptyString());
+   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), const String & returnAddress = GetEmptyString());
 
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply

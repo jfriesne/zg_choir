@@ -127,8 +127,8 @@ void ClientRosterList :: PingUser()
     && (pingMsg()->AddString("user", _fcv?_fcv->GetLocalUserName().toUtf8().constData():"Somebody").IsOK())
     && (pingMsg()->AddString("key",  _localClientInfoNodePath).IsOK()))
    {
-      if (_pingTargetPath.HasChars()) (void) SendMessageToSubscriber(_pingTargetPath.WithSuffix("/").WithSuffix("crl_target"), pingMsg);
-                                 else (void) SendMessageToSubscriber("clients/*/*/*/clientinfo/crl_target", pingMsg);  // broadcast ping!
+      if (_pingTargetPath.HasChars()) (void) SendMessageToSubscriber(_pingTargetPath.WithSuffix("/").WithSuffix("crl_target"), pingMsg);  // unicast ping
+                                 else (void) SendMessageToSubscriber("clients/*/*/*/clientinfo/crl_target", pingMsg);                     // broadcast ping
    }
 }
 

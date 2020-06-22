@@ -90,9 +90,9 @@ status_t ProxyTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySub
    return ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, tag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const String & tag)
+status_t ProxyTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
-   return ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, tag);
+   return ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, optFilterRef, tag);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)

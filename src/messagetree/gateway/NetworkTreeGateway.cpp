@@ -213,15 +213,16 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITr
    return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & userMsg, const String & tag)
+status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & userMsg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSUBSCRIBER);
    if (msg() == NULL) RETURN_OUT_OF_MEMORY;
 
    status_t ret;
-   if (msg()->CAddString(   NTG_NAME_PATH,    path).IsError(ret)) return ret;
-   if (msg()->AddMessage(   NTG_NAME_PAYLOAD, userMsg).IsError(ret)) return ret;
-   return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+   if (msg()->CAddString(        NTG_NAME_PATH,        path).IsError(ret))         return ret;
+   if (msg()->AddMessage(        NTG_NAME_PAYLOAD,     userMsg).IsError(ret))      return ret;
+   if (msg()->CAddArchiveMessage(NTG_NAME_QUERYFILTER, optFilterRef).IsError(ret)) return ret;
+   return msg()->CAddString(     NTG_NAME_TAG,         tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
@@ -347,7 +348,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
       break;
 
       case NTG_COMMAND_MESSAGETOSUBSCRIBER:
-         (void) SendMessageToSubscriber(path, payload, tag);
+         (void) SendMessageToSubscriber(path, payload, qfRef, tag);
       break;
 
       default:

@@ -63,9 +63,9 @@ status_t ITreeGatewaySubscriber :: SendMessageToTreeSeniorPeer(const MessageRef 
    return GetGateway()->TreeGateway_SendMessageToSeniorPeer(this, msg, whichDB, optTag);
 }
 
-status_t ITreeGatewaySubscriber :: SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const String & tag) 
+status_t ITreeGatewaySubscriber :: SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag) 
 {
-   return GetGateway()->TreeGateway_SendMessageToSubscriber(this, subscriberPath, msg, tag);
+   return GetGateway()->TreeGateway_SendMessageToSubscriber(this, subscriberPath, msg, optFilterRef, tag);
 }
 
 status_t ITreeGatewaySubscriber :: BeginUndoSequence(const String & optSequenceLabel, uint32 whichDB)

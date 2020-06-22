@@ -176,9 +176,9 @@ status_t MuxTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubsc
    return _isConnected ? ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
 }
 
-status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const String & tag)
+status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
-   return _isConnected ? ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
+   return _isConnected ? ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, optFilterRef, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
 }
 
 // Begin ITreeGatewaySubscriber callback API

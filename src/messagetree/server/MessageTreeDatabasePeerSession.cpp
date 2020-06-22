@@ -17,6 +17,7 @@ enum {
 
 static const String MTDPS_NAME_TAG     = "mtp_tag";
 static const String MTDPS_NAME_SOURCE  = "mtp_src";
+static const String MTDPS_NAME_FILTER  = "mtp_flt";
 static const String MTDPS_NAME_FLAGS   = "mtp_flg";
 static const String MTDPS_NAME_UNDOKEY = "mtp_key";
 static const String MTDPS_NAME_PAYLOAD = "mtp_pay";
@@ -263,7 +264,7 @@ static ZGPeerID GetPeerIDFromReturnAddress(const String & path, String * optRetS
  
 
 // Note:  If this method returns an error-code, that means we should send to all peers
-status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const String & path, Hashtable<ZGPeerID, Void> & retPeerIDs)
+status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const String & path, const ConstQueryFilterRef & optFilter, Hashtable<ZGPeerID, Void> & retPeerIDs)
 {
    const ZGPeerID peerID = GetPeerIDFromReturnAddress(path, NULL);
    if (peerID.IsValid())
@@ -278,7 +279,7 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
 
       status_t ret;
       NodePathMatcher matcher;
-      if (matcher.PutPathString(isGlobal?path.Substring(1):path, ConstQueryFilterRef()).IsError(ret)) return ret;
+      if (matcher.PutPathString(isGlobal?path.Substring(1):path, optFilter).IsError(ret)) return ret;
 
       GetPerClientPeerIDsCallbackArgs args(retPeerIDs);
       (void) matcher.DoTraversal((PathMatchCallback) GetPerClientPeerIDsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &args);
@@ -286,18 +287,19 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const String & tag)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSUBSCRIBER);
    if (cmdMsg() == NULL) RETURN_OUT_OF_MEMORY;
 
-   status_t ret = cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg)
-                | cmdMsg()->CAddString(MTDPS_NAME_PATH,    subscriberPath)
-                | cmdMsg()->AddString(MTDPS_NAME_TAG,      String("{%1}:%2").Arg(GetLocalPeerID().ToString()).Arg(tag));
+   status_t ret = cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        msg)
+                | cmdMsg()->CAddString(MTDPS_NAME_PATH,           subscriberPath)
+                | cmdMsg()->CAddArchiveMessage(MTDPS_NAME_FILTER, optFilterRef)
+                | cmdMsg()->AddString(MTDPS_NAME_TAG,             String("{%1}:%2").Arg(GetLocalPeerID().ToString()).Arg(tag));
    if (ret.IsError()) return ret;
 
    Hashtable<ZGPeerID, Void> targetPeerIDs;
-   if (GetPerClientPeerIDsForPath(subscriberPath, targetPeerIDs).IsOK())
+   if (GetPerClientPeerIDsForPath(subscriberPath, optFilterRef, targetPeerIDs).IsOK())
    {
       for (HashtableIterator<ZGPeerID, Void> iter(targetPeerIDs); iter.HasData(); iter++) ret |= SendUnicastUserMessageToPeer(iter.GetKey(), cmdMsg);
       return ret;
@@ -558,6 +560,12 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
 
       case MTDPS_COMMAND_MESSAGETOSUBSCRIBER:
       {
+         QueryFilterRef qfRef;
+         {
+            MessageRef qfMsg = msg()->GetMessage(MTDPS_NAME_FILTER);
+            if (qfMsg()) qfRef = GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg());
+         }
+
          MessageRef payload  = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
          const String & path = *(msg()->GetStringPointer(MTDPS_NAME_PATH, &GetEmptyString()));
          const String & tag  = *(msg()->GetStringPointer(MTDPS_NAME_TAG,  &GetEmptyString()));
@@ -579,7 +587,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
                const bool isGlobal = path.StartsWith('/');
 
                NodePathMatcher matcher;
-               (void) matcher.PutPathString(isGlobal?path.Substring(1):path, ConstQueryFilterRef());
+               (void) matcher.PutPathString(isGlobal?path.Substring(1):path, qfRef);
 
                Hashtable<ServerSideMessageTreeSession *, Void> subscribedSessions;
                (void) matcher.DoTraversal((PathMatchCallback) GetSubscribedSessionsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &subscribedSessions);

@@ -102,7 +102,7 @@ protected:
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
    virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const MessageRef & msg, uint32 whichDB, const String & tag);
-   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const String & tag);
+   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag);
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB);
@@ -131,7 +131,7 @@ private:
    DECLARE_MUSCLE_TRAVERSAL_CALLBACK(MessageTreeDatabasePeerSession, GetSubscribedSessionsCallback); /** ServerSideMessageTreeSessions that are subscribed to matching nodes are added to the passed-in Hashtable */
 
    ZGPeerID GetPerClientPeerIDForNode(const DataNode & node) const;
-   status_t GetPerClientPeerIDsForPath(const String & path, Hashtable<ZGPeerID, Void> & retPeerIDs);
+   status_t GetPerClientPeerIDsForPath(const String & path, const ConstQueryFilterRef & ref, Hashtable<ZGPeerID, Void> & retPeerIDs);
 
    status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB);
    status_t GetUnusedNodeID(const String & path, uint32 & retID);
