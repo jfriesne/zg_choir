@@ -15,6 +15,7 @@ enum {
    TREE_GATEWAY_FLAG_INDEXED = 0,  /**< If set, the uploaded node should be added to it's parent's ordered-nodes index. */
    TREE_GATEWAY_FLAG_NOREPLY,      /**< If set, no initial reply is desired */
    TREE_GATEWAY_FLAG_INTERIM,      /**< If set, this update is considered idempotent and can therefore be skipped when performing an undo or redo operation */
+   TREE_GATEWAY_FLAG_SYNC,         /**< If set in PingTreeLocalPeer(), the ping will be pong'd by the client's own network I/O thread rather than going out to the server */
    NUM_TREE_GATEWAY_FLAGS          /**< Guard value */
 };
 DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);

@@ -3,9 +3,12 @@
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVER_NAME_*
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/client/SystemDiscoveryClient.h"
+#include "zg/messagetree/client/ClientSideNetworkTreeGateway.h"  // for GetPongForLocalSyncPing()
+#include "iogateway/MessageIOGateway.h"
 #include "iogateway/SignalMessageIOGateway.h"
 #include "reflector/AbstractReflectSession.h"
 #include "reflector/ReflectServer.h"
+#include "reflector/StorageReflectConstants.h"  // for PR_COMMAND_BATCH
 #include "util/SocketMultiplexer.h"
 #include "system/Thread.h"
 
@@ -32,9 +35,54 @@ public:
       return ret;
    }
 
+   virtual AbstractMessageIOGatewayRef CreateGateway()
+   {
+      MessageIOGatewayRef ret(newnothrow MessageIOGateway());
+      if (ret()) ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
+            else WARN_OUT_OF_MEMORY;
+      return ret;
+   }
+
    virtual void AsyncConnectCompleted();
 
 private:
+   static status_t WatchForLocalPingMessagesCallbackFunc(const MessageRef & msgRef, void * ud) {return ((TCPConnectorSession*)ud)->WatchForLocalPingMessagesCallback(msgRef);}
+   status_t WatchForLocalPingMessagesCallback(const MessageRef & msgRef)
+   {
+      if (msgRef()->what == PR_COMMAND_BATCH)
+      {
+         Queue<MessageRef> pongMessages;
+         StripBatchSyncPings(*msgRef(), pongMessages);
+         for (uint32 i=0; i<pongMessages.GetNumItems(); i++) CallMessageReceivedFromGateway(pongMessages[i], NULL);
+      }
+      else
+      {
+         MessageRef pongMsg = GetPongForLocalSyncPing(*msgRef());
+         if (pongMsg())
+         {
+            CallMessageReceivedFromGateway(pongMsg, NULL);
+            return B_ERROR;  // don't send the sync-ping out over TCP
+         }
+      }
+      return B_NO_ERROR;
+   }
+
+   void StripBatchSyncPings(Message & batchMsg, Queue<MessageRef> & retPongMessages) const
+   {
+      MessageRef subMsg;
+      for (int32 i=0; batchMsg.FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++)
+      {
+         MessageRef pongMsg = GetPongForLocalSyncPing(*subMsg());
+         if (pongMsg())
+         {
+            (void) batchMsg.RemoveData(PR_NAME_KEYS, i);
+            i--;
+            retPongMessages.AddTail(pongMsg); 
+         }
+         else if (subMsg()->what == PR_COMMAND_BATCH) StripBatchSyncPings(*subMsg(), retPongMessages);
+      }
+   }
+
    ClientConnectorImplementation * _master;
    MessageRef _peerInfo;
 };

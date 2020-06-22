@@ -79,6 +79,12 @@ private:
    ConstMessageRef _parameters;
 };
 
+/** If (maybeSyncPingMsg) is a local-sync-ping Message, return the corresponding local-sync-pong Message.
+  * Otherwise, returns a NULL reference.
+  * @param maybeSyncPingMsg a Message to examine.
+  */
+MessageRef GetPongForLocalSyncPing(const Message & maybeSyncPingMsg);
+
 };  // end namespace zg
 
 #endif

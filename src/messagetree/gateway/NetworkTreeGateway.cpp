@@ -550,4 +550,19 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
    return B_NO_ERROR;
 }
 
+MessageRef GetPongForLocalSyncPing(const Message & maybeSyncPingMsg)
+{
+   if ((maybeSyncPingMsg.what == NTG_COMMAND_PING)&&(maybeSyncPingMsg.GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS).IsBitSet(TREE_GATEWAY_FLAG_SYNC)))
+   {
+      // short-circuit the ping on the client-side, to support local-output-queue-drained-notifications
+      MessageRef pongMsg = GetLightweightCopyOfMessageFromPool(maybeSyncPingMsg);
+      if (pongMsg())
+      {
+         pongMsg()->what = NTG_REPLY_PONG;
+         return pongMsg;
+      }
+   }
+   return MessageRef();
+}
+
 }; // end namespace zg
