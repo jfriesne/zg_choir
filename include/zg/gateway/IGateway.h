@@ -23,8 +23,8 @@ public:
    IGateway() : _registrationIDCounter(0) {/* empty */}
    virtual ~IGateway() {MASSERT(_registeredSubscribers.IsEmpty(), "IGateway was destroyed without calling ShutdownGateway() on it first!");}
 
-   bool BeginCommandBatch() {const bool ret = _commandBatchCounter.Increment();   if (ret) CommandBatchBegins();    return ret;}
-   bool   EndCommandBatch() {const bool ret = _commandBatchCounter.IsOutermost(); if (ret) CommandBatchEnds();      _commandBatchCounter.Decrement();  return ret;}
+   bool BeginCommandBatch()  {const bool ret = _commandBatchCounter.Increment();    if (ret) CommandBatchBegins();  return ret;}
+   bool   EndCommandBatch()  {const bool ret = _commandBatchCounter.IsOutermost();  if (ret) CommandBatchEnds();    _commandBatchCounter.Decrement();  return ret;}
 
    bool BeginCallbackBatch() {const bool ret = _callbackBatchCounter.Increment();   if (ret) CallbackBatchBegins(); return ret;}
    bool   EndCallbackBatch() {const bool ret = _callbackBatchCounter.IsOutermost(); if (ret) CallbackBatchEnds();   _callbackBatchCounter.Decrement(); return ret;}
@@ -91,6 +91,10 @@ template<class GatewayType> void IGatewaySubscriber<GatewayType> :: SetGateway(G
 {
    if (optGateway != _gateway)
    {
+      // If we're about to be change gateways, then we need to unwind our callback-batch-state
+      // right now, since after this our gateway will no longer be around to call EndCallbackBatch() for us!
+      while(_callbackBatchCounter.IsInBatch()) EndCallbackBatch();
+
       if (_gateway) _gateway->UnregisterSubscriber(this);
       _gateway = optGateway;
       if (_gateway) _gateway->RegisterSubscriber(this);
