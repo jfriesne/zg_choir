@@ -7,8 +7,8 @@
 namespace zg
 {
 
-#define ZG_VERSION_STRING "1.01"  /**< The current version of the ZG distribution, expressed as an ASCII string */
-#define ZG_VERSION        10100   /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
+#define ZG_VERSION_STRING "1.10"  /**< The current version of the ZG distribution, expressed as an ASCII string */
+#define ZG_VERSION        11000   /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
 
 /** Enumeration of port numbers that will be the same for all ZG systems (not currently used) */
 enum {

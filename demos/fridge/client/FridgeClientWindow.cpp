@@ -144,8 +144,8 @@ void FridgeClientWindow :: keyPressEvent(QKeyEvent * e)
 void FridgeClientWindow :: ConnectTo(const String & systemName)
 {
    status_t ret;
-   _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism(), FRIDGE_PROGRAM_SIGNATURE, systemName);
-   if (_connection->Start().IsOK(ret))
+   _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism());
+   if (_connection->Start(FRIDGE_PROGRAM_SIGNATURE, systemName).IsOK(ret))
    {
       SetGateway(_connection);
 

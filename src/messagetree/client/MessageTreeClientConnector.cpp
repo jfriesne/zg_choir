@@ -4,8 +4,8 @@
 
 namespace zg {
 
-MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * mechanism, const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalCriteria)
-   : ClientConnector(mechanism, signaturePattern, systemNamePattern, optAdditionalCriteria)
+MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * mechanism)
+   : ClientConnector(mechanism)
    , MuxTreeGateway(NULL)  // gotta pass NULL here since _networkGateway hasn't been constructed yet
    , _networkGateway(this)
    , _expectingParameters(false)

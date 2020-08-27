@@ -18,30 +18,31 @@ class ClientConnector : public ICallbackSubscriber, public INetworkMessageSender
 {
 public:
    /** Constructor.
-     * @param mechanism the CallbackMechanism we should use to call callback-methods in the main thread
-     * @param signaturePattern signature string of the type(s) of ZG program you want to connect to.
-     *                         May be wildcarded if you aren't particular about the type of server you want to connect to.
-     *                         (e.g. passing "*" will allow you to connect to any kind of ZG server)
-     * @param systemNamePattern Name of the ZG system we want to connect to.  May be wildcarded if you aren't particular about
-     *                          the name of the system you connect to.  (e.g. passing "*" will get you connected to a system
-     *                          regardless of what its system-name is)
-     * @param optAdditionalCriteria optional reference to a QueryFilter that describes any additional criteria regarding
-     *                          what sorts of server, in particular, you are interested in.  Servers whose
-     *                          reply-Messages don't match this QueryFilter's criteria will not be connected to.
-     *                          May be NULL if you only care about the server's signature and system name.
-     * @note be sure to call Start() to start the network I/O thread running!
+     * @param mechanism pointer to the CallbackMechanism our I/O thread can use to call callback-methods in the context of the main thread
+     * @note be sure to call Start() to start the network I/O thread running, otherwise this object won't do anything useful.
      */
-   ClientConnector(ICallbackMechanism * mechanism, const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalCriteria = ConstQueryFilterRef());
+   ClientConnector(ICallbackMechanism * mechanism);
 
    /** Destructor */
    ~ClientConnector();
 
-   /** Starts the network I/O thread.
+   /** Starts the network I/O thread, and tells it what sort of server it should be trying to connect to.
+     * @param signaturePattern signature string of the type(s) of ZG program you want to connect to.
+     *                         May be wildcarded if you aren't particular about the type of server you want to connect to.
+     *                         (e.g. passing "*" will allow you to connect to any kind of ZG server)
+     * @param systemNamePattern Name of the ZG system we want to connect to.  May be wildcarded if you aren't particular about
+     *                          the name of the system you connect to.  (e.g. passing "*" will get you connected to an available
+     *                          system regardless of what its system-name is)
+     * @param optAdditionalDiscoveryCriteria optional reference to a QueryFilter that describes any additional criteria regarding
+     *                          what sorts of server, in particular, you are interested in.  Servers whose
+     *                          discovery-reply-Messages don't match this QueryFilter's criteria will not be connected to.
+     *                          May be NULL if you only care about the server's signature and system name.
      * @param autoReconnectTimeMicroseconds how long to wait before trying to auto-reconnect, when our TCP connection gets severed.  Defaults to 250 milliseconds.
      * @returns B_NO_ERROR on success, or an error code if setup failed.
-     * @note if called while the thread is already running, the thread will be stopped and then restarted.
+     * @note If called with with the same arguments that are already in use, this method will just return B_NO_ERROR without doing anything else.
+     *       Otherwise, this method will call Stop() and then set up the ClientConnector to connect using the new arguments.
      */
-   status_t Start(uint64 autoReconnectTimeMicroseconds = MillisToMicros(250));
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria = ConstQueryFilterRef(), uint64 autoReconnectTimeMicroseconds = MillisToMicros(250));
 
    /** Stops the network I/O thread, if it is currently running. */
    void Stop();
@@ -55,11 +56,17 @@ public:
    /** Returns a Message containing information about the peer we are currently connected to, or a NULL Message if we aren't currently connected. */
    MessageRef GetConnectedPeerInfo() const {return _connectedPeerInfo;}
 
-   /** Returns the signature--pattern string that was passed in to our constructor. */
-   const String & GetSignaturePattern() const {return _signaturePattern;}
+   /** Returns the signature--pattern string that was passed in to our Start() method, or an empty String if we aren't currently started. */
+   const String & GetSignaturePattern() const;
 
-   /** Returns the system-name-pattern string that was passed in to our constructor. */
-   const String & GetSystemNamePattern() const {return _systemNamePattern;}
+   /** Returns the system-name-pattern string that was passed in to our Start() method, or an empty String if we aren't currently started. */
+   const String & GetSystemNamePattern() const;
+
+   /** Returns a reference to the QueryFilter object that was previously passed in to our Start() method, or a NULL reference if we aren't currently started. */
+   const ConstQueryFilterRef & GetAdditionalDiscoveryCriteria() const;
+
+   /** Returns automatic-reconnect-delay that previously passed in to our Start() method, or 0 if we aren't currently started. */
+   uint64 GetAutoReconnectTimeMicroseconds() const;
 
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);
@@ -92,8 +99,6 @@ private:
 
    void MessageReceivedFromIOThread(const MessageRef & msg);  // called by I/O thread!
 
-   const String _signaturePattern;
-   const String _systemNamePattern;
    ClientConnectorImplementation * _imp;
    MessageRef _connectedPeerInfo;
 

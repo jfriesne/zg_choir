@@ -122,17 +122,28 @@ private:
    ConstSocketRef _notifySock;
 };
 
+static bool AreDiscoveryCriteriaEqual(const ConstQueryFilterRef & c1, const ConstQueryFilterRef & c2)
+{
+   if ((c1() != NULL) != (c2() != NULL)) return false;
+   if (c1() == NULL)                     return false;
+
+   // At this point we are guaranteed that both references are non-NULL.
+   // Since I don't have any kind of IsEqualTo() methods defined for the QueryFilter
+   // class hierarchy, I'm going to cheat by dumping both filters into Message objects,
+   // and then seeing if the created Message objects are equal.
+   Message m1, m2;
+   return ((c1()->SaveToArchive(m1).IsOK())&&(c2()->SaveToArchive(m2).IsOK())&&(m1 == m2));
+}
+
 class ClientConnectorImplementation : private Thread, private IDiscoveryNotificationTarget
 {
 public:
-   ClientConnectorImplementation(ClientConnector * master, const String & signaturePattern, const ConstQueryFilterRef & qfRef)
+   ClientConnectorImplementation(ClientConnector * master)
       : IDiscoveryNotificationTarget(NULL)
       , _master(master)
-      , _signaturePattern(signaturePattern)
-      , _queryFilter(qfRef)
+      , _reconnectTimeMicroseconds(0)
       , _isActive(false)
       , _tcpSession(NULL)
-      , _reconnectTimeMicroseconds(0)
       , _keepGoing(true)
    {
       // empty
@@ -140,25 +151,50 @@ public:
 
    bool IsActive() const {return _isActive;}
 
-   status_t Start(uint64 reconnectTimeMicroseconds)
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds)
    {
-      Stop();
-      _reconnectTimeMicroseconds = reconnectTimeMicroseconds;
+      // If we're already in the desired state, then there's no point in tearing everything down only to set it up again, so instead just smile and nod
+      if ((_isActive)&&(signaturePattern == _signaturePattern)&&(systemNamePattern == _systemNamePattern)&&(AreDiscoveryCriteriaEqual(optAdditionalDiscoveryCriteria,_optAdditionalDiscoveryCriteria))&&(_reconnectTimeMicroseconds == reconnectTimeMicroseconds)) return B_NO_ERROR;
+      else
+      {
+         Stop();
 
-      _isActive = true;
+         // Set these before starting the internal thread, just to avoid potential race conditions should it want to access them
+         _signaturePattern               = signaturePattern;
+         _systemNamePattern              = systemNamePattern;
+         _optAdditionalDiscoveryCriteria = optAdditionalDiscoveryCriteria;
+         _reconnectTimeMicroseconds      = reconnectTimeMicroseconds;
+         _isActive                       = true;
 
-      const status_t ret = StartInternalThread();
-      if (ret.IsError()) _isActive = false;
-      return ret;
+         // This is the filter the DiscoveryModule will actually use (it's a superset of the _optAdditionalDiscoveryCriteria because it also specifies what system name(s) we will accept)
+         _discoFilterRef.SetRef(newnothrow StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, _systemNamePattern));
+         if ((_discoFilterRef())&&(_optAdditionalDiscoveryCriteria())) _discoFilterRef.SetRef(newnothrow AndQueryFilter(_discoFilterRef, _optAdditionalDiscoveryCriteria));
+
+         const status_t ret = _discoFilterRef() ? StartInternalThread() : B_OUT_OF_MEMORY;
+         if (ret.IsError()) Stop();  // roll back the state we set above
+         return ret;
+      }
    }
 
    void Stop()
    {
       ShutdownInternalThread();
+
+      // Reset to our default state
+      _signaturePattern.Clear();
+      _systemNamePattern.Clear();
+      _optAdditionalDiscoveryCriteria.Reset();
+      _reconnectTimeMicroseconds = 0;
+      _discoFilterRef.Reset();
       _isActive = false;
    }
 
    status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
+
+   const String & GetSignaturePattern()  const {return _signaturePattern;}
+   const String & GetSystemNamePattern() const {return _systemNamePattern;}
+   const ConstQueryFilterRef & GetAdditionalDiscoveryCriteria() const {return _optAdditionalDiscoveryCriteria;}
+   uint64 GetAutoReconnectTimeMicroseconds() const {return _reconnectTimeMicroseconds;}
 
 private:
    friend class TCPConnectorSession;
@@ -166,6 +202,8 @@ private:
 
    virtual void InternalThreadEntry()
    {
+      _keepGoing = true;
+
       while(_keepGoing)
       {
          // First, find a server to connect to
@@ -197,7 +235,8 @@ private:
       _discoveries.Reset();  // paranoia
 
       SocketCallbackMechanism threadMechanism;  // so we can get callbacks in this thread from our SystemDiscoveryClient
-      SystemDiscoveryClient discoClient(&threadMechanism, _signaturePattern, _queryFilter);
+
+      SystemDiscoveryClient discoClient(&threadMechanism, _signaturePattern, _discoFilterRef);
       SetDiscoveryClient(&discoClient);
 
       status_t ret;
@@ -318,11 +357,16 @@ private:
    }
 
    ClientConnector * _master;
-   const String _signaturePattern;
-   ConstQueryFilterRef _queryFilter;
-   bool _isActive;
-   AbstractReflectSession * _tcpSession;
+
+   String _signaturePattern;
+   String _systemNamePattern;
+   ConstQueryFilterRef _optAdditionalDiscoveryCriteria;  // additional restrictions that the calling code specified (if any)
    uint64 _reconnectTimeMicroseconds;
+   bool _isActive;
+   ConstQueryFilterRef _discoFilterRef;  // cached superset of _optAdditionalDiscoveryCriteria
+
+   // members below this point should be accessed only by the internal thread
+   AbstractReflectSession * _tcpSession;
    MessageRef _discoveries;
    bool _keepGoing;
 };
@@ -343,14 +387,10 @@ void MonitorOwnerThreadSession :: MessageReceivedFromGateway(const MessageRef &,
    if (_master->HandleIncomingMessagesFromOwnerThread().IsError()) EndServer();
 }
 
-ClientConnector :: ClientConnector(ICallbackMechanism * mechanism, const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalCriteria)
+ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
-   , _signaturePattern(signaturePattern)
-   , _systemNamePattern(systemNamePattern)
 {
-   ConstQueryFilterRef filterRef(new StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, systemNamePattern));
-   if (optAdditionalCriteria()) filterRef.SetRef(new AndQueryFilter(filterRef, optAdditionalCriteria));
-   _imp = new ClientConnectorImplementation(this, signaturePattern, filterRef);
+   _imp = new ClientConnectorImplementation(this);
 }
 
 ClientConnector :: ~ClientConnector() 
@@ -360,7 +400,12 @@ ClientConnector :: ~ClientConnector()
 }
 
 status_t ClientConnector :: ParseTCPPortFromMessage(const Message & msg, uint16 & retPort) const {return msg.FindInt16("port", retPort);}
-status_t ClientConnector :: Start(uint64 reconnectTimeMicroseconds) {return _imp->Start(reconnectTimeMicroseconds);}
+status_t ClientConnector :: Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds) {return _imp->Start(signaturePattern, systemNamePattern, optAdditionalDiscoveryCriteria, reconnectTimeMicroseconds);}
+const String & ClientConnector :: GetSignaturePattern()  const {return _imp->GetSignaturePattern();}
+const String & ClientConnector :: GetSystemNamePattern() const {return _imp->GetSystemNamePattern();}
+const ConstQueryFilterRef & ClientConnector :: GetAdditionalDiscoveryCriteria() const {return _imp->GetAdditionalDiscoveryCriteria();}
+uint64 ClientConnector :: GetAutoReconnectTimeMicroseconds() const {return _imp->GetAutoReconnectTimeMicroseconds();}
+
 void ClientConnector :: Stop() {_imp->Stop();}
 bool ClientConnector :: IsActive() const {return _imp->IsActive();}
 

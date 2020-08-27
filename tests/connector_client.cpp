@@ -23,8 +23,8 @@ int main(int argc, char ** argv)
    stdinGateway.SetDataIO(DataIORef(&stdinDataIO, false));
 
    status_t ret;
-   MessageTreeClientConnector mtcc(&scm, "tree_server", systemName);  // handles our TCP connection to a server
-   if (mtcc.Start().IsOK(ret))
+   MessageTreeClientConnector mtcc(&scm);  // handles our TCP connection to a server
+   if (mtcc.Start("tree_server", systemName).IsOK(ret))
    {
       TestTreeGatewaySubscriber testTreeGatewaySubscriber(&mtcc);
 
