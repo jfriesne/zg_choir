@@ -33,6 +33,19 @@ enum {
   */
 String PeerInfoToString(const ConstMessageRef & peerInfo);
 
+/** Pass-through function for rand_r() (or rand() under Windows, since windows doesn't have rand_r())
+  * @param seedp pointer to the seed value to use and update
+  */
+static inline int GetRandomNumber(unsigned int * seedp)
+{
+#ifdef WIN32
+   (void) seedp;
+   return rand();
+#else
+   return rand_r(seedp);
+#endif
+}
+
 };  // end namespace zg
 
 #endif

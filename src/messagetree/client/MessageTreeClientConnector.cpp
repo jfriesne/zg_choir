@@ -1,3 +1,4 @@
+#include "zg/ZGConstants.h"  // for GetRandomNumber()
 #include "zg/messagetree/client/MessageTreeClientConnector.h"
 #include "zg/messagetree/gateway/TreeConstants.h"
 #include "reflector/StorageReflectConstants.h"  // for PR_COMMAND_GETPARAMETERS and PR_RESULT_PARAMETERS
@@ -10,8 +11,8 @@ MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * me
    , _networkGateway(this)
    , _expectingParameters(false)
 {
-   unsigned seed = time(NULL);
-   _undoKey = String("uk%1").Arg(GetCurrentTime64() + GetRunTime64() + ((uintptr)this) + ((uint64)rand_r(&seed)) + (((uint64)rand_r(&seed))<<32));
+   unsigned int seed = time(NULL);
+   _undoKey = String("uk%1").Arg(GetCurrentTime64() + GetRunTime64() + ((uintptr)this) + ((uint64)GetRandomNumber(&seed)) + (((uint64)GetRandomNumber(&seed))<<32));
 
    MuxTreeGateway::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
 }

@@ -59,8 +59,8 @@ static ZGPeerID GenerateLocalPeerID()
 #endif
 
    // And finally some additional salt just to make use of the other 32 low-bits.  This probably isn't necessary, but I'm paranoid
-   unsigned seed = time(NULL);
-   const uint32 salt = CalculateHashCode(GetCurrentTime64() + GetRunTime64() + rand_r(&seed));
+   unsigned int seed = time(NULL);
+   const uint32 salt = CalculateHashCode(GetCurrentTime64() + GetRunTime64() + GetRandomNumber(&seed));
    return ZGPeerID((macAddress<<16)|((uint64)GetNextUniqueObjectID()), (((uint64)processID)<<32)|((uint64)salt));
 }
 

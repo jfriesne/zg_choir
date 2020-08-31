@@ -14,6 +14,7 @@
 #include "FridgeChatView.h"
 #include "FridgeClientCanvas.h"
 #include "FridgeClientWindow.h"
+#include "zg/ZGConstants.h"  // for GetRandomNumber()
 #include "zg/ZGPeerID.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVERY_NAME_PEERINFO
 
@@ -25,7 +26,7 @@ static const char * _defaultNamesList[] = {
 
 static const char * GetRandomBabyName(unsigned * seed)
 {
-   return _defaultNamesList[rand_r(seed)%ARRAYITEMS(_defaultNamesList)];
+   return _defaultNamesList[GetRandomNumber(seed)%ARRAYITEMS(_defaultNamesList)];
 }
 
 class FridgeClientCanvas;

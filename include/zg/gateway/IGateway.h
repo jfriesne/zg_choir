@@ -91,7 +91,7 @@ template<class GatewayType> void IGatewaySubscriber<GatewayType> :: SetGateway(G
 {
    if (optGateway != _gateway)
    {
-      // If we're about to be change gateways, then we need to unwind our callback-batch-state
+      // If we're about to change gateways, then we need to unwind our callback-batch-state
       // right now, since after this our gateway will no longer be around to call EndCallbackBatch() for us!
       while(_callbackBatchCounter.IsInBatch()) EndCallbackBatch();
 

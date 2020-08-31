@@ -3,6 +3,7 @@
 #include "util/MiscUtilityFunctions.h"
 #include "util/StringTokenizer.h"
 
+#include "zg/ZGConstants.h"  // for GetRandomNumber()
 #include "zg/ZGPeerSession.h"
 #include "zg/ZGStdinSession.h"
 
@@ -350,10 +351,10 @@ private:
 
    void SendRandomDatabaseUpdateRequest()
    {
-      int r = rand_r(&_seed) % 50;
+      const int r = GetRandomNumber(&_seed) % 50;
 
       String s;
-      switch(rand_r(&_seed)%2)
+      switch(GetRandomNumber(&_seed)%2)
       {
          case 0:  s = String("%1=%1").Arg(r);  break;
          case 1:  s = String("del %1").Arg(r); break;

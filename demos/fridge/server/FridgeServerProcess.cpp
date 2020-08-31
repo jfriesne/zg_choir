@@ -1,4 +1,5 @@
 #include "reflector/ReflectServer.h"
+#include "zg/ZGConstants.h"   // for GetRandomNumber()
 #include "zg/ZGPeerSettings.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
 #include "zg/messagetree/server/ClientDataMessageTreeDatabaseObject.h"
@@ -159,8 +160,8 @@ int RunFridgeServerProcess(const char * systemName)
 
    // shuffle the words list into a random order
    {
-      unsigned seed = time(NULL);
-      for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) muscleSwap(_magnetWordsList[i], _magnetWordsList[rand_r(&seed)%ARRAYITEMS(_magnetWordsList)]);
+      unsigned int seed = time(NULL);
+      for (uint32 i=0; i<ARRAYITEMS(_magnetWordsList); i++) muscleSwap(_magnetWordsList[i], _magnetWordsList[GetRandomNumber(&seed)%ARRAYITEMS(_magnetWordsList)]);
    }
 
    // This object is required by the MUSCLE library;
