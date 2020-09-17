@@ -78,7 +78,7 @@ uint64 PZGRoundTripTimeAverager :: GetAverageValueIgnoringOutliersAux() const
    }
 
    const double maxDeviations = 1.0;
-   const double stdDeviation  = sqrt(sumOfDiffs/_measurements.GetNumItems());
+   const double stdDeviation  = sqrt((double)(sumOfDiffs/_measurements.GetNumItems()));
    const int64 maxDelta       = (uint64) (maxDeviations*stdDeviation);
 
    uint64 newSum   = 0;
