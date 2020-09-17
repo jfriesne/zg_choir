@@ -164,7 +164,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    PZGHeartbeatPacketWithMetaDataRef hbRef = GetHeartbeatPacketWithMetaDataFromPool();
    if (hbRef() == NULL) RETURN_OUT_OF_MEMORY;
 
-   if (hbRef()) hbRef()->Initialize(*_hbSettings(), MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
+   if (hbRef()) hbRef()->Initialize(*_hbSettings(), (uint32) MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
 
    PZGHeartbeatPacketWithMetaData & hb = *hbRef();
    if ((_hbSettings()->GetPeerType() == PEER_TYPE_FULL_PEER)&&(_now >= _halfAttachedTime)) 
@@ -400,7 +400,7 @@ ConstPZGHeartbeatPeerInfoRef PZGHeartbeatThreadState :: GetPZGHeartbeatPeerInfoR
             if (phb.HaveSentTimingReply() == false)
             {
                phb.SetHaveSentTimingReply(true);
-               ret()->PutTimingInfo(phb.GetSourceTag(), phb.GetHeartbeatPacketID(), muscleMin(now-phb.GetLocalReceiveTimeMicros(), (uint64)((uint32)-1)));
+               ret()->PutTimingInfo(phb.GetSourceTag(), phb.GetHeartbeatPacketID(), (uint32) muscleMin(now-phb.GetLocalReceiveTimeMicros(), (uint64)((uint32)-1)));
             }
          } 
       }

@@ -65,7 +65,7 @@ class TestZGPeerSession : public ZGPeerSession
 public:
    TestZGPeerSession(const Message & args) 
       : ZGPeerSession(GetTestZGPeerSettings(args))
-      , _seed(time(NULL))
+      , _seed((unsigned int) time(NULL))
       , _autoUpdateDelay(0)
       , _nextAutoUpdateTime(MUSCLE_TIME_NEVER)
       , _nextPrintNetworkTimeTime(MUSCLE_TIME_NEVER)

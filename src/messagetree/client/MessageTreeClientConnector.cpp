@@ -11,7 +11,7 @@ MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * me
    , _networkGateway(this)
    , _expectingParameters(false)
 {
-   unsigned int seed = time(NULL);
+   unsigned int seed = (unsigned int) time(NULL);
    _undoKey = String("uk%1").Arg(GetCurrentTime64() + GetRunTime64() + ((uintptr)this) + ((uint64)GetRandomNumber(&seed)) + (((uint64)GetRandomNumber(&seed))<<32));
 
    MuxTreeGateway::SetGateway(&_networkGateway);  // gotta do this here, *after* _networkGateway is constructed
