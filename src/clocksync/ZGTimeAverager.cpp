@@ -1,3 +1,4 @@
+#include <math.h>
 #include "zg/clocksync/ZGTimeAverager.h"
 
 namespace zg {

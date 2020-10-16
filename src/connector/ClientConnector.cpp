@@ -10,6 +10,7 @@
 #include "reflector/AbstractReflectSession.h"
 #include "reflector/ReflectServer.h"
 #include "reflector/StorageReflectConstants.h"  // for PR_COMMAND_BATCH
+#include "util/NetworkInterfaceInfo.h"
 #include "util/SocketMultiplexer.h"
 #include "system/Thread.h"
 
@@ -23,6 +24,31 @@ static const String CCI_NAME_PAYLOAD = "pay";
 
 class TCPConnectorSession;
 
+static uint64 GetPreferredTimeSyncSendIntervalMicros(const IPAddressAndPort & timeSyncDest)
+{
+#ifdef __APPLE__
+   // If the specified destination is on a WiFi adapter, let's ping faster than 5Hz to
+   // avoid Apple's power-down-the-WiFi-after-200mS-of-inactivity timeout, which would otherwise
+   // introduce a lot of unnecessary jitter into our measured round-trip-times due to the
+   // WiFi hardware taking a random amount of time (up to several dozen milliseconds) to
+   // wake up again.
+   const uint32 iidx = timeSyncDest.GetIPAddress().GetInterfaceIndex();
+   if (iidx > 0)
+   {
+      Queue<NetworkInterfaceInfo> niiq;
+      if (GetNetworkInterfaceInfos(niiq).IsOK())
+      {
+         for (uint32 i=0; i<niiq.GetNumItems(); i++)
+         {
+            const NetworkInterfaceInfo & nii = niiq[i];
+            if ((nii.GetLocalAddress().GetInterfaceIndex() == iidx)&&(nii.GetHardwareType() == NETWORK_INTERFACE_HARDWARE_TYPE_WIFI)) return MillisToMicros(150);
+         }
+      }
+   }
+#endif
+   return SecondsToMicros(1);  // for normal cases, one time-sync per second should be plenty
+}
+
 // This session will periodically UDP-ping the heartbeat-thread of the ZG peer we are connected to,
 // so that we can approximate the peer's network-time clock on this client
 class UDPTimeSyncSession : public AbstractReflectSession
@@ -32,7 +58,7 @@ public:
    : _master(master)
    , _timeSyncDest(timeSyncDest)
    , _nextUDPSendTime(0)
-   , _sendIntervalMicros(SecondsToMicros(1))
+   , _sendIntervalMicros(GetPreferredTimeSyncSendIntervalMicros(timeSyncDest))
    {
       // empty
    }
@@ -532,6 +558,7 @@ ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
    , _timeAverager(20)
    , _mainThreadToNetworkTimeOffset(INVALID_TIME_OFFSET)
+   , _mainThreadLastTimeSyncPongTime(INVALID_TIME_OFFSET)
 {
    _imp = new ClientConnectorImplementation(this);
 }
@@ -547,11 +574,14 @@ void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetw
    if (serverNetworkTime == MUSCLE_TIME_NEVER)
    {
       _timeAverager.Clear();
-      _mainThreadToNetworkTimeOffset = INVALID_TIME_OFFSET;
+      _mainThreadToNetworkTimeOffset  = INVALID_TIME_OFFSET;
+      _mainThreadLastTimeSyncPongTime = MUSCLE_TIME_NEVER;
    }
    else if (_timeAverager.AddMeasurement(roundTripTime, localReceiveTime).IsOK())
    {
-      _mainThreadToNetworkTimeOffset = serverNetworkTime-(localReceiveTime-(_timeAverager.GetAverageValueIgnoringOutliers()/2));
+      _mainThreadToNetworkTimeOffset  = serverNetworkTime-(localReceiveTime-(_timeAverager.GetAverageValueIgnoringOutliers()/2));
+      _mainThreadLastTimeSyncPongTime = localReceiveTime;
+//printf("Added measurement %llu offset is now %lli averager=%llu\n", roundTripTime, (int64) _mainThreadToNetworkTimeOffset, _timeAverager.GetAverageValueIgnoringOutliers());
    }
 }
 

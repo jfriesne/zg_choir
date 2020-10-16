@@ -72,6 +72,11 @@ public:
    /** Returns automatic-reconnect-delay that previously passed in to our Start() method, or 0 if we aren't currently started. */
    uint64 GetAutoReconnectTimeMicroseconds() const;
 
+   /** Returns the local clock-time (as per GetRunTime64()) when we last received a time-sync-pong from our connected server.
+     * Returns MUSCLE_TIME_NEVER if we have never received time-sync-pong so far during this connection.
+     */
+   uint64 GetTimeOfLastTimeSyncPong() const {return _mainThreadLastTimeSyncPongTime;}
+
    // INetworkTimeProvider API
    virtual uint64 GetNetworkTime64() const {return GetNetworkTime64ForRunTime64(GetRunTime64());}
 
@@ -131,6 +136,7 @@ private:
 
    ZGTimeAverager _timeAverager;
    std::atomic<int64> _mainThreadToNetworkTimeOffset;
+   std::atomic<uint64> _mainThreadLastTimeSyncPongTime;
 };
 DECLARE_REFTYPES(ClientConnector);
 
