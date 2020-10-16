@@ -132,8 +132,8 @@ win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
 
 mac:LIBS              += -framework Foundation
 
-FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.cpp ClientRosterList.cpp main.cpp
-FRIDGE_INCLUDES = FridgeClientWindow.h FridgeClientCanvas.h FridgeChatView.h ClientRosterList.h
+FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.cpp ClientRosterList.cpp TimeSyncWidget.cpp main.cpp
+FRIDGE_INCLUDES = FridgeClientWindow.h FridgeClientCanvas.h FridgeChatView.h ClientRosterList.h TimeSyncWidget.h
 
 SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$ZG_SOURCES $$PZG_SOURCES $$CLIENT_SOURCES
 HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_INCLUDES \

@@ -20,6 +20,7 @@ namespace fridge {
 
 class FridgeChatView;
 class FridgeClientCanvas;
+class TimeSyncWidget;
 
 /** This is a demo client that allows the user to mess around with refrigerator-magnets stored on a FridgeServer system */
 class FridgeClientWindow : public QMainWindow, public IDiscoveryNotificationTarget, public ITreeGatewaySubscriber
@@ -63,6 +64,7 @@ private:
    void DeleteConnectionPage();
    void ConnectTo(const String & systemName);
    void UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb);
+   void SetTimeSyncAnimationActive(bool active);
 
    enum {
       PAGE_DISCOVERY_NO_RESULTS = 0,
@@ -87,6 +89,7 @@ private:
    QPushButton * _clearChatButton;
 
    QPushButton * _undoButton;
+   TimeSyncWidget * _timeSyncWidget;
    QPushButton * _redoButton;
 
    String _undoStackTopPath;  // e.g. "project/undo/<KEY>/top", only when we're connected

@@ -14,6 +14,7 @@
 #include "FridgeChatView.h"
 #include "FridgeClientCanvas.h"
 #include "FridgeClientWindow.h"
+#include "TimeSyncWidget.h"
 #include "zg/ZGConstants.h"  // for GetRandomNumber()
 #include "zg/ZGPeerID.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVERY_NAME_PEERINFO
@@ -113,6 +114,8 @@ void FridgeClientWindow :: DeleteConnectionPage()
    _undoStackTop.Reset();
    _undoButton = NULL;
 
+   _timeSyncWidget = NULL;
+
    _redoStackTopPath.Clear();
    _redoStackTop.Reset();
    _redoButton = NULL;
@@ -142,6 +145,11 @@ void FridgeClientWindow :: keyPressEvent(QKeyEvent * e)
    else QMainWindow::keyPressEvent(e);
 }
 
+void FridgeClientWindow :: SetTimeSyncAnimationActive(bool active)
+{
+   if (_timeSyncWidget) _timeSyncWidget->SetAnimationActive(active);
+}
+
 void FridgeClientWindow :: ConnectTo(const String & systemName)
 {
    status_t ret;
@@ -167,7 +175,13 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
                connect(_undoButton, SIGNAL(clicked()), this, SLOT(Undo()));
                tbrLayout->addWidget(_undoButton);
 
-               tbrLayout->addStretch();
+               tbrLayout->addSpacing(5);
+
+               _timeSyncWidget = new TimeSyncWidget(_connection);
+               _timeSyncWidget->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored));
+               tbrLayout->addWidget(_timeSyncWidget);
+
+               tbrLayout->addSpacing(5);
 
                _redoButton = new QPushButton(tr("Redo"));
                connect(_redoButton, SIGNAL(clicked()), this, SLOT(Redo()));
@@ -264,7 +278,11 @@ void FridgeClientWindow :: ClearChat()
 void FridgeClientWindow :: CloneWindow()
 {
    FridgeClientWindow * clone = new FridgeClientWindow(_discoClient.GetCallbackMechanism());
-   if (_connection) clone->ConnectTo(_connection->GetSystemNamePattern());
+   if (_connection) 
+   {
+      clone->ConnectTo(_connection->GetSystemNamePattern());
+      clone->SetTimeSyncAnimationActive(_timeSyncWidget->IsAnimationActive());
+   }
    clone->show();
 }
 
