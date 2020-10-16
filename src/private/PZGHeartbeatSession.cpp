@@ -163,7 +163,6 @@ void PZGHeartbeatSession :: InternalThreadEntry()
       if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket(), SOCKET_SET_READ)))
       {
          const uint64 currentNetworkTime = _hbtState.GetNetworkTime64ForRunTime64(GetRunTime64());
-printf("currentNetworkTime=%llu / %llu\n", currentNetworkTime, MUSCLE_TIME_NEVER);
 
          ByteBuffer inputBB;
          uint8 buf[2048];

@@ -151,7 +151,7 @@ public:
 
    virtual void AsyncConnectCompleted();
 
-   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime);
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime);
 
 private:
    static status_t WatchForLocalPingMessagesCallbackFunc(const MessageRef & msgRef, void * ud) {return ((TCPConnectorSession*)ud)->WatchForLocalPingMessagesCallback(msgRef);}
@@ -199,7 +199,11 @@ private:
 
 void UDPTimeSyncSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
 {
-   if (_master) _master->TimeSyncReceived(GetRunTime64()-msg()->GetInt64("ctm"), msg()->GetInt64("stm"));
+   if (_master) 
+   {
+      const uint64 localReceiveTime = GetRunTime64();
+      _master->TimeSyncReceived(localReceiveTime-msg()->GetInt64("ctm"), msg()->GetInt64("stm"), localReceiveTime);
+   }
 }
 
 // This class handles signals from the owner thread, while we're in the connection-stage
@@ -316,9 +320,9 @@ private:
    friend class MonitorOwnerThreadSession;
 
    // Called from within the InternalThread!
-   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime)
    {
-      if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime);
+      if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime, localReceiveTime);
    }
 
    virtual void InternalThreadEntry()
@@ -498,9 +502,9 @@ private:
    bool _keepGoing;
 };
 
-void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime)
 {
-   if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime);
+   if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime, localReceiveTime);
 }
 
 void TCPConnectorSession :: AsyncConnectCompleted()
@@ -521,6 +525,8 @@ void MonitorOwnerThreadSession :: MessageReceivedFromGateway(const MessageRef &,
 
 ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
+   , _timeAverager(20)
+   , _mainThreadToNetworkTimeOffset(MUSCLE_TIME_NEVER)
 {
    _imp = new ClientConnectorImplementation(this);
 }
@@ -531,9 +537,13 @@ ClientConnector :: ~ClientConnector()
    delete _imp;
 }
 
-void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime)
 {
-printf("TimeSyncReceived:  rtt=%llu snt=%llu\n", roundTripTime, serverNetworkTime);
+   if (_timeAverager.AddMeasurement(roundTripTime, localReceiveTime).IsOK())
+   {
+      _mainThreadToNetworkTimeOffset = serverNetworkTime-(localReceiveTime-(_timeAverager.GetAverageValueIgnoringOutliers()/2));
+//printf("TimeSyncReceived:  rtt=%llu snt=%llu localReceiveTime=%llu offset=%lli\n", roundTripTime, serverNetworkTime, localReceiveTime, (uint64)_mainThreadToNetworkTimeOffset);
+   }
 }
 
 status_t ClientConnector :: ParseTCPPortFromMessage(const Message & msg, uint16 & retPort) const {return msg.FindInt16("port", retPort);}

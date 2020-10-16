@@ -1,10 +1,13 @@
 #ifndef ClientConnector_h
 #define ClientConnector_h
 
+#include <atomic>
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 #include "zg/callback/ICallbackSubscriber.h"
+#include "zg/clocksync/ZGTimeAverager.h"
 #include "zg/gateway/INetworkMessageSender.h"
+#include "zg/INetworkTimeProvider.h"
 
 namespace zg {
 
@@ -14,7 +17,7 @@ class ClientConnectorImplementation;
   * It handles setting up, maintaining, and (if necessary) reconnecting a TCP connection to one of the ZG system's servers. 
   * Any required functionality while the TCP connection is active is delegated to a concrete subclass.
   */
-class ClientConnector : public ICallbackSubscriber, public INetworkMessageSender, public RefCountable
+class ClientConnector : public ICallbackSubscriber, public INetworkMessageSender, public INetworkTimeProvider, public RefCountable
 {
 public:
    /** Constructor.
@@ -68,6 +71,23 @@ public:
    /** Returns automatic-reconnect-delay that previously passed in to our Start() method, or 0 if we aren't currently started. */
    uint64 GetAutoReconnectTimeMicroseconds() const;
 
+   // INetworkTimeProvider API
+   virtual uint64 GetNetworkTime64() const {return GetNetworkTime64ForRunTime64(GetRunTime64());}
+
+   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
+   {
+      const uint64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
+      return ((ntto==MUSCLE_TIME_NEVER)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
+   }
+
+   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
+   {
+      const uint64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
+      return ((ntto==MUSCLE_TIME_NEVER)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
+   }
+
+   virtual int64 GetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;}
+
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);
 
@@ -97,7 +117,7 @@ protected:
 private:
    friend class ClientConnectorImplementation;
 
-   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime);
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime);
    void MessageReceivedFromIOThread(const MessageRef & msg);  // called by I/O thread!
 
    ClientConnectorImplementation * _imp;
@@ -107,6 +127,9 @@ private:
 
    Mutex _replyQueueMutex;
    Queue<MessageRef> _replyQueue;
+
+   ZGTimeAverager _timeAverager;
+   std::atomic<int64> _mainThreadToNetworkTimeOffset;
 };
 DECLARE_REFTYPES(ClientConnector);
 
