@@ -1,3 +1,4 @@
+#include "iogateway/MessageIOGateway.h"
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
@@ -17,7 +18,7 @@ enum {
 static const String PZG_HEARTBEAT_NAME_PEERINFO = "hpi";
 static const String PZG_HEARTBEAT_NAME_PEER_ID  = "pid";
 
-PZGHeartbeatSession :: PZGHeartbeatSession(const ConstPZGHeartbeatSettingsRef & hbSettings, PZGNetworkIOSession * master) : _hbSettings(hbSettings), _master(master)
+PZGHeartbeatSession :: PZGHeartbeatSession(const ConstPZGHeartbeatSettingsRef & hbSettings, PZGNetworkIOSession * master) : _hbSettings(hbSettings), _master(master), _timeSyncUDPPort(0)
 {
    SetThreadPriority(PRIORITY_HIGHER);
 }
@@ -93,6 +94,22 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
    }
 }
 
+status_t PZGHeartbeatSession :: AttachedToServer()
+{
+   _timeSyncUDPSocket = CreateUDPSocket();
+   if (_timeSyncUDPSocket() == NULL)
+   {
+      LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSession::AttachedToServer():  CreateUDPSocket() failed!\n");
+      return B_IO_ERROR;
+   }
+
+   // Do this before the superclass call, so that the socket is ready for use when the internal thread starts
+   status_t ret;
+   if (BindUDPSocket(_timeSyncUDPSocket, 0, &_timeSyncUDPPort).IsError(ret)) return ret;
+
+   return PZGThreadedSession::AttachedToServer();  // starts the internal thread
+}
+
 void PZGHeartbeatSession :: AboutToDetachFromServer()
 {
    _master = NULL;
@@ -109,6 +126,11 @@ void PZGHeartbeatSession :: InternalThreadEntry()
 {
    _hbtState.Initialize(_hbSettings, GetRunTime64());
    Queue<MessageRef> messagesForOwnerThread;
+
+   ConstSocketRef localTimeSyncUDPSocket = _timeSyncUDPSocket;  // so we can pretend it's gone without affecting the main thread
+   if (localTimeSyncUDPSocket()) (void) RegisterInternalThreadSocket(localTimeSyncUDPSocket(), SOCKET_SET_READ);
+
+   MessageIOGateway timeSyncGateway;  // we instantiate this solely so we can call its CallUnflattenHeaderAndMessage() and CallFlattenHeaderAndMessage() methods
 
    bool keepGoing = true;
    while(keepGoing)
@@ -137,6 +159,44 @@ void PZGHeartbeatSession :: InternalThreadEntry()
       const uint64 pulseTime = _hbtState.GetPulseTime();
       MessageRef msgFromOwner;
       const int32 numMessagesLeft = WaitForNextMessageFromOwner(msgFromOwner, pulseTime);
+
+      if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket(), SOCKET_SET_READ)))
+      {
+         const uint64 currentNetworkTime = _hbtState.GetNetworkTime64ForRunTime64(GetRunTime64());
+
+         ByteBuffer inputBB;
+         uint8 buf[2048];
+         while(true)
+         {
+            IPAddress fromAddr;
+            uint16 fromPort;
+            const int32 numTimeSyncBytesRead = ReceiveDataUDP(localTimeSyncUDPSocket, buf, sizeof(buf), false, &fromAddr, &fromPort);
+            if (numTimeSyncBytesRead > 0)
+            {
+               // Parse the incoming ping-Message
+               inputBB.AdoptBuffer(numTimeSyncBytesRead, buf);
+               MessageRef pingMsg = timeSyncGateway.CallUnflattenHeaderAndMessage(ConstByteBufferRef(&inputBB, false));
+               if ((pingMsg())&&(pingMsg()->AddInt64("stm", currentNetworkTime).IsOK()))
+               {
+                  ConstByteBufferRef outputBB = timeSyncGateway.CallFlattenHeaderAndMessage(pingMsg);
+                  if (outputBB())
+                  {
+                     // Send back the corresponding pong-Message with our timestamp added
+                     (void) SendDataUDP(localTimeSyncUDPSocket, outputBB()->GetBuffer(), outputBB()->GetNumBytes(), false, fromAddr, fromPort);
+                  }
+               }
+               (void) inputBB.ReleaseBuffer();
+            }
+            else if (numTimeSyncBytesRead == 0) break;  // nothing more to read, for now
+            else if (numTimeSyncBytesRead < 0)
+            {
+               LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSession:  Time Sync socket had a read-error, abandoning it!\n");
+               (void) UnregisterInternalThreadSocket(localTimeSyncUDPSocket, SOCKET_SET_READ);
+               localTimeSyncUDPSocket.Reset();
+            }
+         }
+      }
+
       _hbtState._now = GetRunTime64();
       if (_hbtState._now >= pulseTime) 
       {

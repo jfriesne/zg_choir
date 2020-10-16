@@ -64,6 +64,9 @@ public:
 
    const ConstPZGHeartbeatSettingsRef & GetHeartbeatSettings() const {return _hbSettings;}
 
+   /** Returns the UDP port number where our heartbeat thread is accepting incoming time-sync UDP packets from clients, or 0 if it isn't currently accepting them. */
+   uint16 GetTimeSyncUDPPort() const;
+
    virtual const char * GetTypeName() const {return "Network I/O Master";}
 
    // PulseNode interface

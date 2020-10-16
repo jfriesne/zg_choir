@@ -4,6 +4,7 @@
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
 #include "zg/discovery/client/SystemDiscoveryClient.h"
 #include "zg/messagetree/client/ClientSideNetworkTreeGateway.h"  // for GetPongForLocalSyncPing()
+#include "dataio/UDPSocketDataIO.h"
 #include "iogateway/MessageIOGateway.h"
 #include "iogateway/SignalMessageIOGateway.h"
 #include "reflector/AbstractReflectSession.h"
@@ -20,11 +21,122 @@ enum {
 };
 static const String CCI_NAME_PAYLOAD = "pay";
 
+class TCPConnectorSession;
+
+// This session will periodically UDP-ping the heartbeat-thread of the ZG peer we are connected to,
+// so that we can approximate the peer's network-time clock on this client
+class UDPTimeSyncSession : public AbstractReflectSession
+{
+public:
+   UDPTimeSyncSession(TCPConnectorSession * master, const IPAddressAndPort & timeSyncDest)
+   : _master(master)
+   , _timeSyncDest(timeSyncDest)
+   , _nextUDPSendTime(0)
+   , _sendIntervalMicros(SecondsToMicros(1))
+   {
+      // empty
+   }
+
+   virtual ConstSocketRef CreateDefaultSocket()
+   {
+      ConstSocketRef udpSocket = CreateUDPSocket();
+      if (udpSocket() == NULL)
+      {
+         LogTime(MUSCLE_LOG_ERROR, "UDPTimeSyncSession:  CreateUDPSocket() failed!\n");
+         return ConstSocketRef();
+      }
+
+      const status_t ret = BindUDPSocket(udpSocket, 0);
+      if (ret.IsError())
+      {
+         LogTime(MUSCLE_LOG_ERROR, "UDPTimeSyncSession:  BindUDPSocket() failed! [%s]\n", ret());
+         return ConstSocketRef();
+      }
+
+      return udpSocket;
+   }
+
+   virtual DataIORef CreateDataIO(const ConstSocketRef & socket)
+   {
+      UDPSocketDataIORef dio(newnothrow UDPSocketDataIO(socket, false));
+      if (dio() == NULL) {WARN_OUT_OF_MEMORY; return DataIORef();}
+
+      (void) dio()->SetPacketSendDestination(_timeSyncDest);
+      return dio;
+   }
+
+   virtual uint64 GetPulseTime(const PulseArgs & args)
+   {
+      return muscleMin(AbstractReflectSession::GetPulseTime(args), _nextUDPSendTime);
+   }
+
+   virtual void Pulse(const PulseArgs & args)
+   {
+      AbstractReflectSession::Pulse(args);
+
+      if (args.GetCallbackTime() >= _nextUDPSendTime)
+      {
+         MessageRef pingMsg = GetMessageFromPool(0);
+         if ((pingMsg())&&(pingMsg()->AddInt64("ctm", GetRunTime64()).IsOK()))
+         {
+            (void) AddOutgoingMessage(pingMsg);
+            (void) DoOutput(MUSCLE_NO_LIMIT);  // since this message is time-sensitive, let's try to send it right away rather than waiting for the event-loop to get to it
+         }
+         _nextUDPSendTime = args.GetCallbackTime() + _sendIntervalMicros;
+      }
+   }
+
+   virtual void MessageReceivedFromGateway(const MessageRef & msg, void *)
+   {
+      const uint64 timeC = GetRunTime64();
+      const uint64 timeB = msg()->GetInt64("stm");
+      const uint64 timeA = msg()->GetInt64("ctm");
+printf("UDPTimeSyncSession:  Received  %llu -> %llu -> %llu (rtt=%lluuS)\n", timeA, timeB, timeC, timeC-timeA);
+   }
+
+   virtual void EndSession()
+   {
+      _master = NULL;  // avoid dangling-pointer after our TCPConnectorSession goes away
+      AbstractReflectSession::EndSession();
+   }
+
+private:
+   TCPConnectorSession * _master;
+   const IPAddressAndPort _timeSyncDest;
+   uint64 _nextUDPSendTime;
+   const uint64 _sendIntervalMicros;
+};
+DECLARE_REFTYPES(UDPTimeSyncSession);
+
 // This class handles TCP I/O to/from the ZG server
 class TCPConnectorSession : public AbstractReflectSession
 {
 public:
-   TCPConnectorSession(ClientConnectorImplementation * master, const MessageRef & peerInfo) : _master(master), _peerInfo(peerInfo) {/* empty */}
+   TCPConnectorSession(ClientConnectorImplementation * master, const IPAddressAndPort & timeSyncDest, const MessageRef & peerInfo)
+   : _master(master)
+   , _timeSyncDest(timeSyncDest)
+   , _peerInfo(peerInfo) {/* empty */}
+
+   virtual status_t AttachedToServer()
+   {
+      status_t ret = AbstractReflectSession::AttachedToServer();
+      if (ret.IsError()) return ret;
+
+      if (_timeSyncDest.IsValid())
+      {
+         _timeSyncSession.SetRef(newnothrow UDPTimeSyncSession(this, _timeSyncDest));
+         if (_timeSyncSession() == NULL) RETURN_OUT_OF_MEMORY;  
+         if (AddNewSession(_timeSyncSession).IsError(ret)) return ret;
+      }
+
+      return B_NO_ERROR;
+   }
+
+   virtual void AboutToDetachFromServer()
+   {
+      if (_timeSyncSession()) _timeSyncSession()->EndSession();  // avoid any chance of it holding a dangling-pointer to us
+      AbstractReflectSession::AboutToDetachFromServer(); 
+   }
 
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void *);
 
@@ -84,6 +196,8 @@ private:
    }
 
    ClientConnectorImplementation * _master;
+   IPAddressAndPort _timeSyncDest;
+   UDPTimeSyncSessionRef _timeSyncSession;
    MessageRef _peerInfo;
 };
 
@@ -281,7 +395,13 @@ private:
 
       LogTime(MUSCLE_LOG_DEBUG, "ClientConnector %p connecting to [%s]...\n", this, iap.ToString()());
 
-      TCPConnectorSession tcs(this, peerInfo);   // handle TCP I/O to/from our server
+      IPAddressAndPort timeSyncDest;
+      {
+         const uint16 timeSyncUDPPort = peerInfo()->GetInt16(ZG_DISCOVERY_NAME_TIMESYNCPORT);
+         if (timeSyncUDPPort > 0) timeSyncDest = IPAddressAndPort(iap.GetIPAddress(), timeSyncUDPPort);
+      }
+
+      TCPConnectorSession tcs(this, timeSyncDest, peerInfo);   // handle TCP I/O to/from our server
       MonitorOwnerThreadSession mots(this, GetInternalThreadWakeupSocket());  // handle Messages and shutdown-requests from our owner-thread
 
       status_t ret;

@@ -13,6 +13,7 @@ enum {DEFAULT_ZG_DISCOVERY_PORT = 25672};  /**< Arbitrary default port number to
 #define ZG_DISCOVERY_NAME_PEERID     "pid" /**< Name of field containing a flattened ZGPeerID object */
 #define ZG_DISCOVERY_NAME_FILTER     "flt" /**< Name of Message sub-field containing archived QueryFilter object */
 #define ZG_DISCOVERY_NAME_TAG        "tag" /**< Name of Misc field supplied in ping message, copied to pong verbatim */
+#define ZG_DISCOVERY_NAME_TIMESYNCPORT "tsp" /**< uint16 containing UDP port number where the ZGPeer is accepting UDP packets for time-synchronization purposes */
 
 #define ZG_DISCOVERY_NAME_PEERINFO   "inf" /**< Name of Message field containing per-Peer information Messages */
 #define ZG_DISCOVERY_NAME_SOURCE     "src" /**< Name of String field containing the source IPAddressAndPort */

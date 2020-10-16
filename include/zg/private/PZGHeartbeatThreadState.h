@@ -29,12 +29,12 @@ public:
    void MessageReceivedFromOwner(const MessageRef & msgFromOwner);
    void ReceiveMulticastTraffic(PacketDataIO & dio);
 
-   int64 MainThreadGetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;} // This will be called from the main thread
+   int64 MainThreadGetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;} // this will be called from the main thread
 
    uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
 
    // INetworkTimeProvider interface
-   virtual uint64 GetNetworkTime64() const {return IsFullyAttached() ?  GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
+   virtual uint64 GetNetworkTime64() const {return IsFullyAttached() ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
    virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return (networkTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-_toNetworkTimeOffset);}
    virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return (runTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(runTime64TimeStamp+_toNetworkTimeOffset);}
    virtual int64 GetToNetworkTimeOffset() const {return _toNetworkTimeOffset;}

@@ -22,6 +22,7 @@ class PZGHeartbeatSession : public PZGThreadedSession
 public:
    PZGHeartbeatSession(const ConstPZGHeartbeatSettingsRef & settings, PZGNetworkIOSession * master);
 
+   virtual status_t AttachedToServer();
    virtual void AboutToDetachFromServer();
    virtual void EndSession();
 
@@ -32,6 +33,7 @@ public:
    status_t SendMessageToHeartbeatThread(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
 
    int64 MainThreadGetToNetworkTimeOffset() const {return _hbtState.MainThreadGetToNetworkTimeOffset();}
+   uint16 MainThreadGetTimeSyncUDPPort()    const {return _timeSyncUDPPort;}
 
    /** Returns the current estimated one-way network latency to the specified peer, in microseconds */
    uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
@@ -49,6 +51,9 @@ private:
    Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > _mainThreadPeers;  // Queue because each peer may be coming in from multiple sources
 
    PZGHeartbeatThreadState _hbtState;
+
+   ConstSocketRef _timeSyncUDPSocket;  // allocated in main thread, used by heartbeat-thread
+   uint16 _timeSyncUDPPort;            // UDP port that _timeSyncUDPSocket is listening for incoming traffic on
 };
 DECLARE_REFTYPES(PZGHeartbeatSession);
 

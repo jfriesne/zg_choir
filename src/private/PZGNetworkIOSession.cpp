@@ -681,4 +681,9 @@ uint64 PZGNetworkIOSession :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID)
    return _hbSession() ? _hbSession()->GetEstimatedLatencyToPeer(peerID) : MUSCLE_TIME_NEVER;
 }
 
+uint16 PZGNetworkIOSession :: GetTimeSyncUDPPort() const
+{
+   return _hbSession() ? _hbSession()->MainThreadGetTimeSyncUDPPort() : 0;
+}
+
 };  // end namespace zg_private
