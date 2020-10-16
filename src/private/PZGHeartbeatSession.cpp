@@ -105,7 +105,7 @@ status_t PZGHeartbeatSession :: AttachedToServer()
 
    // Do this before the superclass call, so that the socket is ready for use when the internal thread starts
    status_t ret;
-   if (BindUDPSocket(_timeSyncUDPSocket, 0, &_timeSyncUDPPort).IsError(ret)) return ret;
+   if ((BindUDPSocket(_timeSyncUDPSocket, 0, &_timeSyncUDPPort).IsError(ret)) || (SetSocketBlockingEnabled(_timeSyncUDPSocket, false).IsError(ret))) return ret;
 
    return PZGThreadedSession::AttachedToServer();  // starts the internal thread
 }
@@ -163,6 +163,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
       if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket(), SOCKET_SET_READ)))
       {
          const uint64 currentNetworkTime = _hbtState.GetNetworkTime64ForRunTime64(GetRunTime64());
+printf("currentNetworkTime=%llu / %llu\n", currentNetworkTime, MUSCLE_TIME_NEVER);
 
          ByteBuffer inputBB;
          uint8 buf[2048];

@@ -29,6 +29,7 @@ add_subdirectory(submodules/muscle)
 file(GLOB ZG_SRCS 
    "./src/*.cpp"
    "./src/callback/*.cpp"
+   "./src/clocksync/*.cpp"
    "./src/connector/*.cpp"
    "./src/discovery/*/*.cpp"
    "./src/messagetree/*/*.cpp"

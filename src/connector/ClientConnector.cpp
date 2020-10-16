@@ -86,13 +86,7 @@ public:
       }
    }
 
-   virtual void MessageReceivedFromGateway(const MessageRef & msg, void *)
-   {
-      const uint64 timeC = GetRunTime64();
-      const uint64 timeB = msg()->GetInt64("stm");
-      const uint64 timeA = msg()->GetInt64("ctm");
-printf("UDPTimeSyncSession:  Received  %llu -> %llu -> %llu (rtt=%lluuS)\n", timeA, timeB, timeC, timeC-timeA);
-   }
+   virtual void MessageReceivedFromGateway(const MessageRef & msg, void *);
 
    virtual void EndSession()
    {
@@ -157,6 +151,8 @@ public:
 
    virtual void AsyncConnectCompleted();
 
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime);
+
 private:
    static status_t WatchForLocalPingMessagesCallbackFunc(const MessageRef & msgRef, void * ud) {return ((TCPConnectorSession*)ud)->WatchForLocalPingMessagesCallback(msgRef);}
    status_t WatchForLocalPingMessagesCallback(const MessageRef & msgRef)
@@ -200,6 +196,11 @@ private:
    UDPTimeSyncSessionRef _timeSyncSession;
    MessageRef _peerInfo;
 };
+
+void UDPTimeSyncSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
+{
+   if (_master) _master->TimeSyncReceived(GetRunTime64()-msg()->GetInt64("ctm"), msg()->GetInt64("stm"));
+}
 
 // This class handles signals from the owner thread, while we're in the connection-stage
 class MonitorOwnerThreadSession : public AbstractReflectSession
@@ -313,6 +314,12 @@ public:
 private:
    friend class TCPConnectorSession;
    friend class MonitorOwnerThreadSession;
+
+   // Called from within the InternalThread!
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+   {
+      if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime);
+   }
 
    virtual void InternalThreadEntry()
    {
@@ -491,6 +498,11 @@ private:
    bool _keepGoing;
 };
 
+void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+{
+   if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime);
+}
+
 void TCPConnectorSession :: AsyncConnectCompleted()
 {
    AbstractReflectSession::AsyncConnectCompleted();
@@ -517,6 +529,11 @@ ClientConnector :: ~ClientConnector()
 {
    MASSERT(IsActive() == false, "~ClientConnector:  You must call Stop() before deleting the ClientConnector object");
    delete _imp;
+}
+
+void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime)
+{
+printf("TimeSyncReceived:  rtt=%llu snt=%llu\n", roundTripTime, serverNetworkTime);
 }
 
 status_t ClientConnector :: ParseTCPPortFromMessage(const Message & msg, uint16 & retPort) const {return msg.FindInt16("port", retPort);}

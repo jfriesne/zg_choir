@@ -79,9 +79,10 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/zlib/ZLibCodec.cpp                      \
                  $$MUSCLE_DIR/zlib/ZLibUtilityFunctions.cpp           \
 
-ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp                       \
-             $$ZG_DIR/src/ZGDatabasePeerSession.cpp               \
-             $$ZG_DIR/src/ZGStdinSession.cpp
+ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp                     \
+             $$ZG_DIR/src/ZGDatabasePeerSession.cpp             \
+             $$ZG_DIR/src/ZGStdinSession.cpp                    \
+             $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp
 
 PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGThreadedSession.cpp       \

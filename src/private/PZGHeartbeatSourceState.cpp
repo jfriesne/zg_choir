@@ -65,34 +65,4 @@ String PZGHeartbeatSourceState :: ToString(const INetworkTimeProvider & ntp) con
    return ret;
 }
 
-uint64 PZGRoundTripTimeAverager :: GetAverageValueIgnoringOutliersAux() const
-{
-   if (_measurements.IsEmpty()) return 0;
-
-   const int64 rawAverage = GetRawAverageValue();
-   uint64 sumOfDiffs = 0;
-   for (uint32 i=0; i<_measurements.GetNumItems(); i++)
-   {
-      const int64 diff = ((int64)_measurements[i])-rawAverage;
-      sumOfDiffs += (diff*diff); 
-   }
-
-   const double maxDeviations = 1.0;
-   const double stdDeviation  = sqrt((double)(sumOfDiffs/_measurements.GetNumItems()));
-   const int64 maxDelta       = (uint64) (maxDeviations*stdDeviation);
-
-   uint64 newSum   = 0;
-   uint32 newCount = 0;
-   for (uint32 i=0; i<_measurements.GetNumItems(); i++)
-   {
-      const uint64 m = _measurements[i];
-      if (muscleAbs(((int64)m)-rawAverage) <= maxDelta)
-      {
-         newSum += m;
-         newCount++;
-      }
-   }
-   return (newCount > 0) ? (newSum/newCount) : 0;
-}
-
 };  // end namespace zg_private

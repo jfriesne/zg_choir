@@ -97,6 +97,7 @@ protected:
 private:
    friend class ClientConnectorImplementation;
 
+   void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime);
    void MessageReceivedFromIOThread(const MessageRef & msg);  // called by I/O thread!
 
    ClientConnectorImplementation * _imp;
