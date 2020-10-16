@@ -33,13 +33,16 @@ void TimeSyncWidget :: paintEvent(QPaintEvent *)
       if (networkNow == MUSCLE_TIME_NEVER) p.drawText(rect(), Qt::AlignCenter, tr("Network time not available"));
       else
       {
-         const uint64 seconds = MicrosToSeconds(networkNow) % 100;
-         const uint64 percent = (100*(networkNow%1000000)) / 1000000;
-         p.drawText(rect(), Qt::AlignCenter, tr("%1").arg(seconds));
-
-         const int x = (width()*percent)/100;
+         static const uint64 periodMicros = SecondsToMicros(2);
+         static const uint64 percentMax = 100*100;  // scale up to avoid too much round-off error
+         const uint64 percent = (percentMax*(networkNow%periodMicros))/periodMicros;
+         const uint64 bouncePercent = 2*((percent >= (percentMax/2)) ? (percentMax-percent) : (percent));
+         const int x = (width()*bouncePercent)/percentMax;
          const int w = muscleMax(width()/20, 6);
          p.fillRect(QRect(x-(w/2), 0, w, height()), Qt::red);
+
+         const uint64 seconds = (networkNow/periodMicros) % 100;
+         p.drawText(rect(), Qt::AlignCenter, tr("%1").arg(seconds));
       }
    }
    else p.drawText(rect(), Qt::AlignCenter, tr("Click to animate"));

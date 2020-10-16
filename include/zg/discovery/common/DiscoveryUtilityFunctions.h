@@ -2,6 +2,7 @@
 #define DiscoveryConstants_h
 
 #include "util/IPAddress.h"
+#include "util/NetworkInterfaceInfo.h"
 #include "zg/ZGNameSpace.h"
 
 namespace zg {
@@ -24,6 +25,9 @@ enum {DEFAULT_ZG_DISCOVERY_PORT = 25672};  /**< Arbitrary default port number to
   * @returns B_NO_ERROR on success, or some other error code on failure.
   */
 status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort = DEFAULT_ZG_DISCOVERY_PORT);
+
+/** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's e.g. known to be a special-purpose thing) */
+bool IsNetworkInterfaceUsableForDiscovery(const NetworkInterfaceInfo & nii);
 
 };  // end namespace zg
 

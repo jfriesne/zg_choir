@@ -1,5 +1,6 @@
 #include "dataio/SimulatedMulticastDataIO.h"
 #include "dataio/UDPSocketDataIO.h"
+#include "zg/discovery/common/DiscoveryUtilityFunctions.h"
 #include "zg/private/PZGHeartbeatSettings.h"
 #include "zg/ZGConstants.h"
 #include "zlib/ZLibUtilityFunctions.h"
@@ -41,19 +42,6 @@ public:
    int Compare(const NetworkInterfaceInfo & nii1, const NetworkInterfaceInfo & nii2, void *) const {return muscleCompare(nii1.GetName(), nii2.GetName());}
 };
 
-// Some network interfaces we just shouldn't try to use!
-bool IsNetworkInterfaceAcceptable(const NetworkInterfaceInfo & nii)
-{
-#ifdef __APPLE__
-   if (nii.GetName().StartsWith("utun")) return false;
-   if (nii.GetName().StartsWith("llw"))  return false;
-#else
-   (void) nii;  // avoid compiler warning
-#endif
-
-   return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
-}
-
 Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() const
 {
    Queue<NetworkInterfaceInfo> niis;
@@ -61,7 +49,7 @@ Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() c
    if (IsSystemOnLocalhostOnly() == false) flags.SetBit(GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
    (void) muscle::GetNetworkInterfaceInfos(niis, flags);
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceAcceptable(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForDiscovery(niis[i]) == false) (void) niis.RemoveItemAt(i);
    niis.Sort(CompareNetworkInterfacesFunctor());
    return niis;
 }

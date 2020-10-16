@@ -35,8 +35,8 @@ public:
 
    // INetworkTimeProvider interface
    virtual uint64 GetNetworkTime64() const {return IsFullyAttached() ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return (networkTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-_toNetworkTimeOffset);}
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return (runTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(runTime64TimeStamp+_toNetworkTimeOffset);}
+   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-_toNetworkTimeOffset);}
+   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+_toNetworkTimeOffset);}
    virtual int64 GetToNetworkTimeOffset() const {return _toNetworkTimeOffset;}
 
 private:

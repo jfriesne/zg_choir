@@ -79,28 +79,10 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/zlib/ZLibCodec.cpp                      \
                  $$MUSCLE_DIR/zlib/ZLibUtilityFunctions.cpp           \
 
-ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp                     \
-             $$ZG_DIR/src/ZGDatabasePeerSession.cpp             \
-             $$ZG_DIR/src/ZGStdinSession.cpp                    \
-             $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp
-
-PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
-              $$ZG_DIR/src/private/PZGThreadedSession.cpp       \
-              $$ZG_DIR/src/private/PZGHeartbeatSettings.cpp     \
-              $$ZG_DIR/src/private/PZGNetworkIOSession.cpp      \
-              $$ZG_DIR/src/private/PZGHeartbeatPacket.cpp       \
-              $$ZG_DIR/src/private/PZGUnicastSession.cpp        \
-              $$ZG_DIR/src/private/PZGDatabaseState.cpp         \
-              $$ZG_DIR/src/private/PZGDatabaseStateInfo.cpp     \
-              $$ZG_DIR/src/private/PZGDatabaseUpdate.cpp        \
-              $$ZG_DIR/src/private/PZGConstants.cpp             \
-              $$ZG_DIR/src/private/PZGBeaconData.cpp            \
-              $$ZG_DIR/src/private/PZGHeartbeatPeerInfo.cpp     \
-              $$ZG_DIR/src/private/PZGHeartbeatSourceState.cpp  \
-              $$ZG_DIR/src/private/PZGHeartbeatThreadState.cpp
 
 CLIENT_SOURCES = $$ZG_DIR/src/callback/ICallbackMechanism.cpp                   \
                  $$ZG_DIR/src/callback/SocketCallbackMechanism.cpp              \
+                 $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp                      \
                  $$ZG_DIR/src/connector/ClientConnector.cpp                     \
                  $$ZG_DIR/src/discovery/client/SystemDiscoveryClient.cpp        \
                  $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp    \
@@ -135,7 +117,7 @@ mac:LIBS              += -framework Foundation
 FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.cpp ClientRosterList.cpp TimeSyncWidget.cpp main.cpp
 FRIDGE_INCLUDES = FridgeClientWindow.h FridgeClientCanvas.h FridgeChatView.h ClientRosterList.h TimeSyncWidget.h
 
-SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$ZG_SOURCES $$PZG_SOURCES $$CLIENT_SOURCES
+SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$CLIENT_SOURCES
 HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_INCLUDES \
           $$ZG_DIR/include/zg/platform/qt/QtCallbackMechanism.h
 

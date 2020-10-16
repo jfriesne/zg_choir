@@ -289,7 +289,7 @@ String MessageTreeDatabaseObject :: ToString() const
 
 void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const
 {
-   // TODO IMPLEMENT THIS
+   s += node.GetNodePath().Pad(indentLevel).Append("\n");
 }
 
 status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)

@@ -5,7 +5,6 @@
 #include "util/NetworkUtilityFunctions.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
 #include "zg/discovery/server/IDiscoveryServerSessionController.h"
-#include "zg/private/PZGHeartbeatSettings.h"  // for IsNetworkInterfaceAcceptable()
 
 namespace zg {
 

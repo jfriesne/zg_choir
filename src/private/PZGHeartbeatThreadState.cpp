@@ -47,8 +47,8 @@ void PZGHeartbeatThreadState :: Initialize(const ConstPZGHeartbeatSettingsRef & 
    _halfAttachedTime                  = startTime+((_hbSettings()->GetHeartbeatsBeforeFullyAttached()*_heartbeatPingInterval)/2);
    _fullyAttachedTime                 = startTime+((_hbSettings()->GetHeartbeatsBeforeFullyAttached()*_heartbeatPingInterval)/1);
    _fullAttachmentReported            = false;
-   _toNetworkTimeOffset               = 0;
-   _mainThreadToNetworkTimeOffset     = 0;
+   _toNetworkTimeOffset               = INVALID_TIME_OFFSET;
+   _mainThreadToNetworkTimeOffset     = INVALID_TIME_OFFSET;
    _updateToNetworkTimeOffsetPending  = false;
    _recreateMulticastDataIOsRequested = true;
    _updateOfficialPeersListPending    = false;
@@ -237,19 +237,23 @@ void PZGHeartbeatThreadState :: PrintTimeSynchronizationDeltas() const
 void PZGHeartbeatThreadState :: UpdateToNetworkTimeOffset()
 {
    _updateToNetworkTimeOffsetPending = false;
-   if ((IsAtLeastHalfAttached())&&(IAmTheSeniorPeer() == false))  // senior peer is always synced with itself by definition, so only do this if we're junior
+   if (IsAtLeastHalfAttached())
    {
-      const ZGPeerID & seniorPID = GetSeniorPeerID();
-      const Queue<IPAddressAndPort> * sourceQ = _peerIDToIPAddresses.Get(seniorPID);
-      PZGHeartbeatSourceState * hss = ((sourceQ)&&(sourceQ->HasItems())) ? _onlineSources[PZGHeartbeatSourceKey(sourceQ->Head(), seniorPID)]() : NULL;
-      const PZGHeartbeatPacketWithMetaData * seniorHB = hss ? hss->GetHeartbeatPacket()() : NULL;
-      if (seniorHB) 
+      if (IAmTheSeniorPeer()) _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = 0; // senior peer is always exactly synced with itself, by definition
+      else
       {
-         const uint64 roundTripTimeMicros = hss->GetPreferredAverageValue(_now-_heartbeatExpirationTimeMicros);
-         const uint64 seniorNetTime = seniorHB->GetNetworkSendTimeMicros();
-         const uint64 localRecvTime = seniorHB->GetLocalReceiveTimeMicros();
-         _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = seniorNetTime-(localRecvTime-(roundTripTimeMicros/2));
+         const ZGPeerID & seniorPID = GetSeniorPeerID();
+         const Queue<IPAddressAndPort> * sourceQ = _peerIDToIPAddresses.Get(seniorPID);
+         PZGHeartbeatSourceState * hss = ((sourceQ)&&(sourceQ->HasItems())) ? _onlineSources[PZGHeartbeatSourceKey(sourceQ->Head(), seniorPID)]() : NULL;
+         const PZGHeartbeatPacketWithMetaData * seniorHB = hss ? hss->GetHeartbeatPacket()() : NULL;
+         if (seniorHB) 
+         {
+            const uint64 roundTripTimeMicros = hss->GetPreferredAverageValue(_now-_heartbeatExpirationTimeMicros);
+            const uint64 seniorNetTime = seniorHB->GetNetworkSendTimeMicros();
+            const uint64 localRecvTime = seniorHB->GetLocalReceiveTimeMicros();
+            _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = seniorNetTime-(localRecvTime-(roundTripTimeMicros/2));
 //printf("UpdateNetworkTimeOffset seniorPeer=[%s] source=[%s]:  seniorNetTime was " UINT64_FORMAT_SPEC " localTimeIReceivedThatAt was " UINT64_FORMAT_SPEC " rttAvg=" UINT64_FORMAT_SPEC " estRoundTripTime=" UINT64_FORMAT_SPEC " --> offset is " INT64_FORMAT_SPEC "\n", GetSeniorPeerID().ToString()(), seniorHB->GetPacketSource().ToString()(), seniorNetTime, localRecvTime, hss->GetPreferredAverageValue(0), roundTripTimeMicros, _toNetworkTimeOffset);
+         }
       }
    }
 }

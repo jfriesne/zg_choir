@@ -137,7 +137,12 @@ public:
    virtual bool ClientConnectionClosed()
    {
       const bool ret = AbstractReflectSession::ClientConnectionClosed();
-      if (ret) EndServer();
+      if (ret) 
+      {
+         if (_timeSyncSession()) _timeSyncSession()->EndSession();  // avoid any chance of it calling methods on us after this
+         TimeSyncReceived(0, MUSCLE_TIME_NEVER, GetRunTime64());    // turn off the client-side clock, as we can't sync it with the server's clock if we aren't in touch with the server
+         EndServer();
+      }
       return ret;
    }
 
@@ -526,7 +531,7 @@ void MonitorOwnerThreadSession :: MessageReceivedFromGateway(const MessageRef &,
 ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
    , _timeAverager(20)
-   , _mainThreadToNetworkTimeOffset(MUSCLE_TIME_NEVER)
+   , _mainThreadToNetworkTimeOffset(INVALID_TIME_OFFSET)
 {
    _imp = new ClientConnectorImplementation(this);
 }
@@ -539,10 +544,14 @@ ClientConnector :: ~ClientConnector()
 
 void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime)
 {
-   if (_timeAverager.AddMeasurement(roundTripTime, localReceiveTime).IsOK())
+   if (serverNetworkTime == MUSCLE_TIME_NEVER)
+   {
+      _timeAverager.Clear();
+      _mainThreadToNetworkTimeOffset = INVALID_TIME_OFFSET;
+   }
+   else if (_timeAverager.AddMeasurement(roundTripTime, localReceiveTime).IsOK())
    {
       _mainThreadToNetworkTimeOffset = serverNetworkTime-(localReceiveTime-(_timeAverager.GetAverageValueIgnoringOutliers()/2));
-//printf("TimeSyncReceived:  rtt=%llu snt=%llu localReceiveTime=%llu offset=%lli\n", roundTripTime, serverNetworkTime, localReceiveTime, (uint64)_mainThreadToNetworkTimeOffset);
    }
 }
 

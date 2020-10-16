@@ -8,6 +8,7 @@
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/ZGStdinSession.h"               // for ITextCommandReceiver
+#include "zg/ZGConstants.h"                  // for INVALID_TIME_CONSTANT
 #include "zg/discovery/server/IDiscoveryServerSessionController.h"
 
 #include "zg/private/PZGBeaconData.h"
@@ -108,12 +109,20 @@ public:
    /** Given a network-time-clock-value (i.e. one using the same time-base as returned by GetNetworkTime64()), 
      * returns the approximately-equivalent local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64())  
      */
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return (networkTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-GetToNetworkTimeOffset());}
+   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
+   {
+      const int64 ntto = GetToNetworkTimeOffset();
+      return ((ntto==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
+   }
 
    /** Given a local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64()), returns 
      * the approximately equivalent network-time-value (i.e. one using the same time-base as returned by GetNetworkTime64())
      */
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return (runTime64TimeStamp==MUSCLE_TIME_NEVER)?MUSCLE_TIME_NEVER:(runTime64TimeStamp+GetToNetworkTimeOffset());}
+   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const 
+   {
+      const int64 ntto = GetToNetworkTimeOffset();
+      return ((ntto==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
+   }
 
    /** Returns the number of microseconds that should be added to a GetRunTime64() value to turn it into a GetNetworkTime64() value,
      * or subtracted to do the inverse operation.  Note that this value will vary from one moment to the next!

@@ -1,7 +1,6 @@
 #include "system/DetectNetworkConfigChangesSession.h"
 #include "util/NetworkUtilityFunctions.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"
-#include "zg/private/PZGHeartbeatSettings.h"  // for IsNetworkInterfaceAcceptable()
 
 namespace zg {
 
@@ -48,12 +47,25 @@ status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint1
    status_t ret = muscle::GetNetworkInterfaceInfos(niis, flags);
    if (ret.IsError()) return ret;
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (zg_private::IsNetworkInterfaceAcceptable(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForDiscovery(niis[i]) == false) (void) niis.RemoveItemAt(i);
 
    Queue<IPAddress> q;
    if (MakeIPv6MulticastAddresses(GetDiscoveryMulticastKey(), niis, q).IsError(ret)) return ret;
    for (uint32 i=0; i<q.GetNumItems(); i++) if (retIAPs.AddTail(IPAddressAndPort(q[i], discoPort)).IsError(ret)) return ret;
    return ret;
+}
+
+// Some network interfaces we just shouldn't try to use!
+bool IsNetworkInterfaceUsableForDiscovery(const NetworkInterfaceInfo & nii)
+{  
+#ifdef __APPLE__
+   if (nii.GetName().StartsWith("utun")) return false;
+   if (nii.GetName().StartsWith("llw"))  return false;
+#else 
+   (void) nii;  // avoid compiler warning
+#endif
+   
+   return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
 }
 
 };  // end namespace zg

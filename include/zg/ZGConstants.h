@@ -10,6 +10,8 @@ namespace zg
 #define ZG_VERSION_STRING "1.10"  /**< The current version of the ZG distribution, expressed as an ASCII string */
 #define ZG_VERSION        11000   /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
 
+#define INVALID_TIME_OFFSET ((int64)(((uint64)-1)/2)) /** Guard value:  Similar to MUSCLE_TIME_NEVER, but for an int64 (relative-offset) time-value rather than an absolute uint64 timestamp */
+
 /** Enumeration of port numbers that will be the same for all ZG systems (not currently used) */
 enum {
    GLOBAL_PORT_BASE = 41780,   /**< guard value */

@@ -8,6 +8,7 @@
 #include "zg/clocksync/ZGTimeAverager.h"
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/INetworkTimeProvider.h"
+#include "zg/ZGConstants.h"  // for INVALID_TIME_OFFSET
 
 namespace zg {
 
@@ -76,14 +77,14 @@ public:
 
    virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
    {
-      const uint64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
-      return ((ntto==MUSCLE_TIME_NEVER)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
+      const int64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
+      return ((ntto==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
    }
 
    virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
    {
-      const uint64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
-      return ((ntto==MUSCLE_TIME_NEVER)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
+      const int64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
+      return ((ntto==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
    }
 
    virtual int64 GetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;}
