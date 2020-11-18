@@ -105,6 +105,8 @@ private:
 
    bool _isConnected;
    Hashtable<ITreeGatewaySubscriber *, Void> _allowedCallbacks;  // untrusted pointers, do not dereference
+
+   ITreeGatewaySubscriber _dummySubscriber;  // here solely so that we can place it into (_allowedCallbacks) if necessary
 };
 
 };  // end namespace zg

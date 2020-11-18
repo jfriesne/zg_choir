@@ -35,6 +35,7 @@ ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const Strin
 MuxTreeGateway :: MuxTreeGateway(ITreeGateway * optUpstreamGateway)
    : ProxyTreeGateway(optUpstreamGateway)
    , _isConnected(false)
+   , _dummySubscriber(NULL)
 {
    // empty
 }
@@ -281,7 +282,7 @@ void MuxTreeGateway :: TreeLocalPeerPonged(const String & tag)
       while((t=tok()) != NULL)
       {
          ITreeGatewaySubscriber * s = ParseRegistrationID(t);
-         if (s) (void) _allowedCallbacks.PutWithDefault(s);
+         (void) _allowedCallbacks.PutWithDefault(s?s:&_dummySubscriber);  // _dummySubscriber so that if the requester has since unregistered we still won't let callbacks spill out to everyone else
       }
    }
    else

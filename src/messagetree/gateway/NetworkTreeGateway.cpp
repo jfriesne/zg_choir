@@ -301,7 +301,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
    MessageRef payload     = msg()->GetMessage(NTG_NAME_PAYLOAD);
-   const String * optB4 = msg()->GetStringPointer(NTG_NAME_BEFORE);
+   const String * optB4   = msg()->GetStringPointer(NTG_NAME_BEFORE);
    const int32 index      = msg()->GetInt32(NTG_NAME_INDEX);
 
    switch(msg()->what)
@@ -389,7 +389,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 wha
 void ServerSideNetworkTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_PONG);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())&&(msg()->CAddString(NTG_NAME_TAG, tag).IsOK())&&(msg()->AddInt32(NTG_NAME_INDEX, -1).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
