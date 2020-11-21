@@ -178,7 +178,7 @@ protected:
      *              this upload from being delivered to any clients (including the caller)
      * @param optBefore Specifies where in the parent's node-index this node should be inserted.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified in the (flags)
      *                  argument.  If non-NULL, the node will be inserted directly before the child node with the specified name; or if NULL, the node will be
-     *                  inserted at the front of the index.
+     *                  inserted at the end of the index.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
    virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String * optBefore = NULL);
