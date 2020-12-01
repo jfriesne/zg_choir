@@ -551,10 +551,34 @@ MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeData
    return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());
 }
 
+DataNode * MessageTreeDatabaseObject :: GetDataNode(const String & nodePath) const
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->GetDataNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath)) : NULL;
+}
+
 status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags, const String *optInsertBefore)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, flags, optInsertBefore) : B_BAD_OBJECT;
+}
+
+status_t MessageTreeDatabaseObject :: FindMatchingNodes(const String & nodePath, const ConstQueryFilterRef & filter, Queue<DataNodeRef> & retMatchingNodes, uint32 maxResults) const
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->FindMatchingNodes(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath), filter, retMatchingNodes, maxResults) : B_BAD_OBJECT;
+}
+
+DataNodeRef MessageTreeDatabaseObject :: FindMatchingNode(const String & nodePath, const ConstQueryFilterRef & filter) const
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->FindMatchingNode(DatabaseSubpathToSessionRelativePath(nodePath.StartsWith("/") ? nodePath : nodePath), filter) : DataNodeRef();
+}
+
+status_t MessageTreeDatabaseObject :: CloneDataNodeSubtree(const DataNode & sourceNode, const String & destPath, SetDataNodeFlags flags, const String * optInsertBefore, const ITraversalPruner * optPruner)
+{
+   MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
+   return zsh ? zsh->CloneDataNodeSubtree(sourceNode, destPath.StartsWith("/") ? destPath : DatabaseSubpathToSessionRelativePath(destPath), flags, optInsertBefore, optPruner) : B_BAD_OBJECT;
 }
 
 void MessageTreeDatabaseObject :: MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag)

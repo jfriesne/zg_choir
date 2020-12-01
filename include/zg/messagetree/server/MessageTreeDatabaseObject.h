@@ -190,6 +190,13 @@ protected:
      */
    bool IsHandlingInterimUpdate() const {return _interimUpdateNestCount.IsInBatch();}
 
+   /**
+    * Returns a pointer to the first DataNode object that mactches the given node-path.
+    * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
+    * @return A pointer to the specified DataNode, or NULL if no node matching that path was found.
+    */
+   DataNode * GetDataNode(const String & nodePath) const;
+
    /** Pass-through to StorageReflectSession::SetDataNode() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.
      * @param dataMsgRef The value to set the node to
@@ -199,6 +206,37 @@ protected:
      * @return B_NO_ERROR on success, or an error code on failure.
      */
    status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String *optInsertBefore=NULL); 
+
+   /** Convenience method:  Adds nodes that match the specified path to the passed-in Queue.
+    *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
+    *                  If it's a relative path, only nodes in the current session's subtree will be searched.
+    *  @param filter If non-NULL, only nodes whose data Messages match this filter will be added to the (retMatchingNodes) table.
+    *  @param retMatchingNodes A Queue that will on return contain the list of matching nodes.
+    *  @param maxResults Maximum number of matching nodes to return.  Defaults to MUSCLE_NO_LIMIT.
+    *  @return B_NO_ERROR on success, or an error code on failure.  Note that failing to find any matching nodes is NOT considered an error.
+    */
+   status_t FindMatchingNodes(const String & nodePath, const ConstQueryFilterRef & filter, Queue<DataNodeRef> & retMatchingNodes, uint32 maxResults = MUSCLE_NO_LIMIT) const;
+
+   /** Convenience method:  Same as FindMatchingNodes(), but finds only the first matching node.
+     *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
+     *                  If it's a relative path, only nodes in the current session's subtree will be searched.
+     *  @param filter If non-NULL, only nodes whose data Messages match this filter will be added to the (retMatchingNodes) table.
+     *  @returns a reference to the first matching node on success, or a NULL reference on failure.
+     */
+   DataNodeRef FindMatchingNode(const String & nodePath, const ConstQueryFilterRef & filter) const;
+
+   /** Convenience method (used by some customized daemons) -- Given a source node and a destination path,
+    * Make (path) a deep, recursive clone of (node).
+    * @param sourceNode Reference to a DataNode to clone.
+    * @param destPath Path of where the newly created node subtree will appear.  Should be relative to our home node.
+    * @param flags optional bit-chord of SETDATANODE_FLAG_* flags to modify our behavior.  Defaults to no-flags-set.
+    * @param optInsertBefore If (addToTargetIndex) is true, this argument will be passed on to InsertOrderedChild().
+    *                        Otherwise, this argument is ignored.
+    * @param optPruner If non-NULL, this object can be used as a callback to prune the traversal or filter
+    *                  the MessageRefs cloned.
+    * @return B_NO_ERROR on success, or an error code on failure (may leave a partially cloned subtree on failure)
+    */
+   status_t CloneDataNodeSubtree(const DataNode & sourceNode, const String & destPath, SetDataNodeFlags flags = SetDataNodeFlags(), const String * optInsertBefore = NULL, const ITraversalPruner * optPruner = NULL);
 
    /** Pass-through to StorageReflectSession::RemoveDataNodes() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
