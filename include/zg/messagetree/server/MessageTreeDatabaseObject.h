@@ -96,7 +96,25 @@ public:
      */
    virtual status_t RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
 
+   /** This callback method is called when a node in this database-object's subtree is created, updated, or destroyed.
+     * @param relativePath the path to this node (relative to this database-object's root-node)
+     * @param node a reference to the node's current state -- see node.GetData() for the node's current (post-change) payload. 
+     * @param oldDataRef a reference to the node's payload as it was before this change (or a NULL reference if this node is being created now)
+     * @param isBeingRemoved true iff this node is being deleted by this change
+     * @note be sure to call up to the parent implementation of this method if you override it!
+     */
    virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
+
+   /** This callback method is called when the index of node in this database-object's subtree is being modified.
+     * @param relativePath the path to this node (relative to this database-object's root-node)
+     * @param node a reference to the node's current state
+     * @param op An INDEX_OP_* value indicating what type of index-update is being applied to the index.
+     * @param index the location within the index at which the new entry is to be inserted (if op is INDEX_OP_ENTRY_INSERTED)
+     *              or removed (if op is INDEX_OP_ENTRYREMOVED).  Not used if op is INDEX_OP_ENTRYCLEARED.
+     * @param key Name of the node that is being inserted (if op is INDEX_OP_ENTRYINSERTED) or removed (if op is INDEX_OP_ENTRYREMOVED)
+     *            Not used if op is INDEX_OP_ENTRYCLEARED.
+     * @note be sure to call up to the parent implementation of this method if you override it!
+     */
    virtual void MessageTreeNodeIndexChanged(const String & relativePath, DataNode & node, char op, uint32 index, const String & key);
 
    /** Called after an ITreeGatewaySubscriber somewhere has called SendMessageToTreeSeniorPeer().
@@ -135,6 +153,7 @@ protected:
    /** Called by SeniorUpdate() when it wants to add an update-node-index action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
      * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
      * override this to do more (e.g. to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
+     * @param relativePath path to the node in question, relative to our subtree's root.
      * @param op the index-update opcode of the change
      * @param index the position within the index of the change
      * @param key the name of the child node in the index

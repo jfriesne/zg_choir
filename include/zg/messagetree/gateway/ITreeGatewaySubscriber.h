@@ -312,6 +312,8 @@ public:
    /**
     * Constructor
     * @param sub pointer to the subscriber object to call BeginUndo() on
+    * @param label a human-readable label used to describe the undo-action to the user.  Defaults to an empty string.
+    * @param whichDB index of the database that the action is going to operate on.  Defaults to 0.
     */
    GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* sub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _sub(sub), _label(label), _whichDB(whichDB)
    {

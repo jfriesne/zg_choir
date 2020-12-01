@@ -515,9 +515,9 @@ int MessageTreeDatabasePeerSession :: GetSubscribedSessionsCallback(DataNode & n
    const Hashtable<const String *, AbstractReflectSessionRef> & sessions = GetSessions();
 
    Hashtable<ServerSideMessageTreeSession *, Void> & results = *(static_cast<Hashtable<ServerSideMessageTreeSession *, Void> *>(ud));
-   for (HashtableIterator<const String *, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
+   for (HashtableIterator<String, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
    {
-      const AbstractReflectSessionRef * arsf = sessions.Get(iter.GetKey());
+      const AbstractReflectSessionRef * arsf = sessions.Get(&iter.GetKey());
       ServerSideMessageTreeSession * ssmts = arsf ? dynamic_cast<ServerSideMessageTreeSession *>(arsf->GetItemPointer()) : NULL;
       if (ssmts) (void) results.PutWithDefault(ssmts);
    }
