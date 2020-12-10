@@ -92,10 +92,10 @@ private:
    TimeSyncWidget * _timeSyncWidget;
    QPushButton * _redoButton;
 
-   String _undoStackTopPath;  // e.g. "project/undo/<KEY>/top", only when we're connected
+   String _undoStackTopPath;  // e.g. "project/undo/<KEY>", only when we're connected
    MessageRef _undoStackTop;  // current Message held by the server at (_undoStackTopPath)
 
-   String _redoStackTopPath;  // e.g. "project/redo/<KEY>/top", only when we're connected
+   String _redoStackTopPath;  // e.g. "project/redo/<KEY>", only when we're connected
    MessageRef _redoStackTop;  // current Message held by the server at (_redoStackTopPath)
 
    bool _updateStatusPending;
