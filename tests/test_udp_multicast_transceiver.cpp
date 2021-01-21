@@ -19,10 +19,10 @@ public:
       // empty
    }
 
-   virtual void MulticastUDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes)
+   virtual void UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes)
    {
       printf("\n\n");
-      LogTime(MUSCLE_LOG_INFO, "Received multicast packet from %s:  [%s]\n", sourceIAP.ToString()(), packetBytes()->GetBuffer());
+      LogTime(MUSCLE_LOG_INFO, "Received UDP packet from %s:  [%s]\n", sourceIAP.ToString()(), packetBytes()->GetBuffer());
       PrintHexBytes(packetBytes);
    }
 
@@ -38,6 +38,24 @@ public:
       LogTime(MUSCLE_LOG_INFO, "This computer just woke up.\n");
    }
 };
+
+// Looks for a string like "[::1]:1234 foo bar", and if it finds it, sets (outStr) to "foo bar" and returns the IPAddressAndPort.
+// otherwise, sets (outStr) equal to (inStr) and returns an invalid IPAddressAndPort.
+static IPAddressAndPort ParseUnicastAddressFromBeginningOfString(const String & inStr, String & outStr)
+{
+   int32 rBracket = inStr.StartsWith('[') ? inStr.IndexOf(']') : -1;
+   if (rBracket > 0)
+   {
+      const IPAddressAndPort ret(inStr, 0, true);
+      while((rBracket < inStr.Length())&&(inStr[rBracket] != ' ')) rBracket++;
+      outStr = inStr.Substring(rBracket).Trim();
+      return ret; 
+   }
+
+   // No unicast address parsed
+   outStr = inStr;
+   return IPAddressAndPort();
+}
 
 int main(int argc, char ** argv)
 {
@@ -89,12 +107,27 @@ int main(int argc, char ** argv)
                   {
                      if (nextLine->HasChars())
                      {
-                        ByteBufferRef payloadBytes = GetByteBufferFromPool(nextLine->FlattenedSize(), (const uint8 *) nextLine->Cstr());
-                        if ((payloadBytes())&&(multicastTransceiver.SendMulticastPacket(payloadBytes).IsOK(ret)))
+                        String sendStr = *nextLine;
+
+                        const IPAddressAndPort unicastDestinationAddress = ParseUnicastAddressFromBeginningOfString(nextLine->Trim(), sendStr);
+
+                        ByteBufferRef payloadBytes = GetByteBufferFromPool(sendStr.FlattenedSize(), (const uint8 *) sendStr());
+                        if (payloadBytes())
                         {
-                           LogTime(MUSCLE_LOG_INFO, "Sent multicast packet containing:  [%s]\n", nextLine->Cstr());
+                           if (unicastDestinationAddress.IsValid())
+                           {
+                              if (multicastTransceiver.SendUnicastPacket(unicastDestinationAddress, payloadBytes).IsOK(ret))
+                              {
+                                 LogTime(MUSCLE_LOG_INFO, "Sent unicast packet containing:  [%s] to [%s]\n", sendStr(), unicastDestinationAddress.ToString()());
+                              }
+                              else LogTime(MUSCLE_LOG_ERROR, "Error sending unicast packet containing [%s] to [%s]: [%s]\n", sendStr(), unicastDestinationAddress.ToString()(), ret());
+                           }
+                           else if (multicastTransceiver.SendMulticastPacket(payloadBytes).IsOK(ret))
+                           {
+                              LogTime(MUSCLE_LOG_INFO, "Sent multicast packet containing:  [%s]\n", sendStr());
+                           }
+                           else LogTime(MUSCLE_LOG_ERROR, "Error sending multicast packet containing [%s]: [%s]\n", sendStr(), ret());
                         }
-                        else LogTime(MUSCLE_LOG_ERROR, "Error sending multicast packet containing [%s]: [%s]\n", nextLine->Cstr(), ret());
                      }
                   }
                }

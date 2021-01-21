@@ -5,6 +5,7 @@
 #include "util/ByteBuffer.h"
 #include "util/RefCount.h"
 #include "util/String.h"
+#include "util/IPAddress.h"
 
 namespace zg {
 
@@ -52,6 +53,14 @@ public:
      * @returns B_NO_ERROR on success, or some other value on error.
      */
    status_t SendMulticastPacket(const ByteBufferRef & payloadBytes);
+
+   /** Call this to send out a unicast UDP packet that will be received whoever is
+     * receiving UDP packets at the specified location.
+     * @param targetAddress the IP address and port that the unicast packet should be sent to.
+     * @param payloadBytes the payload bytes to put into the multicast UDP packet
+     * @returns B_NO_ERROR on success, or some other value on error.
+     */
+   status_t SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes);
 
    /** Returns the current transmission-key string we are using (as specified previously in your call to Start()). 
      *  Only valid if we are currently active.

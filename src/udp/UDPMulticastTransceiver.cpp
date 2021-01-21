@@ -11,10 +11,12 @@
 namespace zg {
 
 enum {
-   UDP_COMMAND_SEND_PACKET = 1969516660 // 'udpt' 
+   UDP_COMMAND_SEND_MULTICAST_PACKET = 1969516660, // 'udpt' 
+   UDP_COMMAND_SEND_UNICAST_PACKET
 };
 
 static const String UDP_NAME_PAYLOAD = "pay";
+static const String UDP_NAME_ADDRESS = "add";
 
 class MulticastUDPClientManagerSession;
 
@@ -56,19 +58,48 @@ public:
 
       if (GetGateway()() == NULL) return -1;  // abort sessions that couldn't create a socket
 
-      DataIO & udpIO = *GetGateway()()->GetDataIO()();
+      PacketDataIO & udpIO = dynamic_cast<PacketDataIO &>(*GetGateway()()->GetDataIO()());
       Queue<MessageRef> & oq = GetGateway()()->GetOutgoingMessageQueue();
       uint32 ret = 0;
       while((oq.HasItems())&&(ret < maxBytes))
       {
+         const Message & m = *oq.Head()();
+
          ByteBufferRef bufRef;
-         if (oq.Head()()->FindFlat(UDP_NAME_PAYLOAD, bufRef).IsOK())
+         if (m.FindFlat(UDP_NAME_PAYLOAD, bufRef).IsOK())
          {
-            const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
-            if (bytesSent > 0) 
+            switch(m.what)
             {
-               ret += bytesSent;
-               if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p sent " INT32_FORMAT_SPEC " bytes of multicast-packet %s\n", this, bytesSent, _multicastIAP.ToString()());
+               case UDP_COMMAND_SEND_MULTICAST_PACKET:
+               {
+                  const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
+                  if (bytesSent > 0) 
+                  {
+                     ret += bytesSent;
+                     if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p sent " INT32_FORMAT_SPEC " bytes of multicast-packet %s\n", this, bytesSent, _multicastIAP.ToString()());
+                  }
+               }
+               break;
+
+               case UDP_COMMAND_SEND_UNICAST_PACKET:
+               {
+                  IPAddressAndPort targetAddress;
+                  if (m.FindFlat(UDP_NAME_ADDRESS, targetAddress).IsOK())
+                  {
+                     const int32 bytesSent = udpIO.WriteTo(bufRef()->GetBuffer(), bufRef()->GetNumBytes(), targetAddress);
+                     if (bytesSent > 0) 
+                     {
+                        ret += bytesSent;
+                        if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p sent " INT32_FORMAT_SPEC " bytes of unicast-packet %s\n", this, bytesSent, targetAddress.ToString()());
+                     }
+                  }
+                  else LogTime(MUSCLE_LOG_ERROR, "MulticastUDPSession:  No target address found in send-unicast Message!\n");
+               }
+               break;
+
+               default:
+                  LogTime(MUSCLE_LOG_ERROR, "MulticastUDPSession:  Unknown command code " UINT32_FORMAT_SPEC "\n", m.what);
+               break;
             }
          }
          oq.RemoveHead();
@@ -130,11 +161,34 @@ public:
    virtual void ComputerIsAboutToSleep();
    virtual void ComputerJustWokeUp();
  
-   void MulticastUDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes);
+   void UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes);
 
    virtual void MessageReceivedFromGateway(const MessageRef &, void *);
 
    bool IsEnableReceive() const {return _enableReceive;}
+
+   void HandleMessageFromOwner(const MessageRef & msg)
+   {
+      switch(msg()->what)
+      {
+         case UDP_COMMAND_SEND_MULTICAST_PACKET:
+            BroadcastToAllSessionsOfType<MulticastUDPSession>(msg);
+         break;
+
+         case UDP_COMMAND_SEND_UNICAST_PACKET:
+         {
+            // Unicast only needs to go to one session (since any of them can send the unicast UDP packet equally well)
+            MulticastUDPSession * mus = FindFirstSessionOfType<MulticastUDPSession>();
+            if (mus) mus->MessageReceivedFromSession(*this, msg, NULL);
+                else LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Couldn't find a MulticastUDPSession to hand unicast Message to!\n");
+         }
+         break;
+
+         default:
+            LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Unknown what-code " UINT32_FORMAT_SPEC "\n");
+         break;
+      }
+   }
 
 private:
    void EndExistingMulticastUDPSessions()
@@ -187,7 +241,7 @@ int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 ma
          {
             newReceiveBuffer.SwapContents(_receiveBuffer);
             (void) newReceiveBuffer()->SetNumBytes(bytesRead, true);
-            _manager->MulticastUDPPacketReceived(sourceLoc, newReceiveBuffer);
+            _manager->UDPPacketReceived(sourceLoc, newReceiveBuffer);
          }
 
          ret += bytesRead;
@@ -258,11 +312,21 @@ public:
    // Called by the main thread
    status_t SendMulticastPacket(const ByteBufferRef & payloadBytes)
    {
-      MessageRef msg = GetMessageFromPool(UDP_COMMAND_SEND_PACKET);
+      MessageRef msg = GetMessageFromPool(UDP_COMMAND_SEND_MULTICAST_PACKET);
       if (msg() == NULL) return B_OUT_OF_MEMORY;
 
       status_t ret;
       return (msg()->AddFlat(UDP_NAME_PAYLOAD, payloadBytes).IsOK(ret)) ? SendMessageToInternalThread(msg) : ret;
+   }
+
+   // Called by the main thread
+   status_t SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes)
+   {
+      MessageRef msg = GetMessageFromPool(UDP_COMMAND_SEND_UNICAST_PACKET);
+      if (msg() == NULL) return B_OUT_OF_MEMORY;
+
+      status_t ret;
+      return ((msg()->AddFlat(UDP_NAME_PAYLOAD, payloadBytes).IsOK(ret))&&(msg()->AddFlat(UDP_NAME_ADDRESS, targetAddress).IsOK(ret))) ? SendMessageToInternalThread(msg) : ret;
    }
 
 protected:
@@ -293,7 +357,7 @@ protected:
    }
 
    // Called in internal I/O thread
-   void MulticastUDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetData)
+   void UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetData)
    {
       bool sendSignal = false;
       {
@@ -330,8 +394,11 @@ private:
       MessageRef msg;
       while(WaitForNextMessageFromOwner(msg, 0) >= 0)
       {
-         if (msg()) managerSession->BroadcastToAllSessions(msg);
-               else return B_ERROR;  // time for this thread to go away!
+         if (msg()) 
+         {
+            managerSession->HandleMessageFromOwner(msg);
+         }
+         else return B_ERROR;  // time for this thread to go away!
       }
       return B_NO_ERROR;
    }
@@ -350,7 +417,7 @@ void MulticastUDPClientManagerSession :: MessageReceivedFromGateway(const Messag
 
 void MulticastUDPClientManagerSession :: ComputerIsAboutToSleep() {_imp->ReportSleepNotification(true);}
 void MulticastUDPClientManagerSession :: ComputerJustWokeUp()     {_imp->ReportSleepNotification(false);}
-void MulticastUDPClientManagerSession :: MulticastUDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes) {_imp->MulticastUDPPacketReceived(sourceIAP, packetBytes);}
+void MulticastUDPClientManagerSession :: UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes) {_imp->UDPPacketReceived(sourceIAP, packetBytes);}
 
 UDPMulticastTransceiver :: UDPMulticastTransceiver(ICallbackMechanism * mechanism) 
    : ICallbackSubscriber(mechanism)
@@ -424,7 +491,7 @@ void UDPMulticastTransceiver :: DispatchCallbacks(uint32 eventTypeBits)
          {
             const ByteBufferRef & b = bbq[i];
             for (HashtableIterator<IUDPMulticastNotificationTarget *, Void> subIter(_targets); subIter.HasData(); subIter++)
-               subIter.GetKey()->MulticastUDPPacketReceived(sourceIAP, b);
+               subIter.GetKey()->UDPPacketReceived(sourceIAP, b);
          }
       }
       mainThreadPendingUpdates.Clear();
@@ -459,9 +526,19 @@ status_t UDPMulticastTransceiver :: SendMulticastPacket(const ByteBufferRef & pa
    return _isActive ? _imp->SendMulticastPacket(payloadBytes) : B_BAD_OBJECT;  // no point queuing up outgoing data if our internal thread isn't running
 }
 
+status_t UDPMulticastTransceiver :: SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes)
+{
+   return _isActive ? _imp->SendUnicastPacket(targetAddress, payloadBytes) : B_BAD_OBJECT;  // no point queuing up outgoing data if our internal thread isn't running
+}
+
 status_t IUDPMulticastNotificationTarget :: SendMulticastPacket(const ByteBufferRef & payloadBytes)
 {
    return _multicastTransceiver ? _multicastTransceiver->SendMulticastPacket(payloadBytes) : B_BAD_OBJECT;
+}
+
+status_t IUDPMulticastNotificationTarget :: SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes)
+{
+   return _multicastTransceiver ? _multicastTransceiver->SendUnicastPacket(targetAddress, payloadBytes) : B_BAD_OBJECT;
 }
 
 };  // end namespace zg
