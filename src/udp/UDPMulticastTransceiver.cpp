@@ -232,24 +232,30 @@ public:
       Stop();  // paranoia
    }
 
+   // Called by the main thread
    status_t Start() 
    {
       Stop();  // paranoia
       return StartInternalThread();
    }
 
+   // Called by the main thread
    void Stop() 
    {
       (void) ShutdownInternalThread();
-      _pendingUpdates.Clear();
+      _ioThreadPendingUpdates.Clear();
+      _mainThreadPendingUpdates.Clear();
    }
 
-   void GrabUpdates(Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & updates)
+   // Called by the main thread
+   Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & SwapUpdateBuffers()
    {
       MutexGuard mg(_mutex);
-      updates.SwapContents(_pendingUpdates);
+      _mainThreadPendingUpdates.SwapContents(_ioThreadPendingUpdates);
+      return _mainThreadPendingUpdates;  // returning a read/write reference so the calling code can iterate it and then clear it
    }
 
+   // Called by the main thread
    status_t SendMulticastPacket(const ByteBufferRef & payloadBytes)
    {
       MessageRef msg = GetMessageFromPool(UDP_COMMAND_SEND_PACKET);
@@ -260,6 +266,7 @@ public:
    }
 
 protected:
+   // Called in internal I/O thread
    virtual void InternalThreadEntry()
    {
       ReflectServer server;
@@ -285,24 +292,28 @@ protected:
       server.Cleanup();
    }
 
+   // Called in internal I/O thread
    void MulticastUDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetData)
    {
       bool sendSignal = false;
       {
-         MutexGuard mg(_mutex);
+         MutexGuard mg(_mutex);  // critical section starts here
 
-         if (_pendingUpdates.IsEmpty()) sendSignal = true;
-         Queue<ByteBufferRef> * q = _pendingUpdates.GetOrPut(sourceIAP);
+         const bool wasEmpty = _ioThreadPendingUpdates.IsEmpty();
+         Queue<ByteBufferRef> * q = _ioThreadPendingUpdates.GetOrPut(sourceIAP);
          if (q)
          {
             (void) q->AddTail(packetData);
             if (q->GetNumItems() > _master._perSenderMaxBacklogDepth) (void) q->RemoveHead();
-            if (q->IsEmpty()) (void) _pendingUpdates.Remove(sourceIAP);  // semi-paranoia
+            if (q->IsEmpty()) (void) _ioThreadPendingUpdates.Remove(sourceIAP);  // semi-paranoia
+            if ((wasEmpty)&&(_ioThreadPendingUpdates.HasItems())) sendSignal = true;
          }
       }
+
       if (sendSignal) _master.RequestCallbackInDispatchThread(1<<UDP_EVENT_TYPE_PACKETRECEIVED);
    }
 
+   // Called in internal I/O thread
    void ReportSleepNotification(bool isAboutToSleep)
    {
       const int setBitIdx = isAboutToSleep ? UDP_EVENT_TYPE_SLEEP : UDP_EVENT_TYPE_AWAKE;
@@ -328,7 +339,8 @@ private:
    UDPMulticastTransceiver & _master;
 
    Mutex _mutex;
-   Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _pendingUpdates; // access to this must be serialized via _mutex
+   Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _ioThreadPendingUpdates;   // access to this must be serialized via _mutex
+   Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _mainThreadPendingUpdates; // access to this must be serialized via _mutex
 };
 
 void MulticastUDPClientManagerSession :: MessageReceivedFromGateway(const MessageRef & /*dummySignalMessage*/, void *)
@@ -401,11 +413,10 @@ void UDPMulticastTransceiver :: DispatchCallbacks(uint32 eventTypeBits)
 {
    if (eventTypeBits & (1<<UDP_EVENT_TYPE_PACKETRECEIVED))
    {
-      Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > updates;
-      _imp->GrabUpdates(updates);
+      Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & mainThreadPendingUpdates = _imp->SwapUpdateBuffers();  // safely swaps the contents of _ioThreadPendingUpdates and _mainThreadPendingUpdates
 
       // Notify all the targets of incoming packet
-      for (HashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(updates); iter.HasData(); iter++) 
+      for (HashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(mainThreadPendingUpdates); iter.HasData(); iter++) 
       {
          const IPAddressAndPort & sourceIAP = iter.GetKey();
          const Queue<ByteBufferRef> & bbq = iter.GetValue();
@@ -416,6 +427,7 @@ void UDPMulticastTransceiver :: DispatchCallbacks(uint32 eventTypeBits)
                subIter.GetKey()->MulticastUDPPacketReceived(sourceIAP, b);
          }
       }
+      mainThreadPendingUpdates.Clear();
    }
 
    if (eventTypeBits & (1<<UDP_EVENT_TYPE_SLEEP)) MainThreadNotifyAllOfSleepChange(true);
