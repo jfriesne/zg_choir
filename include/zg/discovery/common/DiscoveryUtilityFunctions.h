@@ -26,8 +26,16 @@ enum {DEFAULT_ZG_DISCOVERY_PORT = 25672};  /**< Arbitrary default port number to
   */
 status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort = DEFAULT_ZG_DISCOVERY_PORT);
 
+/** Returns the set of multicast groups currently recommended to send/receive multicast UDP packets on with
+  * the UDPMulticastTransceiver class.
+  * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.
+  * @param transmissionKey the transmission-key string (as was passed to the Start() method of the UDPMulticastTransceiver object previously)
+  * @returns B_NO_ERROR on success, or some other error code on failure.
+  */
+status_t GetTransceiverMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, const String & transmissionKey);
+
 /** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's e.g. known to be a special-purpose thing) */
-bool IsNetworkInterfaceUsableForDiscovery(const NetworkInterfaceInfo & nii);
+bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);
 
 };  // end namespace zg
 

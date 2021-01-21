@@ -33,6 +33,7 @@ file(GLOB ZG_SRCS
    "./src/connector/*.cpp"
    "./src/discovery/*/*.cpp"
    "./src/messagetree/*/*.cpp"
+   "./src/udp/*.cpp"
    "./src/private/*.cpp"
 ) 
 

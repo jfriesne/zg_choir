@@ -40,23 +40,42 @@ static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<Net
    return B_NO_ERROR;
 }
 
-status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort)
+static status_t GetMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 port, const IPAddress & baseKey)
 {
    Queue<NetworkInterfaceInfo> niis;
    GNIIFlags flags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
    status_t ret = muscle::GetNetworkInterfaceInfos(niis, flags);
    if (ret.IsError()) return ret;
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForDiscovery(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForMulticast(niis[i]) == false) (void) niis.RemoveItemAt(i);
 
    Queue<IPAddress> q;
-   if (MakeIPv6MulticastAddresses(GetDiscoveryMulticastKey(), niis, q).IsError(ret)) return ret;
-   for (uint32 i=0; i<q.GetNumItems(); i++) if (retIAPs.AddTail(IPAddressAndPort(q[i], discoPort)).IsError(ret)) return ret;
+   if (MakeIPv6MulticastAddresses(baseKey, niis, q).IsError(ret)) return ret;
+   for (uint32 i=0; i<q.GetNumItems(); i++) if (retIAPs.AddTail(IPAddressAndPort(q[i], port)).IsError(ret)) return ret;
    return ret;
 }
 
+status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort)
+{
+   return GetMulticastAddresses(retIAPs, discoPort, GetDiscoveryMulticastKey());
+}
+
+static IPAddressAndPort GetTransceiverMulticastKey(const String & transmissionKey)
+{
+   const uint64 tHash = transmissionKey.HashCode64(); 
+   IPAddress ip = Inet_AtoN("::a1:a2:a3:a4");  // base core multicast address, not including any multicast prefix
+   ip.SetLowBits(ip.GetLowBits()+tHash);
+   return IPAddressAndPort(ip, ((uint16)(tHash%30000))+30000);  // I guess?
+}
+
+status_t GetTransceiverMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, const String & transmissionKey)
+{
+   const IPAddressAndPort iap = GetTransceiverMulticastKey(transmissionKey);
+   return GetMulticastAddresses(retIAPs, iap.GetPort(), iap.GetIPAddress());
+}
+
 // Some network interfaces we just shouldn't try to use!
-bool IsNetworkInterfaceUsableForDiscovery(const NetworkInterfaceInfo & nii)
+bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii)
 {  
 #ifdef __APPLE__
    if (nii.GetName().StartsWith("utun")) return false;

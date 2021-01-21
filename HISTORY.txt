@@ -4,6 +4,7 @@ v1.10 -
      the ringing of the bell is more obvious at a glance
    - Added client/server support and MUSCLE-Message database support
    - Added clocksync/ZGTimeAverager class
+   - Added udp/UDPMulticastTransceiver class
 
 v1.01 - 6/22/2019
    - Added code to test_peer.cpp to test sending and receiving of

@@ -7,7 +7,7 @@
 #include "reflector/ReflectServer.h"
 #include "system/DetectNetworkConfigChangesSession.h"
 #include "system/Thread.h"
-#include "util/NetworkUtilityFunctions.h"    // for GetDiscoveryMulticastAddresses()
+#include "util/NetworkUtilityFunctions.h"
 #include "zg/ZGPeerID.h"
 
 namespace zg {
