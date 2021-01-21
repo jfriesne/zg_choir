@@ -33,20 +33,7 @@ public:
       // empty
    }
 
-   virtual ConstSocketRef CreateDefaultSocket()
-   {
-      _receiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);
-      if (_receiveBuffer())
-      {
-         ConstSocketRef udpSocket = CreateUDPSocket();
-         if ((udpSocket())&&(BindUDPSocket(udpSocket, _multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
-         {
-            if (AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()) != B_NO_ERROR) return ConstSocketRef();
-            return udpSocket;
-         }
-      }
-      return ConstSocketRef();
-   }
+   virtual ConstSocketRef CreateDefaultSocket();
 
    virtual DataIORef CreateDataIO(const ConstSocketRef & s)
    {
@@ -103,9 +90,10 @@ DECLARE_REFTYPES(MulticastUDPSession);
 class MulticastUDPClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey) 
+   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive) 
       : _imp(imp)
       , _transmissionKey(transmissionKey)
+      , _enableReceive(enableReceive)
    {
       // empty
    }
@@ -146,6 +134,8 @@ public:
 
    virtual void MessageReceivedFromGateway(const MessageRef &, void *);
 
+   bool IsEnableReceive() const {return _enableReceive;}
+
 private:
    void EndExistingMulticastUDPSessions()
    {
@@ -176,6 +166,7 @@ private:
 
    UDPMulticastTransceiverImplementation * _imp;
    const String _transmissionKey;
+   const bool _enableReceive;
 };
 
 int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
@@ -204,6 +195,21 @@ int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 ma
       else break;
    }
    return ret;
+}
+
+ConstSocketRef MulticastUDPSession :: CreateDefaultSocket()
+{
+   _receiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);
+   if (_receiveBuffer())
+   {
+      ConstSocketRef udpSocket = CreateUDPSocket();
+      if ((udpSocket())&&(BindUDPSocket(udpSocket, _multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
+      {
+         if ((_manager->IsEnableReceive())&&(AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()).IsError())) return ConstSocketRef();
+         return udpSocket;
+      }
+   }
+   return ConstSocketRef();
 }
 
 enum {
@@ -268,7 +274,7 @@ protected:
       }
 
       // We need to watch our notification-socket to know when it is time to exit
-      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey);
+      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0));
       if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation:  Couldn't add MulticastUDPClientManagerSession! [%s]\n", ret());

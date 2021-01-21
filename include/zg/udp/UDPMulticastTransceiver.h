@@ -33,6 +33,8 @@ public:
      *                        remote location at a time, before we start dropping old packets.  (Note that
      *                        this only matters if your main thread isn't fast enough to handle the incoming
      *                        UDP packets as fast as they are received).  Defaults to 1.
+     *                        Set this to zero to disable reception of incoming multicast packets entirely
+     *                        (in which case the UDPMulticastTransceiver will be send-only)
      * @returns B_NO_ERROR on success, or an error code if setup failed.
      * @note if called while the thread is already running, the thread will be stopped and then restarted.
      */
