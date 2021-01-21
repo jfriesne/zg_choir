@@ -53,8 +53,8 @@ public:
    status_t SendMulticastPacket(const ByteBufferRef & payloadBytes);
 
    /** Convenience method:  Calls SendUnicastPacket() on the UDPMulticastTransceiver object we are registered with.
-     * @param payloadBytes the UDP payload bytes to send via multicast
-     * @param targetAddress the IP address and port to send the unicast packet to (e.g. as previously passed to a UDPPacketReceived() call)
+     * @param payloadBytes the UDP payload bytes to send in the packet
+     * @param targetAddress the IP address and port to send the UDP packet to (perhaps as previously passed to you in a UDPPacketReceived() call)
      * @returns the value returned by UDPMulticastTransceiver::SendUnicastPacket(targetAddress, payloadBytes), or B_BAD_OBJECT if we aren't currently registered with one.
      */
    status_t SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes);

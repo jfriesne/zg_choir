@@ -54,10 +54,9 @@ public:
      */
    status_t SendMulticastPacket(const ByteBufferRef & payloadBytes);
 
-   /** Call this to send out a unicast UDP packet that will be received whoever is
-     * receiving UDP packets at the specified location.
-     * @param targetAddress the IP address and port that the unicast packet should be sent to.
-     * @param payloadBytes the payload bytes to put into the multicast UDP packet
+   /** Call this to send out a UDP packet to the specified target address-and-port.
+     * @param targetAddress the IP address and port that the UDP packet should be sent to.
+     * @param payloadBytes the payload bytes to put into the UDP packet
      * @returns B_NO_ERROR on success, or some other value on error.
      */
    status_t SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes);
