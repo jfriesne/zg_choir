@@ -1,6 +1,7 @@
 #include "zg/udp/UDPMulticastTransceiver.h"
 #include "zg/udp/IUDPMulticastNotificationTarget.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for GetTransceiverMulticastAddresses
+#include "dataio/SimulatedMulticastDataIO.h"
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/SignalMessageIOGateway.h"
 #include "reflector/ReflectServer.h"
@@ -23,8 +24,9 @@ class MulticastUDPClientManagerSession;
 class MulticastUDPSession : public AbstractReflectSession
 {
 public:
-   MulticastUDPSession(const IPAddressAndPort & multicastIAP, MulticastUDPClientManagerSession * manager)
+   MulticastUDPSession(bool useSimulatedMulticast, const IPAddressAndPort & multicastIAP, MulticastUDPClientManagerSession * manager)
       : _multicastIAP(multicastIAP)
+      , _useSimulatedMulticast(useSimulatedMulticast)
       , _manager(manager)
    {
       // empty
@@ -39,7 +41,12 @@ public:
 
    virtual DataIORef CreateDataIO(const ConstSocketRef & s)
    {
-      UDPSocketDataIO * udpIO = new UDPSocketDataIO(s, false);
+      PacketDataIO * udpIO;
+      if (_useSimulatedMulticast) udpIO = newnothrow SimulatedMulticastDataIO(_multicastIAP);
+                             else udpIO = newnothrow UDPSocketDataIO(s, false);
+
+      if (udpIO == NULL) {WARN_OUT_OF_MEMORY; return DataIORef();}
+
       DataIORef ret(udpIO);
       (void) udpIO->SetPacketSendDestination(_multicastIAP);
       return ret;
@@ -111,6 +118,7 @@ public:
 
 private:
    const IPAddressAndPort _multicastIAP;
+   const bool _useSimulatedMulticast;
    MulticastUDPClientManagerSession * _manager;
    
    ByteBufferRef _receiveBuffer;
@@ -121,10 +129,11 @@ DECLARE_REFTYPES(MulticastUDPSession);
 class MulticastUDPClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive) 
+   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive, uint32 multicastBehavior) 
       : _imp(imp)
       , _transmissionKey(transmissionKey)
       , _enableReceive(enableReceive)
+      , _multicastBehavior(multicastBehavior)
    {
       // empty
    }
@@ -204,16 +213,28 @@ private:
    void AddNewMulticastUDPSessions()
    {
       // Now set up new MulticastUDPSessions based on our current network config
-      Queue<IPAddressAndPort> q;
+      Hashtable<IPAddressAndPort, bool> q;
       if (GetTransceiverMulticastAddresses(q, _transmissionKey).IsOK())
       {
-         for (uint32 i=0; i<q.GetNumItems(); i++)
+         for (HashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
          {
-            // FogBugz #5617:  Use a different socket for each IP address, to avoid Mac routing problems
+            const IPAddressAndPort & iap = iter.GetKey();
+            const bool isWiFi = iter.GetValue();
+
+            bool useSimulatedMulticast;
+            switch(_multicastBehavior)
+            {
+               case ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY:  useSimulatedMulticast = false;  break;
+               case ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY: useSimulatedMulticast = true;   break;
+               case ZG_MULTICAST_BEHAVIOR_AUTO: default:  useSimulatedMulticast = isWiFi; break;
+            }
+            
+            // Use a different socket for each IP address, to avoid Mac routing problems
             status_t ret;
-            MulticastUDPSessionRef ldsRef(newnothrow MulticastUDPSession(q[i], this));
+            MulticastUDPSessionRef ldsRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
+
                  if (ldsRef() == NULL) WARN_OUT_OF_MEMORY; 
-            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create transceiver session for [%s] [%s]\n", q[i].ToString()(), ret());
+            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create %s-transceiver session for [%s] [%s]\n", useSimulatedMulticast?"simulated-multicast":"multicast", iap.ToString()(), ret());
          }
       }
    }
@@ -221,6 +242,7 @@ private:
    UDPMulticastTransceiverImplementation * _imp;
    const String _transmissionKey;
    const bool _enableReceive;
+   const uint32 _multicastBehavior;
 };
 
 int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
@@ -236,12 +258,15 @@ int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 ma
       {
          if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
 
-         ByteBufferRef newReceiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);  // get ready for our next received-packet
-         if (newReceiveBuffer())
+         if (_manager->IsEnableReceive())  // this could return false, e.g. if we are using a SimulatedMulticastDataIO
          {
-            newReceiveBuffer.SwapContents(_receiveBuffer);
-            (void) newReceiveBuffer()->SetNumBytes(bytesRead, true);
-            _manager->UDPPacketReceived(sourceLoc, newReceiveBuffer);
+            ByteBufferRef newReceiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);  // get ready for our next received-packet
+            if (newReceiveBuffer())
+            {
+               newReceiveBuffer.SwapContents(_receiveBuffer);
+               (void) newReceiveBuffer()->SetNumBytes(bytesRead, true);
+               _manager->UDPPacketReceived(sourceLoc, newReceiveBuffer);
+            }
          }
 
          ret += bytesRead;
@@ -256,11 +281,15 @@ ConstSocketRef MulticastUDPSession :: CreateDefaultSocket()
    _receiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);
    if (_receiveBuffer())
    {
-      ConstSocketRef udpSocket = CreateUDPSocket();
-      if ((udpSocket())&&(BindUDPSocket(udpSocket, _multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
+      if (_useSimulatedMulticast) return GetInvalidSocket();  // the SimulatedMulticastDataIO will create and use its own socket(s), so don't waste time creating one here
+      else
       {
-         if ((_manager->IsEnableReceive())&&(AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()).IsError())) return ConstSocketRef();
-         return udpSocket;
+         ConstSocketRef udpSocket = CreateUDPSocket();
+         if ((udpSocket())&&(BindUDPSocket(udpSocket, _multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
+         {
+            if ((_manager->IsEnableReceive())&&(AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()).IsError())) return ConstSocketRef();
+            return udpSocket;
+         }
       }
    }
    return ConstSocketRef();
@@ -276,7 +305,7 @@ enum {
 class UDPMulticastTransceiverImplementation : private Thread
 {
 public:
-   UDPMulticastTransceiverImplementation(UDPMulticastTransceiver & master) : _master(master)
+   UDPMulticastTransceiverImplementation(UDPMulticastTransceiver & master) : _master(master), _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
    {
       // empty
    }
@@ -287,9 +316,10 @@ public:
    }
 
    // Called by the main thread
-   status_t Start() 
+   status_t Start(uint32 multicastBehavior) 
    {
       Stop();  // paranoia
+      _multicastBehavior = multicastBehavior;
       return StartInternalThread();
    }
 
@@ -345,7 +375,7 @@ protected:
       }
 
       // We need to watch our notification-socket to know when it is time to exit
-      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0));
+      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0), _multicastBehavior);
       if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation:  Couldn't add MulticastUDPClientManagerSession! [%s]\n", ret());
@@ -408,6 +438,7 @@ private:
    Mutex _mutex;
    Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _ioThreadPendingUpdates;   // access to this must be serialized via _mutex
    Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _mainThreadPendingUpdates; // access to this must be serialized via _mutex
+   uint32 _multicastBehavior;
 };
 
 void MulticastUDPClientManagerSession :: MessageReceivedFromGateway(const MessageRef & /*dummySignalMessage*/, void *)
@@ -422,6 +453,7 @@ void MulticastUDPClientManagerSession :: UDPPacketReceived(const IPAddressAndPor
 UDPMulticastTransceiver :: UDPMulticastTransceiver(ICallbackMechanism * mechanism) 
    : ICallbackSubscriber(mechanism)
    , _perSenderMaxBacklogDepth(1)
+   , _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
    , _isActive(false)
 {
    _imp = new UDPMulticastTransceiverImplementation(*this);
@@ -444,7 +476,7 @@ status_t UDPMulticastTransceiver :: Start(const String & transmissionKey, uint32
    _perSenderMaxBacklogDepth = perSenderMaxBacklogDepth;
 
    status_t ret;
-   if (_imp->Start().IsOK(ret)) 
+   if (_imp->Start(_multicastBehavior).IsOK(ret)) 
    {
       _isActive = true;
       return B_NO_ERROR;

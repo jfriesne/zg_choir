@@ -20,19 +20,19 @@ enum {DEFAULT_ZG_DISCOVERY_PORT = 25672};  /**< Arbitrary default port number to
 #define ZG_DISCOVERY_NAME_SOURCE     "src" /**< Name of String field containing the source IPAddressAndPort */
 
 /** Returns the set of multicast groups currently recommended to send/receive discovery packets on.
-  * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.
+  * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.  (values are true iff the interface is a WiFi interface)
   * @param discoPort Which UDP port to use for discovery.  Defaults to DEFAULT_ZG_DISCOVERY_PORT.
   * @returns B_NO_ERROR on success, or some other error code on failure.
   */
-status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort = DEFAULT_ZG_DISCOVERY_PORT);
+status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 discoPort = DEFAULT_ZG_DISCOVERY_PORT);
 
 /** Returns the set of multicast groups currently recommended to send/receive multicast UDP packets on with
   * the UDPMulticastTransceiver class.
-  * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.
+  * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.  (values are true iff the interface is a WiFi interface)
   * @param transmissionKey the transmission-key string (as was passed to the Start() method of the UDPMulticastTransceiver object previously)
   * @returns B_NO_ERROR on success, or some other error code on failure.
   */
-status_t GetTransceiverMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, const String & transmissionKey);
+status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey);
 
 /** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's e.g. known to be a special-purpose thing) */
 bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);

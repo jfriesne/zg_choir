@@ -222,16 +222,17 @@ private:
    void AddNewDiscoverySessions()
    {
       // Now set up new DiscoverySessions based on our current network config
-      Queue<IPAddressAndPort> q;
-      if (GetDiscoveryMulticastAddresses(q) == B_NO_ERROR)
+      Hashtable<IPAddressAndPort, bool> q;
+      if (GetDiscoveryMulticastAddresses(q).IsOK())
       {
-         for (uint32 i=0; i<q.GetNumItems(); i++)
+         for (HashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
          {
-            // FogBugz #5617:  Use a different socket for each IP address, to avoid Mac routing problems
+            // Use a different socket for each IP address, to avoid Mac routing problems
+            const IPAddressAndPort & iap = iter.GetKey();
             status_t ret;
-            DiscoverySessionRef ldsRef(newnothrow DiscoverySession(q[i], this));
+            DiscoverySessionRef ldsRef(newnothrow DiscoverySession(iap, this));
                  if (ldsRef() == NULL) WARN_OUT_OF_MEMORY; 
-            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", q[i].ToString()(), ret());
+            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
          }
       }
    }

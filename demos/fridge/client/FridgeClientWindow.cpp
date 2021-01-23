@@ -373,7 +373,7 @@ void FridgeClientWindow :: SaveProject()
 static inline QString LocalFromQAux(const QString & qs)
 {
    QString tmp = qs;
-   return tmp.replace('/', '\\');  // FogBugz #5816:  encodeName() doesn't convert slashes back, so we have to do it
+   return tmp.replace('/', '\\');  // encodeName() doesn't convert slashes back, so we have to do it
 }
 # define LocalFromQ(qs) (QFile::encodeName(LocalFromQAux(qs)).constData())
 #else

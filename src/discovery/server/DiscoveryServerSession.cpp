@@ -86,21 +86,24 @@ ConstSocketRef DiscoveryServerSession :: CreateDefaultSocket()
 {
    uint32 numAddedGroups = 0;
    ConstSocketRef udpSocket = CreateUDPSocket();
-   Queue<IPAddressAndPort> mcastIAPs;
+   Hashtable<IPAddressAndPort, bool> mcastIAPs;
    status_t ret;
 
    if ((udpSocket())
     && (GetDiscoveryMulticastAddresses(mcastIAPs, _discoveryPort).IsOK(ret))
     && (mcastIAPs.HasItems())
-    && (BindUDPSocket(udpSocket, mcastIAPs.Head().GetPort(), NULL, invalidIP, true).IsOK()))
+    && (BindUDPSocket(udpSocket, mcastIAPs.GetFirstKey()->GetPort(), NULL, invalidIP, true).IsOK()))
    {
       (void) SetSocketBlockingEnabled(udpSocket, false);
-      for (uint32 i=0; i<mcastIAPs.GetNumItems(); i++) 
+
+      for (HashtableIterator<IPAddressAndPort, bool> iter(mcastIAPs); iter.HasData(); iter++)
       {
-         if (AddSocketToMulticastGroup(udpSocket, mcastIAPs[i].GetIPAddress()) == B_NO_ERROR) numAddedGroups++;
+         const IPAddressAndPort & iap = iter.GetKey();
+
+         if (AddSocketToMulticastGroup(udpSocket, iap.GetIPAddress()) == B_NO_ERROR) numAddedGroups++;
          else 
          {
-            LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::CreateDefaultSocket:  Unable to add socket to multicast group [%s]!\n", Inet_NtoA(mcastIAPs[i].GetIPAddress())());
+            LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::CreateDefaultSocket:  Unable to add socket to multicast group [%s]!\n", Inet_NtoA(iap.GetIPAddress())());
          }
       }
    }

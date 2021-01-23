@@ -2,6 +2,7 @@
 #define UDPMulticastTransceiver_h
 
 #include "zg/callback/ICallbackSubscriber.h"
+#include "zg/ZGPeerSettings.h"  // for ZG_MULTICAST_BEHAVIOR_*
 #include "util/ByteBuffer.h"
 #include "util/RefCount.h"
 #include "util/String.h"
@@ -71,6 +72,18 @@ public:
      */
    uint32 GetPerSeconderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
 
+   /** Specify what kind of multicast behavior this UDPMulticastTransceiver should use.
+     * @param whichBehavior a ZG_MULTICAST_BEHAVIOR_* value.  (Default state is ZG_MULTICAST_BEHAVIOR_AUTO)
+     * @note the new behavior won't take effect until the next time Start() is called.
+     */
+   void SetMulticastBehavior(uint32 whichBehavior) {_multicastBehavior = whichBehavior;}
+
+   /** Returns our current multicast-behavior setting.  Note that this value may not correspond
+     * to what is actually being used, during the period between when you called SetMulticastBehavior()
+     * and when you next called Start().
+     */
+   uint32 GetMulticastBehavior() const {return _multicastBehavior;}
+
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);
 
@@ -84,6 +97,7 @@ private:
 
    String _transmissionKey;
    uint32 _perSenderMaxBacklogDepth;
+   uint32 _multicastBehavior;
    bool _isActive;
 
    Hashtable<IUDPMulticastNotificationTarget *, Void> _targets;

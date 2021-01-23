@@ -17,14 +17,14 @@ static IPAddress MakeMulticastAddressLinkLocal(const IPAddress & ip, bool nodeLo
    return a;
 }
 
-static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<NetworkInterfaceInfo> & niis, Queue<IPAddress> & retAddresses)
+static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<NetworkInterfaceInfo> & niis, Hashtable<IPAddress, bool> & retAddresses)
 {
    if (niis.IsEmpty())
    {
       // If we have no multicast-able interfaces, then we'll fall back to node-local multicast
       IPAddress a = MakeMulticastAddressLinkLocal(ip, true);
       a.SetInterfaceIndex(0);  // paranoia?
-      return retAddresses.AddTail(a);  // guaranteed not to fail
+      return retAddresses.Put(a, false);  // guaranteed not to fail
    }
    else
    {
@@ -32,15 +32,16 @@ static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<Net
       if (retAddresses.EnsureSize(retAddresses.GetNumItems()+niis.GetNumItems()).IsError(ret)) return ret;
       for (uint32 i=0; i<niis.GetNumItems(); i++)
       {
+         const NetworkInterfaceInfo & nii = niis[i];
          IPAddress a = MakeMulticastAddressLinkLocal(ip, false);
-         a.SetInterfaceIndex(niis[i].GetLocalAddress().GetInterfaceIndex());
-         (void) retAddresses.AddTail(a);  // guaranteed not to fail
+         a.SetInterfaceIndex(nii.GetLocalAddress().GetInterfaceIndex());
+         (void) retAddresses.Put(a, (nii.GetHardwareType()==NETWORK_INTERFACE_HARDWARE_TYPE_WIFI));  // guaranteed not to fail
       }
    }
    return B_NO_ERROR;
 }
 
-static status_t GetMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 port, const IPAddress & baseKey)
+static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 port, const IPAddress & baseKey)
 {
    Queue<NetworkInterfaceInfo> niis;
    GNIIFlags flags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
@@ -49,13 +50,13 @@ static status_t GetMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 
 
    for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForMulticast(niis[i]) == false) (void) niis.RemoveItemAt(i);
 
-   Queue<IPAddress> q;
+   Hashtable<IPAddress, bool> q;
    if (MakeIPv6MulticastAddresses(baseKey, niis, q).IsError(ret)) return ret;
-   for (uint32 i=0; i<q.GetNumItems(); i++) if (retIAPs.AddTail(IPAddressAndPort(q[i], port)).IsError(ret)) return ret;
+   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++) if (retIAPs.Put(IPAddressAndPort(iter.GetKey(), port), iter.GetValue()).IsError(ret)) return ret;
    return ret;
 }
 
-status_t GetDiscoveryMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, uint16 discoPort)
+status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 discoPort)
 {
    return GetMulticastAddresses(retIAPs, discoPort, GetDiscoveryMulticastKey());
 }
@@ -68,7 +69,7 @@ static IPAddressAndPort GetTransceiverMulticastKey(const String & transmissionKe
    return IPAddressAndPort(ip, ((uint16)(tHash%30000))+30000);  // I guess?
 }
 
-status_t GetTransceiverMulticastAddresses(Queue<IPAddressAndPort> & retIAPs, const String & transmissionKey)
+status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey)
 {
    const IPAddressAndPort iap = GetTransceiverMulticastKey(transmissionKey);
    return GetMulticastAddresses(retIAPs, iap.GetPort(), iap.GetIPAddress());
