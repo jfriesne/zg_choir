@@ -48,7 +48,7 @@ static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAP
    status_t ret = muscle::GetNetworkInterfaceInfos(niis, flags);
    if (ret.IsError()) return ret;
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForMulticast(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if ((niis[i].IsCopperDetected() == false)||(IsNetworkInterfaceUsableForMulticast(niis[i]) == false)) (void) niis.RemoveItemAt(i);
 
    Hashtable<IPAddress, bool> q;
    if (MakeIPv6MulticastAddresses(baseKey, niis, q).IsError(ret)) return ret;
