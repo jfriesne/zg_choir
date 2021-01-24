@@ -25,7 +25,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
    LogTime(MUSCLE_LOG_INFO, "You typed: [%s]\n", textStr());
 
-   StringTokenizer tok(textStr(), " ");
+   StringTokenizer tok(textStr(), NULL);
    const char * cmd = tok();
    if (cmd == NULL) cmd = "";
 

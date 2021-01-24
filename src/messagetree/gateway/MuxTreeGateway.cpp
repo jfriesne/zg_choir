@@ -277,7 +277,7 @@ void MuxTreeGateway :: TreeLocalPeerPonged(const String & tag)
    if (tag.StartsWith("obss:"))
    {
       _allowedCallbacks.Clear();
-      StringTokenizer tok(tag()+5, ",");
+      StringTokenizer tok(tag()+5, ",", NULL);
       const char * t;
       while((t=tok()) != NULL)
       {

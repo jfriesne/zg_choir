@@ -78,6 +78,7 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/util/NetworkUtilityFunctions.cpp        \
                  $$MUSCLE_DIR/util/SocketMultiplexer.cpp              \
                  $$MUSCLE_DIR/util/String.cpp                         \
+                 $$MUSCLE_DIR/util/StringTokenizer.cpp                \
                  $$MUSCLE_DIR/util/PulseNode.cpp                      \
                  $$MUSCLE_DIR/zlib/ZLibCodec.cpp                      \
                  $$MUSCLE_DIR/zlib/ZLibUtilityFunctions.cpp           \
