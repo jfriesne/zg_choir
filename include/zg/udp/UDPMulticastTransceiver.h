@@ -84,6 +84,22 @@ public:
      */
    uint32 GetMulticastBehavior() const {return _multicastBehavior;}
 
+   /** If you want to restrict which network interfaces are to be used for sending and receiving
+     * multicast packets, you can call this method before calling Start().
+     * @param nameFilter wildcard-able expression indicating which network interfaces may be used.
+     *                   For example, "en*" would specify only network interfaces whose names start with "en",
+     *                   or "en1,en2,lo0" would specify only those three devices.  If set to an empty string
+     *                   (which is the default state) then no filtering is done and all applicable interfaces
+     *                   will be used.
+     * @note the new filter string will not be applied until the next call to Start().
+     */
+   void SetNetworkInterfaceNameFilter(const String & nameFilter) {_nicNameFilter = nameFilter;}
+
+   /** Returns the current network-interface-names filter, as previously passed to SetNetworkInterfaceNameFilter().
+     * Default value is "" (aka no filtering enabled)
+     */
+   const String & GetNetworkInterfaceNameFilter() const {return _nicNameFilter;}
+
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);
 
@@ -98,6 +114,7 @@ private:
    String _transmissionKey;
    uint32 _perSenderMaxBacklogDepth;
    uint32 _multicastBehavior;
+   String _nicNameFilter;
    bool _isActive;
 
    Hashtable<IUDPMulticastNotificationTarget *, Void> _targets;

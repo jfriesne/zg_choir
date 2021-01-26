@@ -41,24 +41,39 @@ static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<Net
    return B_NO_ERROR;
 }
 
-static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 port, const IPAddress & baseKey)
+static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 port, const IPAddress & baseKey, const StringMatcher * optNicNameFilter)
 {
    Queue<NetworkInterfaceInfo> niis;
    GNIIFlags flags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
    status_t ret = muscle::GetNetworkInterfaceInfos(niis, flags);
    if (ret.IsError()) return ret;
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if ((niis[i].IsCopperDetected() == false)||(IsNetworkInterfaceUsableForMulticast(niis[i]) == false)) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetNumItems()-1; i>=0; i--)
+   {
+      const NetworkInterfaceInfo & nii = niis[i];
+      if ((nii.IsCopperDetected() == false)||(IsNetworkInterfaceUsableForMulticast(nii) == false)||((optNicNameFilter)&&(optNicNameFilter->Match(nii.GetName()()) == false))) (void) niis.RemoveItemAt(i);
+   }
+
+//for(uint32 i=0; i<niis.GetNumItems(); i++) printf(" --> %s\n", niis[i].ToString()());
 
    Hashtable<IPAddress, bool> q;
    if (MakeIPv6MulticastAddresses(baseKey, niis, q).IsError(ret)) return ret;
-   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++) if (retIAPs.Put(IPAddressAndPort(iter.GetKey(), port), iter.GetValue()).IsError(ret)) return ret;
+   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++) 
+   {
+      const IPAddressAndPort iap(iter.GetKey(), port);
+      const bool isWiFi = iter.GetValue();
+      if (retIAPs.Put(iap, isWiFi).IsOK(ret))
+      {
+         LogTime(MUSCLE_LOG_TRACE, "GetMulticastAddresses:  Using address [%s] isWiFi=%i for baseKey=%s\n", iap.ToString()(), isWiFi, baseKey.ToString()());
+      }
+      else return ret;
+   }
    return ret;
 }
 
 status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 discoPort)
 {
-   return GetMulticastAddresses(retIAPs, discoPort, GetDiscoveryMulticastKey());
+   return GetMulticastAddresses(retIAPs, discoPort, GetDiscoveryMulticastKey(), NULL);
 }
 
 static IPAddressAndPort GetTransceiverMulticastKey(const String & transmissionKey)
@@ -66,13 +81,13 @@ static IPAddressAndPort GetTransceiverMulticastKey(const String & transmissionKe
    const uint64 tHash = transmissionKey.HashCode64(); 
    IPAddress ip = Inet_AtoN("::a1:a2:a3:a4");  // base core multicast address, not including any multicast prefix
    ip.SetLowBits(ip.GetLowBits()+tHash);
-   return IPAddressAndPort(ip, ((uint16)(tHash%30000))+30000);  // I guess?
+   return IPAddressAndPort(ip, ((uint16)(tHash%30000))+20000);  // I guess?
 }
 
-status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey)
+status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey, const StringMatcher * optNicNameFilter)
 {
    const IPAddressAndPort iap = GetTransceiverMulticastKey(transmissionKey);
-   return GetMulticastAddresses(retIAPs, iap.GetPort(), iap.GetIPAddress());
+   return GetMulticastAddresses(retIAPs, iap.GetPort(), iap.GetIPAddress(), optNicNameFilter);
 }
 
 // Some network interfaces we just shouldn't try to use!
@@ -81,6 +96,7 @@ bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii)
 #ifdef __APPLE__
    if (nii.GetName().StartsWith("utun")) return false;
    if (nii.GetName().StartsWith("llw"))  return false;
+   if (nii.GetName().StartsWith("awdl")) return false;
 #else 
    (void) nii;  // avoid compiler warning
 #endif

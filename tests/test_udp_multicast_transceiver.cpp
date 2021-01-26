@@ -62,7 +62,9 @@ int main(int argc, char ** argv)
    CompleteSetupSystem css;     // set up MUSCLE environment
    SocketCallbackMechanism scm; // orchestrates safe calling of callback-methods in the main/user/GUI thread
 
-   const String transmissionKey = (argc > 1) ? argv[1] : "FooBar";
+   Message args;
+   (void) ParseArgs(argc, argv, args);
+   (void) HandleStandardDaemonArgs(args);
 
    StdinDataIO stdinDataIO(false);
    PlainTextMessageIOGateway plainTextGateway;  // for parsing data read from stdin
@@ -71,12 +73,17 @@ int main(int argc, char ** argv)
    LogTime(MUSCLE_LOG_INFO, "This program implements a super-rudimentary text chat via IPv6 UDP multicast packets.\n");
    LogTime(MUSCLE_LOG_INFO, "You can run several instances of it, type text into one instance, and see it appear in the other instances.\n");
 
+   const String transmissionKey = args.GetString("key", "ExampleKey");
+   const String nicNameFilter   = args.GetString("nics");
+
    status_t ret;
    UDPMulticastTransceiver multicastTransceiver(&scm);
+   if (nicNameFilter.HasChars()) multicastTransceiver.SetNetworkInterfaceNameFilter(nicNameFilter);
    if (multicastTransceiver.Start(transmissionKey).IsOK(ret))
    {
       TestMulticastNotificationTarget testTarget(&multicastTransceiver);
 
+      if (nicNameFilter.HasChars()) LogTime(MUSCLE_LOG_INFO, "Using only network interfaces whose names match the pattern [%s]\n", nicNameFilter());
       LogTime(MUSCLE_LOG_INFO, "Listening for multicast packets from any UDPMulticastTransceivers using transmission-key [%s]\n", transmissionKey());
 
       SocketMultiplexer sm;

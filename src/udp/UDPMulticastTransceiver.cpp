@@ -5,6 +5,7 @@
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/SignalMessageIOGateway.h"
 #include "reflector/ReflectServer.h"
+#include "regex/StringMatcher.h"
 #include "system/DetectNetworkConfigChangesSession.h"
 #include "system/Thread.h"
 #include "util/NetworkUtilityFunctions.h"
@@ -129,11 +130,12 @@ DECLARE_REFTYPES(MulticastUDPSession);
 class MulticastUDPClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive, uint32 multicastBehavior) 
+   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive, uint32 multicastBehavior, const String & nicNameFilter) 
       : _imp(imp)
       , _transmissionKey(transmissionKey)
       , _enableReceive(enableReceive)
       , _multicastBehavior(multicastBehavior)
+      , _nicNameFilter(nicNameFilter)
    {
       // empty
    }
@@ -212,13 +214,15 @@ private:
 
    void AddNewMulticastUDPSessions()
    {
+      const StringMatcher sm(_nicNameFilter);
+
       // Now set up new MulticastUDPSessions based on our current network config
       Hashtable<IPAddressAndPort, bool> q;
-      if (GetTransceiverMulticastAddresses(q, _transmissionKey).IsOK())
+      if (GetTransceiverMulticastAddresses(q, _transmissionKey, _nicNameFilter.HasChars() ? &sm : NULL).IsOK())
       {
          for (HashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
          {
-            const IPAddressAndPort & iap = iter.GetKey();
+            IPAddressAndPort iap = iter.GetKey();
             const bool isWiFi = iter.GetValue();
 
             bool useSimulatedMulticast;
@@ -228,7 +232,8 @@ private:
                case ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY: useSimulatedMulticast = true;   break;
                case ZG_MULTICAST_BEHAVIOR_AUTO: default:  useSimulatedMulticast = isWiFi; break;
             }
-            
+            if (useSimulatedMulticast) iap.SetPort(iap.GetPort()+100);  // just to keep SimulatedMulticastDataIO control-packets from leaking into the user's standard-multicast receivers
+
             // Use a different socket for each IP address, to avoid Mac routing problems
             status_t ret;
             MulticastUDPSessionRef ldsRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
@@ -243,6 +248,7 @@ private:
    const String _transmissionKey;
    const bool _enableReceive;
    const uint32 _multicastBehavior;
+   const String _nicNameFilter;
 };
 
 int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
@@ -316,10 +322,11 @@ public:
    }
 
    // Called by the main thread
-   status_t Start(uint32 multicastBehavior) 
+   status_t Start(uint32 multicastBehavior, const String & nicNameFilter) 
    {
       Stop();  // paranoia
       _multicastBehavior = multicastBehavior;
+      _nicNameFilter     = nicNameFilter;
       return StartInternalThread();
    }
 
@@ -375,7 +382,7 @@ protected:
       }
 
       // We need to watch our notification-socket to know when it is time to exit
-      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0), _multicastBehavior);
+      MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0), _multicastBehavior, _nicNameFilter);
       if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation:  Couldn't add MulticastUDPClientManagerSession! [%s]\n", ret());
@@ -439,6 +446,7 @@ private:
    Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _ioThreadPendingUpdates;   // access to this must be serialized via _mutex
    Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > _mainThreadPendingUpdates; // access to this must be serialized via _mutex
    uint32 _multicastBehavior;
+   String _nicNameFilter;
 };
 
 void MulticastUDPClientManagerSession :: MessageReceivedFromGateway(const MessageRef & /*dummySignalMessage*/, void *)
@@ -476,7 +484,7 @@ status_t UDPMulticastTransceiver :: Start(const String & transmissionKey, uint32
    _perSenderMaxBacklogDepth = perSenderMaxBacklogDepth;
 
    status_t ret;
-   if (_imp->Start(_multicastBehavior).IsOK(ret)) 
+   if (_imp->Start(_multicastBehavior, _nicNameFilter).IsOK(ret)) 
    {
       _isActive = true;
       return B_NO_ERROR;
