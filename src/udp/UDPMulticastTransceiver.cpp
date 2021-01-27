@@ -188,10 +188,15 @@ public:
 
          case UDP_COMMAND_SEND_UNICAST_PACKET:
          {
-            // Unicast only needs to go to one session (since any of them can send the unicast UDP packet equally well)
-            MulticastUDPSession * mus = FindFirstSessionOfType<MulticastUDPSession>();
-            if (mus) mus->MessageReceivedFromSession(*this, msg, NULL);
-                else LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Couldn't find a MulticastUDPSession to hand unicast Message to!\n");
+            IPAddressAndPort targetAddress;
+            if (msg()->FindFlat(UDP_NAME_ADDRESS, targetAddress).IsOK())
+            {
+               MulticastUDPSession * mus = _udpSessions[targetAddress.GetIPAddress().GetInterfaceIndex()]();
+               if (mus == NULL) mus = FindFirstSessionOfType<MulticastUDPSession>();   // if we can't find a session matching the target-addresses interface-index, we'll fall back to sending from anywhere
+               if (mus) mus->MessageReceivedFromSession(*this, msg, NULL);
+                   else LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Couldn't find a MulticastUDPSession to send unicast packet to %s!\n", targetAddress.ToString()());
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation:  No target address specified for unicast packet!\n");
          }
          break;
 
@@ -210,6 +215,7 @@ private:
          MulticastUDPSession * lds = dynamic_cast<MulticastUDPSession *>(iter.GetValue()());
          if (lds) lds->EndSession();
       }
+      _udpSessions.Clear();
    }
 
    void AddNewMulticastUDPSessions()
@@ -236,10 +242,16 @@ private:
 
             // Use a different socket for each IP address, to avoid Mac routing problems
             status_t ret;
-            MulticastUDPSessionRef ldsRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
+            MulticastUDPSessionRef msRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
 
-                 if (ldsRef() == NULL) WARN_OUT_OF_MEMORY; 
-            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create %s-transceiver session for [%s] [%s]\n", useSimulatedMulticast?"simulated-multicast":"multicast", iap.ToString()(), ret());
+                 if (msRef() == NULL) WARN_OUT_OF_MEMORY; 
+            else if (AddNewSession(msRef).IsOK(ret))
+            {
+               const int iidx = iap.GetIPAddress().GetInterfaceIndex();
+               if (_udpSessions.ContainsKey(iidx)) LogTime(MUSCLE_LOG_CRITICALERROR, "MulticastUDPClientManagerSession:  Multiple UDP sessions have the same interface index %i!\n", iidx);
+               (void) _udpSessions.Put(iidx, msRef);
+            }
+            else LogTime(MUSCLE_LOG_ERROR, "Could not create %s-transceiver session for [%s] [%s]\n", useSimulatedMulticast?"simulated-multicast":"multicast", iap.ToString()(), ret());
          }
       }
    }
@@ -249,6 +261,8 @@ private:
    const bool _enableReceive;
    const uint32 _multicastBehavior;
    const String _nicNameFilter;
+
+   Hashtable<int, MulticastUDPSessionRef> _udpSessions;  // interface index -> sessionRef
 };
 
 int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
