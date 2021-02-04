@@ -36,7 +36,7 @@ public:
    ZGPeerSession(const ZGPeerSettings & peerSettings);
 
    /** Called when this session object is attached to the ReflectServer object.
-     * @returns true iff the attaching process went okay, or false if there was an error and the attachment should be aborted.
+     * @returns B_NO_ERROR iff the attaching process went okay, or an error value if there was an error and the attachment should be aborted.
      */
    virtual status_t AttachedToServer();
 
