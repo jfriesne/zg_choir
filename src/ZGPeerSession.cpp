@@ -85,7 +85,7 @@ status_t ZGPeerSession :: AttachedToServer()
    if (StorageReflectSession::AttachedToServer().IsError(ret)) return ret;
 
    PZGNetworkIOSessionRef ioSessionRef(newnothrow PZGNetworkIOSession(_peerSettings, _localPeerID, this));
-   if (ioSessionRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (ioSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
    if (AddNewSession(ioSessionRef).IsError(ret)) return ret;
    _networkIOSession = ioSessionRef;
 
@@ -352,7 +352,7 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    if (_seniorPeerID.IsValid() == false) return B_BAD_OBJECT;  // can't send to senior peer if we don't know who he is!
 
    MessageRef sendMsg = GetMessageFromPool(whatCode);
-   if (sendMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (sendMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    status_t ret;
    if ((sendMsg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID,    whichDatabase).IsError(ret))||

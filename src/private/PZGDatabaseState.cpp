@@ -119,7 +119,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
       case PZG_PEER_COMMAND_RESET_SENIOR_DATABASE:
       {
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_RESET, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
+         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
 
          status_t ret;
          if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
@@ -144,7 +144,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
+         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
 
          status_t ret;
          if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
@@ -175,7 +175,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_UPDATE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) RETURN_OUT_OF_MEMORY;
+         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
 
          status_t ret;
          if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
@@ -562,7 +562,7 @@ ConstPZGDatabaseUpdateRef PZGDatabaseState :: GetDatabaseUpdateByID(uint64 updat
             dbUp()->SetPayloadMessage(savedDBMsg);
             return AddConstToRef(dbUp);
          }
-         else WARN_OUT_OF_MEMORY;
+         else MWARN_OUT_OF_MEMORY;
       }
       else LogTime(MUSCLE_LOG_ERROR, "Unable to save state #" UINT64_FORMAT_SPEC " of local database #" UINT32_FORMAT_SPEC " to a Message to satisfy external request!\n", _localDatabaseStateID, _whichDatabase);
 

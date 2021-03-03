@@ -109,7 +109,7 @@ protected:
    virtual IDatabaseObjectRef CreateDatabaseObject(uint32 whichDatabase)
    {
       IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, GetDatabaseRootPath(whichDatabase)));
-      if (ret() == NULL) WARN_OUT_OF_MEMORY;
+      if (ret() == NULL) MWARN_OUT_OF_MEMORY;
       return ret;
    }
 

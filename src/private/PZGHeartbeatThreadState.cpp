@@ -162,7 +162,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    if (_multicastDataIOs.IsEmpty()) return B_ERROR;  // nothing to send to?
 
    PZGHeartbeatPacketWithMetaDataRef hbRef = GetHeartbeatPacketWithMetaDataFromPool();
-   if (hbRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (hbRef() == NULL) MRETURN_OUT_OF_MEMORY;
 
    if (hbRef()) hbRef()->Initialize(*_hbSettings(), (uint32) MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
 
@@ -180,7 +180,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       }
    }
 
-   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false) != B_NO_ERROR) RETURN_OUT_OF_MEMORY;
+   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false) != B_NO_ERROR) MRETURN_OUT_OF_MEMORY;
    hb.Flatten(_rawScratchBuf.GetBuffer());
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down
@@ -456,7 +456,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    PZGHeartbeatPacketWithMetaDataRef newHB = GetHeartbeatPacketWithMetaDataFromPool();
    if (newHB() == NULL)
    {
-      WARN_OUT_OF_MEMORY;
+      MWARN_OUT_OF_MEMORY;
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
@@ -622,7 +622,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
 void PZGHeartbeatThreadState :: IntroduceSource(const PZGHeartbeatSourceKey & source, const PZGHeartbeatPacketWithMetaDataRef & newHB, uint64 localExpirationTimeMicros)
 {
    PZGHeartbeatSourceStateRef newSource(newnothrow PZGHeartbeatSourceState(20));
-   if (newSource() == NULL) {WARN_OUT_OF_MEMORY; return;}
+   if (newSource() == NULL) {MWARN_OUT_OF_MEMORY; return;}
 
    newSource()->SetHeartbeatPacket(newHB, localExpirationTimeMicros);
    if (_onlineSources.Put(source, newSource) == B_NO_ERROR)

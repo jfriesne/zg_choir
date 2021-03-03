@@ -193,11 +193,11 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
                            return;
                         }
                      }
-                     else WARN_OUT_OF_MEMORY;
+                     else MWARN_OUT_OF_MEMORY;
                   }
                   else LogTime(MUSCLE_LOG_ERROR, "ClientDataMessageTreeDatabaseObject:  Unable to save client session [%s]'s local data-subtree to a Message! [%s]\n", ssmts->GetSessionRootPath()(), ret());
                }
-               else WARN_OUT_OF_MEMORY;
+               else MWARN_OUT_OF_MEMORY;
             }
          }
 

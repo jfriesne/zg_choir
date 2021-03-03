@@ -239,7 +239,7 @@ IDatabaseObjectRef ChoirSession :: CreateDatabaseObject(uint32 whichDatabase)
       case CHOIR_DATABASE_ROSTER:        ret.SetRef(newnothrow NoteAssignmentsMap(this, whichDatabase)); break;
       default:                           /* empty */                                                     break;
    }
-   if (ret() == NULL) WARN_OUT_OF_MEMORY;
+   if (ret() == NULL) MWARN_OUT_OF_MEMORY;
    return ret;
 }
 

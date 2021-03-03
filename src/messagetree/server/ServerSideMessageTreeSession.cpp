@@ -124,7 +124,7 @@ AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(c
    {
       ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
    }
-   else WARN_OUT_OF_MEMORY;
+   else MWARN_OUT_OF_MEMORY;
 
    return ret;
 }

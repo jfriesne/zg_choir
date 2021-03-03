@@ -161,7 +161,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
    if (optMagnetState)
    {
       msgRef  = GetMessageFromPool();
-      if (msgRef() == NULL) RETURN_OUT_OF_MEMORY;
+      if (msgRef() == NULL) MRETURN_OUT_OF_MEMORY;
 
       status_t ret;
       if (optMagnetState->SaveToArchive(*msgRef()).IsError(ret)) return ret;

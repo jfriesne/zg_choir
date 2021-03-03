@@ -46,7 +46,7 @@ public:
       if (_useSimulatedMulticast) udpIO = newnothrow SimulatedMulticastDataIO(_multicastIAP);
                              else udpIO = newnothrow UDPSocketDataIO(s, false);
 
-      if (udpIO == NULL) {WARN_OUT_OF_MEMORY; return DataIORef();}
+      if (udpIO == NULL) {MWARN_OUT_OF_MEMORY; return DataIORef();}
 
       DataIORef ret(udpIO);
       (void) udpIO->SetPacketSendDestination(_multicastIAP);
@@ -143,7 +143,7 @@ public:
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
       AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      if (ret() == NULL) WARN_OUT_OF_MEMORY;
+      if (ret() == NULL) MWARN_OUT_OF_MEMORY;
       return ret;
    }
 
@@ -244,7 +244,7 @@ private:
             status_t ret;
             MulticastUDPSessionRef msRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
 
-                 if (msRef() == NULL) WARN_OUT_OF_MEMORY; 
+                 if (msRef() == NULL) MWARN_OUT_OF_MEMORY; 
             else if (AddNewSession(msRef).IsOK(ret))
             {
                const int iidx = iap.GetIPAddress().GetInterfaceIndex();

@@ -79,7 +79,7 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
       }
       else return ret;
    }
-   else RETURN_OUT_OF_MEMORY;
+   else MRETURN_OUT_OF_MEMORY;
 }
 
 status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
@@ -402,7 +402,7 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
                         (void) oqf->GetChildren().AddTail(sendFilter);
                         sendFilter = unionFilter;
                      }
-                     else WARN_OUT_OF_MEMORY;
+                     else MWARN_OUT_OF_MEMORY;
                   }
                   if (oqf) (void) oqf->GetChildren().AddTail(nextFilter);
                }

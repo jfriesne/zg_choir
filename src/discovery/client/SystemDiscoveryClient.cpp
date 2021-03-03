@@ -112,7 +112,7 @@ public:
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
       AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      if (ret() == NULL) WARN_OUT_OF_MEMORY;
+      if (ret() == NULL) MWARN_OUT_OF_MEMORY;
       return ret;
    }
 
@@ -122,7 +122,7 @@ public:
       if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
 
       _pingMsg = GetMessageFromPool(PR_COMMAND_PING);
-      if (_pingMsg() == NULL) RETURN_OUT_OF_MEMORY;
+      if (_pingMsg() == NULL) MRETURN_OUT_OF_MEMORY;
       if (_pingMsg()->CAddArchiveMessage(ZG_DISCOVERY_NAME_FILTER, _queryFilter).IsError(ret)) return ret;
 
       AddNewDiscoverySessions();
@@ -231,7 +231,7 @@ private:
             const IPAddressAndPort & iap = iter.GetKey();
             status_t ret;
             DiscoverySessionRef ldsRef(newnothrow DiscoverySession(iap, this));
-                 if (ldsRef() == NULL) WARN_OUT_OF_MEMORY; 
+                 if (ldsRef() == NULL) MWARN_OUT_OF_MEMORY; 
             else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
          }
       }

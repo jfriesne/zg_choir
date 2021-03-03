@@ -85,7 +85,7 @@ public:
    virtual DataIORef CreateDataIO(const ConstSocketRef & socket)
    {
       UDPSocketDataIORef dio(newnothrow UDPSocketDataIO(socket, false));
-      if (dio() == NULL) {WARN_OUT_OF_MEMORY; return DataIORef();}
+      if (dio() == NULL) {MWARN_OUT_OF_MEMORY; return DataIORef();}
 
       (void) dio()->SetPacketSendDestination(_timeSyncDest);
       return dio;
@@ -145,7 +145,7 @@ public:
       if (_timeSyncDest.IsValid())
       {
          _timeSyncSession.SetRef(newnothrow UDPTimeSyncSession(this, _timeSyncDest));
-         if (_timeSyncSession() == NULL) RETURN_OUT_OF_MEMORY;  
+         if (_timeSyncSession() == NULL) MRETURN_OUT_OF_MEMORY;  
          if (AddNewSession(_timeSyncSession).IsError(ret)) return ret;
       }
 
@@ -176,7 +176,7 @@ public:
    {
       MessageIOGatewayRef ret(newnothrow MessageIOGateway());
       if (ret()) ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
-            else WARN_OUT_OF_MEMORY;
+            else MWARN_OUT_OF_MEMORY;
       return ret;
    }
 

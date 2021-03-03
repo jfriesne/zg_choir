@@ -79,7 +79,7 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
             {
                UDPSocketDataIORef ret(newnothrow UDPSocketDataIO(udpSock, false));
                if (ret()) (void) ret()->SetPacketSendDestination(multicastIAP);
-                     else WARN_OUT_OF_MEMORY;
+                     else MWARN_OUT_OF_MEMORY;
                return ret;
             }
             else LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s]\n", multicastIAP.GetIPAddress().ToString()());
@@ -159,7 +159,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
                   LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);
                }
-               else WARN_OUT_OF_MEMORY;
+               else MWARN_OUT_OF_MEMORY;
             }
             break;
 

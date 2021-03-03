@@ -95,7 +95,7 @@ public:
    virtual AbstractReflectSessionRef CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
    {
       PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(_master, ZGPeerID()));
-      if (ret() == NULL) {WARN_OUT_OF_MEMORY; return AbstractReflectSessionRef();}
+      if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return AbstractReflectSessionRef();}
       return ret; 
    }
 
@@ -182,18 +182,18 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
 status_t PZGNetworkIOSession :: AttachedToServer()
 {
    PZGUnicastSessionFactoryRef unicastTCPFactoryRef(newnothrow PZGUnicastSessionFactory(this));
-   if (unicastTCPFactoryRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (unicastTCPFactoryRef() == NULL) MRETURN_OUT_OF_MEMORY;
 
    status_t ret;
    uint16 tcpAcceptPort;
    if (PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort).IsError(ret)) return ret;
 
    _hbSettings.SetRef(newnothrow PZGHeartbeatSettings(_peerSettings, _localPeerID, tcpAcceptPort));
-   if (_hbSettings() == NULL) {(void) RemoveAcceptFactory(tcpAcceptPort); RETURN_OUT_OF_MEMORY;}
+   if (_hbSettings() == NULL) {(void) RemoveAcceptFactory(tcpAcceptPort); MRETURN_OUT_OF_MEMORY;}
    LogTime(MUSCLE_LOG_DEBUG, "This peer's ZGPeerID is:  [%s]\n", GetLocalPeerID().ToString()());
 
    DetectNetworkConfigChangesSessionRef dnccSessionRef(newnothrow DetectNetworkConfigChangesSession);
-   if (dnccSessionRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (dnccSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
    if (AddNewSession(dnccSessionRef).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession! [%s]\n", ret());
@@ -210,7 +210,7 @@ status_t PZGNetworkIOSession :: AttachedToServer()
 status_t PZGNetworkIOSession :: SetupHeartbeatSession()
 {
    PZGHeartbeatSessionRef hbSessionRef(newnothrow PZGHeartbeatSession(_hbSettings, this));
-   if (hbSessionRef() == NULL) RETURN_OUT_OF_MEMORY;
+   if (hbSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
 
    status_t ret;
    if (AddNewSession(hbSessionRef).IsError(ret))
@@ -584,7 +584,7 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
    }
 
    PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(this, peerID));
-   if (ret() == NULL) {WARN_OUT_OF_MEMORY; return PZGUnicastSessionRef();}
+   if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return PZGUnicastSessionRef();}
 
    if (AddNewConnectSession(ret, iap.GetIPAddress(), iap.GetPort(), MUSCLE_TIME_NEVER, SecondsToMicros(5)) != B_NO_ERROR)
    {

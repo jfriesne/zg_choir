@@ -113,7 +113,7 @@ void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
 status_t ZGDatabasePeerSession :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx)
 {
    MessageRef wrapperMsg = GetMessageFromPool(DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT);
-   if (wrapperMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (wrapperMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    status_t ret = wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     msg)
                 | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_TARGETDBIDX, targetDBIdx)

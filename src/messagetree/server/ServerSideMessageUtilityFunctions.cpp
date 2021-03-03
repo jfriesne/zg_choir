@@ -8,7 +8,7 @@ namespace zg
 status_t CreateMuscleSubscribeMessage(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, MessageRef & retMsg)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_SETPARAMETERS);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (retMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    const String pathArg = subscriptionPath.Prepend("SUBSCRIBE:");
    return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true)) 
@@ -18,7 +18,7 @@ status_t CreateMuscleSubscribeMessage(const String & subscriptionPath, const Con
 status_t CreateMuscleUnsubscribeMessage(const String & subscriptionPath, MessageRef & retMsg)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (retMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    return retMsg()->AddString(PR_NAME_KEYS, EscapeRegexTokens(subscriptionPath).Prepend("SUBSCRIBE:"));  // EscapeRegexTokens() is here to avoid accidentally removing other subscription-paths that the wildcards happen to match to
 }
@@ -26,7 +26,7 @@ status_t CreateMuscleUnsubscribeMessage(const String & subscriptionPath, Message
 status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (retMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    return retMsg()->AddString(PR_NAME_KEYS, "SUBSCRIBE:*");
 }
@@ -34,7 +34,7 @@ status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)
 status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_GETDATA);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (retMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    return retMsg()->AddString(PR_NAME_KEYS, queryString) 
         | retMsg()->CAddArchiveMessage(PR_NAME_FILTERS, optFilterRef);
@@ -43,7 +43,7 @@ status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const 
 status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, MessageRef & retMsg)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_GETDATATREES);
-   if (retMsg() == NULL) RETURN_OUT_OF_MEMORY;
+   if (retMsg() == NULL) MRETURN_OUT_OF_MEMORY;
 
    status_t ret;
    const uint32 numQueryStrings = queryStrings.GetNumItems();

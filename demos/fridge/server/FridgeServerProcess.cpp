@@ -125,21 +125,21 @@ protected:
          case FRIDGE_DB_PROJECT:
          {
             IDatabaseObjectRef ret(newnothrow MagnetsMessageTreeDatabaseObject(this, whichDatabase, "project"));
-            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
             return ret;
          }
 
          case FRIDGE_DB_CHAT:
          {
             IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "chat"));
-            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
             return ret;
          }
 
          case FRIDGE_DB_CLIENTS:
          {
             IDatabaseObjectRef ret(newnothrow ClientDataMessageTreeDatabaseObject(this, whichDatabase, "clients"));
-            if (ret() == NULL) WARN_OUT_OF_MEMORY;
+            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
             return ret;
          }
 
