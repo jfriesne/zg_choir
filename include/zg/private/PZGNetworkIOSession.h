@@ -31,20 +31,20 @@ public:
    /** Enqueues the given Message object to be sent to the specified peer via unicast/TCP.
      * @param peerID The peer ID to send the Message to.
      * @param msg The Message to send to the specified peer.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure. 
+     * @returns B_NO_ERROR on success, or an error code on failure. 
      */
    status_t SendUnicastMessageToPeer(const ZGPeerID & peerID, const MessageRef & msg);
 
    /** Sends the specified Message to all peers via multicast/UDP/PacketTunnel.   
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t SendMulticastMessageToAllPeers(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
 
    /** Sends the specified Message to all peers via unicast/TCP.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
      * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
 

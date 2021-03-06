@@ -100,7 +100,7 @@ ConstSocketRef DiscoveryServerSession :: CreateDefaultSocket()
       {
          const IPAddressAndPort & iap = iter.GetKey();
 
-         if (AddSocketToMulticastGroup(udpSocket, iap.GetIPAddress()) == B_NO_ERROR) numAddedGroups++;
+         if (AddSocketToMulticastGroup(udpSocket, iap.GetIPAddress()).IsOK()) numAddedGroups++;
          else 
          {
             LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::CreateDefaultSocket:  Unable to add socket to multicast group [%s]!\n", Inet_NtoA(iap.GetIPAddress())());
@@ -146,7 +146,7 @@ int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*recei
          LogTime(MUSCLE_LOG_TRACE, "Received " INT32_FORMAT_SPEC " bytes of discovery query data from %s\n", bytesRead, iap.ToString()());
 
          MessageRef msg = GetMessageFromPool();
-         if ((msg())&&(msg()->Unflatten(_receiveBuffer()->GetBuffer(), bytesRead) == B_NO_ERROR))
+         if ((msg())&&(msg()->Unflatten(_receiveBuffer()->GetBuffer(), bytesRead).IsOK()))
          {
             const uint64 pongDelayMicros = _master->HandleDiscoveryPing(msg, iap);
             if (pongDelayMicros != MUSCLE_TIME_NEVER)

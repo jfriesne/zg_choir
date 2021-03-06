@@ -87,12 +87,12 @@ void PZGHeartbeatThreadState :: EnsureHeartbeatSourceTagsTableUpdated()
          // Let's get rid of any time-averagers that were keyed to this IP address, since they won't get used anymore
          for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) (void) iter.GetValue()()->DiscardRoundTripTimeAverager(iap);
 
-         uint16 tag;
-         if (_heartbeatSourceDestToTag.Remove(iap, tag) == B_NO_ERROR) (void) _heartbeatSourceTagToDest.Remove(tag);
+         uint16 tag = 0;
+         if (_heartbeatSourceDestToTag.Remove(iap, tag).IsOK()) (void) _heartbeatSourceTagToDest.Remove(tag);
       }
    }
 
-   if ((_multicastDataIOs.HasItems())&&(_heartbeatSourceTagToDest.EnsureCanPut(dests.GetNumItems()) == B_NO_ERROR)&&(_heartbeatSourceDestToTag.EnsureCanPut(dests.GetNumItems()) == B_NO_ERROR))
+   if ((_multicastDataIOs.HasItems())&&(_heartbeatSourceTagToDest.EnsureCanPut(dests.GetNumItems()).IsOK())&&(_heartbeatSourceDestToTag.EnsureCanPut(dests.GetNumItems()).IsOK()))
    {
       // Then add any newly-present destinations to our lookup tables
       for (uint32 i=0; i<dests.GetNumItems(); i++)
@@ -131,7 +131,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
    if (_now >= _nextSendHeartbeatTime)
    {
       _nextSendHeartbeatTime = _now+_heartbeatPingInterval;
-      if (SendHeartbeatPackets() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "SendHeartbeatPackets() failed!\n");
+      if (SendHeartbeatPackets().IsError()) LogTime(MUSCLE_LOG_ERROR, "SendHeartbeatPackets() failed!\n");
       if (_printTimeSynchronizationDeltas) PrintTimeSynchronizationDeltas();
 
       // Update the main-thread-accessible latencies table, just so we don't have to lock our own data structures all the time
@@ -180,7 +180,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       }
    }
 
-   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false) != B_NO_ERROR) MRETURN_OUT_OF_MEMORY;
+   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false).IsError()) MRETURN_OUT_OF_MEMORY;
    hb.Flatten(_rawScratchBuf.GetBuffer());
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down
@@ -217,7 +217,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    }
 
    // Store some recently-sent heartbeats so that we can consult them later on, to compute packet-round-trip times
-   if ((_recentlySentHeartbeatLocalSendTimes.Put(hb.GetHeartbeatPacketID(), _now) == B_NO_ERROR)&&(_recentlySentHeartbeatLocalSendTimes.GetNumItems() > 100)) (void) _recentlySentHeartbeatLocalSendTimes.RemoveFirst();
+   if ((_recentlySentHeartbeatLocalSendTimes.Put(hb.GetHeartbeatPacketID(), _now).IsOK())&&(_recentlySentHeartbeatLocalSendTimes.GetNumItems() > 100)) (void) _recentlySentHeartbeatLocalSendTimes.RemoveFirst();
 
    return B_NO_ERROR;
 } 
@@ -371,14 +371,14 @@ Queue<ZGPeerID> PZGHeartbeatThreadState :: CalculateOrderedPeersList()
       if (kmSourceData)
       {
          const Queue<ConstPZGHeartbeatPeerInfoRef> & kmq = kmSourceData->GetItemPointer()->GetHeartbeatPacket()()->GetOrderedPeersList();
-         if (ret.EnsureSize(kmq.GetNumItems()) == B_NO_ERROR) for (uint32 i=0; i<kmq.GetNumItems(); i++) (void) ret.AddTail(kmq[i]()->GetPeerID());
+         if (ret.EnsureSize(kmq.GetNumItems()).IsOK()) for (uint32 i=0; i<kmq.GetNumItems(); i++) (void) ret.AddTail(kmq[i]()->GetPeerID());
       }
    }
    else
    {
       // If we don't know who the kingmaker peer is, then we'll populate the list based solely on our own local sorting-criteria.
       _peerIDToIPAddresses.SortByKey(ComparePeerIDsBySeniorityFunctor(), this);
-      if (ret.EnsureSize(_peerIDToIPAddresses.GetNumItems()) == B_NO_ERROR) for (HashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++) (void) ret.AddTail(iter.GetKey());
+      if (ret.EnsureSize(_peerIDToIPAddresses.GetNumItems()).IsOK()) for (HashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++) (void) ret.AddTail(iter.GetKey());
    }
 
    return ret;
@@ -460,13 +460,13 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
-   if (_zlibCodec.Inflate(defBuf.GetBuffer()+HB_HEADER_SIZE, defBuf.GetNumBytes()-HB_HEADER_SIZE, _rawScratchBuf) != B_NO_ERROR)
+   if (_zlibCodec.Inflate(defBuf.GetBuffer()+HB_HEADER_SIZE, defBuf.GetNumBytes()-HB_HEADER_SIZE, _rawScratchBuf).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Couldn't inflate " UINT32_FORMAT_SPEC " bytes of compressed PZGHeartbeatPacket data!\n", sourceIAP.ToString()(), defBuf.GetNumBytes()-HB_HEADER_SIZE);
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
-   if (newHB()->Unflatten(_rawScratchBuf.GetBuffer(), _rawScratchBuf.GetNumBytes()) != B_NO_ERROR)
+   if (newHB()->Unflatten(_rawScratchBuf.GetBuffer(), _rawScratchBuf.GetNumBytes()).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Couldn't unflatten PZGHeartbeatPacket from " UINT32_FORMAT_SPEC " bytes of uncompressed data!\n", sourceIAP.ToString()(), _rawScratchBuf.GetNumBytes());
       return PZGHeartbeatPacketWithMetaDataRef();
@@ -480,7 +480,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
 
 void PZGHeartbeatThreadState :: ReceiveMulticastTraffic(PacketDataIO & dio)
 {
-   while(_deflatedScratchBuf.SetNumBytes(2048, false) == B_NO_ERROR)  // we want to start each read with the full space available
+   while(_deflatedScratchBuf.SetNumBytes(2048, false).IsOK())  // we want to start each read with the full space available
    {
       int32 numBytesRead;
       if ((numBytesRead = dio.Read(_deflatedScratchBuf.GetBuffer(), _deflatedScratchBuf.GetNumBytes())) != 0)
@@ -606,7 +606,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
 
       const ZGPeerID & pid = sourceInfo()->GetHeartbeatPacket()()->GetSourcePeerID();
       Queue<IPAddressAndPort> * q = _peerIDToIPAddresses.Get(pid);
-      if ((q)&&(q->RemoveFirstInstanceOf(source.GetIPAddressAndPort()) == B_NO_ERROR)&&(q->IsEmpty())) 
+      if ((q)&&(q->RemoveFirstInstanceOf(source.GetIPAddressAndPort()).IsOK())&&(q->IsEmpty())) 
       {
          (void) _peerIDToIPAddresses.Remove(pid);
 
@@ -625,7 +625,7 @@ void PZGHeartbeatThreadState :: IntroduceSource(const PZGHeartbeatSourceKey & so
    if (newSource() == NULL) {MWARN_OUT_OF_MEMORY; return;}
 
    newSource()->SetHeartbeatPacket(newHB, localExpirationTimeMicros);
-   if (_onlineSources.Put(source, newSource) == B_NO_ERROR)
+   if (_onlineSources.Put(source, newSource).IsOK())
    {
       const ZGPeerID & pid = newHB()->GetSourcePeerID();
 

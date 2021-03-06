@@ -44,7 +44,7 @@ public:
 
    /** Updates our state as specified in the (juniorDoMsg).  Will only be called on the instance running on the senior peer.
      * @param juniorDoMsg A Message containing instructions for how to update our state on a junior peer.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
 

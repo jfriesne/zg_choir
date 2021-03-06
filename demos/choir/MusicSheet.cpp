@@ -67,10 +67,10 @@ void MusicSheet :: SetToDefaultStateAux()
 status_t MusicSheet :: SetFromArchive(const ConstMessageRef & archiveRef)
 {
    const Message & archive = *archiveRef();
-   if (archive.what != MUSIC_TYPE_MUSIC_SHEET) return B_ERROR;
+   if (archive.what != MUSIC_TYPE_MUSIC_SHEET) return B_TYPE_MISMATCH;
 
    SetToDefaultStateAux();
-   if (UpdateFromArchive(archiveRef) != B_NO_ERROR) return B_ERROR;
+   MRETURN_ON_ERROR(UpdateFromArchive(archiveRef));
    SendMessageToGUI(archiveRef, true);
    return B_NO_ERROR;
 }
@@ -78,14 +78,14 @@ status_t MusicSheet :: SetFromArchive(const ConstMessageRef & archiveRef)
 status_t MusicSheet :: UpdateFromArchive(const ConstMessageRef & archiveRef)
 {
    const Message & archive = *archiveRef();
-   if (archive.what != MUSIC_TYPE_MUSIC_SHEET) return B_ERROR;
+   if (archive.what != MUSIC_TYPE_MUSIC_SHEET) return B_TYPE_MISMATCH;
 
    const String * newSongFilePath;
-   if (archive.FindString("path", &newSongFilePath) == B_NO_ERROR) SetSongFilePath(*newSongFilePath);
+   if (archive.FindString("path", &newSongFilePath).IsOK()) SetSongFilePath(*newSongFilePath);
 
    uint32 nextIndex;
    uint64 nextChord;
-   for (uint32 i=0; ((archive.FindInt32("idx", i, nextIndex) == B_NO_ERROR)&&(archive.FindInt64("chord", i, nextChord) == B_NO_ERROR)); i++) if (PutChord(nextIndex, nextChord) != B_NO_ERROR) return B_ERROR;
+   for (uint32 i=0; ((archive.FindInt32("idx", i, nextIndex).IsOK())&&(archive.FindInt64("chord", i, nextChord).IsOK())); i++) MRETURN_ON_ERROR(PutChord(nextIndex, nextChord));
 
    return B_NO_ERROR;
 }
@@ -95,11 +95,12 @@ status_t MusicSheet :: SaveToArchive(const MessageRef & archiveRef) const
    Message & archive = *archiveRef();
    archive.what = MUSIC_TYPE_MUSIC_SHEET;
 
-   if (archive.AddString("path", _songFilePath) != B_NO_ERROR) return B_ERROR;
+   MRETURN_ON_ERROR(archive.AddString("path", _songFilePath));
 
    for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
    {
-      if ((archive.AddInt32("idx", iter.GetKey()) != B_NO_ERROR)||(archive.AddInt64("chord", iter.GetValue()) != B_NO_ERROR)) return B_ERROR;
+      MRETURN_ON_ERROR(archive.AddInt32("idx", iter.GetKey()));
+      MRETURN_ON_ERROR(archive.AddInt64("chord", iter.GetValue()));
    }
 
    return B_NO_ERROR;
@@ -110,7 +111,7 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
    if (chordValue != 0)
    {
       uint64 * val = _chords.GetOrPut(whichChord);
-      if (val == NULL) return B_ERROR;  // out of memory?
+      MRETURN_ON_NULL(val); // out of memory?
 
       if (*val) 
       {
@@ -128,8 +129,8 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
    }
    else
    {
-      uint64 oldVal;
-      if (_chords.Remove(whichChord, oldVal) == B_NO_ERROR) 
+      uint64 oldVal = 0;
+      if (_chords.Remove(whichChord, oldVal).IsOK()) 
       {
          UpdateNoteHistogram(oldVal, false, _noteHistogram, _usedNotes);
          _checksum -= CalculateChecksumForChord(whichChord, oldVal);
@@ -213,10 +214,10 @@ ConstMessageRef MusicSheet :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
 
          uint64 curChord = GetChordAtIndex(chordIdx, false);
          uint64 newChord = curChord ^ (1LL<<noteIdx);
-         if (PutChord(chordIdx, newChord) == B_NO_ERROR)
+         if (PutChord(chordIdx, newChord).IsOK())
          {
             MessageRef juniorMsg = GetMessageFromPool(CHOIR_COMMAND_SET_CHORD);
-            if ((juniorMsg())&&(juniorMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx) == B_NO_ERROR)&&(juniorMsg()->AddInt64(CHOIR_NAME_CHORD_VALUE, newChord) == B_NO_ERROR)) 
+            if ((juniorMsg())&&(juniorMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx).IsOK())&&(juniorMsg()->AddInt64(CHOIR_NAME_CHORD_VALUE, newChord).IsOK())) 
             {
                SendMessageToGUI(juniorMsg, true);
                return AddConstToRef(juniorMsg);
@@ -275,10 +276,11 @@ status_t MusicSheet :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
          const uint32 chordIdx = juniorDoMsg()->GetInt32(CHOIR_NAME_CHORD_INDEX);
          const uint64 chordVal = juniorDoMsg()->GetInt64(CHOIR_NAME_CHORD_VALUE);
 
-         if (PutChord(chordIdx, chordVal) != B_NO_ERROR)
+         status_t ret;
+         if (PutChord(chordIdx, chordVal).IsError(ret))
          {
-            LogTime(MUSCLE_LOG_ERROR, "MusicSheet::JuniorUpdate():  Unable to set chord index " UINT32_FORMAT_SPEC " to chord value " XINT64_FORMAT_SPEC "\n", chordIdx, chordVal);
-            return B_ERROR;
+            LogTime(MUSCLE_LOG_ERROR, "MusicSheet::JuniorUpdate():  Unable to set chord index " UINT32_FORMAT_SPEC " to chord value " XINT64_FORMAT_SPEC " [%s]\n", chordIdx, chordVal, ret());
+            return ret;
          }
 
          SendMessageToGUI(juniorDoMsg, true); // tell the GUI thread about the change also
@@ -315,7 +317,7 @@ status_t MusicSheet :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
    }
 
    LogTime(MUSCLE_LOG_ERROR, "MusicSheet::JuniorUpdate() failed!\n");
-   return B_ERROR;
+   return B_BAD_ARGUMENT;
 }
 
 }; // end namespace choir

@@ -34,7 +34,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
          for (uint32 i=0; i<numPeers; i++)
          {
             FlatCountableRef fcRef;  // deliberately doing it this way to avoid a flatten/unflatten cycle, which would have the side effect of losing the source IP address value
-            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, fcRef) == B_NO_ERROR) 
+            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, fcRef).IsOK()) 
             {
                PZGHeartbeatPacketWithMetaDataRef hbRef(fcRef, true);
                if (hbRef()) 
@@ -75,7 +75,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
             {
                *optOldRefQ = newRefQ;  // might as well make sure we have the latest sources, even if we won't inform the user code about it
             }
-            else if ((_mainThreadPeers.Put(peerID, newRefQ) == B_NO_ERROR)&&((optPrevID?_mainThreadPeers.MoveToBehind(peerID, *optPrevID):_mainThreadPeers.MoveToFront(peerID))==B_NO_ERROR))
+            else if ((_mainThreadPeers.Put(peerID, newRefQ).IsOK())&&((optPrevID?_mainThreadPeers.MoveToBehind(peerID, *optPrevID):_mainThreadPeers.MoveToFront(peerID))==B_NO_ERROR))
             {
                _master->PeerHasComeOnline(peerID, newRefQ.Head()()->GetPeerAttributesAsMessage());
             }
@@ -150,7 +150,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          if (dios.HasItems())
          {
             for (uint32 i=0; i<dios.GetNumItems(); i++) 
-               if (RegisterInternalThreadSocket(dios[i]()->GetReadSelectSocket(), SOCKET_SET_READ) != B_NO_ERROR)
+               if (RegisterInternalThreadSocket(dios[i]()->GetReadSelectSocket(), SOCKET_SET_READ).IsError())
                   LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatSession:  Couldn't register Multicast DataIO #" UINT32_FORMAT_SPEC "!\n", i);
          }
          else LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatSession:  Couldn't create any Multicast DataIOs!\n");
@@ -203,7 +203,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          _hbtState.Pulse(messagesForOwnerThread);
 
          MessageRef nextMsgToOwner;
-         while(messagesForOwnerThread.RemoveHead(nextMsgToOwner) == B_NO_ERROR) (void) SendMessageToOwner(nextMsgToOwner);
+         while(messagesForOwnerThread.RemoveHead(nextMsgToOwner).IsOK()) (void) SendMessageToOwner(nextMsgToOwner);
       }
       if (numMessagesLeft >= 0)
       {

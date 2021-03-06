@@ -64,7 +64,7 @@ status_t ZGDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whichDatabase
 MessageRef ZGDatabasePeerSession :: SaveLocalDatabaseToMessage(uint32 whichDatabase) const
 {
    MessageRef msg = GetMessageFromPool();
-   if ((msg())&&(GetDatabaseObject(whichDatabase)->SaveToArchive(msg) != B_NO_ERROR)) msg.Reset();
+   if ((msg())&&(GetDatabaseObject(whichDatabase)->SaveToArchive(msg).IsError())) msg.Reset();
    return msg;
 }
 

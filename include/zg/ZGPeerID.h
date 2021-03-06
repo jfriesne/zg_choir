@@ -115,7 +115,7 @@ public:
    /** Restores this point from an endian-neutral flattened buffer.
     *  @param buffer Points to an array of (size) bytes
     *  @param size The number of bytes (buffer) points to (should be at least FlattenedSize())
-    *  @return B_NO_ERROR on success, B_ERROR on failure (size was too small)
+    *  @return B_NO_ERROR on success, an error code on failure (size was too small)
     */
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
@@ -125,7 +125,7 @@ public:
          _lowBits  = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(&buffer[1*sizeof(int64)]));
          return B_NO_ERROR;
       }
-      else return B_ERROR;
+      else return B_BAD_DATA;
    }
 
    /** This is implemented so that if ZGPeerID is used as the key in a Hashtable, the HashCode() method will be

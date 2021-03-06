@@ -70,12 +70,12 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
    if (udpSock())
    {
       // This must be done before adding the socket to any multicast groups, otherwise Windows gets uncooperative
-      if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true) == B_NO_ERROR)
+      if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())
       {
          const uint8 dummyBuf = 0;  // doesn't matter what this is, I just want to make sure I can actually send on this socket
          if (SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort()) == 0)
          {
-            if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()) == B_NO_ERROR)
+            if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK())
             {
                UDPSocketDataIORef ret(newnothrow UDPSocketDataIO(udpSock, false));
                if (ret()) (void) ret()->SetPacketSendDestination(multicastIAP);
@@ -154,7 +154,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
             case MULTICAST_MODE_SIMULATED:
             {
                SimulatedMulticastDataIORef wifiIO(newnothrow SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
-               if ((wifiIO())&&(ret.AddTail(wifiIO) == B_NO_ERROR)) 
+               if ((wifiIO())&&(ret.AddTail(wifiIO).IsOK())) 
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);
@@ -166,7 +166,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
             case MULTICAST_MODE_STANDARD:
             {
                UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, isForHeartbeats ? _hbUDPPort : _dataUDPPort));
-               if ((wiredIO())&&(ret.AddTail(wiredIO) == B_NO_ERROR))
+               if ((wiredIO())&&(ret.AddTail(wiredIO).IsOK()))
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);

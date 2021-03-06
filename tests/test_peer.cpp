@@ -30,7 +30,7 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
    s.SetPeerAttributes(peerAttributes);
 
    String multicastMode;
-   if (args.FindString("multicast", multicastMode) == B_NO_ERROR)
+   if (args.FindString("multicast", multicastMode).IsOK())
    {
       if (multicastMode.ContainsIgnoreCase("sim"))
       {
@@ -45,9 +45,9 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
    }
 
    String maxLogSizeBytesStr;
-   if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr) == B_NO_ERROR)
+   if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr).IsOK())
    {
-      uint32 maxBytes = atol(maxLogSizeBytesStr());
+      const uint32 maxBytes = atol(maxLogSizeBytesStr());
       if (maxBytes > 0)
       {
          LogTime(MUSCLE_LOG_INFO, "Setting maximum log size for database #0 to " UINT32_FORMAT_SPEC " bytes.\n", maxBytes);
@@ -80,30 +80,30 @@ public:
    {
       if (text.Equals("reset"))
       {
-         if (RequestResetDatabaseStateToDefault(0) == B_NO_ERROR) LogTime(MUSCLE_LOG_INFO, "Database reset-request sent!\n");
-                                                             else LogTime(MUSCLE_LOG_INFO, "Database reset-request failed!\n");
+         if (RequestResetDatabaseStateToDefault(0).IsOK()) LogTime(MUSCLE_LOG_INFO, "Database reset-request sent!\n");
+                                                      else LogTime(MUSCLE_LOG_INFO, "Database reset-request failed!\n");
       }
       else if (text.StartsWith("replace all "))
       {
          MessageRef newStateMsg = ParseTestInstructions(TOY_DB_COMMAND_SET_DB_STATE, text.WithoutPrefix("replace all "));
          const String s = TestInstructionsToString(newStateMsg);
-         if (RequestReplaceDatabaseState(0, newStateMsg) == B_NO_ERROR) LogTime(MUSCLE_LOG_INFO,  "Database replace-all-request [%s] sent\n", s());
-                                                                   else LogTime(MUSCLE_LOG_ERROR, "Database replace-all-request [%s] failed!\n", s());
+         if (RequestReplaceDatabaseState(0, newStateMsg).IsOK()) LogTime(MUSCLE_LOG_INFO,  "Database replace-all-request [%s] sent\n", s());
+                                                            else LogTime(MUSCLE_LOG_ERROR, "Database replace-all-request [%s] failed!\n", s());
       }
       else if ((text.StartsWith("del "))||(text.StartsWith("rm "))||(text.StartsWith("delete "))||(text.StartsWith("remove ")))
       {
          int32 firstSpace = text.IndexOf(' ');
          MessageRef updateMsg = ParseTestInstructions(TOY_DB_COMMAND_REMOVE_STRINGS, text.Substring(firstSpace));
          const String s = TestInstructionsToString(updateMsg);
-         if (RequestUpdateDatabaseState(0, updateMsg) == B_NO_ERROR) LogTime(MUSCLE_LOG_INFO,  "Database delete-items-request [%s] sent\n", s());
-                                                                else LogTime(MUSCLE_LOG_ERROR, "Database delete-items-request [%s] failed!\n", s());
+         if (RequestUpdateDatabaseState(0, updateMsg).IsOK()) LogTime(MUSCLE_LOG_INFO,  "Database delete-items-request [%s] sent\n", s());
+                                                         else LogTime(MUSCLE_LOG_ERROR, "Database delete-items-request [%s] failed!\n", s());
       }
       else if ((text.StartsWith("put "))||(text.StartsWith("set "))||(text.Contains('=')))
       {
          MessageRef updateMsg = ParseTestInstructions(TOY_DB_COMMAND_PUT_STRINGS, text.WithoutPrefix("put ").WithoutPrefix("set "));
          const String s = TestInstructionsToString(updateMsg);
-         if (RequestUpdateDatabaseState(0, updateMsg) == B_NO_ERROR) LogTime(MUSCLE_LOG_INFO,  "Database put-items-request [%s] sent\n", s());
-                                                                else LogTime(MUSCLE_LOG_ERROR, "Database put-items-request [%s] failed!\n", s());
+         if (RequestUpdateDatabaseState(0, updateMsg).IsOK()) LogTime(MUSCLE_LOG_INFO,  "Database put-items-request [%s] sent\n", s());
+                                                         else LogTime(MUSCLE_LOG_ERROR, "Database put-items-request [%s] failed!\n", s());
       }
       else if (text.StartsWith("sendunicast"))
       {
@@ -114,7 +114,7 @@ public:
             const char * chatText = tok.GetRemainderOfString();
 
             MessageRef msg = GetMessageFromPool(TOY_DB_COMMAND_USER_TEXT);
-            if ((msg())&&(msg()->CAddString("chat_text", chatText) == B_NO_ERROR))
+            if ((msg())&&(msg()->CAddString("chat_text", chatText).IsOK()))
             {
                if (strcmp(target, "*") == 0)
                {
@@ -141,7 +141,7 @@ public:
          const String chatText = text.Substring(14).Trim();
 
          MessageRef msg = GetMessageFromPool(TOY_DB_COMMAND_USER_TEXT);
-         if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trim()) == B_NO_ERROR))
+         if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trim()).IsOK()))
          {
             LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via multicast.\n", chatText());
             SendMulticastUserMessageToAllPeers(msg);
@@ -175,7 +175,7 @@ protected:
    virtual ConstMessageRef SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
    {
       SchedulePrintDB();
-      return (HandleUpdate(seniorDoMsg()->what, whichDatabase, dbChecksum, seniorDoMsg) == B_NO_ERROR) ? seniorDoMsg : ConstMessageRef();
+      return HandleUpdate(seniorDoMsg()->what, whichDatabase, dbChecksum, seniorDoMsg).IsOK() ? seniorDoMsg : ConstMessageRef();
    }
 
    virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg)
@@ -197,7 +197,7 @@ protected:
       if (ret()==NULL) return MessageRef();
 
       for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++)
-         if (ret()->AddString(iter.GetKey(), iter.GetValue()) != B_NO_ERROR) return MessageRef();
+         if (ret()->AddString(iter.GetKey(), iter.GetValue()).IsError()) return MessageRef();
      
       return ret;
    }
@@ -205,7 +205,7 @@ protected:
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg)
    {
       SchedulePrintDB();
-      if (newDBStateMsg()->what != TOY_DB_COMMAND_SET_DB_STATE) return B_ERROR;
+      if (newDBStateMsg()->what != TOY_DB_COMMAND_SET_DB_STATE) return B_TYPE_MISMATCH;
 
       ResetLocalDatabaseToDefault(whichDatabase, dbChecksum);
       return HandleUpdate(TOY_DB_COMMAND_PUT_STRINGS, whichDatabase, dbChecksum, newDBStateMsg);
@@ -283,7 +283,7 @@ private:
    MessageRef ParseTestInstructions(uint32 what, const String & s) const
    {
       MessageRef m = GetMessageFromPool(what);
-      if ((m() == NULL)||(ParseArgs(s, *m(), true) != B_NO_ERROR)) return MessageRef();
+      if ((m() == NULL)||(ParseArgs(s, *m(), true).IsError())) return MessageRef();
       return m;
    }
 
@@ -321,7 +321,7 @@ private:
                else 
                {
                   // create-new key-value pair
-                  if (toyDB.Put(keyStr, valStr) != B_NO_ERROR) return B_ERROR;
+                  MRETURN_ON_ERROR(toyDB.Put(keyStr, valStr));
                   dbChecksum += CalculateKeyValueChecksum(keyStr, valStr);     // in with the new (there is no old)
                }
             }
@@ -345,7 +345,7 @@ private:
 
          default:
             LogTime(MUSCLE_LOG_ERROR, "TestZGPeerSession::HandleUpdate:  Unknown command code " UINT32_FORMAT_SPEC "\n", cmdWhat);
-         return B_ERROR;
+         return B_BAD_ARGUMENT;
       }
    }
 
@@ -405,12 +405,12 @@ int main(int argc, char ** argv)
    ReflectServer server;
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
-   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)) == B_NO_ERROR))&&
-       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)) == B_NO_ERROR))
+   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK()))&&
+       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK()))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       status_t ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret == B_NO_ERROR) 
+      if (ret.IsOK()) 
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

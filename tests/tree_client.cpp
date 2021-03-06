@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
 
       LogTime(MUSCLE_LOG_INFO, "tree_client is accepting commands on stdin.  Enter '?' for a list of available commands.\n");
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret == B_NO_ERROR) 
+      if (ret.IsOK()) 
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

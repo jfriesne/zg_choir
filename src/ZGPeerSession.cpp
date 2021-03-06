@@ -39,7 +39,7 @@ static ZGPeerID GenerateLocalPeerID()
    uint64 macAddress = 0;
    {
       Queue<NetworkInterfaceInfo> niis;
-      if (GetNetworkInterfaceInfos(niis) == B_NO_ERROR)
+      if (GetNetworkInterfaceInfos(niis).IsOK())
       {
          for (uint32 i=0; i<niis.GetNumItems(); i++)
          {
@@ -123,7 +123,7 @@ void ZGPeerSession :: ShutdownChildSessions()
 static MessageRef GetForwardedTextMessage(const String & cmd)
 {
    MessageRef msg = GetMessageFromPool(PZG_PEER_COMMAND_USER_TEXT_MESSAGE);
-   return ((msg())&&(msg()->AddString(PZG_PEER_NAME_TEXT, cmd) == B_NO_ERROR)) ? msg : MessageRef();
+   return ((msg())&&(msg()->AddString(PZG_PEER_NAME_TEXT, cmd).IsOK())) ? msg : MessageRef();
 }
 
 bool ZGPeerSession :: TextCommandReceived(const String & s)
@@ -133,7 +133,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       // Take the remainder of the Message and send it to everybody, to save on typing
       String cmd = s.Substring(10).Trim();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg) == B_NO_ERROR))
+      if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg).IsOK()))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to all peers.\n", cmd());
          return TextCommandReceived(cmd); 
@@ -149,7 +149,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       // Take the remainder of the Message and send it to the senior peer
       String cmd = s.Substring(11).Trim();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg) == B_NO_ERROR))
+      if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg).IsOK()))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to senior peer [%s].\n", cmd(), GetSeniorPeerID().ToString()());
          return true;
@@ -311,7 +311,7 @@ status_t ZGPeerSession :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerI
    if (msg()->what == PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE)
    {
       dbUp = GetPZGDatabaseUpdateFromPool();
-      if ((dbUp() == NULL)||(msg()->FindFlat(PZG_PEER_NAME_DATABASE_UPDATE, *dbUp()) != B_NO_ERROR))
+      if ((dbUp() == NULL)||(msg()->FindFlat(PZG_PEER_NAME_DATABASE_UPDATE, *dbUp()).IsError()))
       {
          LogTime(MUSCLE_LOG_ERROR, "HandleDatabaseUpdateRequest:  Couldn't get PZGDatabaseUpdate from junior-update Message!\n");
          return B_BAD_DATA;
@@ -375,13 +375,15 @@ status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseU
    if (nios == NULL) return B_LOGIC_ERROR;
 
    MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE);
-   return ((wrapMsg())&&(wrapMsg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, FlatCountableRef(CastAwayConstFromRef(dbUp))) == B_NO_ERROR)) ? nios->SendMulticastMessageToAllPeers(wrapMsg) : B_ERROR;
+   MRETURN_ON_NULL(wrapMsg());
+   MRETURN_ON_ERROR(wrapMsg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, FlatCountableRef(CastAwayConstFromRef(dbUp))));
+   return nios->SendMulticastMessageToAllPeers(wrapMsg);
 }
 
 static MessageRef WrapUserMessage(const MessageRef & userMsg)
 {
    MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg) == B_NO_ERROR)) ? wrapMsg : MessageRef();
+   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg).IsOK())) ? wrapMsg : MessageRef();
 }
 
 status_t ZGPeerSession :: SendMulticastUserMessageToAllPeers(const MessageRef & userMsg)
@@ -394,7 +396,7 @@ status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const MessageRe
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   return nios ? nios->SendMulticastMessageToAllPeers(internalMsg) : B_ERROR;
+   return nios ? nios->SendMulticastMessageToAllPeers(internalMsg) : B_BAD_OBJECT;
 }
 
 status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const MessageRef & userMsg, bool sendToSelf)
@@ -407,7 +409,7 @@ status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef 
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   return nios ? nios->SendUnicastMessageToAllPeers(internalMsg, sendToSelf) : B_ERROR;
+   return nios ? nios->SendUnicastMessageToAllPeers(internalMsg, sendToSelf) : B_BAD_OBJECT;
 }
 
 status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & userMsg)
@@ -420,7 +422,7 @@ status_t ZGPeerSession :: SendUnicastInternalMessageToPeer(const ZGPeerID & dest
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
-   return nios ? nios->SendUnicastMessageToPeer(destinationPeerID, internalMsg) : B_ERROR;
+   return nios ? nios->SendUnicastMessageToPeer(destinationPeerID, internalMsg) : B_BAD_OBJECT;
 }
 
 void ZGPeerSession :: PrintDatabaseStateInfo(int32 whichDatabase) const
@@ -465,7 +467,7 @@ ConstPZGBeaconDataRef ZGPeerSession :: GetNewSeniorBeaconData() const
 
    const uint32 numDBs = _databases.GetNumItems();
    Queue<PZGDatabaseStateInfo> & q = beaconDataRef()->GetDatabaseStateInfos();
-   if (q.EnsureSize(numDBs) != B_NO_ERROR) return ConstPZGBeaconDataRef();
+   if (q.EnsureSize(numDBs).IsError()) return ConstPZGBeaconDataRef();
 
    for (uint32 i=0; i<numDBs; i++) (void) q.AddTail(_databases[i].GetDatabaseStateInfo());
    return AddConstToRef(beaconDataRef);
@@ -489,7 +491,7 @@ void ZGPeerSession :: Pulse(const PulseArgs & args)
       {
          ConstPZGBeaconDataRef beaconData;
          if (IAmTheSeniorPeer()) beaconData = GetNewSeniorBeaconData();
-         if (nios->SetBeaconData(beaconData) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession:  Couldn't set beacon data!\n");
+         if (nios->SetBeaconData(beaconData).IsError()) LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession:  Couldn't set beacon data!\n");
       }
    }
 }

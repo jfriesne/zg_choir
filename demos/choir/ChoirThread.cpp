@@ -13,7 +13,7 @@ ReflectServerRef ChoirThread :: CreateReflectServer()
    ReflectServerRef ret = QMessageTransceiverThread::CreateReflectServer();
    if (ret() == NULL) return ReflectServerRef();
 
-   if (ret()->AddNewSession(_choirSession) != B_NO_ERROR)
+   if (ret()->AddNewSession(_choirSession).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "ChoirThread::CreateReflectServer):  Error adding ChoirSession!\n");
       ret()->Cleanup();  // to avoid an assertion failure when the ReflectServer object gets deleted!

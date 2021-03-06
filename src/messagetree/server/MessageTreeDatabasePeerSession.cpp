@@ -469,7 +469,9 @@ status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, 
    {
       // If there is no parent node currently, demand-create it
       MessageRef emptyRef(GetMessageFromPool());
-      return ((emptyRef())&&(SetDataNode(path, emptyRef) == B_NO_ERROR)) ? GetUnusedNodeID(path, retID) : B_ERROR;
+      MRETURN_ON_NULL(emptyRef());
+      MRETURN_ON_ERROR(SetDataNode(path, emptyRef));
+      return GetUnusedNodeID(path, retID);
    }
 
    const uint32 NUM_NODE_IDS = 100000;  // chosen arbitrarily

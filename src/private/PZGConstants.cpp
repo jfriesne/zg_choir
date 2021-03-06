@@ -20,7 +20,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
    {  
       const String & fn = fnIter.GetFieldName();
       uint32 fieldTypeCode;
-      if (pm.GetInfo(fn, &fieldTypeCode) == B_NO_ERROR)
+      if (pm.GetInfo(fn, &fieldTypeCode).IsOK())
       {  
          switch(fieldTypeCode)
          { 

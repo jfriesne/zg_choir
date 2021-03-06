@@ -54,7 +54,7 @@ public:
    /** Places the specified chord into our chords-set.
      * @param whichChord The temporal index of the chord to set.
      * @param chordValue the notes to be present in the chord (0x00==silence, 0x01==lowest note, etc)
-     * @returns B_NO_ERROR on success, or B_ERROR on failure (out of memory?)
+     * @returns B_NO_ERROR on success, or an error code on failure (out of memory?)
      */
    status_t PutChord(uint32 whichChord, uint64 chordValue);
 
@@ -90,7 +90,7 @@ public:
 
    /** Updates our state as specified in the (juniorDoMsg).  Will only be called on the instance running on the senior peer.
      * @param juniorDoMsg A Message containing instructions for how to update our state on a junior peer.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
 

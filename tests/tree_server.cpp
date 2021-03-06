@@ -49,7 +49,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    s.SetPeerAttributes(peerAttributes);
 
    String multicastMode;
-   if (args.FindString("multicast", multicastMode) == B_NO_ERROR)
+   if (args.FindString("multicast", multicastMode).IsOK())
    {
       if (multicastMode.ContainsIgnoreCase("sim"))
       {
@@ -64,7 +64,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    }
 
    String maxLogSizeBytesStr;
-   if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr) == B_NO_ERROR)
+   if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr).IsOK())
    {
       uint32 maxBytes = atol(maxLogSizeBytesStr());
       if (maxBytes > 0)
@@ -174,7 +174,7 @@ int main(int argc, char ** argv)
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret == B_NO_ERROR) 
+      if (ret.IsOK()) 
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

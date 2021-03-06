@@ -38,7 +38,7 @@ void NoteAssignmentsMap :: SetToDefaultStateAux()
 status_t NoteAssignmentsMap :: SetFromArchive(const ConstMessageRef & archiveRef)
 {
    const Message & archive = *archiveRef();
-   if (archive.what != MUSIC_TYPE_ASSIGNMENTS_MAP) return B_ERROR;
+   if (archive.what != MUSIC_TYPE_ASSIGNMENTS_MAP) return B_TYPE_MISMATCH;
 
    SetToDefaultStateAux();
 
@@ -46,8 +46,8 @@ status_t NoteAssignmentsMap :: SetFromArchive(const ConstMessageRef & archiveRef
 
    ZGPeerID tempID;
    uint64 tempChord;
-   for (int32 i=0; ((archive.FindFlat("pid", i, tempID) == B_NO_ERROR)&&(archive.FindInt64("chord", i, tempChord) == B_NO_ERROR)); i++)
-      if (SetNoteAssignmentsForPeerID(tempID, tempChord) != B_NO_ERROR) return B_ERROR;
+   for (int32 i=0; ((archive.FindFlat("pid", i, tempID).IsOK())&&(archive.FindInt64("chord", i, tempChord).IsOK())); i++)
+      MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(tempID, tempChord));
 
    SendMessageToGUI(archiveRef, true);
    return B_NO_ERROR;
@@ -60,7 +60,8 @@ status_t NoteAssignmentsMap :: SaveToArchive(const MessageRef & archiveRef) cons
 
    for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
    {
-      if ((archive.AddFlat("pid", iter.GetKey()) != B_NO_ERROR)||(archive.AddInt64("chord", iter.GetValue()) != B_NO_ERROR)) return B_ERROR;
+      MRETURN_ON_ERROR(archive.AddFlat("pid", iter.GetKey()));
+      MRETURN_ON_ERROR(archive.AddInt64("chord", iter.GetValue()));
    }
    return archive.AddInt32("strategy", _assignmentStrategy);
 }
@@ -96,7 +97,7 @@ status_t NoteAssignmentsMap :: SetNoteAssignmentsForPeerID(const ZGPeerID & peer
    if (assignedNotes != 0)
    {
       uint64 * val = _noteAssignments.GetOrPut(peerID);
-      if (val == NULL) return B_ERROR;  // out of memory?
+      MRETURN_ON_NULL(val);  // out of memory?
 
       if (*val) 
       {
@@ -140,14 +141,15 @@ status_t NoteAssignmentsMap :: HandleToggleAssignmentMessage(const Message & msg
    if (msg.what != CHOIR_COMMAND_TOGGLE_ASSIGNMENT)
    {
       LogTime(MUSCLE_LOG_ERROR, "NoteAssignmentsMap::HandleToggleAssignmentMessage:  wrong Message type " UINT32_FORMAT_SPEC "\n", msg.what);
-      return B_ERROR;
+      return B_TYPE_MISMATCH;
    }
 
+   status_t ret;
    ZGPeerID peerID;
-   if (msg.FindFlat(CHOIR_NAME_PEER_ID, peerID) != B_NO_ERROR)
+   if (msg.FindFlat(CHOIR_NAME_PEER_ID, peerID).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "NoteAssignmentsMap::HandleToggleAssignmentMessage:  no CHOIR_NAME_PEER_ID found!\n");
-      return B_ERROR;
+      return ret;
    }
 
    const uint32 noteIdx = msg.GetInt32(CHOIR_NAME_NOTE_INDEX);
@@ -219,7 +221,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
       const ZGPeerID & pid = iter.GetKey();
       if (onlinePeers.ContainsKey(pid) == false)
       {
-         if (SetNoteAssignmentsForPeerID(pid, 0) != B_NO_ERROR) return B_ERROR;
+         MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(pid, 0));
          retChangedAnything = true;
       }
    }
@@ -232,9 +234,9 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
    {
       if (((allNotesChord & (1LL<<i)) != 0)&&((_assignedNotes & (1LL<<i)) == 0))
       {
-         uint32 lightCount;
+         uint32 lightCount = 0;
          const ZGPeerID & pid = GetLightestPeer(onlinePeers, lightCount);
-         if (SetNoteAssignmentsForPeerID(pid, GetNoteAssignmentsForPeerID(pid)|(1LL<<i)) != B_NO_ERROR) return B_ERROR;
+         MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(pid, GetNoteAssignmentsForPeerID(pid)|(1LL<<i)));
          retChangedAnything = true;
       }
    }
@@ -259,7 +261,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
                if (foundNoteAlready == false) foundNoteAlready = true;
                else 
                {
-                  if (SetNoteAssignmentsForPeerID(pid, GetNoteAssignmentsForPeerID(pid)&~noteBit) != B_NO_ERROR) return B_ERROR;
+                  MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(pid, GetNoteAssignmentsForPeerID(pid)&~noteBit));
                   retChangedAnything = true;
                }
             } 
@@ -279,8 +281,8 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
          if (muscleAbs((int32)(heavyCount-lightCount)) > 1)
          {
             const uint32 noteIdx = GetLastNoteInChord(GetNoteAssignmentsForPeerID(mrHeavy));
-            if (SetNoteAssignmentsForPeerID(mrHeavy, GetNoteAssignmentsForPeerID(mrHeavy)&~(1LL<<noteIdx)) != B_NO_ERROR) return B_ERROR;
-            if (SetNoteAssignmentsForPeerID(mrLight, GetNoteAssignmentsForPeerID(mrLight)| (1LL<<noteIdx)) != B_NO_ERROR) return B_ERROR;
+            MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(mrHeavy, GetNoteAssignmentsForPeerID(mrHeavy)&~(1LL<<noteIdx)));
+            MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(mrLight, GetNoteAssignmentsForPeerID(mrLight)| (1LL<<noteIdx)));
             retChangedAnything = true; 
          }
          else break;
@@ -316,7 +318,7 @@ ConstMessageRef NoteAssignmentsMap :: SeniorUpdate(const ConstMessageRef & senio
       case CHOIR_COMMAND_TOGGLE_ASSIGNMENT:
       {
          // Junior peers can just handle the same command the same way and get the same result
-         if (HandleToggleAssignmentMessage(*seniorDoMsg()) == B_NO_ERROR) 
+         if (HandleToggleAssignmentMessage(*seniorDoMsg()).IsOK()) 
          {
             SendMessageToGUI(seniorDoMsg, true);
             return seniorDoMsg;
@@ -355,7 +357,7 @@ ConstMessageRef NoteAssignmentsMap :: SeniorUpdate(const ConstMessageRef & senio
          }
 
          bool changedAnything = false;
-         if (SeniorAutoUpdateAssignments(musicSheet->GetAllUsedNotesChord(), changedAnything) != B_NO_ERROR)
+         if (SeniorAutoUpdateAssignments(musicSheet->GetAllUsedNotesChord(), changedAnything).IsError())
          {
             LogTime(MUSCLE_LOG_ERROR, "Strategy review failed!\n");
             return MessageRef();
@@ -390,12 +392,9 @@ status_t NoteAssignmentsMap :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
          return B_NO_ERROR;
 
       case CHOIR_COMMAND_TOGGLE_ASSIGNMENT:
-         if (HandleToggleAssignmentMessage(*juniorDoMsg()) == B_NO_ERROR) 
-         {
-            SendMessageToGUI(juniorDoMsg, true);
-            return B_NO_ERROR;
-         }
-      break;
+         MRETURN_ON_ERROR(HandleToggleAssignmentMessage(*juniorDoMsg()));
+         SendMessageToGUI(juniorDoMsg, true);
+         return B_NO_ERROR;
 
       case CHOIR_COMMAND_SET_STRATEGY:
          SetAssignmentStrategy(juniorDoMsg()->GetInt32(CHOIR_NAME_STRATEGY));
@@ -411,7 +410,7 @@ status_t NoteAssignmentsMap :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
    }
 
    LogTime(MUSCLE_LOG_ERROR, "NoteAssignmentsMap::JuniorUpdate() failed!\n");
-   return B_ERROR;
+   return B_BAD_ARGUMENT;
 }
 
 }; // end namespace choir

@@ -48,7 +48,7 @@ MuxTreeGateway :: ~MuxTreeGateway()
 status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    TreeSubscriberInfoRef hisSubs;
-   if (_subscriberInfos.Get(calledBy, hisSubs) != B_NO_ERROR) return B_BAD_ARGUMENT;  // he has to be a subscriber of ours!
+   if (_subscriberInfos.Get(calledBy, hisSubs).IsError()) return B_BAD_ARGUMENT;  // he has to be a subscriber of ours!
 
    Queue<SubscriptionInfo> * filterQueue = _subscribedStrings.GetOrPut(subscriptionPath);
    if (filterQueue)
@@ -60,7 +60,7 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
          {
             // demand-allocate an entry for him
             hisSubs.SetRef(newnothrow TreeSubscriberInfo);
-            if ((hisSubs())&&(_subscriberInfos.Put(calledBy, hisSubs) != B_NO_ERROR)) hisSubs.Reset();
+            if ((hisSubs())&&(_subscriberInfos.Put(calledBy, hisSubs).IsError())) hisSubs.Reset();
             if ((hisSubs())&&(_isConnected)) calledBy->TreeGatewayConnectionStateChanged();  // let him know we are connected to the server already
          }
 
@@ -97,7 +97,7 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
             break;
          }
       }
-      if ((removeIdx >= 0)&&(q->RemoveItemAt(removeIdx) == B_NO_ERROR))
+      if ((removeIdx >= 0)&&(q->RemoveItemAt(removeIdx).IsOK()))
       {
          (void) UpdateSubscription(subscriptionPath, calledBy, TreeGatewayFlags());  // this does the actual unsubscribe (or re-subscribe with a reduced queryfilter set, if necessary)
          if (q->IsEmpty()) (void) _subscribedStrings.Remove(subscriptionPath);
@@ -105,7 +105,7 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
       else return B_DATA_NOT_FOUND;  // hmm, unknown (subscriber/queryfilter) pair!
 
       TreeSubscriberInfoRef hisSubs;
-      if ((_subscriberInfos.Get(calledBy, hisSubs) == B_NO_ERROR)&&(hisSubs()))
+      if ((_subscriberInfos.Get(calledBy, hisSubs).IsOK())&&(hisSubs()))
       {
          (void) hisSubs()->RemovePathString(subscriptionPath.WithoutSuffix("/"));
          if (hisSubs()->GetEntries().IsEmpty()) (void) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
@@ -220,7 +220,7 @@ void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscr
       (void) subInfo._receivedPaths.Put(path, path.GetNumInstancesOf('/')+1);
       sub->TreeNodeUpdated(path, msgRef);
    }
-   else if (subInfo._receivedPaths.Remove(path) == B_NO_ERROR)
+   else if (subInfo._receivedPaths.Remove(path).IsOK())
    {
       EnsureSubscriberInBatchGroup(sub);
       sub->TreeNodeUpdated(path, msgRef);
@@ -356,7 +356,7 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
    Queue<String> * q = _requestedSubtrees.Get(untrustedSubPtr);
    if (q)
    {
-      if ((q)&&(q->RemoveFirstInstanceOf(suffix) == B_NO_ERROR))
+      if ((q)&&(q->RemoveFirstInstanceOf(suffix).IsOK()))
       {
          untrustedSubPtr->SubtreesRequestResultReturned(suffix, subtreeData);
          if (q->IsEmpty()) _requestedSubtrees.Remove(untrustedSubPtr);

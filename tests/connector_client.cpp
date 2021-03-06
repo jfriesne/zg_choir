@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
          }
          else
          {
-            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", B_ERROR());
+            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting!\n");
             break; 
          }
       }

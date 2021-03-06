@@ -165,7 +165,7 @@ protected:
      * The well-known default state is defined by the implementation of the subclass's ResetLocalDatabaseToDefault() method.
      * Note that this method only sends the request; the actual reset will happen (if it happens) some time after this method returns.
      * @param whichDatabase the index of the database that should be reset
-     * @returns B_NO_ERROR if the the reset-request was successfully sent to the senior peer, or B_ERROR if the request could not be sent.
+     * @returns B_NO_ERROR if the the reset-request was successfully sent to the senior peer, or an error code if the request could not be sent.
      */
    status_t RequestResetDatabaseStateToDefault(uint32 whichDatabase);
 
@@ -174,7 +174,7 @@ protected:
      * Note that this method only sends the request; the actual database-replace will happen (if it happens) some time after this method returns.
      * @param whichDatabase the index of the database whose state should be replaced.
      * @param newDatabaseStateMsg a Message containing instructions/data that SetLocalDatabaseFromMessage() can use later on to create a new database state.
-     * @returns B_NO_ERROR if the the replace-request was successfully sent to the senior peer, or B_ERROR if the request could not be sent.
+     * @returns B_NO_ERROR if the the replace-request was successfully sent to the senior peer, or an error code if the request could not be sent.
      */
    status_t RequestReplaceDatabaseState(uint32 whichDatabase, const MessageRef & newDatabaseStateMsg);
 
@@ -184,7 +184,7 @@ protected:
      * Note that this method only sends the request; the actual database-update will happen (if it happens) some time after this method returns.
      * @param whichDatabase the index of the database whose state should be updated.
      * @param databaseUpdateMsg a Message containing instructions/data that SeniorUpdateLocalDatabase() can use later on to transition the database to a new database state.
-     * @returns B_NO_ERROR if the the update-request was successfully sent to the senior peer, or B_ERROR if the request could not be sent.
+     * @returns B_NO_ERROR if the the update-request was successfully sent to the senior peer, or an error code if the request could not be sent.
      */
    status_t RequestUpdateDatabaseState(uint32 whichDatabase, const MessageRef & databaseUpdateMsg);
 
@@ -222,7 +222,7 @@ protected:
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new (post-update) checksum value.
      * @param juniorDoMsg Reference to a Message instructing the junior peer how his lcoal database should be updated. (The contents and semantics of this Message
      *                    will be determined by logic in the subclass of this class; they are not specified by the ZGPeerSession class itself)
-     * @returns on success, returns B_NO_ERROR.  On failure (or refusal-to-update), returns B_ERROR.
+     * @returns on success, returns B_NO_ERROR.  On failure (or refusal-to-update), returns an error code.
      */
    virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg) = 0;
 
@@ -237,7 +237,7 @@ protected:
      * @param whichDatabase The index of the database to replace (e.g. 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new (post-update) checksum value.
      * @param newDBStateMsg A Message holding the contents of the new database we want to replace the current database with.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg) = 0;
 
@@ -281,21 +281,21 @@ protected:
      * The PacketTunnelIOGateway mechanism is used so that large Messages can
      * be transmitted as well as small ones.  Delivery is not guaranteed, however.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
-     * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of B_ERROR otherwise.
+     * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of an error code otherwise.
      */
    status_t SendMulticastUserMessageToAllPeers(const MessageRef & msg);
 
    /** Tries to send the given Message to all peers via multiple instances of TCP unicast.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
      * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
-     * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of B_ERROR otherwise.
+     * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of an error code otherwise.
      */
    status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
 
    /** Tries to send the given Message to a specific peers via TCP unicast.
      * @param destinationPeerID The ZGPeerID of the peer we want this Message to be sent to.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on the peer when the Message arrives there.
-     * @returns B_NO_ERROR if the Message was successfully enqueued to be unicasted out, of B_ERROR otherwise.
+     * @returns B_NO_ERROR if the Message was successfully enqueued to be unicasted out, of an error code otherwise.
      */
    status_t SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
 

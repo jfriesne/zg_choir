@@ -117,12 +117,12 @@ static MessageRef CreateBeaconDataMessage(const ConstPZGBeaconDataRef & beaconDa
       if (serializeBeaconData)
       {
          FlatCountableRef fcRef(CastAwayConstFromRef(beaconData));
-         if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef) != B_NO_ERROR) return MessageRef();
+         if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef).IsError()) return MessageRef();
       }
-      else if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconData()) != B_NO_ERROR) return MessageRef();
+      else if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconData()).IsError()) return MessageRef();
    }
 
-   if ((sourceTag.IsValid())&&(msg()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, sourceTag) != B_NO_ERROR)) return MessageRef();
+   if ((sourceTag.IsValid())&&(msg()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, sourceTag).IsError())) return MessageRef();
 
    return msg;
 }
@@ -132,7 +132,7 @@ static MessageRef CreateBeaconDataMessage(const ConstPZGBeaconDataRef & beaconDa
 static ConstPZGBeaconDataRef GetBeaconDataFromMessage(const MessageRef & msg)
 {
    FlatCountableRef fcRef;
-   if (msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef) == B_NO_ERROR)
+   if (msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef).IsOK())
    {
       PZGBeaconDataRef beaconRef(fcRef.GetRefCountableRef(), true);
       if (beaconRef()) return AddConstToRef(beaconRef);
@@ -140,7 +140,7 @@ static ConstPZGBeaconDataRef GetBeaconDataFromMessage(const MessageRef & msg)
 
    // Didn't work?  Okay, let's try to unflatten some bytes instead
    PZGBeaconDataRef beaconRef = GetBeaconDataFromPool();
-   if ((beaconRef())&&(msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconRef()) != B_NO_ERROR)) beaconRef.Reset();
+   if ((beaconRef())&&(msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconRef()).IsError())) beaconRef.Reset();
    return AddConstToRef(beaconRef);
 }
 
@@ -157,7 +157,7 @@ PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, 
 void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef & msg)
 {
    PZGMulticastMessageTag tag;
-   if (msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag) == B_NO_ERROR) 
+   if (msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK()) 
    {
       if (msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)
       {
@@ -172,7 +172,7 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
             // Hmm, race condition caused us to end up with beacon data from the wrong senior peer? 
             // we'd better as the I/O thread to try again
             static Message _retryMsg(PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA);
-            if (SendMessageToInternalThread(MessageRef(&_retryMsg, false)) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
+            if (SendMessageToInternalThread(MessageRef(&_retryMsg, false)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
          } 
       }
       else _master->PrivateMessageReceivedFromPeer(tag.GetPeerID(), msg);
@@ -324,7 +324,7 @@ void PZGNetworkIOSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, 
       // Let's tell the internal thread what the senior peer ID is too, so he
       // can know which beacon datas to send us and which to ignore
       MessageRef msg = GetMessageFromPool(PZG_NETWORK_COMMAND_SET_SENIOR_PEER_ID);
-      if ((msg() == NULL)||(msg()->AddFlat(PZG_NETWORK_NAME_PEER_ID, _seniorPeerID) != B_NO_ERROR)||(SendMessageToInternalThread(msg) != B_NO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "PZGNetworkSession::SeniorPeerChanged:  Couldn't inform multicast thread!\n");
+      if ((msg() == NULL)||(msg()->AddFlat(PZG_NETWORK_NAME_PEER_ID, _seniorPeerID).IsError())||(SendMessageToInternalThread(msg).IsError())) LogTime(MUSCLE_LOG_ERROR, "PZGNetworkSession::SeniorPeerChanged:  Couldn't inform multicast thread!\n");
    }
 }
 
@@ -370,10 +370,10 @@ void PZGNetworkIOSession :: InternalThreadEntry()
             for (uint32 i=0; i<dios.GetNumItems(); i++)
             {
                PacketDataIORef & dio = dios[i];
-               if (RegisterInternalThreadSocket(dio()->GetReadSelectSocket(), SOCKET_SET_READ) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession:  Couldn't register DataIO # " UINT32_FORMAT_SPEC " for input!\n", i);
+               if (RegisterInternalThreadSocket(dio()->GetReadSelectSocket(), SOCKET_SET_READ).IsError()) LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession:  Couldn't register DataIO # " UINT32_FORMAT_SPEC " for input!\n", i);
 
                PacketTunnelIOGatewayRef ptRef(newnothrow PacketTunnelIOGateway);
-               if ((ptRef())&&(ptGateways.AddTail(ptRef) == B_NO_ERROR)) ptRef()->SetDataIO(dio);
+               if ((ptRef())&&(ptGateways.AddTail(ptRef).IsOK())) ptRef()->SetDataIO(dio);
                else 
                {
                   LogTime(MUSCLE_LOG_ERROR, "Couldn't create PacketTunnelIOGateway for DataIO #" UINT32_FORMAT_SPEC "\n", i);
@@ -410,7 +410,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                break;
 
                case PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE: case PZG_PEER_COMMAND_USER_MESSAGE:
-                  if (msgFromOwner()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, PZGMulticastMessageTag(GetLocalPeerID(), ++outgoingMulticastMessageTagCounter)) == B_NO_ERROR)
+                  if (msgFromOwner()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, PZGMulticastMessageTag(GetLocalPeerID(), ++outgoingMulticastMessageTagCounter)).IsOK())
                   {
                      for (uint32 i=0; i<ptGateways.GetNumItems(); i++) 
                         (void) ptGateways[i]()->AddOutgoingMessage(msgFromOwner);
@@ -418,7 +418,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                break;
 
                case PZG_NETWORK_COMMAND_SET_SENIOR_PEER_ID:
-                  if (msgFromOwner()->FindFlat(PZG_NETWORK_NAME_PEER_ID, seniorPeerID) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Multicast I/O thread:  Couldn't get senior peer ID from Message!\n");
+                  if (msgFromOwner()->FindFlat(PZG_NETWORK_NAME_PEER_ID, seniorPeerID).IsError()) LogTime(MUSCLE_LOG_ERROR, "Multicast I/O thread:  Couldn't get senior peer ID from Message!\n");
                break;
 
                case PZG_NETWORK_COMMAND_SET_BEACON_DATA:
@@ -454,7 +454,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                if (outgoingBeaconMsg() == NULL) outgoingBeaconMsg = CreateBeaconDataMessage(outgoingBeaconData, true, PZGMulticastMessageTag(GetLocalPeerID(), 0));
                if (outgoingBeaconMsg())
                {
-                  for (uint32 i=0; i<ptGateways.GetNumItems(); i++) if (ptGateways[i]()->AddOutgoingMessage(outgoingBeaconMsg) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Unable to add outgoing beacon to gateway # " UINT32_FORMAT_SPEC "!\n", i);
+                  for (uint32 i=0; i<ptGateways.GetNumItems(); i++) if (ptGateways[i]()->AddOutgoingMessage(outgoingBeaconMsg).IsError()) LogTime(MUSCLE_LOG_ERROR, "Unable to add outgoing beacon to gateway # " UINT32_FORMAT_SPEC "!\n", i);
                }
                else LogTime(MUSCLE_LOG_ERROR, "Unable to create Outgoing Beacon Message!\n");
             }
@@ -471,11 +471,11 @@ void PZGNetworkIOSession :: InternalThreadEntry()
             while(ptGateways[i]()->DoInput(messageReceiver) > 0)
             {
                MessageRef msg;
-               while(messageReceiver.RemoveHead(msg) == B_NO_ERROR) 
+               while(messageReceiver.RemoveHead(msg).IsOK()) 
                { 
                   // no point in forwarding-to-owner a dup Message, or a Message that came from us
                   PZGMulticastMessageTag tag;
-                  if ((msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag) == B_NO_ERROR)&&(tag.GetPeerID() != GetLocalPeerID())&&((msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)||((recentlyReceived.ContainsKey(tag) == false)&&(recentlyReceived.PutWithDefault(tag) == B_NO_ERROR))))
+                  if ((msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK())&&(tag.GetPeerID() != GetLocalPeerID())&&((msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)||((recentlyReceived.ContainsKey(tag) == false)&&(recentlyReceived.PutWithDefault(tag).IsOK()))))
                   {
                      if (msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)
                      {
@@ -490,7 +490,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                                  if ((lastReceivedBeaconData() == NULL)||(*incomingBeaconData() != *lastReceivedBeaconData()))
                                  {
                                     lastReceivedBeaconData = incomingBeaconData;
-                                    if (SendMessageToOwner(CreateBeaconDataMessage(incomingBeaconData, false, tag)) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send beacon data to main thread!\n");
+                                    if (SendMessageToOwner(CreateBeaconDataMessage(incomingBeaconData, false, tag)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send beacon data to main thread!\n");
                                  }
                               } 
                               else LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to retrieve beacon data from incoming multicast Message!\n");
@@ -501,7 +501,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                      else 
                      {
                         (void) recentlyReceived.MoveToBack(tag);  // might as well use the full LRU semantics
-                        if (SendMessageToOwner(msg) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send Message to main thread!\n");
+                        if (SendMessageToOwner(msg).IsError()) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send Message to main thread!\n");
                         while(recentlyReceived.GetNumItems() > 1000) (void) recentlyReceived.RemoveFirst();  // don't let our cache get too large
                      }
                   }
@@ -525,7 +525,7 @@ void PZGNetworkIOSession :: Pulse(const PulseArgs & args)
    PZGThreadedSession::Pulse(args);
 
    MessageRef nextMsgToSelf;
-   while(_messagesSentToSelf.RemoveHead(nextMsgToSelf) == B_NO_ERROR) UnicastMessageReceivedFromPeer(GetLocalPeerID(), nextMsgToSelf);
+   while(_messagesSentToSelf.RemoveHead(nextMsgToSelf).IsOK()) UnicastMessageReceivedFromPeer(GetLocalPeerID(), nextMsgToSelf);
 }
 
 status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf)
@@ -553,20 +553,20 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID
       // which probably isn't expecting SendUnicastMessageToPeer() to execute any message-handling code during this call!
       bool wasEmpty = _messagesSentToSelf.IsEmpty();
       status_t ret = _messagesSentToSelf.AddTail(msg);
-      if ((wasEmpty)&&(ret == B_NO_ERROR)) InvalidatePulseTime();  // so we'll wake up and receive our message to ourself ASAP
+      if ((wasEmpty)&&(ret.IsOK())) InvalidatePulseTime();  // so we'll wake up and receive our message to ourself ASAP
       return ret;
    }
    else
    {
       PZGUnicastSessionRef usRef = GetUnicastSessionForPeerID(peerID, true);
-      return usRef() ? usRef()->AddOutgoingMessage(msg) : B_ERROR;
+      return usRef() ? usRef()->AddOutgoingMessage(msg) : B_DATA_NOT_FOUND;
    }
 }
 
 status_t PZGNetworkIOSession :: SetBeaconData(const ConstPZGBeaconDataRef & optBeaconData)
 {
    MessageRef msg = CreateBeaconDataMessage(optBeaconData, false, PZGMulticastMessageTag());
-   return msg() ? SendMessageToInternalThread(msg) : B_ERROR;
+   return msg() ? SendMessageToInternalThread(msg) : B_OUT_OF_MEMORY;
 }
 
 PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGPeerID & peerID, bool allocIfNecessary)
@@ -586,7 +586,7 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
    PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(this, peerID));
    if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return PZGUnicastSessionRef();}
 
-   if (AddNewConnectSession(ret, iap.GetIPAddress(), iap.GetPort(), MUSCLE_TIME_NEVER, SecondsToMicros(5)) != B_NO_ERROR)
+   if (AddNewConnectSession(ret, iap.GetIPAddress(), iap.GetPort(), MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't connect to peer [%s] at [%s]!\n", peerID.ToString()(), iap.ToString()());
       return PZGUnicastSessionRef();
@@ -640,7 +640,7 @@ void PZGNetworkIOSession :: ComputerIsAboutToSleep()
 void PZGNetworkIOSession :: ComputerJustWokeUp()
 {
    _computerIsAsleep = false;
-   if (SetupHeartbeatSession() != B_NO_ERROR) LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't recreate heartbeat session!\n");
+   if (SetupHeartbeatSession().IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't recreate heartbeat session!\n");
 }
 
 void PZGNetworkIOSession :: UnicastMessageReceivedFromPeer(const ZGPeerID & remotePeerID, const MessageRef & msg)
@@ -662,7 +662,7 @@ status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBa
    else
    {
       PZGUnicastSessionRef usRef = GetUnicastSessionForPeerID(peerID, true);
-      return usRef() ? usRef()->RequestBackOrderFromSeniorPeer(ubok) : B_ERROR;
+      return usRef() ? usRef()->RequestBackOrderFromSeniorPeer(ubok) : B_DATA_NOT_FOUND;
    }
 }
 

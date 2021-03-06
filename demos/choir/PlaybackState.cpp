@@ -36,7 +36,7 @@ void PlaybackState :: SetToDefaultStateAux()
 status_t PlaybackState :: SetFromArchive(const ConstMessageRef & archiveRef)
 {
    const Message & archive = *archiveRef();
-   if (archive.what != MUSIC_TYPE_PLAYBACK_STATE) return B_ERROR;
+   if (archive.what != MUSIC_TYPE_PLAYBACK_STATE) return B_TYPE_MISMATCH;
 
    _networkStartTimeMicros = archive.GetInt64("start_time");
    _microsPerChord         = archive.GetInt64("us_per_chord");
@@ -131,13 +131,13 @@ ConstMessageRef PlaybackState :: SeniorUpdate(const ConstMessageRef & seniorDoMs
       case CHOIR_COMMAND_PLAY: case CHOIR_COMMAND_PAUSE: case CHOIR_COMMAND_ADJUST_PLAYBACK:
       {
          uint64 newMicrosPerChord;
-         bool useMicrosPerChord = (seniorDoMsg()->FindInt64(CHOIR_NAME_MICROS_PER_CHORD, newMicrosPerChord) == B_NO_ERROR);
+         bool useMicrosPerChord = (seniorDoMsg()->FindInt64(CHOIR_NAME_MICROS_PER_CHORD, newMicrosPerChord).IsOK());
 
          uint32 newSeek;
-         bool useSeek = (seniorDoMsg()->FindInt32(CHOIR_NAME_CHORD_INDEX, newSeek) == B_NO_ERROR);
+         bool useSeek = (seniorDoMsg()->FindInt32(CHOIR_NAME_CHORD_INDEX, newSeek).IsOK());
 
          bool isLoop;
-         bool useLoop = (seniorDoMsg()->FindBool(CHOIR_NAME_LOOP, isLoop) == B_NO_ERROR);
+         bool useLoop = (seniorDoMsg()->FindBool(CHOIR_NAME_LOOP, isLoop).IsOK());
 
          return SeniorAdjustPlaybackState(seniorDoMsg()->what, useMicrosPerChord?&newMicrosPerChord:NULL, useSeek?&newSeek:NULL, useLoop?&isLoop:NULL);
       }
@@ -171,7 +171,7 @@ status_t PlaybackState :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
    }
 
    LogTime(MUSCLE_LOG_ERROR, "PlaybackState::JuniorUpdate() failed!\n");
-   return B_ERROR;
+   return B_BAD_ARGUMENT;
 }
 
 MessageRef PlaybackState :: SeniorAdjustPlaybackState(uint32 whatCode, const uint64 * optNewMicrosPerChord, const uint32 * optSeekTo, bool * optSetLoop)
@@ -222,7 +222,7 @@ MessageRef PlaybackState :: SeniorAdjustPlaybackState(uint32 whatCode, const uin
    }
 
    MessageRef juniorMsg = GetMessageFromPool();
-   if ((juniorMsg())&&(SaveToArchive(juniorMsg) != B_NO_ERROR)) juniorMsg.Reset();
+   if ((juniorMsg())&&(SaveToArchive(juniorMsg).IsError())) juniorMsg.Reset();
    if (juniorMsg()) SendMessageToGUI(juniorMsg, false); // tell the GUI thread about the change also
 
    return juniorMsg;

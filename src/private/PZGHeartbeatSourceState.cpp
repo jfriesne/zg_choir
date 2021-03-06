@@ -19,7 +19,7 @@ status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & mult
       rtt = _rttAveragers.PutAndGet(multicastAddr, r);
       if (rtt == NULL) MRETURN_OUT_OF_MEMORY;
    }
-   return rtt ? rtt->GetItemPointer()->AddMeasurement(newMeasurementMicros, now) : B_ERROR;
+   return rtt ? rtt->GetItemPointer()->AddMeasurement(newMeasurementMicros, now) : B_DATA_NOT_FOUND;
 }
 
 uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime)

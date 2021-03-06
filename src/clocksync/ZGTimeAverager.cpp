@@ -6,7 +6,8 @@ namespace zg {
 status_t ZGTimeAverager :: AddMeasurement(uint64 newMeasurementMicros, uint64 now)
 {
    while(_measurements.GetNumItems() >= _maxMeasurements) RemoveOldMeasurement();
-   if (_measurements.AddTail(newMeasurementMicros) != B_NO_ERROR) return B_ERROR;
+   MRETURN_ON_ERROR(_measurements.AddTail(newMeasurementMicros));
+
    _totalMicros                 += newMeasurementMicros;
    _lastMeasurementTime          = now;
    _cachedAverageWithoutOutliers = -1;
@@ -46,7 +47,7 @@ uint64 ZGTimeAverager :: GetAverageValueIgnoringOutliersAux() const
 void ZGTimeAverager :: RemoveOldMeasurement()
 {
    uint64 oldMeasurement = 0;  // set to zero to avoid compiler warning
-   if (_measurements.RemoveHead(oldMeasurement) == B_NO_ERROR)
+   if (_measurements.RemoveHead(oldMeasurement).IsOK())
    {
       _totalMicros -= oldMeasurement;
       _cachedAverageWithoutOutliers = -1;

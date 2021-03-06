@@ -78,7 +78,7 @@ const ChoirSession * MusicDatabaseObject :: GetChoirSession() const
 ConstMessageRef MusicDatabaseObject :: SendFullStateToGUI(bool allowReviewTrigger)
 {
    MessageRef msg = GetMessageFromPool();
-   if ((msg() == NULL)||(SaveToArchive(msg) != B_NO_ERROR)) return ConstMessageRef();
+   if ((msg() == NULL)||(SaveToArchive(msg).IsError())) return ConstMessageRef();
    SendMessageToGUI(msg, allowReviewTrigger);
    return AddConstToRef(msg);
 }

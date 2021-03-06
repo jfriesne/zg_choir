@@ -50,7 +50,7 @@ ConstMessageRef ChoirSession :: GenerateLatenciesMessage() const
    for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
    {
       const ZGPeerID & pid = iter.GetKey();
-      if ((msg()->AddFlat(CHOIR_NAME_PEER_ID, pid) == B_NO_ERROR)&&(msg()->AddInt64(CHOIR_NAME_PEER_LATENCY, GetEstimatedLatencyToPeer(pid)) != B_NO_ERROR)) 
+      if ((msg()->AddFlat(CHOIR_NAME_PEER_ID, pid).IsOK())&&(msg()->AddInt64(CHOIR_NAME_PEER_LATENCY, GetEstimatedLatencyToPeer(pid)).IsError())) 
       {
          (void) msg()->RemoveData(CHOIR_NAME_PEER_ID, msg()->GetNumValuesInName(CHOIR_NAME_PEER_ID-1));  // roll back!
       }
@@ -89,7 +89,7 @@ void ChoirSession :: SendMessageToGUI(const ConstMessageRef & msg, bool allowRev
    if (supervisorSession)
    {
       MessageRef wrapper = GetMessageFromPool(CHOIR_REPLY_GUI_UPDATE);
-      if ((wrapper())&&(wrapper()->AddMessage(CHOIR_NAME_WRAPPED_MESSAGE, CastAwayConstFromRef(msg)) == B_NO_ERROR)) supervisorSession->MessageReceivedFromSession(*this, wrapper, NULL);
+      if ((wrapper())&&(wrapper()->AddMessage(CHOIR_NAME_WRAPPED_MESSAGE, CastAwayConstFromRef(msg)).IsOK())) supervisorSession->MessageReceivedFromSession(*this, wrapper, NULL);
 
       if ((allowReviewTrigger)&&(IAmTheSeniorPeer())&&(_requestAssignmentStrategyReviewPending == false)&&((force)||(IsStrategyReviewMaybeNecessary())))
       {
@@ -113,37 +113,37 @@ void ChoirSession :: MessageReceivedFromSession(AbstractReflectSession & from, c
       break;
 
       case CHOIR_COMMAND_SET_SONG_FILE_PATH:
-         if (RequestUpdateDatabaseState(CHOIR_DATABASE_SCORE, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send song-file-path-update request to senior peer!\n");
+         if (RequestUpdateDatabaseState(CHOIR_DATABASE_SCORE, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send song-file-path-update request to senior peer!\n");
       break;
 
       case CHOIR_COMMAND_TOGGLE_NOTE: case CHOIR_COMMAND_INSERT_CHORD: case CHOIR_COMMAND_DELETE_CHORD:
          // This message is from our local GUI, telling us that the user clicked on the MusicSheetWidget
-         if (RequestUpdateDatabaseState(CHOIR_DATABASE_SCORE, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send note-update request to senior peer!\n");
+         if (RequestUpdateDatabaseState(CHOIR_DATABASE_SCORE, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send note-update request to senior peer!\n");
       break;
 
       case CHOIR_COMMAND_PLAY: case CHOIR_COMMAND_PAUSE: case CHOIR_COMMAND_ADJUST_PLAYBACK:
          // This message is from our local GUI, telling us that the user wants to modify the playback state
-         if (RequestUpdateDatabaseState(CHOIR_DATABASE_PLAYBACKSTATE, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send playback-state-update request to senior peer!\n");
+         if (RequestUpdateDatabaseState(CHOIR_DATABASE_PLAYBACKSTATE, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send playback-state-update request to senior peer!\n");
       break;
 
       case CHOIR_COMMAND_TOGGLE_ASSIGNMENT: case CHOIR_COMMAND_SET_STRATEGY:
          // This message is from our local GUI, telling us that the user clicked on the RosterWidget
-         if (RequestUpdateDatabaseState(CHOIR_DATABASE_ROSTER, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send note-assignment request to senior peer!\n");
+         if (RequestUpdateDatabaseState(CHOIR_DATABASE_ROSTER, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send note-assignment request to senior peer!\n");
       break;
 
       case MUSIC_TYPE_MUSIC_SHEET:
          // This message is from our local GUI, telling us that the user wants to fully replace the score database
-         if (RequestReplaceDatabaseState(CHOIR_DATABASE_SCORE, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send score-replace request to senior peer!\n");
+         if (RequestReplaceDatabaseState(CHOIR_DATABASE_SCORE, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send score-replace request to senior peer!\n");
       break;
 
       case MUSIC_TYPE_PLAYBACK_STATE:
          // This message is from our local GUI, telling us that the user wants to fully replace the playback-state database
-         if (RequestReplaceDatabaseState(CHOIR_DATABASE_PLAYBACKSTATE, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send playback-state-replace request to senior peer!\n");
+         if (RequestReplaceDatabaseState(CHOIR_DATABASE_PLAYBACKSTATE, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send playback-state-replace request to senior peer!\n");
       break;
 
       case MUSIC_TYPE_ASSIGNMENTS_MAP:
          // This message is from our local GUI, telling us that the user wants to fully replace the note-assignments database
-         if (RequestReplaceDatabaseState(CHOIR_DATABASE_ROSTER, msgRef) != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Couldn't send assigns-state-replace request to senior peer!\n");
+         if (RequestReplaceDatabaseState(CHOIR_DATABASE_ROSTER, msgRef).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send assigns-state-replace request to senior peer!\n");
       break;
 
       default:
@@ -155,12 +155,12 @@ void ChoirSession :: MessageReceivedFromSession(AbstractReflectSession & from, c
 status_t ChoirSession :: SendPeerOnlineOfflineMessageToGUI(uint32 whatCode, const ZGPeerID & id, const ConstMessageRef & optPeerInfo)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if ((msg())&&(msg()->AddFlat(CHOIR_NAME_PEER_ID, id) == B_NO_ERROR)&&(msg()->CAddMessage(CHOIR_NAME_PEER_INFO, CastAwayConstFromRef(optPeerInfo)) == B_NO_ERROR))
-   {
-      SendMessageToGUI(msg, true);
-      return B_NO_ERROR;
-   }
-   else return B_ERROR;
+   MRETURN_ON_NULL(msg());
+
+   MRETURN_ON_ERROR(msg()->AddFlat(CHOIR_NAME_PEER_ID, id));
+   MRETURN_ON_ERROR(msg()->CAddMessage(CHOIR_NAME_PEER_INFO, CastAwayConstFromRef(optPeerInfo)));
+   SendMessageToGUI(msg, true);
+   return B_NO_ERROR;
 }
 
 void ChoirSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
@@ -190,7 +190,7 @@ void ChoirSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const Z
    }
 
    MessageRef msg = GetMessageFromPool(CHOIR_REPLY_NEW_SENIOR_PEER);
-   if ((msg())&&(msg()->AddFlat(CHOIR_NAME_PEER_ID, newSeniorPeerID) == B_NO_ERROR)) SendMessageToGUI(msg, true, true);
+   if ((msg())&&(msg()->AddFlat(CHOIR_NAME_PEER_ID, newSeniorPeerID).IsOK())) SendMessageToGUI(msg, true, true);
 }
 
 void ChoirSession :: SetReviewResults(uint64 allNotesAtLastReview)

@@ -203,11 +203,12 @@ int RunFridgeServerProcess(const char * systemName)
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret == B_NO_ERROR)
+      if (ret.IsOK())
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;
       }
+      else LogTime(MUSCLE_LOG_ERROR, "Event loop exited with error [%s]\n", ret());
    }
    else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up sessions [%s]!\n", ret());
 

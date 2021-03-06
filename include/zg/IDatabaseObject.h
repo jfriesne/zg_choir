@@ -32,13 +32,13 @@ public:
 
    /** Should be implemented to replace this object's entire state with the state contained in (archive) 
      * @param archive a Message containing state information, that was previously created by calling SaveToArchive()
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    virtual status_t SetFromArchive(const ConstMessageRef & archive) = 0;
 
    /** Should be implemented to save this object's entire state into (archive).
      * @param archive An empty Message into which to save all of our state information.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    virtual status_t SaveToArchive(const MessageRef & archive) const = 0;
 
@@ -139,7 +139,7 @@ protected:
    /** Should update this object's state using the passed-in junior-do-Messsage (that was previously
      * returned by a call to SeniorUpdate() on the senior peer's instance of this object)
      * @param juniorDoMsg A Message containing instrutions on how to update this object's state.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */ 
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg) = 0;
 

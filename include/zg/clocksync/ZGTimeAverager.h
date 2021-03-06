@@ -25,7 +25,7 @@ public:
    /** Adds a new measurement into the running average.
      * @param newMeasurementMicros The new round-trip-time measurement
      * @param now The current time, e.g. as returned by GetRunTime64()
-     * @returns B_NO_ERROR on success, or B_ERROR on failure
+     * @returns B_NO_ERROR on success, or an error code on failure
      */
    status_t AddMeasurement(uint64 newMeasurementMicros, uint64 now);
 

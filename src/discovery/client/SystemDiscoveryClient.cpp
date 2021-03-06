@@ -36,9 +36,9 @@ public:
       {
          ConstSocketRef udpSocket = CreateUDPSocket();
          uint16 retPort;
-         if ((udpSocket())&&(BindUDPSocket(udpSocket, 0, &retPort) == B_NO_ERROR)&&(SetSocketBlockingEnabled(udpSocket, false) == B_NO_ERROR))
+         if ((udpSocket())&&(BindUDPSocket(udpSocket, 0, &retPort).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
          {
-            if (AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()) != B_NO_ERROR) return ConstSocketRef();
+            if (AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()).IsError()) return ConstSocketRef();
             return udpSocket;
          }
       }
@@ -193,7 +193,7 @@ public:
       if ((_queryFilter())&&(_queryFilter()->Matches(dataMsg, NULL) == false)) return;  // just in case the server didn't filter correctly, we'll also filter here
 
       RawDiscoveryResult * r = _rawDiscoveryResults.GetOrPut(RawDiscoveryKey(localIAP, sourceIAP, peerID));
-      if ((r)&&(r->Update(dataMsg, GetExpirationTime(GetRunTime64())) == B_NO_ERROR)&&(_updateResultSetPending == false))
+      if ((r)&&(r->Update(dataMsg, GetExpirationTime(GetRunTime64())).IsOK())&&(_updateResultSetPending == false))
       {
          _updateResultSetPending = true;
          InvalidatePulseTime();
@@ -248,8 +248,7 @@ private:
 
          const String * systemName;
          ZGPeerID peerID;
-         if ((result()->FindFlat( ZG_DISCOVERY_NAME_PEERID, peerID).IsOK())&&
-             (result()->FindString(ZG_DISCOVERY_NAME_SYSTEMNAME, &systemName).IsOK()))
+         if ((result()->FindFlat(ZG_DISCOVERY_NAME_PEERID, peerID).IsOK())&&(result()->FindString(ZG_DISCOVERY_NAME_SYSTEMNAME, &systemName).IsOK()))
          {
             Hashtable<ZGPeerID, MessageRef> * systemTable = systemNameToPeerIDToInfo.GetOrPut(*systemName);
             if (systemTable) (void) systemTable->Put(peerID, result);
@@ -311,7 +310,7 @@ private:
       RawDiscoveryResult() : _expirationTime(0) {/* empty */}
       RawDiscoveryResult(const MessageRef & data, uint64 expirationTime) : _data(data), _expirationTime(expirationTime) {/* empty */}
 
-      // Returns B_NO_ERROR if anything actually changed, B_ERROR if nothing changed except our expiration time
+      // Returns B_NO_ERROR if anything actually changed, or B_ERROR if nothing changed except our expiration time
       status_t Update(const MessageRef & newData, uint64 newExpirationTime)
       {
          _expirationTime = newExpirationTime;
@@ -440,7 +439,7 @@ protected:
       bool sendSignal = false;
       {
          MutexGuard mg(_mutex);
-         sendSignal = (_pendingUpdates.Put(systemName, msg) == B_NO_ERROR);
+         sendSignal = (_pendingUpdates.Put(systemName, msg).IsOK());
       }
       if (sendSignal) ScheduleDiscoveryUpdate();
    }
@@ -479,7 +478,7 @@ private:
 
 void DiscoveryClientManagerSession :: MessageReceivedFromGateway(const MessageRef &, void *)
 {
-   if (_imp->HandleMessagesFromOwner() != B_NO_ERROR) EndServer();
+   if (_imp->HandleMessagesFromOwner().IsError()) EndServer();
 }
 
 void DiscoveryClientManagerSession :: ComputerIsAboutToSleep() {_imp->ReportSleepNotification(true);}
@@ -607,7 +606,7 @@ void IDiscoveryNotificationTarget :: SetDiscoveryClient(SystemDiscoveryClient * 
 
 void SystemDiscoveryClient :: RegisterTarget(IDiscoveryNotificationTarget * newTarget)
 {
-   if (_targets.Put(newTarget, true) == B_NO_ERROR) _imp->ScheduleDiscoveryUpdate(); // make sure the new guys learns ASAP about whatever we already know
+   if (_targets.Put(newTarget, true).IsOK()) _imp->ScheduleDiscoveryUpdate(); // make sure the new guys learns ASAP about whatever we already know
 }
 
 void SystemDiscoveryClient :: UnregisterTarget(IDiscoveryNotificationTarget * target) 

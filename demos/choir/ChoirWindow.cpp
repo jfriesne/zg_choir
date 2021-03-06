@@ -212,7 +212,7 @@ ChoirWindow :: ChoirWindow()
    UpdateButtons();
 
    // start the ZG thread running
-   if (_serverThread.StartInternalThread() != B_NO_ERROR) printf("Error, couldn't start network thread!\n");
+   if (_serverThread.StartInternalThread().IsError()) printf("Error, couldn't start network thread!\n");
 
    _quasimodo.moveToThread(&_quasimodoThread);  // do this first, so these connections will be Queued connections
    connect(this, SIGNAL(SetupTheBells()),                      &_quasimodo, SLOT(SetupTheBells()));
@@ -281,13 +281,13 @@ static uint64 TempoToMicrosecondsPerChord(int tempo) {return (tempo>0) ? ((DEFAU
 void ChoirWindow :: UserRequestedStrategyChange(int newStrategy)
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_SET_STRATEGY);
-   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_STRATEGY, newStrategy) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_STRATEGY, newStrategy).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: TempoChangeRequested(int sliderVal)
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_ADJUST_PLAYBACK);
-   if ((cmdMsg())&&(cmdMsg()->AddInt64(CHOIR_NAME_MICROS_PER_CHORD, TempoToMicrosecondsPerChord(sliderVal)) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt64(CHOIR_NAME_MICROS_PER_CHORD, TempoToMicrosecondsPerChord(sliderVal)).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: UpdateTempoValueLabel()
@@ -340,7 +340,7 @@ void ChoirWindow :: NotePositionClicked(uint32 chordIdx, int noteIdx)
    if (newChord) emit RequestBells(newChord, false);  // so the user can hear the chord he's assembling
 
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_TOGGLE_NOTE);
-   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx) == B_NO_ERROR)&&(cmdMsg()->AddInt32(CHOIR_NAME_NOTE_INDEX, noteIdx) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx).IsOK())&&(cmdMsg()->AddInt32(CHOIR_NAME_NOTE_INDEX, noteIdx).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: RosterBellPositionClicked(const ZGPeerID & pid, uint32 noteIdx)
@@ -348,7 +348,7 @@ void ChoirWindow :: RosterBellPositionClicked(const ZGPeerID & pid, uint32 noteI
    if (_assigns.GetAssignmentStrategy() != ASSIGNMENT_STRATEGY_AUTOMATIC)
    {
       MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_TOGGLE_ASSIGNMENT);
-      if ((cmdMsg())&&(cmdMsg()->AddFlat(CHOIR_NAME_PEER_ID, pid) == B_NO_ERROR)&&(cmdMsg()->AddInt32(CHOIR_NAME_NOTE_INDEX, noteIdx) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+      if ((cmdMsg())&&(cmdMsg()->AddFlat(CHOIR_NAME_PEER_ID, pid).IsOK())&&(cmdMsg()->AddInt32(CHOIR_NAME_NOTE_INDEX, noteIdx).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
    }
 }
 
@@ -360,7 +360,7 @@ void ChoirWindow :: AutoScrollMusicSheetWidget(int pixelsToTheRight)
 void ChoirWindow :: SeekRequested(uint32 chordIdx)
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_ADJUST_PLAYBACK);
-   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: SendTransportCommand(uint32 what, const uint32 * optSeekToChordIdx)
@@ -368,7 +368,7 @@ void ChoirWindow :: SendTransportCommand(uint32 what, const uint32 * optSeekToCh
    UpdateButtons();  // since we only want their state to change when we get an update to our _playbackState, not from a local input
  
    MessageRef cmdMsg = GetMessageFromPool(what);
-   if ((cmdMsg())&&((optSeekToChordIdx == NULL)||(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, *optSeekToChordIdx) == B_NO_ERROR))) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&((optSeekToChordIdx == NULL)||(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, *optSeekToChordIdx).IsOK()))) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: keyPressEvent(QKeyEvent * e)
@@ -451,13 +451,13 @@ void ChoirWindow :: UpdateButtons()
 void ChoirWindow :: LoopMenuItemSelected()
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_ADJUST_PLAYBACK);
-   if ((cmdMsg())&&(cmdMsg()->AddBool(CHOIR_NAME_LOOP, _loopMenuItem->isChecked()) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddBool(CHOIR_NAME_LOOP, _loopMenuItem->isChecked()).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: LoopButtonClicked()
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_ADJUST_PLAYBACK);
-   if ((cmdMsg())&&(cmdMsg()->AddBool(CHOIR_NAME_LOOP, _loopButton->isChecked()) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddBool(CHOIR_NAME_LOOP, _loopButton->isChecked()).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: UserBeganDraggingTempoSlider()
@@ -509,7 +509,7 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
          Hashtable<ZGPeerID, uint64> latencies;
          ZGPeerID pid;
          uint64 latency;
-         for (uint32 i=0; ((msg()->FindFlat(CHOIR_NAME_PEER_ID, i, pid) == B_NO_ERROR)&&(msg()->FindInt64(CHOIR_NAME_PEER_LATENCY, i, latency) == B_NO_ERROR)); i++) (void) latencies.Put(pid, latency);
+         for (uint32 i=0; ((msg()->FindFlat(CHOIR_NAME_PEER_ID, i, pid).IsOK())&&(msg()->FindInt64(CHOIR_NAME_PEER_LATENCY, i, latency).IsOK())); i++) (void) latencies.Put(pid, latency);
          _rosterWidget->SetLatenciesTable(latencies);
       }
       break;
@@ -522,7 +522,7 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
       break;
 
       case CHOIR_COMMAND_SET_CHORD:
-         if (_musicSheet.PutChord(msg()->GetInt32(CHOIR_NAME_CHORD_INDEX), msg()->GetInt64(CHOIR_NAME_CHORD_VALUE)) == B_NO_ERROR) MusicSheetUpdated();
+         if (_musicSheet.PutChord(msg()->GetInt32(CHOIR_NAME_CHORD_INDEX), msg()->GetInt64(CHOIR_NAME_CHORD_VALUE)).IsOK()) MusicSheetUpdated();
       break;
 
       case CHOIR_COMMAND_INSERT_CHORD: 
@@ -541,7 +541,7 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
       break;
 
       case CHOIR_COMMAND_TOGGLE_ASSIGNMENT:
-         if (_assigns.HandleToggleAssignmentMessage(*msg()) == B_NO_ERROR) NoteAssignmentsUpdated();
+         if (_assigns.HandleToggleAssignmentMessage(*msg()).IsOK()) NoteAssignmentsUpdated();
       break;
 
       case CHOIR_COMMAND_SET_STRATEGY:
@@ -550,11 +550,11 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
       break;
 
       case MUSIC_TYPE_MUSIC_SHEET:
-         if (_musicSheet.SetFromArchive(msg) == B_NO_ERROR) MusicSheetUpdated();
+         if (_musicSheet.SetFromArchive(msg).IsOK()) MusicSheetUpdated();
       break;
 
       case MUSIC_TYPE_PLAYBACK_STATE:
-         if (_playbackState.SetFromArchive(msg) == B_NO_ERROR)
+         if (_playbackState.SetFromArchive(msg).IsOK())
          {
             UpdateButtons();
             _musicSheetWidget->SetPlaybackState(_playbackState);
@@ -563,13 +563,13 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
       break;
 
       case MUSIC_TYPE_ASSIGNMENTS_MAP:
-         if (_assigns.SetFromArchive(msg) == B_NO_ERROR) NoteAssignmentsUpdated();
+         if (_assigns.SetFromArchive(msg).IsOK()) NoteAssignmentsUpdated();
       break;
 
       case CHOIR_COMMAND_PEER_ONLINE: case CHOIR_COMMAND_PEER_OFFLINE:
       {
          ZGPeerID peerID;
-         if (msg()->FindFlat(CHOIR_NAME_PEER_ID, peerID) == B_NO_ERROR)
+         if (msg()->FindFlat(CHOIR_NAME_PEER_ID, peerID).IsOK())
          {
             ConstMessageRef optPeerInfo = msg()->GetMessage(CHOIR_NAME_PEER_INFO);
             _rosterWidget->SetPeerIsOnline(peerID, (msg()->what == CHOIR_COMMAND_PEER_ONLINE), optPeerInfo);
@@ -618,8 +618,9 @@ void ChoirWindow :: SendUpdatedPlaybackStateToPlayer()
 status_t ChoirWindow :: UploadMusicSheet(const MusicSheet & musicSheet)
 {
    MessageRef uploadMsg = GetMessageFromPool();
-   if ((uploadMsg())&&(musicSheet.SaveToArchive(uploadMsg) != B_NO_ERROR)) uploadMsg.Reset();
-   return uploadMsg() ? _serverThread.SendMessageToSessions(uploadMsg) : B_ERROR;
+   MRETURN_ON_NULL(uploadMsg());
+   MRETURN_ON_ERROR(musicSheet.SaveToArchive(uploadMsg));
+   return _serverThread.SendMessageToSessions(uploadMsg);
 }
 
 void ChoirWindow :: ClearSong()
@@ -644,13 +645,13 @@ void ChoirWindow :: OpenSong()
       {
          QByteArray ba = f.readAll();
          Message songMsg;
-         if (songMsg.Unflatten((const uint8 *) ba.data(), ba.size()) == B_NO_ERROR)
+         if (songMsg.Unflatten((const uint8 *) ba.data(), ba.size()).IsOK())
          { 
             MusicSheet temp;
-            if (temp.SetFromArchive(ConstMessageRef(&songMsg, false)) == B_NO_ERROR)
+            if (temp.SetFromArchive(ConstMessageRef(&songMsg, false)).IsOK())
             {
                temp.SetSongFilePath(openPath.toUtf8().constData());  // update it with our new open-path, just for consistency
-               if (UploadMusicSheet(temp) == B_NO_ERROR)
+               if (UploadMusicSheet(temp).IsOK())
                {
                   LogTime(MUSCLE_LOG_INFO, "Opened song file from [%s]\n", openPath.toUtf8().constData());
                   return;
@@ -673,7 +674,7 @@ void ChoirWindow :: SaveSong()
       temp.SetSongFilePath(savePath.toUtf8().constData());
 
       Message songMsg;
-      if (temp.SaveToArchive(MessageRef(&songMsg, false)) == B_NO_ERROR)
+      if (temp.SaveToArchive(MessageRef(&songMsg, false)).IsOK())
       {
          ConstByteBufferRef msgBytes = songMsg.FlattenToByteBuffer();
          if (msgBytes())
@@ -685,7 +686,7 @@ void ChoirWindow :: SaveSong()
 
                // success!  Now the one other thing we want to do is tell everyone about the new song path
                MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_SET_SONG_FILE_PATH);
-               if ((cmdMsg())&&(cmdMsg()->AddString(CHOIR_NAME_SONG_FILE_PATH, savePath.toUtf8().constData()) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+               if ((cmdMsg())&&(cmdMsg()->AddString(CHOIR_NAME_SONG_FILE_PATH, savePath.toUtf8().constData()).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
                return;
             }
          }
@@ -705,13 +706,13 @@ void ChoirWindow :: CloneWindow()
 void ChoirWindow :: InsertChord()
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_INSERT_CHORD);
-   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, _musicSheetWidget->GetSeekPointChordIndex()) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, _musicSheetWidget->GetSeekPointChordIndex()).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 void ChoirWindow :: DeleteChord()
 {
    MessageRef cmdMsg = GetMessageFromPool(CHOIR_COMMAND_DELETE_CHORD);
-   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, _musicSheetWidget->GetSeekPointChordIndex()) == B_NO_ERROR)) (void) _serverThread.SendMessageToSessions(cmdMsg);
+   if ((cmdMsg())&&(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, _musicSheetWidget->GetSeekPointChordIndex()).IsOK())) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
 
 }; // end namespace choir

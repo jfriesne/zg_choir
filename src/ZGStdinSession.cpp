@@ -56,7 +56,7 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
    if ((msg())&&(msg()->what == PR_COMMAND_TEXT_STRINGS))
    {
       String nextCmd;
-      for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd) == B_NO_ERROR; i++) 
+      for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd).IsOK(); i++) 
       {
          nextCmd = nextCmd.Trim();
          StringTokenizer tok(nextCmd(), ";", NULL);

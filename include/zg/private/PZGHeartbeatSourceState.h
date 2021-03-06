@@ -27,7 +27,7 @@ public:
      * @param multicastAddress The multicast address we originally sent our heartbeat packet out on
      * @param newMeasurementMicros The new round-trip-time measurement across (multicastAddress)
      * @param localNowMicros The current local clock time (as given by GetRunTime64())
-     * @returns B_NO_ERROR on success, or B_ERROR on failure
+     * @returns B_NO_ERROR on success, or an error code on failure
      */
    status_t AddMeasurement(const IPAddressAndPort & multicastAddress, uint64 newMeasurementMicros, uint64 localNowMicros);
 
@@ -61,7 +61,7 @@ public:
 
    /** Discards the PZGRoundTripTimeAverager (if any) associated with the specified multicast address.
      * @param multicastAddress the multicast address (ff12::blah) that the averager is associated with
-     * @returns B_NO_ERROR if the averagers was found and discarded, or B_ERROR if it wasn't found.
+     * @returns B_NO_ERROR if the averagers was found and discarded, or an error code if it wasn't found.
      */
    status_t DiscardRoundTripTimeAverager(const IPAddressAndPort & multicastAddress) {return _rttAveragers.Remove(multicastAddress);}
 

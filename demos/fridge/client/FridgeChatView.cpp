@@ -132,16 +132,15 @@ status_t FridgeChatView :: UploadNewChatLine(const QString & chatText)
    // TODO: generate a better timestamp -- GetCurrentTime64() will return different times on different client machines whose wallclocks are set differently, leading to weirdness
    const ChatTextEntry cte(chatText.trimmed().toUtf8().constData(), _userName->text().trimmed().toUtf8().constData(), GetCurrentTime64(MUSCLE_TIMEZONE_LOCAL));
    MessageRef cteMsg = GetMessageFromPool();
-   if ((cteMsg())&&(cte.SaveToArchive(*cteMsg()).IsOK()))
-   {
-      (void) UploadTreeNodeValue("chat/", cteMsg);
+   MRETURN_ON_NULL(cteMsg());
+   MRETURN_ON_ERROR(cte.SaveToArchive(*cteMsg()));
 
-      // If our table starts getting too large, we should start deleting old chat text to avoid an eventual slowdown
-      if (_chatData.GetNumItems() >= 500) (void) UploadTreeNodeValue(String("chat/%1").Arg(*_chatData.GetFirstKey()), MessageRef());
+   (void) UploadTreeNodeValue("chat/", cteMsg);
 
-      return B_NO_ERROR;
-   }
-   else return B_ERROR;
+   // If our table starts getting too large, we should start deleting old chat text to avoid an eventual slowdown
+   if (_chatData.GetNumItems() >= 500) (void) UploadTreeNodeValue(String("chat/%1").Arg(*_chatData.GetFirstKey()), MessageRef());
+
+   return B_NO_ERROR;
 }
 
 void FridgeChatView :: AcceptKeyPressEventFromWindow(QKeyEvent * e)

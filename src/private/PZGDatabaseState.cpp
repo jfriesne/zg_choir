@@ -61,7 +61,7 @@ status_t PZGDatabaseState :: AddDatabaseUpdateToUpdateLog(const ConstPZGDatabase
 void PZGDatabaseState :: RemoveDatabaseUpdateFromUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp)
 {
    ConstPZGDatabaseUpdateRef temp;  // necessary to avoid freeing the object before we're done using it, below
-   if (_updateLog.Remove(dbUp()->GetUpdateID(), temp) == B_NO_ERROR)
+   if (_updateLog.Remove(dbUp()->GetUpdateID(), temp).IsOK())
    {
       const ConstByteBufferRef & payloadBuf = temp()->GetPayloadBuffer();
       if (payloadBuf()) _totalPayloadBytesInLog -= payloadBuf()->GetNumBytes();
@@ -252,7 +252,7 @@ void PZGDatabaseState :: RescanUpdateLog()
             if ((iter.IsBackwards())&&((nextUpdateID <= _firstUnsentUpdateID)||(nextUpdateID == oldestUpdateID))) iter.SetBackwards(false);
 
             // Stage 2: When iterating forwards, we'll send every unsent-update we encounter
-            if ((!iter.IsBackwards())&&(nextUpdateID >= _firstUnsentUpdateID)&&(_master->SendDatabaseUpdateViaMulticast(iter.GetValue()) == B_NO_ERROR)) _firstUnsentUpdateID = nextUpdateID+1;
+            if ((!iter.IsBackwards())&&(nextUpdateID >= _firstUnsentUpdateID)&&(_master->SendDatabaseUpdateViaMulticast(iter.GetValue()).IsOK())) _firstUnsentUpdateID = nextUpdateID+1;
          }
 
          // Finally, let's trim old ConstPZGDatabaseUpdates from our _updateLog if necessary, until it again fits within our memory budget
@@ -280,14 +280,14 @@ void PZGDatabaseState :: RescanUpdateLog()
             ConstPZGDatabaseUpdateRef dbUp = _updateLog[nextStateID];
             if (dbUp())
             {
-               if (JuniorExecuteDatabaseUpdate(*dbUp()) == B_NO_ERROR)
+               if (JuniorExecuteDatabaseUpdate(*dbUp()).IsOK())
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully executed junior update to state #" UINT64_FORMAT_SPEC "\n", _whichDatabase, nextStateID);
                }
                else
                {
                   LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to execute junior update #" UINT64_FORMAT_SPEC ", will try to recover by requesting full database resend.\n", _whichDatabase, nextStateID);
-                  if (RequestFullDatabaseResendFromSeniorPeer() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
+                  if (RequestFullDatabaseResendFromSeniorPeer().IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
                   break;
                }
             } 
@@ -299,7 +299,7 @@ void PZGDatabaseState :: RescanUpdateLog()
                   if (nextStateID < _seniorOldestIDInLog)
                   {
                      LogTime(MUSCLE_LOG_DEBUG, "Next required state ID " UINT64_FORMAT_SPEC " is no longer in senior peer's log (oldest he has is " UINT64_FORMAT_SPEC "), so we'll request a full DB #" UINT32_FORMAT_SPEC " resend instead.\n", nextStateID, _seniorOldestIDInLog, _whichDatabase);
-                     if (RequestFullDatabaseResendFromSeniorPeer() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
+                     if (RequestFullDatabaseResendFromSeniorPeer().IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
                   }
                   else
                   {
@@ -312,14 +312,14 @@ void PZGDatabaseState :: RescanUpdateLog()
                            const PZGUpdateBackOrderKey ubok(seniorPeerID, _whichDatabase, updateID);
                            if (_backorders.ContainsKey(ubok) == false)
                            {
-                              if (RequestBackOrderFromSeniorPeer(ubok) == B_NO_ERROR)
+                              if (RequestBackOrderFromSeniorPeer(ubok).IsOK())
                               {
                                  LogTime(MUSCLE_LOG_DEBUG, "Database " UINT32_FORMAT_SPEC ":  Placed update #" UINT64_FORMAT_SPEC " on back-order from senior peer [%s]\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID(), ubok.GetTargetPeerID().ToString()());
                               }
                               else
                               {
                                  LogTime(MUSCLE_LOG_ERROR, "Database " UINT32_FORMAT_SPEC ":  Requested back order of update #" UINT64_FORMAT_SPEC " failed, requesting full resend\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID());
-                                 if (RequestFullDatabaseResendFromSeniorPeer() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
+                                 if (RequestFullDatabaseResendFromSeniorPeer().IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
                                  break;
                               }
                            }
@@ -509,7 +509,7 @@ void PZGDatabaseState :: SeniorDatabaseStateInfoChanged(const PZGDatabaseStateIn
 void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData)
 {
    const ZGPeerID & seniorPeerID = _master->GetSeniorPeerID();
-   if ((_backorders.Remove(ubok) == B_NO_ERROR)&&(ubok.GetTargetPeerID() == seniorPeerID)&&(_master->IAmTheSeniorPeer() == false))
+   if ((_backorders.Remove(ubok).IsOK())&&(ubok.GetTargetPeerID() == seniorPeerID)&&(_master->IAmTheSeniorPeer() == false))
    {
       if (ubok.GetDatabaseUpdateID() == DATABASE_UPDATE_ID_FULL_UPDATE)
       {
@@ -517,13 +517,13 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
          {
             LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Received full database state from senior peer.\n", _whichDatabase);
             NestCountGuard ncg(_inJuniorDatabaseUpdate);
-            if (JuniorExecuteDatabaseReplace(*optUpdateData()) == B_NO_ERROR) ScheduleLogContentsRescan();
+            if (JuniorExecuteDatabaseReplace(*optUpdateData()).IsOK()) ScheduleLogContentsRescan();
          }
          else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC ":  Senior peer failed to send full database state to us!\n", _whichDatabase, ubok.GetDatabaseUpdateID());  // now what do we do?
       }
       else
       {
-         if ((optUpdateData())&&(_updateLog.Put(ubok.GetDatabaseUpdateID(), optUpdateData) == B_NO_ERROR))
+         if ((optUpdateData())&&(_updateLog.Put(ubok.GetDatabaseUpdateID(), optUpdateData).IsOK()))
          {
             LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " received from senior peer.\n", _whichDatabase, ubok.GetDatabaseUpdateID());
             ScheduleLogContentsRescan();
@@ -531,7 +531,7 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
          else
          {
             LogTime(MUSCLE_LOG_WARNING, "Database #" UINT32_FORMAT_SPEC ":  Necessary back-order of database update #" UINT64_FORMAT_SPEC " failed, requesting full database to recover.\n", _whichDatabase, ubok.GetDatabaseUpdateID());
-            if (RequestFullDatabaseResendFromSeniorPeer() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
+            if (RequestFullDatabaseResendFromSeniorPeer().IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
          }
       }
    }
