@@ -111,7 +111,7 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
    if (chordValue != 0)
    {
       uint64 * val = _chords.GetOrPut(whichChord);
-      MRETURN_ON_NULL(val); // out of memory?
+      MRETURN_OOM_ON_NULL(val); // out of memory?
 
       if (*val) 
       {

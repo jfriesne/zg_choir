@@ -132,7 +132,7 @@ status_t FridgeChatView :: UploadNewChatLine(const QString & chatText)
    // TODO: generate a better timestamp -- GetCurrentTime64() will return different times on different client machines whose wallclocks are set differently, leading to weirdness
    const ChatTextEntry cte(chatText.trimmed().toUtf8().constData(), _userName->text().trimmed().toUtf8().constData(), GetCurrentTime64(MUSCLE_TIMEZONE_LOCAL));
    MessageRef cteMsg = GetMessageFromPool();
-   MRETURN_ON_NULL(cteMsg());
+   MRETURN_OOM_ON_NULL(cteMsg());
    MRETURN_ON_ERROR(cte.SaveToArchive(*cteMsg()));
 
    (void) UploadTreeNodeValue("chat/", cteMsg);

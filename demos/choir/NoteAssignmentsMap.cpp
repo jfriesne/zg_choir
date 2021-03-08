@@ -97,7 +97,7 @@ status_t NoteAssignmentsMap :: SetNoteAssignmentsForPeerID(const ZGPeerID & peer
    if (assignedNotes != 0)
    {
       uint64 * val = _noteAssignments.GetOrPut(peerID);
-      MRETURN_ON_NULL(val);  // out of memory?
+      MRETURN_OOM_ON_NULL(val);  // out of memory?
 
       if (*val) 
       {

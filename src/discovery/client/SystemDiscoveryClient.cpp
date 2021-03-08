@@ -118,12 +118,11 @@ public:
 
    virtual status_t AttachedToServer()
    {
-      status_t ret;
-      if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+      MRETURN_ON_ERROR(AbstractReflectSession::AttachedToServer());
 
       _pingMsg = GetMessageFromPool(PR_COMMAND_PING);
-      if (_pingMsg() == NULL) MRETURN_OUT_OF_MEMORY;
-      if (_pingMsg()->CAddArchiveMessage(ZG_DISCOVERY_NAME_FILTER, _queryFilter).IsError(ret)) return ret;
+      MRETURN_OOM_ON_NULL(_pingMsg());
+      MRETURN_ON_ERROR(_pingMsg()->CAddArchiveMessage(ZG_DISCOVERY_NAME_FILTER, _queryFilter));
 
       AddNewDiscoverySessions();
       return B_NO_ERROR;

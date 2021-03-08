@@ -182,7 +182,7 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
 status_t PZGNetworkIOSession :: AttachedToServer()
 {
    PZGUnicastSessionFactoryRef unicastTCPFactoryRef(newnothrow PZGUnicastSessionFactory(this));
-   if (unicastTCPFactoryRef() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(unicastTCPFactoryRef());
 
    status_t ret;
    uint16 tcpAcceptPort;
@@ -193,7 +193,7 @@ status_t PZGNetworkIOSession :: AttachedToServer()
    LogTime(MUSCLE_LOG_DEBUG, "This peer's ZGPeerID is:  [%s]\n", GetLocalPeerID().ToString()());
 
    DetectNetworkConfigChangesSessionRef dnccSessionRef(newnothrow DetectNetworkConfigChangesSession);
-   if (dnccSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(dnccSessionRef());
    if (AddNewSession(dnccSessionRef).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession! [%s]\n", ret());
@@ -210,7 +210,7 @@ status_t PZGNetworkIOSession :: AttachedToServer()
 status_t PZGNetworkIOSession :: SetupHeartbeatSession()
 {
    PZGHeartbeatSessionRef hbSessionRef(newnothrow PZGHeartbeatSession(_hbSettings, this));
-   if (hbSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(hbSessionRef());
 
    status_t ret;
    if (AddNewSession(hbSessionRef).IsError(ret))

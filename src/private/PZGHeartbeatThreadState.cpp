@@ -162,7 +162,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    if (_multicastDataIOs.IsEmpty()) return B_ERROR;  // nothing to send to?
 
    PZGHeartbeatPacketWithMetaDataRef hbRef = GetHeartbeatPacketWithMetaDataFromPool();
-   if (hbRef() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(hbRef());
 
    if (hbRef()) hbRef()->Initialize(*_hbSettings(), (uint32) MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
 
@@ -180,7 +180,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       }
    }
 
-   if (_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false).IsError()) MRETURN_OUT_OF_MEMORY;
+   MRETURN_ON_ERROR(_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false));
    hb.Flatten(_rawScratchBuf.GetBuffer());
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down

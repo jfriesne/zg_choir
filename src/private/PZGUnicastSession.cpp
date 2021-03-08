@@ -141,7 +141,7 @@ status_t PZGUnicastSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBack
    if (_backorders.PutWithDefault(ubok).IsOK(ret))
    {
       MessageRef msg = GetMessageFromPool(PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER);
-      if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(msg());
       if ((msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID, ubok.GetDatabaseIndex()).IsOK(ret))&&(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()).IsOK(ret))&&(AddOutgoingMessage(msg).IsOK(ret))) return B_NO_ERROR;
       (void) _backorders.Remove(ubok);  // roll back!
    }

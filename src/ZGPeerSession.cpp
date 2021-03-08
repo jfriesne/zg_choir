@@ -81,12 +81,11 @@ void ZGPeerSession :: MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const
 
 status_t ZGPeerSession :: AttachedToServer()
 {
-   status_t ret;
-   if (StorageReflectSession::AttachedToServer().IsError(ret)) return ret;
+   MRETURN_ON_ERROR(StorageReflectSession::AttachedToServer());
 
    PZGNetworkIOSessionRef ioSessionRef(newnothrow PZGNetworkIOSession(_peerSettings, _localPeerID, this));
-   if (ioSessionRef() == NULL) MRETURN_OUT_OF_MEMORY;
-   if (AddNewSession(ioSessionRef).IsError(ret)) return ret;
+   MRETURN_OOM_ON_NULL(ioSessionRef());
+   MRETURN_ON_ERROR(AddNewSession(ioSessionRef));
    _networkIOSession = ioSessionRef;
 
    ScheduleSetBeaconData();
@@ -352,7 +351,7 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    if (_seniorPeerID.IsValid() == false) return B_BAD_OBJECT;  // can't send to senior peer if we don't know who he is!
 
    MessageRef sendMsg = GetMessageFromPool(whatCode);
-   if (sendMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(sendMsg());
 
    status_t ret;
    if ((sendMsg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID,    whichDatabase).IsError(ret))||
@@ -375,7 +374,7 @@ status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseU
    if (nios == NULL) return B_LOGIC_ERROR;
 
    MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE);
-   MRETURN_ON_NULL(wrapMsg());
+   MRETURN_OOM_ON_NULL(wrapMsg());
    MRETURN_ON_ERROR(wrapMsg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, FlatCountableRef(CastAwayConstFromRef(dbUp))));
    return nios->SendMulticastMessageToAllPeers(wrapMsg);
 }

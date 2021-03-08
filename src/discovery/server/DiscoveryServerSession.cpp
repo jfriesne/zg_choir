@@ -59,7 +59,7 @@ void DiscoveryServerSession :: NetworkInterfacesChanged(const Hashtable<String, 
 status_t DiscoveryServerSession :: AttachedToServer()
 {
    _watchInterfacesSession.SetRef(newnothrow DiscoveryDetectNetworkConfigChangesSession(this));
-   if (_watchInterfacesSession() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(_watchInterfacesSession());
 
    status_t ret;
    if (AddNewSession(_watchInterfacesSession).IsError(ret))

@@ -131,13 +131,13 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
    _orderedPeersList.Clear();
 
    status_t ret;
-   if (_orderedPeersList.EnsureSize(opListItemCount).IsError(ret)) return ret;
+   MRETURN_ON_ERROR(_orderedPeersList.EnsureSize(opListItemCount));
 
    for (uint32 i=0; i<opListItemCount; i++)
    {
        PZGHeartbeatPeerInfoRef newPIRef = GetPZGHeartbeatPeerInfoFromPool();
-       if (newPIRef() == NULL) MRETURN_OUT_OF_MEMORY;
-       if (newPIRef()->Unflatten(buf, size).IsError(ret)) return ret;
+       MRETURN_OOM_ON_NULL(newPIRef());
+       MRETURN_ON_ERROR(newPIRef()->Unflatten(buf, size));
 
        const uint32 actualPISize = newPIRef()->FlattenedSize();
        if (actualPISize > size) return B_BAD_DATA;  // wtf?
@@ -155,7 +155,7 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
          return B_BAD_DATA;
       }
       _peerAttributesBuf = GetByteBufferFromPool(attribBufSize, buf);
-      if (_peerAttributesBuf() == NULL) MRETURN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(_peerAttributesBuf());
    }
    else _peerAttributesBuf.Reset();
 

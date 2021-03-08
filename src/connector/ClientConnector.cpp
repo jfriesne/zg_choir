@@ -139,14 +139,13 @@ public:
 
    virtual status_t AttachedToServer()
    {
-      status_t ret = AbstractReflectSession::AttachedToServer();
-      if (ret.IsError()) return ret;
+      MRETURN_ON_ERROR(AbstractReflectSession::AttachedToServer());
 
       if (_timeSyncDest.IsValid())
       {
          _timeSyncSession.SetRef(newnothrow UDPTimeSyncSession(this, _timeSyncDest));
-         if (_timeSyncSession() == NULL) MRETURN_OUT_OF_MEMORY;  
-         if (AddNewSession(_timeSyncSession).IsError(ret)) return ret;
+         MRETURN_OOM_ON_NULL(_timeSyncSession());
+         MRETURN_ON_ERROR(AddNewSession(_timeSyncSession));
       }
 
       return B_NO_ERROR;

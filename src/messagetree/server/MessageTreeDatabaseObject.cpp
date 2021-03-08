@@ -241,7 +241,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
 status_t MessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & /*oldPayload*/, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend)
 {
    MessageRef msg = CreateNodeUpdateMessage(relativePath, newPayload, _interimUpdateNestCount.IsInBatch()?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags(), NULL);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    return AssembleBatchMessage(assemblingMessage, msg, prepend);
 }
@@ -271,7 +271,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
 status_t MessageTreeDatabaseObject :: SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend)
 {
    MessageRef msg = CreateNodeIndexUpdateMessage(relativePath, op, index, key);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    return AssembleBatchMessage(assemblingMessage, msg, prepend);
 }
@@ -307,7 +307,7 @@ status_t MessageTreeDatabaseObject :: UploadNodeSubtree(const String & path, con
 status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_SENIOR_COMMAND_REQUESTDELETENODES);
-   if (cmdMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(cmdMsg());
 
    status_t ret;
    if ((optFilter())&&(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()).IsError(ret))) return ret;
@@ -321,7 +321,7 @@ status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, co
 status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_SENIOR_COMMAND_MOVEINDEXENTRY);
-   if (cmdMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(cmdMsg());
 
    status_t ret;
    if ((optFilter())&&(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()).IsError(ret))) return ret;

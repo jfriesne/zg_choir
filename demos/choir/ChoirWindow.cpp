@@ -618,7 +618,7 @@ void ChoirWindow :: SendUpdatedPlaybackStateToPlayer()
 status_t ChoirWindow :: UploadMusicSheet(const MusicSheet & musicSheet)
 {
    MessageRef uploadMsg = GetMessageFromPool();
-   MRETURN_ON_NULL(uploadMsg());
+   MRETURN_OOM_ON_NULL(uploadMsg());
    MRETURN_ON_ERROR(musicSheet.SaveToArchive(uploadMsg));
    return _serverThread.SendMessageToSessions(uploadMsg);
 }

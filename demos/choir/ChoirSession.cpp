@@ -155,7 +155,7 @@ void ChoirSession :: MessageReceivedFromSession(AbstractReflectSession & from, c
 status_t ChoirSession :: SendPeerOnlineOfflineMessageToGUI(uint32 whatCode, const ZGPeerID & id, const ConstMessageRef & optPeerInfo)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   MRETURN_ON_NULL(msg());
+   MRETURN_OOM_ON_NULL(msg());
 
    MRETURN_ON_ERROR(msg()->AddFlat(CHOIR_NAME_PEER_ID, id));
    MRETURN_ON_ERROR(msg()->CAddMessage(CHOIR_NAME_PEER_INFO, CastAwayConstFromRef(optPeerInfo)));

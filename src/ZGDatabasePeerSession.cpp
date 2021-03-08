@@ -113,12 +113,11 @@ void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
 status_t ZGDatabasePeerSession :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx)
 {
    MessageRef wrapperMsg = GetMessageFromPool(DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT);
-   if (wrapperMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(wrapperMsg());
 
-   status_t ret = wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     msg)
-                | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_TARGETDBIDX, targetDBIdx)
-                | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_SOURCEDBIDX, sourceDBIdx);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     msg)
+                  | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_TARGETDBIDX, targetDBIdx)
+                  | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_SOURCEDBIDX, sourceDBIdx));
 
    return targetPeerID.IsValid() ? SendUnicastUserMessageToPeer(targetPeerID, wrapperMsg) : SendUnicastUserMessageToAllPeers(wrapperMsg);
 }

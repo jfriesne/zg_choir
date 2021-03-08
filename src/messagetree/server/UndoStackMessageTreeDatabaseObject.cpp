@@ -29,10 +29,9 @@ UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(Message
 status_t UndoStackMessageTreeDatabaseObject :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if (msg()->CAddString(UNDOSTACK_NAME_LABEL, optSequenceLabel).IsError(ret)) return ret;
+   MRETURN_ON_ERROR(msg()->CAddString(UNDOSTACK_NAME_LABEL, optSequenceLabel));
 
    return RequestUpdateDatabaseState(msg);
 }
@@ -135,7 +134,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
 
                // Entering the first level of undo-sequence nesting -- create a new undo-sequence child node for this client
                MessageRef seqPayload = GetMessageFromPool(1);  // 1 because we've started the first level of nesting
-               if (seqPayload() == NULL) MRETURN_OUT_OF_MEMORY;
+               MRETURN_OOM_ON_NULL(seqPayload());
 
                const String * label = msg()->GetStringPointer(UNDOSTACK_NAME_LABEL);
                if ((label)&&(seqPayload()->CAddString(UNDOSTACK_NAME_LABEL, *label).IsError(ret))) return ret;
@@ -154,14 +153,14 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
             else 
             {
                newClientPayload = GetLightweightCopyOfMessageFromPool(oldClientPayload);
-               if (newClientPayload() == NULL) MRETURN_OUT_OF_MEMORY;
+               MRETURN_OOM_ON_NULL(newClientPayload());
                newClientPayload()->what++;  // increment nest-count
             }
          }
          else if (oldClientPayload.what > 1)
          {
             newClientPayload = GetLightweightCopyOfMessageFromPool(oldClientPayload);
-            if (newClientPayload() == NULL) MRETURN_OUT_OF_MEMORY;
+            MRETURN_OOM_ON_NULL(newClientPayload());
             newClientPayload()->what--;  // decrement nest-count
          }
          else
@@ -171,7 +170,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
 
             DataNode & seqNode = *((*seqIdx).Tail()());
             MessageRef seqPayload = GetLightweightCopyOfMessageFromPool(*seqNode.GetData()());  // make a copy as we're not allowed to modify payloads in-place
-            if (seqPayload() == NULL) MRETURN_OUT_OF_MEMORY;
+            MRETURN_OOM_ON_NULL(seqPayload());
 
             // Exiting the last level of undo-sequence nesting -- gotta finalize the undo-sequence child node
             const uint64 afterLastDBID = GetCurrentDatabaseStateID()+1;  // +1 because the db transaction we are part of hasn't been included in the database yet

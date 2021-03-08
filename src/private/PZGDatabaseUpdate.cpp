@@ -137,7 +137,7 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    if (dataSize > 0)  // 0 data is taken to mean a NULL/empty buffer (we don't distinguish between the two)
    {
       _updateBuf = GetByteBufferFromPool(dataSize, buf);
-      if (_updateBuf() == NULL) MRETURN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(_updateBuf());
    }
 
    const uint32 myChk = CalculateChecksum();

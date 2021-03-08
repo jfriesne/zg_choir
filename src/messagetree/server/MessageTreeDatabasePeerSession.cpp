@@ -179,7 +179,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("PingSeniorPeer:  Senior peer not available");
 
    MessageRef seniorPingMsg = GetMessageFromPool(MTDPS_COMMAND_PINGSENIORPEER);
-   if (seniorPingMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(seniorPingMsg());
 
    const status_t ret = seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag)
                       | seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID())
@@ -192,7 +192,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(I
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("SendMessageToSeniorPeer:  Senior peer not available");
 
    MessageRef seniorCommandMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSENIORPEER);
-   if (seniorCommandMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(seniorCommandMsg());
 
    const status_t ret = seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg)
                       | seniorCommandMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())
@@ -290,7 +290,7 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
 status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSUBSCRIBER);
-   if (cmdMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(cmdMsg());
 
    status_t ret = cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        msg)
                 | cmdMsg()->CAddString(MTDPS_NAME_PATH,           subscriberPath)
@@ -469,7 +469,7 @@ status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, 
    {
       // If there is no parent node currently, demand-create it
       MessageRef emptyRef(GetMessageFromPool());
-      MRETURN_ON_NULL(emptyRef());
+      MRETURN_OOM_ON_NULL(emptyRef());
       MRETURN_ON_ERROR(SetDataNode(path, emptyRef));
       return GetUnusedNodeID(path, retID);
    }
@@ -617,7 +617,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromTreeGatewaySubscriber(
 status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload, int32 optWhichDB)
 {
    MessageRef replyMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGEFROMSENIORPEER);
-   if (replyMsg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(replyMsg());
 
    const status_t ret = replyMsg()->AddMessage(MTDPS_NAME_PAYLOAD, payload)
                       | replyMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())

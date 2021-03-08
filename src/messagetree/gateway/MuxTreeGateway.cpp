@@ -51,35 +51,33 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
    if (_subscriberInfos.Get(calledBy, hisSubs).IsError()) return B_BAD_ARGUMENT;  // he has to be a subscriber of ours!
 
    Queue<SubscriptionInfo> * filterQueue = _subscribedStrings.GetOrPut(subscriptionPath);
-   if (filterQueue)
+   MRETURN_OOM_ON_NULL(filterQueue);
+
+   status_t ret;
+   if (filterQueue->AddTail(SubscriptionInfo(calledBy, optFilterRef, flags)).IsOK(ret))
    {
-      status_t ret;
-      if (filterQueue->AddTail(SubscriptionInfo(calledBy, optFilterRef, flags)).IsOK(ret))
+      if (hisSubs() == NULL)
       {
-         if (hisSubs() == NULL)
-         {
-            // demand-allocate an entry for him
-            hisSubs.SetRef(newnothrow TreeSubscriberInfo);
-            if ((hisSubs())&&(_subscriberInfos.Put(calledBy, hisSubs).IsError())) hisSubs.Reset();
-            if ((hisSubs())&&(_isConnected)) calledBy->TreeGatewayConnectionStateChanged();  // let him know we are connected to the server already
-         }
-
-         if (hisSubs())
-         {
-            if ((hisSubs()->PutPathString(subscriptionPath.WithoutPrefix("/"), optFilterRef).IsOK(ret))&&((_isConnected == false)||(UpdateSubscription(subscriptionPath, calledBy, flags).IsOK(ret)))) return B_NO_ERROR;
-         }
-         else ret = B_OUT_OF_MEMORY;
-
-         // roll back (due to error)
-         if ((hisSubs())&&(hisSubs()->GetEntries().IsEmpty())) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
-
-         (void) filterQueue->RemoveTail();
-         if (filterQueue->IsEmpty()) _subscribedStrings.Remove(subscriptionPath);
-         return ret;
+         // demand-allocate an entry for him
+         hisSubs.SetRef(newnothrow TreeSubscriberInfo);
+         if ((hisSubs())&&(_subscriberInfos.Put(calledBy, hisSubs).IsError())) hisSubs.Reset();
+         if ((hisSubs())&&(_isConnected)) calledBy->TreeGatewayConnectionStateChanged();  // let him know we are connected to the server already
       }
-      else return ret;
+
+      if (hisSubs())
+      {
+         if ((hisSubs()->PutPathString(subscriptionPath.WithoutPrefix("/"), optFilterRef).IsOK(ret))&&((_isConnected == false)||(UpdateSubscription(subscriptionPath, calledBy, flags).IsOK(ret)))) return B_NO_ERROR;
+      }
+      else ret = B_OUT_OF_MEMORY;
+
+      // roll back (due to error)
+      if ((hisSubs())&&(hisSubs()->GetEntries().IsEmpty())) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
+
+      (void) filterQueue->RemoveTail();
+      if (filterQueue->IsEmpty()) _subscribedStrings.Remove(subscriptionPath);
+      return ret;
    }
-   else MRETURN_OUT_OF_MEMORY;
+   else return ret;
 }
 
 status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)

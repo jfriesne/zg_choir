@@ -119,10 +119,8 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
       case PZG_PEER_COMMAND_RESET_SENIOR_DATABASE:
       {
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_RESET, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
-
-         status_t ret;
-         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
+         MRETURN_OOM_ON_NULL(dbUp());
+         MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
          const uint64 startTime = GetRunTime64();
          {
@@ -144,11 +142,11 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
+         MRETURN_OOM_ON_NULL(dbUp());
+
+         MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
          status_t ret;
-         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
-
          const uint64 startTime = GetRunTime64();
          {
             NestCountGuard ncg(_inSeniorDatabaseUpdate);
@@ -175,10 +173,8 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          }
 
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_UPDATE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
-         if (dbUp() == NULL) MRETURN_OUT_OF_MEMORY;
-
-         status_t ret;
-         if (AddDatabaseUpdateToUpdateLog(dbUp).IsError(ret)) return ret;
+         MRETURN_OOM_ON_NULL(dbUp());
+         MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
          const uint64 startTime = GetRunTime64();
          ConstMessageRef juniorMsg;

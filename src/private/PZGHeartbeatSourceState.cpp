@@ -14,10 +14,10 @@ status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & mult
    if (rtt == NULL) 
    {
       PZGRoundTripTimeAveragerRef r(newnothrow PZGRoundTripTimeAverager(_maxMeasurements));
-      if (r() == NULL) MRETURN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(r());
 
       rtt = _rttAveragers.PutAndGet(multicastAddr, r);
-      if (rtt == NULL) MRETURN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(rtt);
    }
    return rtt ? rtt->GetItemPointer()->AddMeasurement(newMeasurementMicros, now) : B_DATA_NOT_FOUND;
 }

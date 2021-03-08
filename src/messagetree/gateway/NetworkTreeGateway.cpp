@@ -104,7 +104,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveSubscription(ITreeGat
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_REMOVEALLSUBSCRIPTIONS);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    return msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
@@ -118,7 +118,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGate
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_REQUESTNODESUBTREES);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    const uint32 numQs = queryStrings.GetNumItems();
@@ -138,7 +138,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGa
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODEVALUE);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret = msg()->CAddString( NTG_NAME_PATH,    path) 
                 | msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload)
@@ -151,7 +151,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewa
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODESUBTREE);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    const status_t ret = msg()->CAddString( NTG_NAME_PATH,    basePath) 
                       | msg()->CAddMessage(NTG_NAME_PAYLOAD, valuesMsg)
@@ -168,7 +168,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGat
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MOVEINDEXENTRIES);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
@@ -194,7 +194,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGateway
 status_t ClientSideNetworkTreeGateway :: PingLocalPeerAux(const String & tag, int32 optWhichDB, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_PING);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    if (msg()->CAddFlat(     NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
@@ -205,7 +205,7 @@ status_t ClientSideNetworkTreeGateway :: PingLocalPeerAux(const String & tag, in
 status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & userMsg, uint32 whichDB, const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSENIORPEER);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    if (msg()->AddMessage(   NTG_NAME_PAYLOAD, userMsg).IsError(ret)) return ret;
@@ -216,7 +216,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITr
 status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & userMsg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSUBSCRIBER);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    if (msg()->CAddString(        NTG_NAME_PATH,        path).IsError(ret))         return ret;
@@ -248,7 +248,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySub
 status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    const status_t ret = msg()->CAddString(NTG_NAME_TAG, tag) | msg()->CAddInt32(NTG_NAME_INDEX, whichDB);
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
@@ -257,7 +257,7 @@ status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, co
 status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef msg = GetMessageFromPool(what);
-   if (msg() == NULL) MRETURN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(msg());
 
    status_t ret;
    if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
