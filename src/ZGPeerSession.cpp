@@ -608,4 +608,15 @@ ConstMessageRef ZGPeerSession :: GetUpdatePayload(uint32 whichDB, uint64 transac
    return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetDatabaseUpdatePayloadByID(transactionID) : ConstMessageRef();
 }
 
+Queue<IPAddressAndPort> ZGPeerSession :: GetUnicastIPAddressAndPortsForPeerID(const ZGPeerID & peerID) const
+{
+   Queue<IPAddressAndPort> ret;
+   uint32 idx = 0;
+   while(1)
+   {
+      const IPAddressAndPort iap = static_cast<const PZGNetworkIOSession *>(_networkIOSession())->GetUnicastIPAddressAndPortForPeerID(peerID, idx++);
+      if ((iap.IsValid() == false)||(ret.AddTail(iap).IsError())) return ret;
+   }
+}
+
 };  // end namespace zg

@@ -147,6 +147,16 @@ public:
             SendMulticastUserMessageToAllPeers(msg);
          }
       }
+      else if (text == "print peer locations")
+      {
+         for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
+         {
+            const ZGPeerID & peerID = iter.GetKey();
+            const Queue<IPAddressAndPort> locs = GetUnicastIPAddressAndPortsForPeerID(peerID);
+            LogTime(MUSCLE_LOG_INFO, "Peer [%s] is listening at " UINT32_FORMAT_SPEC " network locations:\n", peerID.ToString()(), locs.GetNumItems());
+            for (uint32 i=0; i<locs.GetNumItems(); i++) LogTime(MUSCLE_LOG_INFO, "   #" UINT32_FORMAT_SPEC ": %s\n", i+1, locs[i].ToString()());
+         }
+      }
       else if (text == "print db")
       {
          SchedulePrintDB();

@@ -91,6 +91,8 @@ public:
 
    int64 GetToNetworkTimeOffset() const;
 
+   IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;
+
 protected:
    virtual void InternalThreadEntry();
    virtual void MessageReceivedFromInternalThread(const MessageRef & msg);
@@ -104,7 +106,6 @@ private:
    void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
    void SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const ZGPeerID & newSeniorPeerID);
 
-   IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;
    PZGUnicastSessionRef GetUnicastSessionForPeerID(const ZGPeerID & peerID, bool allocIfNecessary);
 
    void RegisterUnicastSession(PZGUnicastSession * session);

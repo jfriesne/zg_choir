@@ -5,6 +5,7 @@ v1.10 -
    - Added client/server support and MUSCLE-Message database support
    - Added clocksync/ZGTimeAverager class
    - Added udp/UDPMulticastTransceiver class
+   - Added ZGPeer::GetUnicastIPAddressAndPortsForPeerID()
 
 v1.01 - 6/22/2019
    - Added code to test_peer.cpp to test sending and receiving of

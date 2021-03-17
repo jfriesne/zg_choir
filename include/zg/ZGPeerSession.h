@@ -339,6 +339,11 @@ protected:
      */
    ConstMessageRef GetUpdatePayload(uint32 whichDB, uint64 transactionID) const;
 
+   /** Returns a list of unicast IPAddressAndPort locations we have on file for the specified ZGPeer.
+     * @param peerID The unique ID of peer in question.
+     */
+   Queue<IPAddressAndPort> GetUnicastIPAddressAndPortsForPeerID(const ZGPeerID & peerID) const;
+
 private:
    void ScheduleSetBeaconData();
    void ShutdownChildSessions();
