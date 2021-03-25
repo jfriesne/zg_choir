@@ -347,14 +347,14 @@ void MessageTreeDatabasePeerSession :: CommandBatchEnds()
    if (IsAttachedToServer()) PushSubscriptionMessages();  // make sure any subscription updates go out in a timely fashion
 }
 
-void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved)
+void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, NodeChangeFlags nodeChangeFlags)
 {
-//printf("NotifySubscribersThatNodeChanged node=[%s] payload=%p isBeingRemoved=%i\n", node.GetNodePath()(), node.GetData()(), isBeingRemoved);
+//printf("NotifySubscribersThatNodeChanged node=[%s] payload=%p nodeChangeFlags=%s\n", node.GetNodePath()(), node.GetData()(), nodeChangeFlags.ToHexString()());
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
-   if (mtDB) mtDB->MessageTreeNodeUpdated(relativePath, node, oldDataRef, isBeingRemoved);
+   if (mtDB) mtDB->MessageTreeNodeUpdated(relativePath, node, oldDataRef, nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED));
 
-   ZGDatabasePeerSession::NotifySubscribersThatNodeChanged(node, oldDataRef, isBeingRemoved);
+   ZGDatabasePeerSession::NotifySubscribersThatNodeChanged(node, oldDataRef, nodeChangeFlags);
 }
 
 void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
@@ -367,10 +367,10 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(Dat
    ZGDatabasePeerSession::NotifySubscribersThatNodeIndexChanged(node, op, index, key);
 }
 
-void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & /*oldData*/, bool isBeingRemoved)
+void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & /*oldData*/, NodeChangeFlags nodeChangeFlags)
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
-   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), isBeingRemoved?MessageRef():node.GetData());
+   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData());
 }
 
 void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)

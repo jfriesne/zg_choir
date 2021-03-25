@@ -112,9 +112,9 @@ protected:
 
    // StorageReflectSession API implementation
    virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
-   virtual void NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved);
+   virtual void NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldData, NodeChangeFlags nodeChangeFlags);
    virtual void NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
-   virtual void NodeChanged(DataNode & node, const MessageRef & oldData, bool isBeingRemoved);
+   virtual void NodeChanged(DataNode & node, const MessageRef & oldData, NodeChangeFlags nodeChangeFlags);
    virtual void NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
 
    // ZGPeerSession API implementation

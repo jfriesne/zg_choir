@@ -184,14 +184,14 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
             }
 
             seqPayload()->what = 0;  // nest-count is now zero because we're done with this undo-sequence
-            seqNode.SetData(seqPayload, mtdps, false);
+            seqNode.SetData(seqPayload, mtdps);
 
             newClientPayload = seqPayload;
          }
 
          if (newClientPayload()) 
          {
-            clientNode->SetData(newClientPayload, mtdps, false);
+            clientNode->SetData(newClientPayload, mtdps);
             return B_NO_ERROR;
          }
          else
@@ -259,7 +259,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   if (fromClientNode->RemoveChild(indexQ->Tail()()->GetNodeName(), mtdps, true, NULL).IsError(ret)) return ret;
                   if (fromClientNode->GetNumChildren() > 0)
                   {
-                     fromClientNode->SetData(indexQ->Tail()()->GetData(), mtdps, false);  // notify programs that are tracking the top of the source-stack
+                     fromClientNode->SetData(indexQ->Tail()()->GetData(), mtdps);  // notify programs that are tracking the top of the source-stack
                   }
                   else fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
 
@@ -279,7 +279,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   const String destSeqPath = destNodePath + String("/I%1").Arg(newNodeID);
                   if (mtdps->SetDataNode(destSeqPath, payload, SetDataNodeFlags(SETDATANODE_FLAG_ADDTOINDEX)).IsError(ret)) return ret;
 
-                  destClientNode->SetData(payload, mtdps, false);  // notify programs that are tracking the top of the dest-stack
+                  destClientNode->SetData(payload, mtdps);  // notify programs that are tracking the top of the dest-stack
                   return B_NO_ERROR;
                }
             }

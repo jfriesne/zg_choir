@@ -130,7 +130,6 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
 
    _orderedPeersList.Clear();
 
-   status_t ret;
    MRETURN_ON_ERROR(_orderedPeersList.EnsureSize(opListItemCount));
 
    for (uint32 i=0; i<opListItemCount; i++)
