@@ -247,7 +247,6 @@ protected:
      *                      ITreeGatewaySubscribers that are currently subscribed to at least one of the nodes matched by the path 
      *                      (wildcards in the path are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber 
      *                      identified by the subscriber-return-address.
-     *                      represented by that string.
      * @param msg the Message to send to one or more other ITreeGatewaySubscribers.
      * @param optFilterRef an optional reference to a QueryFilter object to use to filter which nodes will be matched by (subscriberPath).
      *                     If non-NULL, only nodes whose payloads match the QueryFilter's criteria will be considered when deciding whom
