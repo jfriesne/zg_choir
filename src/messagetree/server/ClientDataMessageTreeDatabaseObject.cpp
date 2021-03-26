@@ -19,29 +19,29 @@ ClientDataMessageTreeDatabaseObject :: ClientDataMessageTreeDatabaseObject(Messa
    // empty
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & localPath, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
+status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & localPath, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
    
-   status_t ret = MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore);
+   status_t ret = MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore, optOpTag);
    if (ret.IsError()) return ret;
 
    // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
    SetDataNodeFlags sdnFlags;
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)) sdnFlags.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
-   return ssmts->SetDataNode(localPath, optPayload, sdnFlags, optBefore);
+   return ssmts->SetDataNode(localPath, optPayload, sdnFlags, optBefore.HasChars()?&optBefore:NULL);
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   status_t ret = MessageTreeDatabaseObject::UploadNodeSubtree(sharedPath, valuesMsg, flags);
+   status_t ret = MessageTreeDatabaseObject::UploadNodeSubtree(sharedPath, valuesMsg, flags, optOpTag);
    if (ret.IsError()) return ret;
 
    // Upload the subtree in our local MUSCLE database also, so that we can retransmit it later if we need to
@@ -50,28 +50,28 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String &
    return ssmts->RestoreNodeTreeFromMessage(*valuesMsg(), localPath, true, sdnFlags);
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: RequestDeleteNodes(const String & localPath, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
+status_t ClientDataMessageTreeDatabaseObject :: RequestDeleteNodes(const String & localPath, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   status_t ret = MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, optFilter, flags);
+   status_t ret = MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, optFilter, flags, optOpTag);
    if (ret.IsError()) return ret;
 
    return ssmts->RemoveDataNodes(localPath, optFilter, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & localPath, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags)
+status_t ClientDataMessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & localPath, const String & optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   const status_t ret = MessageTreeDatabaseObject::RequestMoveIndexEntry(sharedPath, optBefore, optFilter, flags);
+   const status_t ret = MessageTreeDatabaseObject::RequestMoveIndexEntry(sharedPath, optBefore, optFilter, flags, optOpTag);
    if (ret.IsError()) return ret;
 
-   return ssmts->MoveIndexEntries(localPath, optBefore, optFilter);;
+   return ssmts->MoveIndexEntries(localPath, optBefore, optFilter);
 }
 
 String ClientDataMessageTreeDatabaseObject :: GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const
@@ -93,7 +93,7 @@ void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetach
       GatewaySubscriberCommandBatchGuard<ITreeGatewaySubscriber> gcb(ssmts);
 
       // Request the deletion of any shared-nodes corresponding to the departing client's local data.
-      (void) MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, ConstQueryFilterRef(), TreeGatewayFlags());
+      (void) MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
 
       // We'll also send a request to delete the parent/IP-address node, but only if it no longer has any session nodes beneath
       // it.  That way the shared-database won't contain "orphan client IP addresses" with no sessions left in them.
@@ -103,11 +103,11 @@ void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetach
          const String ipPath = sharedPath.Substring(0, lastSlash);
 
          static const ChildCountQueryFilter _noKids(ChildCountQueryFilter::OP_EQUAL_TO, 0);
-         (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath, ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags());
+         (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath, ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags(), GetEmptyString());
 
          // And if the grandparent/peer-ID node has also become empty, we can delete that too
          lastSlash = ipPath.LastIndexOf('/');
-         if (lastSlash > 0) (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath.Substring(0, lastSlash), ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags());
+         if (lastSlash > 0) (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath.Substring(0, lastSlash), ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags(), GetEmptyString());
       }
    }
 }
@@ -136,7 +136,7 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
       if (nodesToDelete.HasChars()) 
       {
          LogTime(MUSCLE_LOG_INFO, "ClientDataMessageTreeDatabaseObject assuming senior-peer status, flushing nodes for offline peers [%s]\n", nodesToDelete());
-         MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags());
+         MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
       }
 
       // Tell all of the junior peers to resend their local data to us, in case it got corrupted during the confusion
@@ -153,7 +153,7 @@ void ClientDataMessageTreeDatabaseObject :: PeerHasComeOnline(const ZGPeerID & p
 void ClientDataMessageTreeDatabaseObject :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
    MessageTreeDatabaseObject::PeerHasGoneOffline(peerID, peerInfo);
-   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) (void) MessageTreeDatabaseObject::RequestDeleteNodes(peerID.ToString(), ConstQueryFilterRef(), TreeGatewayFlags());
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) (void) MessageTreeDatabaseObject::RequestDeleteNodes(peerID.ToString(), ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
 }
 
 void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDatabaseObject(const MessageRef & msg, const ZGPeerID & sourcePeer, uint32 sourceDBIdx)
@@ -215,7 +215,7 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
             for (int32 i=0; ((msg()->FindString(CLIENTDATA_NAME_PATH, i, &nextPath).IsOK())&&(msg()->FindMessage(CLIENTDATA_NAME_PAYLOAD, i, nextPayload).IsOK())); i++)
             {
                status_t ret;
-               if (MessageTreeDatabaseObject::UploadNodeSubtree(*nextPath, nextPayload, TreeGatewayFlags()).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "ClientDataMessageTreeDatabaseObject:  shared-data UploadNodeSubtree(%s) failed.  [%s]\n", nextPath->Cstr(), ret());
+               if (MessageTreeDatabaseObject::UploadNodeSubtree(*nextPath, nextPayload, TreeGatewayFlags(), GetEmptyString()).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "ClientDataMessageTreeDatabaseObject:  shared-data UploadNodeSubtree(%s) failed.  [%s]\n", nextPath->Cstr(), ret());
             }
          }
       }

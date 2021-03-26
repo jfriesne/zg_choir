@@ -111,11 +111,11 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
-   if (mtDB) return mtDB->UploadNodeValue(relativePath, optPayload, flags, optBefore);
+   if (mtDB) return mtDB->UploadNodeValue(relativePath, optPayload, flags, optBefore, optOpTag);
    else 
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeValue():  No database found for path [%s]!\n", path());
@@ -123,7 +123,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGate
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(basePath, &relativePath);
@@ -138,8 +138,8 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
          return ret;
       }
 
-      (void) mtDB->RequestDeleteNodes(relativePath, ConstQueryFilterRef(), TreeGatewayFlags());  // we want a full overwrite of the specified subtree, not an add-to
-      return mtDB->UploadNodeSubtree(relativePath, effMsg, flags);
+      (void) mtDB->RequestDeleteNodes(relativePath, ConstQueryFilterRef(), TreeGatewayFlags(), optOpTag);  // we want a full overwrite of the specified subtree, not an add-to
+      return mtDB->UploadNodeSubtree(relativePath, effMsg, flags, optOpTag);
    }
    else 
    {
@@ -148,19 +148,19 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
    status_t ret;
    const Hashtable<MessageTreeDatabaseObject *, String> dbs = GetDatabasesForNodePath(path);
-   for (HashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags);
+   for (HashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags, optOpTag);
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String & optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
-   if (mtDB) return mtDB->RequestMoveIndexEntry(relativePath, optBefore, optFilterRef, flags); 
+   if (mtDB) return mtDB->RequestMoveIndexEntry(relativePath, optBefore, optFilterRef, flags, optOpTag);
    else 
    {
       LogTime(MUSCLE_LOG_ERROR, "TreeGateway_RequestMoveIndexEntry:  No database found for path [%s]\n", path());
@@ -317,22 +317,22 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_EndUndoSequence(ITreeGate
    return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_UNDO, GetEmptyString(), whichDB);
+   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_UNDO, optOpTag, whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_REDO, GetEmptyString(), whichDB);
+   return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_REDO, optOpTag, whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabel, uint32 whichDB)
+status_t MessageTreeDatabasePeerSession :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabelOrOpTag, uint32 whichDB)
 {
    UndoStackMessageTreeDatabaseObject * undoDB = dynamic_cast<UndoStackMessageTreeDatabaseObject *>(GetDatabaseObject(whichDB));
    if (undoDB)
    {
-      return undoDB->UploadUndoRedoRequestToSeniorPeer(whatCode, optSequenceLabel);
+      return undoDB->UploadUndoRedoRequestToSeniorPeer(whatCode, optSequenceLabelOrOpTag);
    }
    else
    {

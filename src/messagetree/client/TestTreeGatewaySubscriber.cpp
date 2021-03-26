@@ -4,7 +4,7 @@
 
 namespace zg {
 
-TestTreeGatewaySubscriber :: TestTreeGatewaySubscriber(ITreeGateway * gateway) : ITreeGatewaySubscriber(gateway)
+TestTreeGatewaySubscriber :: TestTreeGatewaySubscriber(ITreeGateway * gateway) : ITreeGatewaySubscriber(gateway), _opTagCounter(0)
 {
    /* empty */
 }
@@ -28,6 +28,8 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
    StringTokenizer tok(textStr(), NULL);
    const char * cmd = tok();
    if (cmd == NULL) cmd = "";
+
+   String optOpTag;
 
    status_t ret;
    switch(cmd[0])
@@ -78,9 +80,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
        
          MessageRef payloadMsg = GetMessageFromPool(1234);
          payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
-         if (UploadTreeNodeValue(path, payloadMsg).IsOK(ret))
+         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(), GetEmptyString(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s]\n", path());
+            LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s] [%s]\n", path(), optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error uploading Message to relative path [%s] (%s)\n", path(), ret());
       }
@@ -95,7 +97,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          const String optBefore = tok();
 
-         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), &optBefore).IsOK(ret))
+         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), optBefore).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s])\n", path(), optBefore.HasChars()?optBefore():NULL);
          }
@@ -108,9 +110,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          const String path      = tok();
          const String optBefore = tok();
 
-         if (RequestMoveTreeIndexEntry(path, &optBefore).IsOK(ret))
+         if (RequestMoveTreeIndexEntry(path, optBefore, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s])\n", path(), optBefore.HasChars()?optBefore():NULL);
+            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s] [%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error moving indexed-node [%s] to before [%s] (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
       }
@@ -120,9 +122,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       {
          const String path = tok();
        
-         if (RequestDeleteTreeNodes(path).IsOK(ret))
+         if (RequestDeleteTreeNodes(path, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s]\n", path());
+            LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s] [%s]\n", path(), optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of nodes matching path [%s] (%s)\n", path(), ret());
       }
@@ -198,6 +200,14 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
    return true;
 }
 
+String TestTreeGatewaySubscriber :: GenerateOpTag(String & retTag)
+{
+   char buf[128];
+   muscleSprintf(buf, "optag-%i", ++_opTagCounter);
+   retTag = buf;
+   return retTag;
+}
+
 void TestTreeGatewaySubscriber :: CallbackBatchBegins()
 {
    IGatewaySubscriber::CallbackBatchBegins();
@@ -214,6 +224,7 @@ void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p)\n", nodePath(), payloadMsg());
    if (payloadMsg()) payloadMsg()->PrintToStream();
+PrintStackTrace();
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path)

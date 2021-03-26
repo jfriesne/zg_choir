@@ -64,37 +64,45 @@ public:
      * @param optPayload reference to the Message payload you want added/updated at the given path, or a NULL reference if you want 
      *                   node(s) matching the given path to be deleted.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
-     * @param optBefore if non-NULL, the name of the sibling node that this node should be placed before, or NULL if you want the
+     * @param optBefore if non-mpety, the name of the sibling node that this node should be placed before, or empty if you want the
      *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
+     * @param optOpTag if non-empty, a String provided by the client-side ITreeGatewaySubscriber to be associated with this operation.
+     *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore);
+   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
 
    /** Sends a request to the senior peer that the specified node sub-tree be uploaded.
      * @param path session-relative path indicating where in the message-tree to place the root of the uploaded sub-tree.
      * @param valuesMsg should contain the subtree to upload.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
+     * @param optOpTag if non-empty, a String provided by the client-side ITreeGatewaySubscriber to be associated with this operation.
+     *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags);
+   virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag);
 
    /** Sends a request to remove matching nodes from the database.
      * @param path session-relative path indicating which node(s) to delete.  May be wildcarded.
      * @param optFilter if non-NULL, only nodes whose Message-payloaded are matched by this query-filter will be deletes.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
+     * @param optOpTag if non-empty, a String provided by the client-side ITreeGatewaySubscriber to be associated with this operation.
+     *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag);
 
    /** Sends a request to modify the ordering of the indices of matching nodes in the database.
      * @param path session-relative path indicating which node(s) to modify the indices of.  May be wildcarded.
-     * @param optBefore if non-NULL, the name of the sibling node that this node should be placed before, or NULL if you want the
+     * @param optBefore if non-empty, the name of the sibling node that this node should be placed before, or empty if you want the
      *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
      * @param optFilter if non-NULL, only nodes whose Message-payloaded are matched by this query-filter will have their indices modified.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the operation.
+     * @param optOpTag if non-empty, a String provided by the client-side ITreeGatewaySubscriber to be associated with this operation.
+     *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t RequestMoveIndexEntry(const String & path, const String * optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags);
+   virtual status_t RequestMoveIndexEntry(const String & path, const String & optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag);
 
    /** This callback method is called when a node in this database-object's subtree is created, updated, or destroyed.
      * @param relativePath the path to this node (relative to this database-object's root-node)
@@ -146,9 +154,10 @@ protected:
      * @param newPayload the payload that our node has after we make this change (NULL if the node is being destroyed)
      * @param assemblingMessage the Message we are gathering records into.
      * @param prepend True iff the filed Message should be prepended to the beginning of (assemblingMessage), or false if it should be appended to the end.
+     * @param optOpTag Client-provided descriptive tag for this operation.
      * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
      */
-   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend);
+   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
 
    /** Called by SeniorUpdate() when it wants to add an update-node-index action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
      * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
@@ -159,9 +168,10 @@ protected:
      * @param key the name of the child node in the index
      * @param assemblingMessage the Message we are gathering records into.
      * @param prepend True iff the filed Message should be prepended to the beginning of (assemblingMessage), or false if it should be appended to the end.
+     * @param optOpTag Client-provided descriptive tag for this operation.
      * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
      */
-   virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend);
+   virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
 
    /** Called by SeniorUpdate() when it needs to handle an individual sub-Message in the senior-update context
      * @param msg the sub-Message to handle
@@ -202,10 +212,11 @@ protected:
      * @param dataMsgRef The value to set the node to
      * @param flags list of SETDATANODE_FLAG_* values to affect our behavior.  Defaults to no-bits-set.
      * @param optInsertBefore If (addToIndex) is true, this may be the name of the node to insert this new node before in the index.
-     *                        If NULL, the new node will be appended to the end of the index.  If (addToIndex) is false, this argument is ignored.
+     *                        If empty, the new node will be appended to the end of the index.  If (addToIndex) is false, this argument is ignored.
+     * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String *optInsertBefore=NULL); 
+   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String &optInsertBefore=GetEmptyString(), const String & optOpTag=GetEmptyString());
 
    /** Convenience method:  Adds nodes that match the specified path to the passed-in Queue.
     *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
@@ -234,26 +245,47 @@ protected:
     *                        Otherwise, this argument is ignored.
     * @param optPruner If non-NULL, this object can be used as a callback to prune the traversal or filter
     *                  the MessageRefs cloned.
+    * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
     * @return B_NO_ERROR on success, or an error code on failure (may leave a partially cloned subtree on failure)
     */
-   status_t CloneDataNodeSubtree(const DataNode & sourceNode, const String & destPath, SetDataNodeFlags flags = SetDataNodeFlags(), const String * optInsertBefore = NULL, const ITraversalPruner * optPruner = NULL);
+   status_t CloneDataNodeSubtree(const DataNode & sourceNode, const String & destPath, SetDataNodeFlags flags = SetDataNodeFlags(), const String * optInsertBefore = NULL, const ITraversalPruner * optPruner = NULL, const String & optOpTag = GetEmptyString());
 
    /** Pass-through to StorageReflectSession::RemoveDataNodes() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
      * @param filterRef optional ConstQueryFilter to restrict which nodes that match (nodePath) actually get removed
      * @param quiet If set to true, subscribers won't be updated regarding this change to the database.
+     * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-   status_t RemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false);
+   status_t RemoveDataNodes(const String & nodePath, const ConstQueryFilterRef & filterRef = ConstQueryFilterRef(), bool quiet = false, const String & optOpTag = GetEmptyString());
 
    /** Pass-through to StorageReflectSession::MoveIndexEntries() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
-     * @param optBefore if non-NULL, the moved nodes in the index will be moved to just before the node with this name.  If NULL, they'll be moved to the end of the index.
+     * @param optBefore if non-empty, the moved nodes in the index will be moved to just before the node with this name.  If empty, they'll be moved to the end of the index.
      * @param filterRef If non-NULL, we'll use the given QueryFilter object to filter out our result set.
      *                  Only nodes whose Messages match the QueryFilter will have their parent-nodes' index modified.  Default is a NULL reference.
+     * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-   status_t MoveIndexEntries(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & filterRef);
+   status_t MoveIndexEntries(const String & nodePath, const String & optBefore, const ConstQueryFilterRef & filterRef, const String & optOpTag = GetEmptyString());
+
+   // A little RIAA class to manage pushing/popping the _opTagStack for us automagically
+   class OpTagGuard
+   {
+   public:
+      OpTagGuard(const String & optOpTag, MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj), _optOpTag(optOpTag)
+      {
+         _pushed = ((_optOpTag.HasChars())&&(_dbObj->_opTagStack.AddTail(&_optOpTag).IsOK()));
+      }
+
+      ~OpTagGuard() {if (_pushed) _dbObj->_opTagStack.RemoveTail();}
+
+   private:
+      MessageTreeDatabaseObject * _dbObj;
+      const String & _optOpTag;
+      bool _pushed;
+   };
+   #define DECLARE_OP_TAG_GUARD const OpTagGuard tagGuard(optOpTag, this)
 
 private:
    class SafeQueryFilter : public QueryFilter
@@ -275,9 +307,9 @@ private:
    String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;}
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
 
-   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore) const;
-   MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key);
-   MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags) const;
+   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const;
+   MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, const String & optOpTag);
+   MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags, const String & optOpTag) const;
 
    status_t HandleNodeUpdateMessage(const Message & msg);
    status_t HandleNodeUpdateMessageAux(const Message & msg, TreeGatewayFlags flags);
@@ -293,6 +325,10 @@ private:
    const String _rootNodePathWithSlash;
    const uint32 _rootNodeDepth;
    uint32 _checksum;  // running checksum
+
+   Queue<const String *> _opTagStack;
+
+   friend class OpTagGuard;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 

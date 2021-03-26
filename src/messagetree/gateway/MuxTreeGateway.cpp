@@ -154,10 +154,10 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscribe
    else return B_OUT_OF_MEMORY;
 }
 
-status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
+status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) TreeNodeUpdatedAux(path, optPayload, calledBy);  // if we won't get a reply back from the server, then we'll need to update our other subscribers directly.
-   return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags, optBefore);
+   return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags, optBefore, optOpTag);
 }
 
 status_t MuxTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)

@@ -38,6 +38,11 @@ public:
    // ITextCommandReceiver API
    virtual bool IsReadyForTextCommands() const;
    virtual bool TextCommandReceived(const String & textStr);
+
+private:
+   String GenerateOpTag(String & retTag);
+
+   int _opTagCounter;
 };
 
 };

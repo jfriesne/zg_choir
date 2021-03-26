@@ -93,12 +93,12 @@ void ClientSideNetworkTreeGateway :: CommandBatchEnds()
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-   return HandleBasicCommandAux(NTG_COMMAND_ADDSUBSCRIPTION, subscriptionPath, optFilterRef, flags);
+   return HandleBasicCommandAux(NTG_COMMAND_ADDSUBSCRIPTION, subscriptionPath, optFilterRef, flags, GetEmptyString());
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-   return HandleBasicCommandAux(NTG_COMMAND_REMOVESUBSCRIPTION, subscriptionPath, optFilterRef, flags);
+   return HandleBasicCommandAux(NTG_COMMAND_REMOVESUBSCRIPTION, subscriptionPath, optFilterRef, flags, GetEmptyString());
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags flags)
@@ -112,7 +112,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITre
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
-   return HandleBasicCommandAux(NTG_COMMAND_REQUESTNODEVALUES, queryString, optFilterRef, flags);
+   return HandleBasicCommandAux(NTG_COMMAND_REQUESTNODEVALUES, queryString, optFilterRef, flags, GetEmptyString());
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
@@ -135,48 +135,49 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGa
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODEVALUE);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret = msg()->CAddString( NTG_NAME_PATH,    path) 
+   status_t ret = msg()->CAddString( NTG_NAME_PATH,    path)
                 | msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload)
-                | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags);
-   if (optBefore) ret |= msg()->CAddString(NTG_NAME_BEFORE, *optBefore);
+                | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
+                | msg()->CAddString( NTG_NAME_BEFORE,  optBefore)
+                | msg()->CAddString( NTG_NAME_TAG,     optOpTag);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODESUBTREE);
    MRETURN_OOM_ON_NULL(msg());
 
-   const status_t ret = msg()->CAddString( NTG_NAME_PATH,    basePath) 
+   const status_t ret = msg()->CAddString( NTG_NAME_PATH,    basePath)
                       | msg()->CAddMessage(NTG_NAME_PAYLOAD, valuesMsg)
-                      | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags);
+                      | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
+                      | msg()->CAddString( NTG_NAME_TAG,     optOpTag);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
-   return HandleBasicCommandAux(NTG_COMMAND_REMOVENODES, path, optFilterRef, flags);
+   return HandleBasicCommandAux(NTG_COMMAND_REMOVENODES, path, optFilterRef, flags, optOpTag);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String & optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MOVEINDEXENTRIES);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
+   if (optFilterRef()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()));
 
-   ret = msg()->CAddString(NTG_NAME_PATH,   path) 
-       | msg()->CAddFlat(  NTG_NAME_FLAGS, flags);
-
-   if (optBefore) ret |= msg()->CAddString(NTG_NAME_BEFORE, *optBefore);
+   const status_t ret = msg()->CAddString(NTG_NAME_PATH,  path)
+                      | msg()->CAddString(NTG_NAME_TAG,   optOpTag)
+                      | msg()->CAddFlat(  NTG_NAME_FLAGS, flags)
+                      | msg()->CAddString(NTG_NAME_BEFORE, optBefore);
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
@@ -235,14 +236,14 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewa
    return SendUndoRedoMessage(NTG_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_UNDO, GetEmptyString(), whichDB);
+   return SendUndoRedoMessage(NTG_COMMAND_UNDO, optOpTag, whichDB);
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_REDO, GetEmptyString(), whichDB);
+   return SendUndoRedoMessage(NTG_COMMAND_REDO, optOpTag, whichDB);
 }
 
 status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
@@ -254,23 +255,22 @@ status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, co
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(what);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if ((optFilterRef())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()).IsError(ret))) return ret;
+   if (optFilterRef()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()));
 
-   MessageRef queryFilterMsg;
-   ret = (msg()->CAddString( NTG_NAME_PATH,  subscriptionPath)) |
-         (msg()->CAddFlat(   NTG_NAME_FLAGS, flags));
+   const status_t ret = (msg()->CAddString( NTG_NAME_PATH,  subscriptionPath))
+                      | (msg()->CAddString( NTG_NAME_TAG,   optOpTag))
+                      | (msg()->CAddFlat(   NTG_NAME_FLAGS, flags));
 
    return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
 void ClientSideNetworkTreeGateway :: SetParameters(const MessageRef & parameters)
-{  
+{
    _parameters = parameters;
 }
 
@@ -298,21 +298,21 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
 
    TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS);
    QueryFilterRef qfRef   = InstantiateQueryFilterAux(*msg(), 0);
-   const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
-   const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
+   const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH,   &GetEmptyString()));
+   const String & optB4   = *(msg()->GetStringPointer(NTG_NAME_BEFORE, &GetEmptyString()));
+   const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,    &GetEmptyString()));
    MessageRef payload     = msg()->GetMessage(NTG_NAME_PAYLOAD);
-   const String * optB4   = msg()->GetStringPointer(NTG_NAME_BEFORE);
    const int32 index      = msg()->GetInt32(NTG_NAME_INDEX);
 
    switch(msg()->what)
    {
-      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,   flags);        break;
-      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,   flags);        break;
-      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags);        break;
-      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,   flags);        break;
-      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload, flags);        break;
-      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optB4,   qfRef, flags); break;
-      case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload, flags, optB4); break;
+      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,   flags);             break;
+      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,   flags);             break;
+      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags);             break;
+      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,   flags, tag);        break;
+      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload, flags, tag);        break;
+      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optB4,   qfRef, flags, tag); break;
+      case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload, flags, optB4, tag); break;
 
       case NTG_COMMAND_PING:
       {
@@ -340,8 +340,8 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
 
       case NTG_COMMAND_BEGINSEQUENCE: (void) BeginUndoSequence(tag, index); break;
       case NTG_COMMAND_ENDSEQUENCE:   (void) EndUndoSequence(  tag, index); break;
-      case NTG_COMMAND_UNDO:          (void) RequestUndo(           index); break;
-      case NTG_COMMAND_REDO:          (void) RequestRedo(           index); break;
+      case NTG_COMMAND_UNDO:          (void) RequestUndo(index, tag);       break;
+      case NTG_COMMAND_REDO:          (void) RequestRedo(index, tag);       break;
 
       case NTG_COMMAND_MESSAGETOSENIORPEER:
          (void) SendMessageToTreeSeniorPeer(payload, index, tag);
@@ -423,6 +423,8 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
 
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag  = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
+printf("\n\nincoming tag from server: [%s]\n", tag());
+msg()->PrintToStream();
    const String & name = *(msg()->GetStringPointer(NTG_NAME_NAME, &GetEmptyString()));
    MessageRef payload  = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 idx     = msg()->GetInt32(NTG_NAME_INDEX);

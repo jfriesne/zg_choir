@@ -55,24 +55,24 @@ status_t ProxyTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscri
    return ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, tag, maxDepth, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String * optBefore)
+status_t ProxyTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::UploadTreeNodeValue(path, optPayload, flags, optBefore);
+   return ITreeGatewaySubscriber::UploadTreeNodeValue(path, optPayload, flags, optBefore, optOpTag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::UploadTreeNodeSubtree(basePath, valuesMsg, flags);
+   return ITreeGatewaySubscriber::UploadTreeNodeSubtree(basePath, valuesMsg, flags, optOpTag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::RequestDeleteTreeNodes(path, optFilterRef, flags);
+   return ITreeGatewaySubscriber::RequestDeleteTreeNodes(path, optFilterRef, flags, optOpTag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String * optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const String & optBefore, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::RequestMoveTreeIndexEntry(path, optBefore, optFilterRef, flags);
+   return ITreeGatewaySubscriber::RequestMoveTreeIndexEntry(path, optBefore, optFilterRef, flags, optOpTag);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
@@ -105,14 +105,14 @@ status_t ProxyTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewaySubscriber 
    return ITreeGatewaySubscriber::EndUndoSequence(optSequenceLabel, whichDB);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t ProxyTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::RequestUndo(whichDB);
+   return ITreeGatewaySubscriber::RequestUndo(whichDB, optOpTag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB)
+status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
 {
-   return ITreeGatewaySubscriber::RequestRedo(whichDB);
+   return ITreeGatewaySubscriber::RequestRedo(whichDB, optOpTag);
 }
 
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const

@@ -207,8 +207,11 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
          const bool isRedo         = (msg()->what == UNDOSTACK_COMMAND_REDO);
          const char * desc         = isRedo ? "redo" : "undo";
          const String & clientKey  = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
+         const String & optOpTag   = *(msg()->GetStringPointer(UNDOSTACK_NAME_LABEL,   &GetEmptyString()));
          const String fromNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_REDO : UNDOSTACK_NODENAME_UNDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
          const String destNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_UNDO : UNDOSTACK_NODENAME_REDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
+
+         DECLARE_OP_TAG_GUARD;
 
          MessageTreeDatabasePeerSession * mtdps = GetMessageTreeDatabasePeerSession();
          DataNode * fromClientNode = mtdps->GetDataNode(fromNodePath);
@@ -303,24 +306,24 @@ status_t UndoStackMessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRe
    return pairMsg()->FindMessage(UNDOSTACK_NAME_DOMESSAGE, doMsg).IsOK(ret) ? MessageTreeDatabaseObject::JuniorUpdate(doMsg) : ret;
 }
 
-status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend)
+status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
 {
    // File the do-action as usual for our Junior Peers to use
    status_t ret;
-   if (MessageTreeDatabaseObject::SeniorRecordNodeUpdateMessage(relativePath, oldPayload, newPayload, assemblingMessage, prepend).IsError(ret)) return ret;
+   if (MessageTreeDatabaseObject::SeniorRecordNodeUpdateMessage(relativePath, oldPayload, newPayload, assemblingMessage, prepend, optOpTag).IsError(ret)) return ret;
 
    // Also prepend the equal-and-opposite undo-action to the beginning of our _assembledJuniorUndoMessage (in case we ever want to undo this action later)
-   return MessageTreeDatabaseObject::SeniorRecordNodeUpdateMessage(relativePath, newPayload, oldPayload, _assembledJuniorUndoMessage, !prepend);
+   return MessageTreeDatabaseObject::SeniorRecordNodeUpdateMessage(relativePath, newPayload, oldPayload, _assembledJuniorUndoMessage, !prepend, optOpTag);
 }
 
-status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend)
+status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
 {
    // File the do-action as usual for our Junior Peers to use
    status_t ret;
-   if (MessageTreeDatabaseObject::SeniorRecordNodeIndexUpdateMessage(relativePath, op, index, key, assemblingMessage, prepend).IsError(ret)) return ret;
+   if (MessageTreeDatabaseObject::SeniorRecordNodeIndexUpdateMessage(relativePath, op, index, key, assemblingMessage, prepend, optOpTag).IsError(ret)) return ret;
 
    // Also prepend the equal-and-opposite undo-action to the beginning of our _assembledJuniorUndoMessage (in case we ever want to undo this action later)
-   return MessageTreeDatabaseObject::SeniorRecordNodeIndexUpdateMessage(relativePath, (op == (char)INDEX_OP_ENTRYINSERTED) ? INDEX_OP_ENTRYREMOVED : INDEX_OP_ENTRYINSERTED, index, key, _assembledJuniorUndoMessage, !prepend);
+   return MessageTreeDatabaseObject::SeniorRecordNodeIndexUpdateMessage(relativePath, (op == (char)INDEX_OP_ENTRYINSERTED) ? INDEX_OP_ENTRYREMOVED : INDEX_OP_ENTRYINSERTED, index, key, _assembledJuniorUndoMessage, !prepend, optOpTag);
 }
 
 status_t UndoStackMessageTreeDatabaseObject :: RequestReplaceDatabaseState(const MessageRef & newDatabaseStateMsg)

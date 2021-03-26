@@ -175,39 +175,47 @@ protected:
      * @param optPayload the payload Message to upload, or a NULL reference if you wish to delete one or more nodes instead.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently TREE_GATEWAY_FLAG_INDEXED will cause the
      *              uploaded node to be added to its parent's ordered-children index, and TREE_GATEWAY_FLAG_NOREPLY will prevent any notifications about
-     *              this upload from being delivered to any clients (including the caller)
+     *              this upload from being delivered to any clients (including the caller).
      * @param optBefore Specifies where in the parent's node-index this node should be inserted.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified in the (flags)
-     *                  argument.  If non-NULL, the node will be inserted directly before the child node with the specified name; or if NULL, the node will be
-     *                  inserted at the end of the index.
+     *                  argument.  If non-empty, the node will be inserted directly before the child node with the specified name; or if empty, the node will be
+     *                  inserted at the end of the index.  Defaults to an empty string.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String * optBefore = NULL);
+   virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optBefore = GetEmptyString(), const String & optOpTag = GetEmptyString());
 
    /** Request that a subtree of nodes be uploaded to the specified location in the database.
      * @param basePath the session-relative path indicating where the root of the subtree should be created.
      * @param valuesMsg a Message containing the contents of the subtree (as previously passed back to you in SubtreesRequestResultReturned())
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optOpTag = GetEmptyString());
 
    /** Request that one of more nodes be deleted from the database.
      * @param nodePath Session-relative path to the node (or nodes) to delete.  May be wildcarded.
      * @param optFilterRef if non-NULL, reference to a QueryFilter object that the server will use to limit which nodes get deleted.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @note that any children/grandchildren/etc of deleted nodes will also be deleted.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestDeleteTreeNodes(const String & nodePath, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestDeleteTreeNodes(const String & nodePath, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags(), const String & optOpTag = GetEmptyString());
 
    /** Request that an entry within the index of parent-node of one or more specified nodes be moved to a different location in its index.
      * @param nodePath Session-relative path to the node (or nodes) to move within their parents' node-indices.  May be wildcarded (although I'm not sure how useful that is).
      * @param optBefore Specifies where in the parent's node-index the node should be moved to.
      * @param optFilterRef if non-NULL, reference to a QueryFilter object that the server will use to limit which nodes get moved.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently this argument is ignored.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestMoveTreeIndexEntry(const String & nodePath, const String * optBefore, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestMoveTreeIndexEntry(const String & nodePath, const String & optBefore = GetEmptyString(), const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags(), const String & optOpTag = GetEmptyString());
 
    /** Sends a "Ping" message to the server this client is directly connected to.
      * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding TreeLocalPeerPonged() callback.
@@ -281,14 +289,18 @@ protected:
    /** Request an "undo" of the most recent previously uploaded database change.
      * @param whichDB index of the database to which should perform the undo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
      *                or the undo request will be ignored.  Defaults to zero.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      */
-   virtual status_t RequestUndo(uint32 whichDB = 0);
+   virtual status_t RequestUndo(uint32 whichDB = 0, const String & optOpTag = GetEmptyString());
 
    /** Request a "redo" of a previously un-dnoe database change.
      * @param whichDB index of the database to which should perform the redo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
      *                or the redo request will be ignored.  Defaults to zero.
+     * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
+     *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      */
-   virtual status_t RequestRedo(uint32 whichDB = 0);
+   virtual status_t RequestRedo(uint32 whichDB = 0, const String & optOpTag = GetEmptyString());
 
    /** Returns true iff our gateway is currently connected to the upstream database. */
    virtual bool IsTreeGatewayConnected() const;
