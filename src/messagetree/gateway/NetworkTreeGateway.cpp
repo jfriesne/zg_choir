@@ -358,32 +358,41 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    return B_NO_ERROR; // If we got here, the Message was handled
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_NODEUPDATED);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, nodePath).IsOK())&&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())
+     &&(msg()->CAddString( NTG_NAME_PATH,      nodePath).IsOK())
+     &&(msg()->CAddString( NTG_NAME_TAG,       optOpTag).IsOK())
+     &&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_INDEXCLEARED);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())
+     &&(msg()->CAddString(NTG_NAME_PATH,     path).IsOK())
+     &&(msg()->CAddString(NTG_NAME_TAG,  optOpTag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYINSERTED, path, insertedAtIndex, nodeName);
+   HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYINSERTED, path, insertedAtIndex, nodeName, optOpTag);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName)
+void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYREMOVED, path, removedAtIndex, nodeName);
+   HandleIndexEntryUpdate(NTG_REPLY_INDEXENTRYREMOVED, path, removedAtIndex, nodeName, optOpTag);
 }
 
-void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName)
+void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if ((msg())&&(msg()->CAddString(NTG_NAME_PATH, path).IsOK())&&(msg()->CAddInt32(NTG_NAME_INDEX, idx).IsOK())&&(msg()->CAddString(NTG_NAME_NAME, nodeName).IsOK())) SendOutgoingMessageToNetwork(msg);
+   if ((msg())
+     &&(msg()->CAddString(NTG_NAME_PATH,     path).IsOK())
+     &&(msg()->CAddString(NTG_NAME_TAG,  optOpTag).IsOK())
+     &&(msg()->CAddInt32(NTG_NAME_INDEX,      idx).IsOK())
+     &&(msg()->CAddString(NTG_NAME_NAME, nodeName).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
 
 void ServerSideNetworkTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)
@@ -423,19 +432,17 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
 
    const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
    const String & tag  = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
-printf("\n\nincoming tag from server: [%s]\n", tag());
-msg()->PrintToStream();
    const String & name = *(msg()->GetStringPointer(NTG_NAME_NAME, &GetEmptyString()));
    MessageRef payload  = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 idx     = msg()->GetInt32(NTG_NAME_INDEX);
    
    switch(msg()->what)
    {
-      case NTG_REPLY_NODEUPDATED:        TreeNodeUpdated(path, payload);              break;
-      case NTG_REPLY_INDEXCLEARED:       TreeNodeIndexCleared(path);                  break;
-      case NTG_REPLY_INDEXENTRYINSERTED: TreeNodeIndexEntryInserted(path, idx, name); break;
-      case NTG_REPLY_INDEXENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, idx, name); break;
-      case NTG_REPLY_SUBTREES:           SubtreesRequestResultReturned(tag, payload); break;
+      case NTG_REPLY_NODEUPDATED:        TreeNodeUpdated(path, payload, tag);              break;
+      case NTG_REPLY_INDEXCLEARED:       TreeNodeIndexCleared(path, tag);                  break;
+      case NTG_REPLY_INDEXENTRYINSERTED: TreeNodeIndexEntryInserted(path, idx, name, tag); break;
+      case NTG_REPLY_INDEXENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, idx, name, tag); break;
+      case NTG_REPLY_SUBTREES:           SubtreesRequestResultReturned(tag, payload);      break;
 
       case NTG_REPLY_PONG:
          if (idx >= 0) TreeSeniorPeerPonged(tag, idx);
@@ -471,6 +478,7 @@ status_t ClientSideNetworkTreeGateway :: ConvertPathToSessionRelative(String & p
 // return results in that form than to use our internal NTG_REPLY_* format.
 status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServer(const MessageRef & msg)
 {
+const String optOpTag = "TODO FIX THIS";
    switch(msg()->what)
    {
       case PR_RESULT_DATATREES:
@@ -499,7 +507,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
          {
             String nodePath;
             for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
-               if (ConvertPathToSessionRelative(nodePath).IsOK()) TreeNodeUpdated(nodePath, MessageRef());
+               if (ConvertPathToSessionRelative(nodePath).IsOK()) TreeNodeUpdated(nodePath, MessageRef(), optOpTag);
          }
 
          // Handle notifications of added/updated nodes
@@ -510,7 +518,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
                String nodePath = iter.GetFieldName();
                if (ConvertPathToSessionRelative(nodePath).IsOK())
                   for (uint32 i=0; msg()->FindMessage(iter.GetFieldName(), i, nodeRef).IsOK(); i++)
-                     TreeNodeUpdated(nodePath, nodeRef);
+                     TreeNodeUpdated(nodePath, nodeRef, optOpTag);
             }
          }
       }
@@ -531,9 +539,9 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
                   char c = indexCmd[0];
                   switch(c)
                   {
-                     case INDEX_OP_CLEARED:       TreeNodeIndexCleared(sessionRelativePath);                                                   break;
-                     case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(sessionRelativePath, atoi(&indexCmd[1]), colonAt?(colonAt+1):""); break;
-                     case INDEX_OP_ENTRYREMOVED:  TreeNodeIndexEntryRemoved(sessionRelativePath,  atoi(&indexCmd[1]), colonAt?(colonAt+1):""); break;
+                     case INDEX_OP_CLEARED:       TreeNodeIndexCleared(sessionRelativePath, optOpTag);                                                   break;
+                     case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(sessionRelativePath, atoi(&indexCmd[1]), colonAt?(colonAt+1):"", optOpTag); break;
+                     case INDEX_OP_ENTRYREMOVED:  TreeNodeIndexEntryRemoved(sessionRelativePath,  atoi(&indexCmd[1]), colonAt?(colonAt+1):"", optOpTag); break;
                   }
                }
             }

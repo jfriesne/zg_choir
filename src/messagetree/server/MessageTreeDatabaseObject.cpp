@@ -222,7 +222,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      const status_t ret = SeniorRecordNodeUpdateMessage(relativePath, oldPayload, isBeingRemoved?MessageRef():node.GetData(), _assembledJuniorMessage, false, *(_opTagStack.TailWithDefault(&GetEmptyString())));
+      const status_t ret = SeniorRecordNodeUpdateMessage(relativePath, oldPayload, isBeingRemoved?MessageRef():node.GetData(), _assembledJuniorMessage, false, GetCurrentOpTag());
       if (ret.IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!  [%s]\n", this, isBeingRemoved?"removed":"updated", relativePath(), ret());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
@@ -253,7 +253,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      const status_t ret = SeniorRecordNodeIndexUpdateMessage(relativePath, op, index, key, _assembledJuniorMessage, false, *(_opTagStack.TailWithDefault(&GetEmptyString())));
+      const status_t ret = SeniorRecordNodeIndexUpdateMessage(relativePath, op, index, key, _assembledJuniorMessage, false, GetCurrentOpTag());
       if (ret.IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  Error assembling junior message for node-index-update to [%s]!  [%s]\n", this, relativePath(), ret());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))

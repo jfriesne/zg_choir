@@ -137,24 +137,24 @@ void ProxyTreeGateway :: CallbackBatchEnds()
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) CallEndCallbackBatch(iter.GetKey());
 }
 
-void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & nodeMsg)
+void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & nodeMsg, const String & optOpTag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeUpdated(nodePath, nodeMsg);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeUpdated(nodePath, nodeMsg, optOpTag);
 }
 
-void ProxyTreeGateway :: TreeNodeIndexCleared(const String & nodePath)
+void ProxyTreeGateway :: TreeNodeIndexCleared(const String & nodePath, const String & optOpTag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexCleared(nodePath);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexCleared(nodePath, optOpTag);
 }
 
-void ProxyTreeGateway :: TreeNodeIndexEntryInserted(const String & nodePath, uint32 insertedAtIndex, const String & nodeName)
+void ProxyTreeGateway :: TreeNodeIndexEntryInserted(const String & nodePath, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryInserted(nodePath, insertedAtIndex, nodeName);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryInserted(nodePath, insertedAtIndex, nodeName, optOpTag);
 }
 
-void ProxyTreeGateway :: TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName)
+void ProxyTreeGateway :: TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryRemoved(nodePath, removedAtIndex, nodeName);
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeIndexEntryRemoved(nodePath, removedAtIndex, nodeName, optOpTag);
 }
 
 void ProxyTreeGateway :: TreeLocalPeerPonged(const String & tag)

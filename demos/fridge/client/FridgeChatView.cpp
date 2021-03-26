@@ -65,9 +65,9 @@ FridgeChatView :: ~FridgeChatView()
    // empty
 }
 
-void FridgeChatView :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg)
+void FridgeChatView :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag)
 {
-   ITreeGatewaySubscriber::TreeNodeUpdated(nodePath, optPayloadMsg);
+   ITreeGatewaySubscriber::TreeNodeUpdated(nodePath, optPayloadMsg, optOpTag);
 
    if (nodePath.StartsWith("chat/"))
    {

@@ -156,7 +156,7 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscribe
 
 status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) TreeNodeUpdatedAux(path, optPayload, calledBy);  // if we won't get a reply back from the server, then we'll need to update our other subscribers directly.
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) TreeNodeUpdatedAux(path, optPayload, optOpTag, calledBy);  // if we won't get a reply back from the server, then we'll need to update our other subscribers directly.
    return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags, optBefore, optOpTag);
 }
 
@@ -182,12 +182,12 @@ status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubsc
 
 // Begin ITreeGatewaySubscriber callback API
 
-void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & nodeMsg)
+void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & nodeMsg, const String & optOpTag)
 {
-   TreeNodeUpdatedAux(path, nodeMsg, NULL);
+   TreeNodeUpdatedAux(path, nodeMsg, optOpTag, NULL);
 }
 
-void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, ITreeGatewaySubscriber * optDontNotify)
+void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify)
 {
    if (_allowedCallbacks.HasItems())
    {
@@ -196,7 +196,7 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef 
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();  // untrusted pointer
          TreeSubscriberInfo * subInfo = _subscriberInfos.GetWithDefault(sub)();
-         if ((subInfo)&&(sub != optDontNotify)) UpdateSubscriber(sub, *subInfo, path, DoesPathMatch(sub, subInfo, path, msgRef()) ? msgRef : MessageRef());
+         if ((subInfo)&&(sub != optDontNotify)) UpdateSubscriber(sub, *subInfo, path, DoesPathMatch(sub, subInfo, path, msgRef()) ? msgRef : MessageRef(), optOpTag);
       }
    }
    else
@@ -205,42 +205,42 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef 
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfo * subInfo = iter.GetValue()();
-         if ((subInfo)&&(sub != optDontNotify)) UpdateSubscriber(sub, *subInfo, path, DoesPathMatch(sub, subInfo, path, msgRef()) ? msgRef : MessageRef());
+         if ((subInfo)&&(sub != optDontNotify)) UpdateSubscriber(sub, *subInfo, path, DoesPathMatch(sub, subInfo, path, msgRef()) ? msgRef : MessageRef(), optOpTag);
       }
    }
 }
 
-void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef)
+void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef, const String & optOpTag)
 {
    if (msgRef())
    {
       EnsureSubscriberInBatchGroup(sub);
       (void) subInfo._receivedPaths.Put(path, path.GetNumInstancesOf('/')+1);
-      sub->TreeNodeUpdated(path, msgRef);
+      sub->TreeNodeUpdated(path, msgRef, optOpTag);
    }
    else if (subInfo._receivedPaths.Remove(path).IsOK())
    {
       EnsureSubscriberInBatchGroup(sub);
-      sub->TreeNodeUpdated(path, msgRef);
+      sub->TreeNodeUpdated(path, msgRef, optOpTag);
    }
 }
 
-void MuxTreeGateway :: TreeNodeIndexCleared(const String & path)
+void MuxTreeGateway :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
 {
-   DoIndexNotifications(path, INDEX_OP_CLEARED, 0, GetEmptyString());
+   DoIndexNotifications(path, INDEX_OP_CLEARED, 0, GetEmptyString(), optOpTag);
 }
 
-void MuxTreeGateway :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
+void MuxTreeGateway :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   DoIndexNotifications(path, INDEX_OP_ENTRYINSERTED, insertedAtIndex, nodeName);
+   DoIndexNotifications(path, INDEX_OP_ENTRYINSERTED, insertedAtIndex, nodeName, optOpTag);
 }
 
-void MuxTreeGateway :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName)
+void MuxTreeGateway :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   DoIndexNotifications(path, INDEX_OP_ENTRYREMOVED, removedAtIndex, nodeName);
+   DoIndexNotifications(path, INDEX_OP_ENTRYREMOVED, removedAtIndex, nodeName, optOpTag);
 }
 
-void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName)
+void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag)
 {
    if (_allowedCallbacks.HasItems())
    {
@@ -249,24 +249,24 @@ void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, ui
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();  // untrusted pointer
          TreeSubscriberInfoRef * pmr = _subscriberInfos.Get(sub);
-         if ((pmr)&&(DoesPathMatch(sub, pmr->GetItemPointer(), path, NULL))) DoIndexNotificationAux(sub, path, opCode, index, nodeName);
+         if ((pmr)&&(DoesPathMatch(sub, pmr->GetItemPointer(), path, NULL))) DoIndexNotificationAux(sub, path, opCode, index, nodeName, optOpTag);
       }
    }
    else
    {
       for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
-         if (DoesPathMatch(iter.GetKey(), iter.GetValue()(), path, NULL)) DoIndexNotificationAux(iter.GetKey(), path, opCode, index, nodeName);
+         if (DoesPathMatch(iter.GetKey(), iter.GetValue()(), path, NULL)) DoIndexNotificationAux(iter.GetKey(), path, opCode, index, nodeName, optOpTag);
    }
 }
 
-void MuxTreeGateway :: DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName)
+void MuxTreeGateway :: DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag)
 {
    EnsureSubscriberInBatchGroup(sub);
    switch(opCode)
    {
-      case INDEX_OP_CLEARED:       sub->TreeNodeIndexCleared(path);                        break;
-      case INDEX_OP_ENTRYINSERTED: sub->TreeNodeIndexEntryInserted(path, index, nodeName); break;
-      case INDEX_OP_ENTRYREMOVED:  sub->TreeNodeIndexEntryRemoved( path, index, nodeName); break;
+      case INDEX_OP_CLEARED:       sub->TreeNodeIndexCleared(path, optOpTag);                        break;
+      case INDEX_OP_ENTRYINSERTED: sub->TreeNodeIndexEntryInserted(path, index, nodeName, optOpTag); break;
+      case INDEX_OP_ENTRYREMOVED:  sub->TreeNodeIndexEntryRemoved( path, index, nodeName, optOpTag); break;
    }
 }
 

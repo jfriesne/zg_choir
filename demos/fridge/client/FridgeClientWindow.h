@@ -42,7 +42,7 @@ public:
 
 protected:
    // ITreeGatewaySubscriber API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
 private slots:

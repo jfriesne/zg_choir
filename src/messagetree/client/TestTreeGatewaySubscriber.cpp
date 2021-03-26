@@ -220,26 +220,26 @@ void TestTreeGatewaySubscriber :: CallbackBatchEnds()
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchEnds()\n");
 }
 
-void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg)
+void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p)\n", nodePath(), payloadMsg());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s]\n", nodePath(), payloadMsg(), optOpTag());
    if (payloadMsg()) payloadMsg()->PrintToStream();
 PrintStackTrace();
 }
 
-void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path)
+void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexCleared(%s)\n", path());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexCleared(%s) optOpTag=[%s]\n", path(), optOpTag());
 }
 
-void TestTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName)
+void TestTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), insertedAtIndex, nodeName());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s]\n", path(), insertedAtIndex, nodeName(), optOpTag());
 }
 
-void TestTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName)
+void TestTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s)\n", path(), removedAtIndex, nodeName());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s]\n", path(), removedAtIndex, nodeName(), optOpTag());
 }
 
 void TestTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)

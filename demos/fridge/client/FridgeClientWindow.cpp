@@ -402,7 +402,7 @@ void FridgeClientWindow :: SubtreesRequestResultReturned(const String & tag, con
    }
 }
 
-void FridgeClientWindow :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg)
+void FridgeClientWindow :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & /*optOpTag*/)
 {
    if (nodePath == _undoStackTopPath)
    {

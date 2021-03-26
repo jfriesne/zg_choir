@@ -43,31 +43,35 @@ public:
    /** Called by the upstream gateway to notify this subscriber about the new current state of a particular subscribed-to database node.
      * @param nodePath the session-relative path of the database node in question.
      * @param optPayloadMsg a reference to the node's current payload-Message, or a NULL reference if the node has been deleted.
+     * @param optOpTag If the entity responsible for this database change specified an operation-tag for the change, that tag will appear in this argument.
      * Default implementation is a no-op.
      */
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg) {(void) nodePath; (void) optPayloadMsg;}
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag) {(void) nodePath; (void) optPayloadMsg; (void) optOpTag;}
 
    /** Called by the upstream gateway to notify this subscriber when the node-index of a subscribed-to database node has been cleared.
      * @param nodePath the session-relative path of the database node in question.
+     * @param optOpTag If the entity responsible for this database change specified an operation-tag for the change, that tag will appear in this argument.
      * Default implementation is a no-op.
      */
-   virtual void TreeNodeIndexCleared(const String & nodePath) {(void) nodePath;}
+   virtual void TreeNodeIndexCleared(const String & nodePath, const String & optOpTag) {(void) nodePath; (void) optOpTag;}
 
    /** Called by the upstream gateway to notify this subscriber when a new entry has been inserted into the node-index of a subscribed-to database node.
      * @param nodePath the session-relative path of the database node in question.
      * @param insertedAtIndex position at which the entry has been inserted (0==first in the index, 1==second in the index, etc)
      * @param nodeName the name of the child node that was inserted at the specified position.
+     * @param optOpTag If the entity responsible for this database change specified an operation-tag for the change, that tag will appear in this argument.
      * Default implementation is a no-op.
      */
-   virtual void TreeNodeIndexEntryInserted(const String & nodePath, uint32 insertedAtIndex, const String & nodeName) {(void) nodePath; (void) insertedAtIndex; (void) nodeName;}
+   virtual void TreeNodeIndexEntryInserted(const String & nodePath, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag) {(void) nodePath; (void) insertedAtIndex; (void) nodeName; (void) optOpTag;}
 
    /** Called by the upstream gateway to notify this subscriber when an entry has been removed from the node-index of a subscribed-to database node.
      * @param nodePath the session-relative path of the database node in question.
      * @param removedAtIndex position from which the entry has been removed (0==first in the index, 1==second in the index, etc)
      * @param nodeName the name of the child node that was removed from the specified position.
+     * @param optOpTag If the entity responsible for this database change specified an operation-tag for the change, that tag will appear in this argument.
      * Default implementation is a no-op.
      */
-   virtual void TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName) {(void) nodePath; (void) removedAtIndex; (void) nodeName;}
+   virtual void TreeNodeIndexEntryRemoved(const String & nodePath, uint32 removedAtIndex, const String & nodeName, const String & optOpTag) {(void) nodePath; (void) removedAtIndex; (void) nodeName; (void) optOpTag;}
 
    /** Called when a "pong" comes back from the server this client is directly connected to (in response to a previous call to PingTreeLocalPeer()).
      * @param tag the tag-string that you had previously passed to PingTreeLocalPeer().

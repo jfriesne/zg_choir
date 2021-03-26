@@ -27,7 +27,7 @@ public:
    virtual ~ClientRosterList();
 
    // ITreeGatewaySubscriber API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
    virtual void MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void CallbackBatchEnds();

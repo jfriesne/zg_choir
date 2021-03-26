@@ -27,10 +27,10 @@ public:
    virtual status_t IncomingTreeMessageReceivedFromClient(const MessageRef & msg);
 
    // ITreeGatewaySubscriber callback API -- implemented to create Message objects and send them back to our client over TCP
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg);
-   virtual void TreeNodeIndexCleared(const String & path);
-   virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
-   virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
+   virtual void TreeNodeIndexCleared(const String & path, const String & optOpTag);
+   virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag);
+   virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag);
    virtual void TreeLocalPeerPonged(const String & tag);
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB);
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload);
@@ -38,7 +38,7 @@ public:
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
 private:
-   void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName);
+   void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName, const String & optOpTag);
    status_t SendOutgoingMessageToNetwork(const MessageRef & msg);
    QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
 

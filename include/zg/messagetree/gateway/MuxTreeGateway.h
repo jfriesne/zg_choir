@@ -42,10 +42,10 @@ protected:
    virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag);
    
    // ITreeGatewaySubscriber callback API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg);
-   virtual void TreeNodeIndexCleared(const String & path);
-   virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName);
-   virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName);
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
+   virtual void TreeNodeIndexCleared(const String & path, const String & optOpTag);
+   virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag);
+   virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag);
    virtual void TreeLocalPeerPonged(const String & tag);
    virtual void TreeSeniorPeerPonged(const String & tag, uint32 whichDB);
    virtual void MessageReceivedFromTreeSeniorPeer(int32 optWhichDB, const String & tag, const MessageRef & payload);
@@ -67,12 +67,12 @@ private:
    DECLARE_REFTYPES(TreeSubscriberInfo);
 
    status_t UpdateSubscription(const String & subscriptionPath, ITreeGatewaySubscriber * optSubscriber, TreeGatewayFlags flags);
-   void UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef);
-   void TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, ITreeGatewaySubscriber * optDontNotify);
+   void UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef, const String & optOpTag);
+   void TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify);
    bool DoesPathMatch(ITreeGatewaySubscriber * sub, const PathMatcher * pm, const String & path, const Message * optMessage) const;
    void EnsureSubscriberInBatchGroup(ITreeGatewaySubscriber * sub);
-   void DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName);
-   void DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName);
+   void DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
+   void DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
 
    String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub) const;
    String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s) const;

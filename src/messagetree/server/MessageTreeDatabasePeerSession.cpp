@@ -370,18 +370,21 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(Dat
 void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & /*oldData*/, NodeChangeFlags nodeChangeFlags)
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
-   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData());
+   const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), NULL);
+   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData(), mtDB?mtDB->GetCurrentOpTag():GetEmptyString());
 }
 
 void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
+   const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), NULL);
+   const String & opTag = mtDB?mtDB->GetCurrentOpTag():GetEmptyString();
    const String path = node.GetNodePath().Substring(GetSessionRootPath().Length());
    switch(op)
    {
-      case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(path, index, key); break;
-      case INDEX_OP_ENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, index, key); break;
-      case INDEX_OP_CLEARED:       TreeNodeIndexCleared(path);                   break;
+      case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(path, index, key, opTag); break;
+      case INDEX_OP_ENTRYREMOVED:  TreeNodeIndexEntryRemoved( path, index, key, opTag); break;
+      case INDEX_OP_CLEARED:       TreeNodeIndexCleared(path, opTag);                   break;
       default:                     LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabasePeerSession::NodeIndexChanged:  Unknown op [%c] for node [%s]\n", op, path());
    }
 }

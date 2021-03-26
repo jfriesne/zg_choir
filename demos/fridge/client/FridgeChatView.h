@@ -32,7 +32,7 @@ public:
    virtual ~FridgeChatView();
 
    // ITreeGatewaySubscriber API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg);
+   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void CallbackBatchEnds();
 

@@ -141,6 +141,9 @@ public:
      */
    virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload); 
      
+   /** Returns a reference to our currently-active operation-tag, or a reference to an empty string if there isn't one. */
+   const String & GetCurrentOpTag() const {return *_opTagStack.TailWithDefault(&GetEmptyString());}
+
 protected:
    // IDatabaseObject API
    virtual ConstMessageRef SeniorUpdate(const ConstMessageRef & seniorDoMsg);
