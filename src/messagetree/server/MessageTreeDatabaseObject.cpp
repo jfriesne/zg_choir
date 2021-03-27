@@ -569,7 +569,7 @@ status_t MessageTreeDatabaseObject :: MoveIndexEntries(const String & nodePath, 
    const SafeQueryFilter safeQF(this);
    AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
    if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
-   return zsh->MoveIndexEntries(nodePath, optBefore, ConstQueryFilterRef(&andQF, false));
+   return zsh->MoveIndexEntries(nodePath, optBefore.HasChars()?&optBefore:NULL, ConstQueryFilterRef(&andQF, false));
 }
 
 MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeDatabasePeerSession() const 

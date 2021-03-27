@@ -224,7 +224,6 @@ void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s]\n", nodePath(), payloadMsg(), optOpTag());
    if (payloadMsg()) payloadMsg()->PrintToStream();
-PrintStackTrace();
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)

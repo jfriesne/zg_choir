@@ -42,6 +42,11 @@ public:
      */
    void ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * clientSession);
 
+   /** Given a node-path, returns the currently-executing OpTag for that database, or an empty String if no OpTag is available.
+     * @param nodePath path to a node within the muscle database
+     */
+   const String & GetCurrentOpTagForNodePath(const String & nodePath) const;
+
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return

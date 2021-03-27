@@ -9,6 +9,10 @@
 
 namespace zg {
 
+extern const String _opTagFieldName = "_op_fn";  // String field containing opTag strings referenced in the Message
+extern const String _opTagPutMap    = "_op_pm";  // int32 field; values are (opTagIndex<<24)|(fieldNameIndex<<12)|(valueIndex)
+extern const String _opTagRemoveMap = "_op_rm";  // int32 field; values are (opTagIndex)
+
 // Command-codes for Messages sent from client to server
 enum {
    NTG_COMMAND_ADDSUBSCRIPTION = 1852269360,  // 'ngc0' 
@@ -478,7 +482,6 @@ status_t ClientSideNetworkTreeGateway :: ConvertPathToSessionRelative(String & p
 // return results in that form than to use our internal NTG_REPLY_* format.
 status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServer(const MessageRef & msg)
 {
-const String optOpTag = "TODO FIX THIS";
    switch(msg()->what)
    {
       case PR_RESULT_DATATREES:
@@ -503,22 +506,52 @@ const String optOpTag = "TODO FIX THIS";
 
       case PR_RESULT_DATAITEMS:
       {
+         const bool hasOpTags = msg()->HasName(_opTagFieldName, B_STRING_TYPE);
+
+         const uint32 * opTagPutMap = NULL;
+         uint32 opTagPutMapLength = 0;
+         if ((hasOpTags)&&(msg()->GetInfo(_opTagPutMap, NULL, &opTagPutMapLength).IsOK())) (void) msg()->FindData(_opTagPutMap, B_INT32_TYPE, (const void **) &opTagPutMap, NULL);
+
          // Handle notifications of removed nodes
          {
             String nodePath;
             for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
-               if (ConvertPathToSessionRelative(nodePath).IsOK()) TreeNodeUpdated(nodePath, MessageRef(), optOpTag);
+               if (ConvertPathToSessionRelative(nodePath).IsOK())
+                  TreeNodeUpdated(nodePath, MessageRef(), hasOpTags ? *(msg()->GetStringPointer(_opTagFieldName, &GetEmptyString(), msg()->GetInt32(_opTagRemoveMap, -1, i))) : GetEmptyString());
          }
 
          // Handle notifications of added/updated nodes
          {
+            uint32 currentFieldNameIndex = 0;
             MessageRef nodeRef;
-            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
+            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++,currentFieldNameIndex++)
             {
                String nodePath = iter.GetFieldName();
                if (ConvertPathToSessionRelative(nodePath).IsOK())
+               {
                   for (uint32 i=0; msg()->FindMessage(iter.GetFieldName(), i, nodeRef).IsOK(); i++)
-                     TreeNodeUpdated(nodePath, nodeRef, optOpTag);
+                  {
+                     const String * opTag = NULL;
+                     if (opTagPutMap)
+                     {
+                        for (uint32 j=0; j<opTagPutMapLength; j++)
+                        {
+                           const uint32 mapEntry     = opTagPutMap[j];
+                           const uint32 fieldNameIdx = (mapEntry>>12) & 0xFFF;
+                           if (fieldNameIdx == currentFieldNameIndex)
+                           {
+                              const uint32 valueIdx  = mapEntry & 0xFFF;
+                              if (valueIdx == i)
+                              {
+                                 opTag = msg()->GetStringPointer(_opTagFieldName, NULL, (mapEntry>>24)&0xFFF);
+                                 break;
+                              }
+                           }
+                        }
+                     }
+                     TreeNodeUpdated(nodePath, nodeRef, opTag?*opTag:GetEmptyString());
+                  }
+               }
             }
          }
       }
@@ -526,6 +559,8 @@ const String optOpTag = "TODO FIX THIS";
 
       case PR_RESULT_INDEXUPDATED:
       {
+         const String & optOpTag = GetEmptyString();  // TODO implement this!
+
          // Handle notifications of node-index changes
          for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_STRING_TYPE); iter.HasData(); iter++)
          {

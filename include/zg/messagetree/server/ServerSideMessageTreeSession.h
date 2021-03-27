@@ -9,6 +9,7 @@
 namespace zg {
 
 class ClientDataMessageTreeDatabaseObject;
+class MessageTreeDatabasePeerSession;
 
 /** This class is a StorageReflectSession that functions as one connected client's interface
   *  to a server that is implementing a database.  It runs inside a ReflectServer inside a server process.
@@ -41,6 +42,11 @@ public:
    const String & GetUndoKey() const {return _undoKey;}
 
 protected:
+   // StorageReflectSession overrides
+   virtual status_t UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const MessageRef & optMessageData);
+   virtual status_t UpdateSubscriptionIndexMessage(Message & subscriptionIndexMessage, const String & nodePath, char op, uint32 index, const String & key);
+   virtual status_t PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath);
+
    virtual void AddApplicationSpecificParametersToParametersResultMessage(Message & parameterResultsMsg) const;
    virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
 
@@ -60,6 +66,8 @@ private:
    bool _logOnAttachAndDetach;
 
    String _undoKey;
+
+   MessageTreeDatabasePeerSession * _dbSession;
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSession);
 

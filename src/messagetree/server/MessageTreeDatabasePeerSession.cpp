@@ -515,6 +515,12 @@ void MessageTreeDatabasePeerSession :: ServerSideMessageTreeSessionIsDetaching(S
    }
 }
 
+const String & MessageTreeDatabasePeerSession :: GetCurrentOpTagForNodePath(const String & nodePath) const
+{
+   const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(nodePath, NULL);
+   return mtDB ? mtDB->GetCurrentOpTag() : GetEmptyString();
+}
+
 int MessageTreeDatabasePeerSession :: GetSubscribedSessionsCallback(DataNode & node, void * ud)
 {
    const Hashtable<const String *, AbstractReflectSessionRef> & sessions = GetSessions();

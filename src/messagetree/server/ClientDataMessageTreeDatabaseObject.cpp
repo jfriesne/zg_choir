@@ -71,7 +71,7 @@ status_t ClientDataMessageTreeDatabaseObject :: RequestMoveIndexEntry(const Stri
    const status_t ret = MessageTreeDatabaseObject::RequestMoveIndexEntry(sharedPath, optBefore, optFilter, flags, optOpTag);
    if (ret.IsError()) return ret;
 
-   return ssmts->MoveIndexEntries(localPath, optBefore, optFilter);
+   return ssmts->MoveIndexEntries(localPath, optBefore.HasChars()?&optBefore:NULL, optFilter);
 }
 
 String ClientDataMessageTreeDatabaseObject :: GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const

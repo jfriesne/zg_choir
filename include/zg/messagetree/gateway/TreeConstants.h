@@ -2,6 +2,7 @@
 #define TreeConstants_h
 
 #include "zg/ZGNameSpace.h"
+#include "util/String.h"
 
 namespace zg {
 

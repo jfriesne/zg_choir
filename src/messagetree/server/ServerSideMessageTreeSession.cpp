@@ -5,9 +5,15 @@
 
 namespace zg {
 
+// These objects are stored in NetworkTreeGateway.cpp but we want to reference them here also
+extern const String _opTagFieldName;
+extern const String _opTagPutMap;
+extern const String _opTagRemoveMap;
+
 ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upstreamGateway)
    : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)
    , _undoKey("anon")
+   , _dbSession(NULL)
 {
    // empty
 }
@@ -19,18 +25,18 @@ ServerSideMessageTreeSession :: ~ServerSideMessageTreeSession()
 
 status_t ServerSideMessageTreeSession :: AttachedToServer()
 {
-   status_t ret = StorageReflectSession::AttachedToServer();
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(StorageReflectSession::AttachedToServer());
 
+   _dbSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();
    if (_logOnAttachAndDetach) LogTime(MUSCLE_LOG_INFO, "ServerSideMessageTreeSession %p:  Client at [%s] has connected to this server.\n", this, GetSessionRootPath()());
-   return ret;
+   return B_NO_ERROR;
 }
 
 void ServerSideMessageTreeSession :: AboutToDetachFromServer()
 {
    if (_logOnAttachAndDetach) LogTime(MUSCLE_LOG_INFO, "ServerSideMessageTreeSession %p:  Client at [%s] has disconnected from this server.\n", this, GetSessionRootPath()());
 
-   MessageTreeDatabasePeerSession * peerSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();
+   MessageTreeDatabasePeerSession * peerSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();  // doing a fresh lookup to avoid shutdown-order-of-operations problems
    if (peerSession) peerSession->ServerSideMessageTreeSessionIsDetaching(this);  // notify the ZGPeer so that any ClientDataMessageTreeDatabaseObjects can remove our shared nodes
 
    StorageReflectSession::AboutToDetachFromServer();
@@ -127,6 +133,68 @@ AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(c
    else MWARN_OUT_OF_MEMORY;
 
    return ret;
+}
+
+status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const MessageRef & optMessageData)
+{
+   int32 opTagIndex = -1;  // this will be set to the index of our optOptTag string within the _opTagFieldName field
+   const String & optOpTag = _dbSession ? _dbSession->GetCurrentOpTagForNodePath(nodePath) : GetEmptyString();
+   if (optOpTag.HasChars())
+   {  
+      const String * nextStr;
+      int32 arrayLen = 0;
+      for (; subscriptionMessage.FindString(_opTagFieldName, arrayLen, &nextStr).IsOK(); arrayLen++)
+      {  
+         if (*nextStr == optOpTag)
+         {  
+            opTagIndex = arrayLen;
+            break;
+         }
+      }
+      if (opTagIndex < 0)
+      {  
+         MRETURN_ON_ERROR(subscriptionMessage.AddString(_opTagFieldName, optOpTag));
+         opTagIndex = arrayLen;
+      }
+   }
+   
+   MRETURN_ON_ERROR(StorageReflectSession::UpdateSubscriptionMessage(subscriptionMessage, nodePath, optMessageData));
+
+   if (opTagIndex >= 0)
+   {  
+      if (optMessageData())
+      {  
+         // Harder case:  for each Message placed, we need to store its (fieldIndex,valueIndex) along with our own (opTagIndex)
+         uint32 numValuesInField = 0;
+         MRETURN_ON_ERROR(subscriptionMessage.GetInfo(nodePath, NULL, &numValuesInField));
+         
+         // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
+         const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionMessage.IndexOfName(nodePath) : (subscriptionMessage.GetNumNames()-1);
+         MRETURN_ON_ERROR(subscriptionMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
+      }   
+      else 
+      {
+         uint32 removeMapLength = 0, dataItemsLength = 0;
+         (void) subscriptionMessage.GetInfo(_opTagRemoveMap,           NULL, &removeMapLength);
+         (void) subscriptionMessage.GetInfo(PR_NAME_REMOVED_DATAITEMS, NULL, &dataItemsLength);
+         for (uint32 i=removeMapLength; (i+1)<dataItemsLength; i++) MRETURN_ON_ERROR(subscriptionMessage.AddInt32(_opTagRemoveMap, -1));  // in case optag-free items were previously addded
+         MRETURN_ON_ERROR(subscriptionMessage.ReplaceInt32(true, _opTagRemoveMap, dataItemsLength-1, opTagIndex)); // since PR_NAME_REMOVED_DATAITEMS is just a single list we only need to record the (opTagIndex) each item corresponds to
+      }
+   }
+   
+   return B_NO_ERROR;
+}
+
+status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message & subscriptionIndexMessage, const String & nodePath, char op, uint32 index, const String & key)
+{
+   // TODO:  implement this
+   return StorageReflectSession::UpdateSubscriptionIndexMessage(subscriptionIndexMessage, nodePath, op, index, key);
+}
+
+status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath)
+{
+   // TODO:  implement this
+   return StorageReflectSession::PruneSubscriptionMessage(subscriptionMessage, nodePath);
 }
 
 };
