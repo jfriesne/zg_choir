@@ -97,9 +97,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          const String optBefore = tok();
 
-         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), optBefore).IsOK(ret))
+         if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), optBefore, GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s])\n", path(), optBefore.HasChars()?optBefore():NULL);
+            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s]) [%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error uploading indexed Message to relative path [%s] (before [%s]) (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
       }

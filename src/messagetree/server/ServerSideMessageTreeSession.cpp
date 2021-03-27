@@ -9,6 +9,7 @@ namespace zg {
 extern const String _opTagFieldName;
 extern const String _opTagPutMap;
 extern const String _opTagRemoveMap;
+extern const String _opTagDummy;
 
 ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upstreamGateway)
    : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)
@@ -135,29 +136,30 @@ AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(c
    return ret;
 }
 
+static status_t GetOrPutOpTagIndex(Message & subscriptionMessage, const String & optOpTag, int & opTagIndex)
+{
+   int32 arrayLen = 0;
+
+   const String * nextStr;
+   for (; subscriptionMessage.FindString(_opTagFieldName, arrayLen, &nextStr).IsOK(); arrayLen++)
+   {  
+      if (*nextStr == optOpTag)
+      {  
+         opTagIndex = arrayLen;
+         return B_NO_ERROR;
+      }
+   }
+
+   opTagIndex = arrayLen;
+   return subscriptionMessage.AddString(_opTagFieldName, optOpTag);
+}
+
 status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const MessageRef & optMessageData)
 {
    int32 opTagIndex = -1;  // this will be set to the index of our optOptTag string within the _opTagFieldName field
    const String & optOpTag = _dbSession ? _dbSession->GetCurrentOpTagForNodePath(nodePath) : GetEmptyString();
-   if (optOpTag.HasChars())
-   {  
-      const String * nextStr;
-      int32 arrayLen = 0;
-      for (; subscriptionMessage.FindString(_opTagFieldName, arrayLen, &nextStr).IsOK(); arrayLen++)
-      {  
-         if (*nextStr == optOpTag)
-         {  
-            opTagIndex = arrayLen;
-            break;
-         }
-      }
-      if (opTagIndex < 0)
-      {  
-         MRETURN_ON_ERROR(subscriptionMessage.AddString(_opTagFieldName, optOpTag));
-         opTagIndex = arrayLen;
-      }
-   }
-   
+   if (optOpTag.HasChars()) MRETURN_ON_ERROR(GetOrPutOpTagIndex(subscriptionMessage, optOpTag, opTagIndex));
+
    MRETURN_ON_ERROR(StorageReflectSession::UpdateSubscriptionMessage(subscriptionMessage, nodePath, optMessageData));
 
    if (opTagIndex >= 0)
@@ -187,13 +189,45 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & sub
 
 status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message & subscriptionIndexMessage, const String & nodePath, char op, uint32 index, const String & key)
 {
-   // TODO:  implement this
-   return StorageReflectSession::UpdateSubscriptionIndexMessage(subscriptionIndexMessage, nodePath, op, index, key);
+   int32 opTagIndex = -1;  // this will be set to the index of our optOptTag string within the _opTagFieldName field
+   const String & optOpTag = _dbSession ? _dbSession->GetCurrentOpTagForNodePath(nodePath) : GetEmptyString();
+   if (optOpTag.HasChars()) MRETURN_ON_ERROR(GetOrPutOpTagIndex(subscriptionIndexMessage, optOpTag, opTagIndex));
+
+   MRETURN_ON_ERROR(StorageReflectSession::UpdateSubscriptionIndexMessage(subscriptionIndexMessage, nodePath, op, index, key));
+
+   if (opTagIndex >= 0)
+   {  
+      // Harder case:  for each String placed, we need to store its (fieldIndex,valueIndex) along with our own (opTagIndex)
+      uint32 numValuesInField = 0;
+      MRETURN_ON_ERROR(subscriptionIndexMessage.GetInfo(nodePath, NULL, &numValuesInField));
+      
+      // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
+      const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionIndexMessage.IndexOfName(nodePath) : (subscriptionIndexMessage.GetNumNames()-1);
+      MRETURN_ON_ERROR(subscriptionIndexMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
+   }
+
+   return B_NO_ERROR;
 }
 
 status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath)
 {
-   // TODO:  implement this
+   if ((subscriptionMessage.HasName(_opTagPutMap, B_STRING_TYPE))&&(subscriptionMessage.HasName(nodePath)))
+   {
+      // Oh dear, this Message has an _opTagPutMap in it, which means that fields in this Message are being referenced
+      // by the _opTagPutMap based on the index in which they appear in the Message.  So if we just remove a field from
+      // the Message, we're likely to break the _opTagPutMap!  To avoid that, we'll insert a dummy-field just before
+      // the field that the superclass-method is going to remove; that way any fields that come after the removed field
+      // will still retain their same field-name-index values afterwards, and the table won't be broken.
+      String dummyFieldName;
+      int dummyIdx = 0;
+      while(1)
+      {
+         dummyFieldName = String("__%1").Arg(dummyIdx++);
+         if (subscriptionMessage.HasName(dummyFieldName) == false) break;
+      }
+      MRETURN_ON_ERROR(subscriptionMessage.AddBool(dummyFieldName, false));
+      MRETURN_ON_ERROR(subscriptionMessage.MoveNameToBefore(dummyFieldName, nodePath));
+   }
    return StorageReflectSession::PruneSubscriptionMessage(subscriptionMessage, nodePath);
 }
 
