@@ -302,9 +302,9 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
 
    TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS);
    QueryFilterRef qfRef   = InstantiateQueryFilterAux(*msg(), 0);
-   const String & path    = *(msg()->GetStringPointer(NTG_NAME_PATH,   &GetEmptyString()));
-   const String & optB4   = *(msg()->GetStringPointer(NTG_NAME_BEFORE, &GetEmptyString()));
-   const String & tag     = *(msg()->GetStringPointer(NTG_NAME_TAG,    &GetEmptyString()));
+   const String & path    = msg()->GetStringReference(NTG_NAME_PATH);
+   const String & optB4   = msg()->GetStringReference(NTG_NAME_BEFORE);
+   const String & tag     = msg()->GetStringReference(NTG_NAME_TAG);
    MessageRef payload     = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 index      = msg()->GetInt32(NTG_NAME_INDEX);
 
@@ -434,9 +434,9 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
    GatewayCallbackBatchGuard<ITreeGateway> cbg(this);  // let everyone know when this Message's processing begins and ends
    if (muscleInRange(msg()->what, (uint32)BEGIN_PR_RESULTS, (uint32)END_PR_RESULTS)) return IncomingMuscledMessageReceivedFromServer(msg);
 
-   const String & path = *(msg()->GetStringPointer(NTG_NAME_PATH, &GetEmptyString()));
-   const String & tag  = *(msg()->GetStringPointer(NTG_NAME_TAG,  &GetEmptyString()));
-   const String & name = *(msg()->GetStringPointer(NTG_NAME_NAME, &GetEmptyString()));
+   const String & path = msg()->GetStringReference(NTG_NAME_PATH);
+   const String & tag  = msg()->GetStringReference(NTG_NAME_TAG);
+   const String & name = msg()->GetStringReference(NTG_NAME_NAME);
    MessageRef payload  = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 idx     = msg()->GetInt32(NTG_NAME_INDEX);
    
@@ -536,7 +536,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
             String nodePath;
             for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
                if (ConvertPathToSessionRelative(nodePath).IsOK())
-                  TreeNodeUpdated(nodePath, MessageRef(), hasOpTags ? *(msg()->GetStringPointer(_opTagFieldName, &GetEmptyString(), msg()->GetInt32(_opTagRemoveMap, -1, i))) : GetEmptyString());
+                  TreeNodeUpdated(nodePath, MessageRef(), hasOpTags ? msg()->GetStringReference(_opTagFieldName, msg()->GetInt32(_opTagRemoveMap, -1, i)) : GetEmptyString());
          }
 
          // Handle notifications of added/updated nodes

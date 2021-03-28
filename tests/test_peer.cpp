@@ -318,7 +318,7 @@ private:
             for (MessageFieldNameIterator fnIter(*cmdMsg(), B_STRING_TYPE); fnIter.HasData(); fnIter++)
             {
                const String & keyStr = fnIter.GetFieldName();
-               const String & valStr = *cmdMsg()->GetStringPointer(keyStr);
+               const String & valStr = cmdMsg()->GetStringReference(keyStr);
 
                String * oldValue = toyDB.Get(keyStr);
                if (oldValue)

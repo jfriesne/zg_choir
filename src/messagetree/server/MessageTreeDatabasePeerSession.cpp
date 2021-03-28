@@ -459,10 +459,9 @@ status_t MessageTreeDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whic
 
 void MessageTreeDatabasePeerSession :: HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg)
 {
-   const String * tag          = msg()->GetStringPointer(MTDPS_NAME_TAG);
    const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
    TreeGatewayFlags flags      = msg()->GetFlat<TreeGatewayFlags>(MTDPS_NAME_FLAGS);
-   if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(*tag, whichDatabase);
+   if ((flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY) == false)&&(sourcePeerID == GetLocalPeerID())) TreeSeniorPeerPonged(msg()->GetStringReference(MTDPS_NAME_TAG), whichDatabase);
 }
 
 status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, uint32 & retID)
@@ -545,7 +544,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
             MessageRef payload          = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
             const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
             const uint32 whichDB        = msg()->GetInt32(MTDPS_NAME_WHICHDB);
-            const String & tag          = *(msg()->GetStringPointer(MTDPS_NAME_TAG, &GetEmptyString()));
+            const String & tag          = msg()->GetStringReference(MTDPS_NAME_TAG);
             if (payload())
             {
                MessageReceivedFromTreeGatewaySubscriber(sourcePeerID, payload, whichDB, tag);
@@ -557,10 +556,10 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
 
       case MTDPS_COMMAND_MESSAGEFROMSENIORPEER:
       {
-         MessageRef payload          = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
+         MessageRef payload            = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
          //const ZGPeerID sourcePeerID = msg()->GetFlat<ZGPeerID>(MTDPS_NAME_SOURCE);
-         const uint32 whichDB        = msg()->GetInt32(MTDPS_NAME_WHICHDB);
-         const String & tag          = *(msg()->GetStringPointer(MTDPS_NAME_TAG, &GetEmptyString()));
+         const uint32 whichDB          = msg()->GetInt32(MTDPS_NAME_WHICHDB);
+         const String & tag            = msg()->GetStringReference(MTDPS_NAME_TAG);
          if (payload())
          {
             MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
@@ -578,8 +577,8 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
          }
 
          MessageRef payload  = msg()->GetMessage(MTDPS_NAME_PAYLOAD);
-         const String & path = *(msg()->GetStringPointer(MTDPS_NAME_PATH, &GetEmptyString()));
-         const String & tag  = *(msg()->GetStringPointer(MTDPS_NAME_TAG,  &GetEmptyString()));
+         const String & path = msg()->GetStringReference(MTDPS_NAME_PATH);
+         const String & tag  = msg()->GetStringReference(MTDPS_NAME_TAG);
          if (payload())
          {
             String suffix;  // will contain everything but the {peerID}:

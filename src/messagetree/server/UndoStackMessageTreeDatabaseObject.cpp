@@ -107,7 +107,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
    {
       case UNDOSTACK_COMMAND_BEGINSEQUENCE: case UNDOSTACK_COMMAND_ENDSEQUENCE:
       {
-         const String & clientKey   = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
+         const String & clientKey   = msg()->GetStringReference(UNDOSTACK_NAME_UNDOKEY);
          const String undoNodePath  = GetRootPathWithSlash() + UNDOSTACK_NODENAME_UNDO + "/" + (clientKey.HasChars() ? clientKey : "default");
          const bool isBeginSequence = (msg()->what == UNDOSTACK_COMMAND_BEGINSEQUENCE);
 
@@ -206,8 +206,8 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
       {
          const bool isRedo         = (msg()->what == UNDOSTACK_COMMAND_REDO);
          const char * desc         = isRedo ? "redo" : "undo";
-         const String & clientKey  = *(msg()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString()));
-         const String & optOpTag   = *(msg()->GetStringPointer(UNDOSTACK_NAME_LABEL,   &GetEmptyString()));
+         const String & clientKey  = msg()->GetStringReference(UNDOSTACK_NAME_UNDOKEY);
+         const String & optOpTag   = msg()->GetStringReference(UNDOSTACK_NAME_LABEL);
          const String fromNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_REDO : UNDOSTACK_NODENAME_UNDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
          const String destNodePath = GetRootPathWithSlash() + (isRedo ? UNDOSTACK_NODENAME_UNDO : UNDOSTACK_NODENAME_REDO) + "/" + (clientKey.HasChars() ? clientKey : "default");
 
@@ -244,8 +244,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                      ConstMessageRef payload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
                      if (payload())
                      {
-                        const String * nextKey = payload()->GetStringPointer(UNDOSTACK_NAME_UNDOKEY, &GetEmptyString());
-                        if (*nextKey == clientKey)  // only undo or redo actions that were uploaded by our own client!
+                        if (payload()->GetStringReference(UNDOSTACK_NAME_UNDOKEY) == clientKey)  // only undo or redo actions that were uploaded by our own client!
                         {
                            MessageRef subMsg;
                            if ((payload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK())&&(SeniorMessageTreeUpdateAux(subMsg).IsError(ret))) return ret;

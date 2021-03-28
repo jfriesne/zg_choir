@@ -131,8 +131,8 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
       {
          MessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String & path          = *msg()->GetStringPointer(MTDO_NAME_PATH, &GetEmptyString());
-         const String & optOpTag      = *msg()->GetStringPointer(MTDO_NAME_TAG,  &GetEmptyString());
+         const String & path          = msg()->GetStringReference(MTDO_NAME_PATH);
+         const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
          ConstQueryFilterRef qfRef    = msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK() ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
          return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), optOpTag);
@@ -143,9 +143,9 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
       {
          MessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-         const String & path          = *(msg()->GetStringPointer(MTDO_NAME_PATH,   &GetEmptyString()));
-         const String & optBefore     = *(msg()->GetStringPointer(MTDO_NAME_BEFORE, &GetEmptyString()));
-         const String & optOpTag      = *(msg()->GetStringPointer(MTDO_NAME_TAG,    &GetEmptyString()));
+         const String & path          = msg()->GetStringReference(MTDO_NAME_PATH);
+         const String & optBefore     = msg()->GetStringReference(MTDO_NAME_BEFORE);
+         const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
          ConstQueryFilterRef qfRef    = msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK() ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
          return MoveIndexEntries(DatabaseSubpathToSessionRelativePath(path), optBefore, qfRef, optOpTag);
@@ -454,14 +454,14 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
    MessageRef optPayload   = msg.GetMessage(MTDO_NAME_PAYLOAD);
-   const String & path     = *(msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString()));
-   const String & optOpTag = *(msg.GetStringPointer(MTDO_NAME_TAG,  &GetEmptyString()));
+   const String & path     = msg.GetStringReference(MTDO_NAME_PATH);
+   const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
  
    DECLARE_OP_TAG_GUARD;
 
    if (optPayload())
    {
-      const String & optBefore   = *(msg.GetStringPointer(MTDO_NAME_BEFORE, &GetEmptyString()));
+      const String & optBefore   = msg.GetStringReference(MTDO_NAME_BEFORE);
       String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path);
       if ((IsInSeniorDatabaseUpdateContext())&&(sessionRelativePath.EndsWith('/')))
       {
@@ -487,7 +487,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
 status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message & msg)
 {
-   const String & path = *(msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString()));
+   const String & path = msg.GetStringReference(MTDO_NAME_PATH);
    if (IsOkayToHandleUpdateMessage(path, TreeGatewayFlags()) == false) return B_NO_ERROR;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
@@ -495,8 +495,8 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    DataNode * node = zsh->GetDataNode(sessionRelativePath);
    if (node) 
    {
-      const String & key      = *(msg.GetStringPointer(MTDO_NAME_KEY,  &GetEmptyString()));
-      const String & optOpTag = *(msg.GetStringPointer(MTDO_NAME_TAG,  &GetEmptyString()));
+      const String & key      = msg.GetStringReference(MTDO_NAME_KEY);
+      const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
       const int32 index       = msg.GetInt32(MTDO_NAME_INDEX);
 
       DECLARE_OP_TAG_GUARD;
@@ -519,11 +519,11 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
    MessageRef payload  = msg.GetMessage(MTDO_NAME_PAYLOAD);
-   const String & path = *(msg.GetStringPointer(MTDO_NAME_PATH, &GetEmptyString()));
+   const String & path = msg.GetStringReference(MTDO_NAME_PATH);
    if (payload())
    {
       TreeGatewayFlags flags  = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
-      const String & optOpTag = *(msg.GetStringPointer(MTDO_NAME_TAG,  &GetEmptyString()));
+      const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
 
       DECLARE_OP_TAG_GUARD;
 

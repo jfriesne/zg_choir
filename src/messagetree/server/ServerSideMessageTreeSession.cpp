@@ -221,8 +221,8 @@ status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subs
          const uint32 fieldNameIndex = (nextEntry >> 12) & 0xFFF;
          const uint32 valueIndex     = (nextEntry >> 00) & 0xFFF;
 
-              if (fieldNameIndex == nodePathIndex) (void) subscriptionMessage.RemoveData(_opTagPutMap, i--);
-         else if (fieldNameIndex  > nodePathIndex) (void) subscriptionMessage.ReplaceInt32(false, _opTagPutMap, i, (opTagIndex<<24)|((fieldNameIndex-1)<<12)|(valueIndex));
+              if (fieldNameIndex == (uint32)nodePathIndex) (void) subscriptionMessage.RemoveData(_opTagPutMap, i--);
+         else if (fieldNameIndex  > (uint32)nodePathIndex) (void) subscriptionMessage.ReplaceInt32(false, _opTagPutMap, i, (opTagIndex<<24)|((fieldNameIndex-1)<<12)|(valueIndex));
       }
    }
 
