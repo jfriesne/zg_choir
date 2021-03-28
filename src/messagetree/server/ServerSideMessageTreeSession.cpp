@@ -211,23 +211,21 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message 
 
 status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath)
 {
-   if ((subscriptionMessage.HasName(_opTagPutMap, B_STRING_TYPE))&&(subscriptionMessage.HasName(nodePath)))
+   const int32 nodePathIndex = subscriptionMessage.HasName(_opTagPutMap, B_STRING_TYPE) ? subscriptionMessage.IndexOfName(nodePath) : -1;
+   if (nodePathIndex >= 0)
    {
-      // Oh dear, this Message has an _opTagPutMap in it, which means that fields in this Message are being referenced
-      // by the _opTagPutMap based on the index in which they appear in the Message.  So if we just remove a field from
-      // the Message, we're likely to break the _opTagPutMap!  To avoid that, we'll insert a dummy-field just before
-      // the field that the superclass-method is going to remove; that way any fields that come after the removed field
-      // will still retain their same field-name-index values afterwards, and the table won't be broken.
-      String dummyFieldName;
-      int dummyIdx = 0;
-      while(1)
-      {
-         dummyFieldName = String("__%1").Arg(dummyIdx++);
-         if (subscriptionMessage.HasName(dummyFieldName) == false) break;
+      uint32 nextEntry = 0;
+      for (uint32 i=0; subscriptionMessage.FindInt32(_opTagPutMap, i, nextEntry).IsOK(); i++)
+      { 
+         const uint32 opTagIndex     = (nextEntry >> 24) & 0xFFF;
+         const uint32 fieldNameIndex = (nextEntry >> 12) & 0xFFF;
+         const uint32 valueIndex     = (nextEntry >> 00) & 0xFFF;
+
+              if (fieldNameIndex == nodePathIndex) (void) subscriptionMessage.RemoveData(_opTagPutMap, i--);
+         else if (fieldNameIndex  > nodePathIndex) (void) subscriptionMessage.ReplaceInt32(false, _opTagPutMap, i, (opTagIndex<<24)|((fieldNameIndex-1)<<12)|(valueIndex));
       }
-      MRETURN_ON_ERROR(subscriptionMessage.AddBool(dummyFieldName, false));
-      MRETURN_ON_ERROR(subscriptionMessage.MoveNameToBefore(dummyFieldName, nodePath));
    }
+
    return StorageReflectSession::PruneSubscriptionMessage(subscriptionMessage, nodePath);
 }
 
