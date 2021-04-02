@@ -40,6 +40,7 @@ RESOURCES = ./samples/samples.qrc \
 
 MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/dataio/ByteBufferDataIO.cpp             \
+                 $$MUSCLE_DIR/dataio/ByteBufferPacketDataIO.cpp       \
                  $$MUSCLE_DIR/dataio/FileDataIO.cpp                   \
                  $$MUSCLE_DIR/dataio/StdinDataIO.cpp                  \
                  $$MUSCLE_DIR/dataio/SimulatedMulticastDataIO.cpp     \
@@ -49,6 +50,7 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/iogateway/MessageIOGateway.cpp          \
                  $$MUSCLE_DIR/iogateway/PlainTextMessageIOGateway.cpp \
                  $$MUSCLE_DIR/iogateway/PacketTunnelIOGateway.cpp     \
+                 $$MUSCLE_DIR/iogateway/ProxyIOGateway.cpp            \
                  $$MUSCLE_DIR/message/Message.cpp                     \
                  $$MUSCLE_DIR/qtsupport/QMessageTransceiverThread.cpp \
                  $$MUSCLE_DIR/reflector/AbstractReflectSession.cpp    \

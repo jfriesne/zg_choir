@@ -37,6 +37,7 @@ win32:INCLUDEPATH += $$MUSCLE_DIR/regex/regex
 
 MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/dataio/ByteBufferDataIO.cpp             \
+                 $$MUSCLE_DIR/dataio/ByteBufferPacketDataIO.cpp       \
                  $$MUSCLE_DIR/dataio/ChildProcessDataIO.cpp           \
                  $$MUSCLE_DIR/dataio/FileDataIO.cpp                   \
                  $$MUSCLE_DIR/dataio/StdinDataIO.cpp                  \
@@ -45,8 +46,9 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/dataio/UDPSocketDataIO.cpp              \
                  $$MUSCLE_DIR/iogateway/AbstractMessageIOGateway.cpp  \
                  $$MUSCLE_DIR/iogateway/MessageIOGateway.cpp          \
-                 $$MUSCLE_DIR/iogateway/PlainTextMessageIOGateway.cpp \
                  $$MUSCLE_DIR/iogateway/PacketTunnelIOGateway.cpp     \
+                 $$MUSCLE_DIR/iogateway/PlainTextMessageIOGateway.cpp \
+                 $$MUSCLE_DIR/iogateway/ProxyIOGateway.cpp            \
                  $$MUSCLE_DIR/message/Message.cpp                     \
                  $$MUSCLE_DIR/reflector/AbstractReflectSession.cpp    \
                  $$MUSCLE_DIR/reflector/DataNode.cpp                  \
