@@ -326,23 +326,23 @@ class GatewaySubscriberUndoBatchGuard : public NotCopyable
 public:
    /**
     * Constructor
-    * @param sub pointer to the subscriber object to call BeginUndo() on
+    * @param optSub pointer to the subscriber object to call BeginUndo() on
     * @param label a human-readable label used to describe the undo-action to the user.  Defaults to an empty string.
     * @param whichDB index of the database that the action is going to operate on.  Defaults to 0.
     */
-   GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* sub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _sub(sub), _label(label), _whichDB(whichDB)
+   GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* optSub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _optSub(optSub), _label(label), _whichDB(whichDB)
    {
-      _sub->BeginUndoSequence(label, whichDB);
+      if (_optSub) _optSub->BeginUndoSequence(label, whichDB);
    }
     
    /**
     * Destructor
     * Calls EndUndoSequence on the subscriber object
     */
-   ~GatewaySubscriberUndoBatchGuard() {_sub->EndUndoSequence(_label, _whichDB);}
+   ~GatewaySubscriberUndoBatchGuard() {if (_optSub) _optSub->EndUndoSequence(_label, _whichDB);}
     
 private:
-   ITreeGatewaySubscriber * _sub;
+   ITreeGatewaySubscriber * _optSub;
    const String _label;
    const uint32 _whichDB;
 };
