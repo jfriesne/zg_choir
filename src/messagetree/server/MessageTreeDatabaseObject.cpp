@@ -475,11 +475,10 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
          sessionRelativePath += buf;
       }
 
-//printf("   SetDataNode [%s] -> %p (%s) (indexed=%i optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED), optBefore());
+//printf("   SetDataNode [%s] -> %p (%s) (flags=%s optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.ToHexString()(), optBefore());
       SetDataNodeFlags sdnFlags;
-      if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
-      if (flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)) sdnFlags.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
-      return zsh->SetDataNode(sessionRelativePath, optPayload, sdnFlags, optBefore.HasChars()?&optBefore:NULL);
+      const status_t ret = zsh->SetDataNode(sessionRelativePath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
+      return ((ret.IsOK())||((ret == B_ACCESS_DENIED)&&(flags.AreAnyOfTheseBitsSet(TREE_GATEWAY_FLAG_DONTCREATENODE, TREE_GATEWAY_FLAG_DONTOVERWRITEDATA)))) ? B_NO_ERROR : ret;
    }
    else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
@@ -620,6 +619,17 @@ status_t MessageTreeDatabaseObject :: SendMessageToTreeGatewaySubscriber(const Z
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    return zsh ? zsh->SendMessageToTreeGatewaySubscriber(toPeerID, tag, payload, GetDatabaseIndex()) : B_BAD_OBJECT;
+}
+
+SetDataNodeFlags MessageTreeDatabaseObject :: ConvertTreeGatewayFlagsToSetDataNodeFlags(TreeGatewayFlags tgf) const
+{
+   SetDataNodeFlags sdnf;
+   if (tgf.IsBitSet(TREE_GATEWAY_FLAG_INDEXED))           sdnf.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
+   if (tgf.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY))           sdnf.SetBit(SETDATANODE_FLAG_QUIET);
+   if (tgf.IsBitSet(TREE_GATEWAY_FLAG_DONTCREATENODE))    sdnf.SetBit(SETDATANODE_FLAG_DONTCREATENODE);
+   if (tgf.IsBitSet(TREE_GATEWAY_FLAG_DONTOVERWRITEDATA)) sdnf.SetBit(SETDATANODE_FLAG_DONTOVERWRITEDATA);
+   if (tgf.IsBitSet(TREE_GATEWAY_FLAG_ENABLESUPERCEDE))   sdnf.SetBit(SETDATANODE_FLAG_ENABLESUPERCEDE);
+   return sdnf;
 }
 
 }; // end namespace zg

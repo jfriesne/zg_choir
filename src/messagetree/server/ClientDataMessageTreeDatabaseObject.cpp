@@ -29,10 +29,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    if (ret.IsError()) return ret;
 
    // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
-   SetDataNodeFlags sdnFlags;
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)) sdnFlags.SetBit(SETDATANODE_FLAG_ADDTOINDEX);
-   return ssmts->SetDataNode(localPath, optPayload, sdnFlags, optBefore.HasChars()?&optBefore:NULL);
+   return ssmts->SetDataNode(localPath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
 }
 
 status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)

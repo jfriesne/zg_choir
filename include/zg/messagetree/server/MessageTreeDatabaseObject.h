@@ -290,6 +290,13 @@ protected:
    };
    #define DECLARE_OP_TAG_GUARD const OpTagGuard tagGuard(optOpTag, this)
 
+   /** Convenience method for when we want to call SetDataNode(); returns the set of SETDATANODE_FLAGS_* bits
+     * that corresponds to the passed-in set of TREE_GATEWAY_FLAG_* bits that pertain to uploading a data-node.
+     * @param tgf a set of TREE_GATEWAY_FLAG_* bits
+     * @returns the corresponding set of SETDATANODE_FLAG_* bits.
+     */
+   SetDataNodeFlags ConvertTreeGatewayFlagsToSetDataNodeFlags(TreeGatewayFlags tgf) const;
+
 private:
    class SafeQueryFilter : public QueryFilter
    {
