@@ -31,6 +31,9 @@ public:
    void SetAnimationActive(bool a);
    bool IsAnimationActive() const {return _animationActive;}
 
+signals:
+   void clicked();
+
 private:
    const INetworkTimeProvider * _networkTimeProvider;
 

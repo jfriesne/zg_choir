@@ -179,6 +179,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
 
                _timeSyncWidget = new TimeSyncWidget(_connection);
                _timeSyncWidget->setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored));
+               connect(_timeSyncWidget, SIGNAL(clicked()), this, SLOT(TimeSyncWidgetClicked()));
                tbrLayout->addWidget(_timeSyncWidget);
 
                tbrLayout->addSpacing(5);
@@ -263,6 +264,11 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    }
 
    ScheduleUpdateStatus();
+}
+
+void FridgeClientWindow :: TimeSyncWidgetClicked()
+{
+   if (_connection) _connection->RequestSessionParameters();  // just to demonstrate that how to request them
 }
 
 void FridgeClientWindow :: ClearMagnets()

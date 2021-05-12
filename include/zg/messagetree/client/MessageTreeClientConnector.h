@@ -35,9 +35,22 @@ public:
      */
    void SetUndoKey(const String & undoKey) {_undoKey = undoKey;}
 
+   /** Call this while connected if you want to request the session-parameters from the local server.
+     * On success, it will result in SessionParametersReceived() being called when the current session-parameters
+     * Message (a PR_RESULT_PARAMETERS Message from the server's StorageReflectSession implementation) is received.
+     * @returns B_NO_ERROR on success, or some other error code on failure.
+     */
+   status_t RequestSessionParameters();
+
 protected:
    virtual void ConnectionStatusUpdated(const MessageRef & optServerInfo);
    virtual void MessageReceivedFromNetwork(const MessageRef & msg);
+
+   /** Called when the PR_RESULT_PARAMETERS Message is received in response to an earlier
+     * call to RequestSessionParameters().  Default implementation just prints the contents
+     * of (msg) to stdout.
+     */
+   virtual void SessionParametersReceived(const MessageRef & msg);
 
 private:
    ClientSideNetworkTreeGateway _networkGateway;

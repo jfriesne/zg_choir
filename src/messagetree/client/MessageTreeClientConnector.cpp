@@ -28,7 +28,7 @@ void MessageTreeClientConnector :: ConnectionStatusUpdated(const MessageRef & op
    if (optServerInfo())
    {
       status_t ret;
-      if (SendOutgoingMessageToNetwork(GetMessageFromPool(PR_COMMAND_GETPARAMETERS)).IsOK(ret)) _expectingParameters = true;
+      if (RequestSessionParameters().IsOK(ret)) _expectingParameters = true;
       else
       {
          LogTime(MUSCLE_LOG_ERROR, "Couldn't send PR_COMMAND_GETPARAMETERS to server! [%s]\n", ret());
@@ -48,13 +48,28 @@ void MessageTreeClientConnector :: ConnectionStatusUpdated(const MessageRef & op
 
 void MessageTreeClientConnector :: MessageReceivedFromNetwork(const MessageRef & msg)
 {
-   if ((_expectingParameters)&&(msg()->what == PR_RESULT_PARAMETERS))
+   if (msg()->what == PR_RESULT_PARAMETERS)
    {
-      _expectingParameters = false;
-      _networkGateway.SetParameters(msg);
-      _networkGateway.SetNetworkConnected(true);
+      if (_expectingParameters)
+      {
+         _expectingParameters = false;
+         _networkGateway.SetParameters(msg);
+         _networkGateway.SetNetworkConnected(true);
+      }
+      else SessionParametersReceived(msg);
    }
    else _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
+}
+
+status_t MessageTreeClientConnector :: RequestSessionParameters()
+{
+   return SendOutgoingMessageToNetwork(GetMessageFromPool(PR_COMMAND_GETPARAMETERS));
+}
+
+void MessageTreeClientConnector :: SessionParametersReceived(const MessageRef & msg)
+{
+   printf("MessageTreeClientConnector::SessionParametersReceived():\n");
+   msg()->PrintToStream();
 }
 
 };

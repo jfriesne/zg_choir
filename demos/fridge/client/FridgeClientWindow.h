@@ -58,6 +58,7 @@ private slots:
    void SaveProject();
    void Undo();
    void Redo();
+   void TimeSyncWidgetClicked();
 
 private:
    void UpdateGUI();

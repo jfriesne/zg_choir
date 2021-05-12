@@ -52,6 +52,7 @@ void TimeSyncWidget :: mousePressEvent(QMouseEvent * e)
 {
    e->accept(); 
    SetAnimationActive(!IsAnimationActive());
+   emit clicked();
 }
 
 void TimeSyncWidget :: SetAnimationActive(bool active)
