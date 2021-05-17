@@ -187,7 +187,7 @@ int RunFridgeServerProcess(const char * systemName)
    // Allocate a TCP port to accept incoming client connections on
    status_t ret;
    uint16 acceptPort;
-   if (server.PutAcceptFactory(0, ReflectSessionFactoryRef(&sssFactory, false), invalidIP, &acceptPort).IsError(ret))
+   if (server.PutAcceptFactory(0, DummyReflectSessionFactoryRef(sssFactory), invalidIP, &acceptPort).IsError(ret))
    {
       LogTime(MUSCLE_LOG_WARNING, "Couldn't bind to a TCP port to accept incoming connections, exiting!\n");
       return exitCode;
@@ -197,9 +197,9 @@ int RunFridgeServerProcess(const char * systemName)
    LogTime(MUSCLE_LOG_INFO, "Listening for incoming client TCP connections (from FridgeClient) on port %u\n", acceptPort);
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
-   if ((server.AddNewSession(ZGStdinSessionRef(        &stdinSession,      false)).IsOK(ret))
-     &&(server.AddNewSession(ZGPeerSessionRef(         &fridgePeerSession, false)).IsOK(ret))
-     &&(server.AddNewSession(DiscoveryServerSessionRef(&sdss,              false)).IsOK(ret)))
+   if ((server.AddNewSession(DummyZGStdinSessionRef(stdinSession)).IsOK(ret))
+     &&(server.AddNewSession(DummyZGPeerSessionRef(fridgePeerSession)).IsOK(ret))
+     &&(server.AddNewSession(DummyDiscoveryServerSessionRef(sdss)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit

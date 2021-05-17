@@ -152,7 +152,7 @@ int main(int argc, char ** argv)
    // we find one that's open.
    status_t ret;
    uint16 acceptPort = TREE_PEER_SERVER_PORT;
-   while(server.PutAcceptFactory(acceptPort, ReflectSessionFactoryRef(&sssFactory, false)).IsError(ret))
+   while(server.PutAcceptFactory(acceptPort, DummyReflectSessionFactoryRef(sssFactory)).IsError(ret))
    {
       if ((acceptPort-TREE_PEER_SERVER_PORT) >= 1000)
       {
@@ -168,9 +168,9 @@ int main(int argc, char ** argv)
    LogTime(MUSCLE_LOG_INFO, "Listening for incoming client TCP connections (from tree_client) on port %u\n", acceptPort);
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
-   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK(ret)))&&
-       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK(ret))&&
-       (server.AddNewSession(DiscoveryServerSessionRef(&sdss, false)).IsOK(ret)))
+   if (((IsDaemonProcess())||(server.AddNewSession(DummyZGStdinSessionRef(zgStdinSession)).IsOK(ret)))&&
+       (server.AddNewSession(DummyZGPeerSessionRef(zgPeerSession)).IsOK(ret))&&
+       (server.AddNewSession(DummyDiscoveryServerSessionRef(sdss)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit

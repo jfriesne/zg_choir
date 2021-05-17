@@ -175,7 +175,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
             {
                // Parse the incoming ping-Message
                inputBB.AdoptBuffer(numTimeSyncBytesRead, buf);
-               MessageRef pingMsg = timeSyncGateway.CallUnflattenHeaderAndMessage(ConstByteBufferRef(&inputBB, false));
+               MessageRef pingMsg = timeSyncGateway.CallUnflattenHeaderAndMessage(DummyConstByteBufferRef(inputBB));
                if ((pingMsg())&&(pingMsg()->AddInt64("stm", currentNetworkTime).IsOK()))
                {
                   ConstByteBufferRef outputBB = timeSyncGateway.CallFlattenHeaderAndMessage(pingMsg);

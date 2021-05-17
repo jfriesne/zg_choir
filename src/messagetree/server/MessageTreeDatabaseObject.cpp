@@ -552,9 +552,9 @@ status_t MessageTreeDatabaseObject :: RemoveDataNodes(const String & nodePath, c
    DECLARE_OP_TAG_GUARD;
 
    const SafeQueryFilter safeQF(this);
-   AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
+   AndQueryFilter andQF = AndQueryFilter(DummyConstQueryFilterRef(safeQF));
    if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
-   return zsh->RemoveDataNodes(nodePath, ConstQueryFilterRef(&andQF, false), quiet);
+   return zsh->RemoveDataNodes(nodePath, DummyConstQueryFilterRef(andQF), quiet);
 }
 
 // Like StorageReflectSession::MoveIndexEntries(), except it is careful not to modify the indices of any data nodes that aren't part of our own database
@@ -566,9 +566,9 @@ status_t MessageTreeDatabaseObject :: MoveIndexEntries(const String & nodePath, 
    DECLARE_OP_TAG_GUARD;
 
    const SafeQueryFilter safeQF(this);
-   AndQueryFilter andQF(ConstQueryFilterRef(&safeQF, false));
+   AndQueryFilter andQF = AndQueryFilter(DummyConstQueryFilterRef(safeQF));
    if (filterRef()) (void) andQF.GetChildren().AddTail(filterRef);
-   return zsh->MoveIndexEntries(nodePath, optBefore.HasChars()?&optBefore:NULL, ConstQueryFilterRef(&andQF, false));
+   return zsh->MoveIndexEntries(nodePath, optBefore.HasChars()?&optBefore:NULL, DummyConstQueryFilterRef(andQF));
 }
 
 MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeDatabasePeerSession() const 

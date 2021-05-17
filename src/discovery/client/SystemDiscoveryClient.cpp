@@ -415,7 +415,7 @@ protected:
       // We need to keep track of when the set of available network interfaces changes
       status_t ret;
       DetectNetworkConfigChangesSession dnccs;
-      if (server.AddNewSession(AbstractReflectSessionRef(&dnccs, false)).IsError(ret))
+      if (server.AddNewSession(DummyAbstractReflectSessionRef(dnccs)).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "DiscoveryServer:  Couldn't add DetectNetworkChangesSession! [%s]\n", ret());
          return;
@@ -423,7 +423,7 @@ protected:
 
       // We need to watch our notification-socket to know when it is time to exit
       DiscoveryClientManagerSession cdms(this, _master._queryFilter, _master._pingInterval);
-      if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
+      if (server.AddNewSession(DummyAbstractReflectSessionRef(cdms), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "DiscoveryServer:  Couldn't add DiscoveryClientManagerSession! [%s]\n", ret());
          return;

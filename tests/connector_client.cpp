@@ -20,7 +20,7 @@ int main(int argc, char ** argv)
 
    StdinDataIO stdinDataIO(false);  // will listen for text input on stdin
    PlainTextMessageIOGateway stdinGateway;  // will parse the text input from stdin into lines for us
-   stdinGateway.SetDataIO(DataIORef(&stdinDataIO, false));
+   stdinGateway.SetDataIO(DummyDataIORef(stdinDataIO));
 
    status_t ret;
    MessageTreeClientConnector mtcc(&scm);  // handles our TCP connection to a server

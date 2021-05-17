@@ -51,10 +51,8 @@ void PZGThreadedSession :: MessageReceivedFromGateway(const MessageRef & /*msg*/
 
 status_t PZGThreadedSession :: TellInternalThreadToRecreateMulticastSockets()
 {
-   static Message recreateSocketsMsg(PZG_THREADED_SESSION_RECREATE_SOCKETS);
-   MessageRef msgRef(&recreateSocketsMsg, false);
-
-   return SendMessageToInternalThread(msgRef);
+   static Message _recreateSocketsMsg(PZG_THREADED_SESSION_RECREATE_SOCKETS);
+   return SendMessageToInternalThread(DummyMessageRef(_recreateSocketsMsg));
 }
 
 };  // end namespace zg_private

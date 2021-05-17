@@ -172,7 +172,7 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
             // Hmm, race condition caused us to end up with beacon data from the wrong senior peer? 
             // we'd better as the I/O thread to try again
             static Message _retryMsg(PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA);
-            if (SendMessageToInternalThread(MessageRef(&_retryMsg, false)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
+            if (SendMessageToInternalThread(DummyMessageRef(_retryMsg)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
          } 
       }
       else _master->PrivateMessageReceivedFromPeer(tag.GetPeerID(), msg);

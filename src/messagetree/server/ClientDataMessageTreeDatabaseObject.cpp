@@ -100,11 +100,11 @@ void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetach
          const String ipPath = sharedPath.Substring(0, lastSlash);
 
          static const ChildCountQueryFilter _noKids(ChildCountQueryFilter::OP_EQUAL_TO, 0);
-         (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath, ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags(), GetEmptyString());
+         (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath, DummyConstQueryFilterRef(_noKids), TreeGatewayFlags(), GetEmptyString());
 
          // And if the grandparent/peer-ID node has also become empty, we can delete that too
          lastSlash = ipPath.LastIndexOf('/');
-         if (lastSlash > 0) (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath.Substring(0, lastSlash), ConstQueryFilterRef(&_noKids, false), TreeGatewayFlags(), GetEmptyString());
+         if (lastSlash > 0) (void) MessageTreeDatabaseObject::RequestDeleteNodes(ipPath.Substring(0, lastSlash), DummyConstQueryFilterRef(_noKids), TreeGatewayFlags(), GetEmptyString());
       }
    }
 }
@@ -137,14 +137,14 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
       }
 
       // Tell all of the junior peers to resend their local data to us, in case it got corrupted during the confusion
-      SendMessageToDatabaseObject(ZGPeerID(), MessageRef(&_uploadLocalDataRequestMsg, false));
+      SendMessageToDatabaseObject(ZGPeerID(), DummyMessageRef(_uploadLocalDataRequestMsg));
    }
 }
 
 void ClientDataMessageTreeDatabaseObject :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
    MessageTreeDatabaseObject::PeerHasComeOnline(peerID, peerInfo);
-   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) SendMessageToDatabaseObject(peerID, MessageRef(&_uploadLocalDataRequestMsg, false));
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) SendMessageToDatabaseObject(peerID, DummyMessageRef(_uploadLocalDataRequestMsg));
 }
 
 void ClientDataMessageTreeDatabaseObject :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)

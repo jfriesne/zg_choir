@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
 
    StdinDataIO stdinDataIO(false);
    PlainTextMessageIOGateway plainTextGateway;  // for parsing data read from stdin
-   plainTextGateway.SetDataIO(DataIORef(&stdinDataIO, false));
+   plainTextGateway.SetDataIO(DummyDataIORef(stdinDataIO));
 
    LogTime(MUSCLE_LOG_INFO, "This program implements a super-rudimentary text chat via IPv6 UDP multicast packets.\n");
    LogTime(MUSCLE_LOG_INFO, "You can run several instances of it, type text into one instance, and see it appear in the other instances.\n");

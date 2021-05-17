@@ -389,7 +389,7 @@ protected:
       // We need to keep track of when the set of available network interfaces changes
       status_t ret;
       DetectNetworkConfigChangesSession dnccs;
-      if (server.AddNewSession(AbstractReflectSessionRef(&dnccs, false)).IsError(ret))
+      if (server.AddNewSession(DummyAbstractReflectSessionRef(dnccs)).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "MulticastUDPServer:  Couldn't add DetectNetworkChangesSession! [%s]\n", ret());
          return;
@@ -397,7 +397,7 @@ protected:
 
       // We need to watch our notification-socket to know when it is time to exit
       MulticastUDPClientManagerSession cdms(this, _master._transmissionKey, (_master._perSenderMaxBacklogDepth > 0), _multicastBehavior, _nicNameFilter);
-      if (server.AddNewSession(AbstractReflectSessionRef(&cdms, false), GetInternalThreadWakeupSocket()).IsError(ret))
+      if (server.AddNewSession(DummyAbstractReflectSessionRef(cdms), GetInternalThreadWakeupSocket()).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation:  Couldn't add MulticastUDPClientManagerSession! [%s]\n", ret());
          return;

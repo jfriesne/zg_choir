@@ -478,14 +478,14 @@ void ChoirWindow :: UserStoppedDraggingTempoSlider()
 
 void ChoirWindow :: MusicSheetUpdated()
 {
-   _musicSheetWidget->SetMusicSheet(ConstMusicSheetRef(&_musicSheet, false));  // this will update the GUI
+   _musicSheetWidget->SetMusicSheet(DummyConstMusicSheetRef(_musicSheet));  // this will update the GUI
    _rosterWidget->SetNotesUsedInMusicSheet(_musicSheet.GetAllUsedNotesChord());
    ScheduleSendUpdatedMusicSheetToPlayer();
 }
 
 void ChoirWindow :: NoteAssignmentsUpdated()
 {
-   _rosterWidget->SetNoteAssignments(ConstNoteAssignmentsMapRef(&_assigns, false));  // causes him to update his GUI
+   _rosterWidget->SetNoteAssignments(DummyConstNoteAssignmentsMapRef(_assigns));  // causes him to update his GUI
 
    const uint64 localNotes = _assigns.GetNoteAssignmentsForPeerID(GetLocalPeerID());
    _musicSheetWidget->SetNoteAssignments(localNotes, _assigns.GetAllAssignedNotesChord());  // so he can color-code the notes
@@ -648,7 +648,7 @@ void ChoirWindow :: OpenSong()
          if (songMsg.Unflatten((const uint8 *) ba.data(), ba.size()).IsOK())
          { 
             MusicSheet temp;
-            if (temp.SetFromArchive(ConstMessageRef(&songMsg, false)).IsOK())
+            if (temp.SetFromArchive(DummyConstMessageRef(songMsg)).IsOK())
             {
                temp.SetSongFilePath(openPath.toUtf8().constData());  // update it with our new open-path, just for consistency
                if (UploadMusicSheet(temp).IsOK())
@@ -674,7 +674,7 @@ void ChoirWindow :: SaveSong()
       temp.SetSongFilePath(savePath.toUtf8().constData());
 
       Message songMsg;
-      if (temp.SaveToArchive(MessageRef(&songMsg, false)).IsOK())
+      if (temp.SaveToArchive(DummyMessageRef(songMsg)).IsOK())
       {
          ConstByteBufferRef msgBytes = songMsg.FlattenToByteBuffer();
          if (msgBytes())

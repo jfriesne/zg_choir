@@ -66,7 +66,7 @@ int main(int argc, char ** argv)
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
    status_t ret;
-   if ((server.AddNewSession(ZGStdinSessionRef(&stdinSession, false)).IsOK(ret))&&(server.AddNewConnectSession(AbstractReflectSessionRef(&clientSession, false), host, port).IsOK(ret)))
+   if ((server.AddNewSession(DummyZGStdinSessionRef(stdinSession)).IsOK(ret))&&(server.AddNewConnectSession(DummyAbstractReflectSessionRef(clientSession), host, port).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
 

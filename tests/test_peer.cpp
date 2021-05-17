@@ -415,8 +415,8 @@ int main(int argc, char ** argv)
    ReflectServer server;
 
    // Add our session objects to the ReflectServer object so that they will be used during program execution
-   if (((IsDaemonProcess())||(server.AddNewSession(ZGStdinSessionRef(&zgStdinSession, false)).IsOK()))&&
-       (server.AddNewSession(ZGPeerSessionRef(&zgPeerSession, false)).IsOK()))
+   if (((IsDaemonProcess())||(server.AddNewSession(DummyZGStdinSessionRef(zgStdinSession)).IsOK()))&&
+       (server.AddNewSession(DummyZGPeerSessionRef(zgPeerSession)).IsOK()))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       status_t ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
