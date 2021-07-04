@@ -70,7 +70,7 @@ public:
    /** Returns our current per-sender maximum backlog depth (as specified previously in your call to Start()).
      * Only valid if we are currently active. 
      */
-   uint32 GetPerSeconderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
+   uint32 GetPerSenderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
 
    /** Specify what kind of multicast behavior this UDPMulticastTransceiver should use.
      * @param whichBehavior a ZG_MULTICAST_BEHAVIOR_* value.  (Default state is ZG_MULTICAST_BEHAVIOR_AUTO)
