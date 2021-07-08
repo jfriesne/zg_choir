@@ -120,6 +120,12 @@ public:
       AbstractReflectSession::EndSession();
    }
 
+   void SchedulePing(uint64 when)
+   {
+      _nextUDPSendTime = when;
+      InvalidatePulseTime();
+   }
+
 private:
    TCPConnectorSession * _master;
    const IPAddressAndPort _timeSyncDest;
@@ -178,6 +184,14 @@ public:
       {
          _lastInactivityPingTime = args.GetCallbackTime();
          (void) AddOutgoingMessage(DummyMessageRef(_inactivityPingMsg));
+
+         if (_inactivityPingTimeMicroseconds > 0)
+         {
+            const uint32 overdueCount = (args.GetScheduledTime()-_lastDataReadTime)/_inactivityPingTimeMicroseconds;
+                 if (overdueCount > 4)                         (void) DisconnectSession();                                // connectivity lost, force a failover
+            else if ((overdueCount > 1)&&(_timeSyncSession())) _timeSyncSession()->SchedulePing(args.GetCallbackTime());  // to check up on the server's health ASAP
+         }
+
          UpdateNextInactivityPingTime();
       }
    }
@@ -587,6 +601,8 @@ private:
 
 void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime)
 {
+   RecordThatDataWasRead();  // so that we won't force-disconnect just because the server's main thread is busy executing some extended operation
+
    if (_master) _master->TimeSyncReceived(roundTripTime, serverNetworkTime, localReceiveTime);
 }
 
