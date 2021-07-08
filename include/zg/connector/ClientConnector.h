@@ -43,13 +43,13 @@ public:
      *                          May be NULL if you only care about the server's signature and system name.
      * @param autoReconnectTimeMicroseconds how long to wait before trying to auto-reconnect, when our TCP connection gets severed.  Defaults to 250 milliseconds.
      *                                       Pass MUSCLE_TIME_NEVER to disable.
-     * @param inactivityPingTimeMicroseconds how often to send a TCP keepalive ping on an otherwise idle connection, to detect connectivity problems.  Defaults to 1 second.
+     * @param inactivityPingTimeMicroseconds how often to send a TCP keepalive ping on an otherwise idle connection, to detect connectivity problems.  Defaults to 250 milliseconds.
      *                                       Pass MUSCLE_TIME_NEVER to disable.
      * @returns B_NO_ERROR on success, or an error code if setup failed.
      * @note If called with with the same arguments that are already in use, this method will just return B_NO_ERROR without doing anything else.
      *       Otherwise, this method will call Stop() and then set up the ClientConnector to connect using the new arguments.
      */
-   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria = ConstQueryFilterRef(), uint64 autoReconnectTimeMicroseconds = MillisToMicros(250), uint64 inactivityPingTimeMicroseconds = SecondsToMicros(1));
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria = ConstQueryFilterRef(), uint64 autoReconnectTimeMicroseconds = MillisToMicros(250), uint64 inactivityPingTimeMicroseconds = MillisToMicros(250));
 
    /** Stops the network I/O thread, if it is currently running. */
    void Stop();
