@@ -28,6 +28,14 @@ PZGDatabaseStateInfo :: PZGDatabaseStateInfo(uint64 dbID, uint64 oldestDatabaseI
    // empty
 }
 
+PZGDatabaseStateInfo & PZGDatabaseStateInfo :: operator=(const PZGDatabaseStateInfo & rhs)
+{
+   _currentDatabaseStateID = rhs._currentDatabaseStateID;
+   _oldestDatabaseIDInLog  = rhs._oldestDatabaseIDInLog;
+   _dbChecksum             = rhs._dbChecksum;
+   return *this;
+}
+
 void PZGDatabaseStateInfo :: Flatten(uint8 *buffer) const
 {
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_currentDatabaseStateID)); buffer += sizeof(uint64);

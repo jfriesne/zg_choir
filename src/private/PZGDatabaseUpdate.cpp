@@ -50,6 +50,20 @@ PZGDatabaseUpdate :: PZGDatabaseUpdate(const PZGDatabaseUpdate & rhs)
    // empty
 }
 
+PZGDatabaseUpdate & PZGDatabaseUpdate :: operator=(const PZGDatabaseUpdate & rhs)
+{
+   _updateType              = rhs._updateType;
+   _databaseIndex           = rhs._databaseIndex;
+   _seniorElapsedTimeMillis = rhs._seniorElapsedTimeMillis;
+   _sourcePeerID            = rhs._sourcePeerID;
+   _updateID                = rhs._updateID;
+   _preUpdateDBChecksum     = rhs._preUpdateDBChecksum;
+   _postUpdateDBChecksum    = rhs._postUpdateDBChecksum;
+   _updateBuf               = rhs._updateBuf;
+   _updateMsg               = rhs._updateMsg;
+   return *this;
+}
+
 uint32 PZGDatabaseUpdate :: CalculateChecksum() const
 {
    uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + _sourcePeerID.CalculateChecksum() + CalculateChecksumForUint64(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);

@@ -21,6 +21,8 @@ public:
    PZGDatabaseStateInfo(const PZGDatabaseStateInfo & stateInfo);
    PZGDatabaseStateInfo(uint64 currentDatabaseID, uint64 oldestDatabaseIDInLog, uint32 dbChecksum);
 
+   PZGDatabaseStateInfo & operator=(const PZGDatabaseStateInfo & rhs);
+
    static MUSCLE_CONSTEXPR bool IsFixedSize()             {return true;}
    static MUSCLE_CONSTEXPR uint32 TypeCode()              {return PZG_DATABASE_STATE_INFO;}
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}

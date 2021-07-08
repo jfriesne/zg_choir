@@ -24,6 +24,8 @@ public:
    PZGDatabaseUpdate();
    PZGDatabaseUpdate(const PZGDatabaseUpdate & rhs);
 
+   PZGDatabaseUpdate & operator=(const PZGDatabaseUpdate & rhs);
+
    virtual bool IsFixedSize() const {return false;}
    virtual uint32 TypeCode() const {return PZG_DATABASE_UPDATE_TYPE_CODE;}
    virtual uint32 FlattenedSize() const;

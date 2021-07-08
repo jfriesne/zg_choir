@@ -27,6 +27,11 @@ public:
      */
    ZGPeerID(uint64 highBits, uint64 lowBits) : _highBits(highBits), _lowBits(lowBits) {/* empty */}
 
+   /** Copy constructor
+     * @param rhs the ZGPeerID to make this a copy of
+     */
+   ZGPeerID(const ZGPeerID & rhs) : _highBits(rhs._highBits), _lowBits(rhs._lowBits) {/* empty */}
+
    /** Equality operator; returns true iff this ZGPeerID is equal to (rhs) 
      * @param rhs The ZGPeerID to compare to
      */
