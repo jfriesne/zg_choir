@@ -17,8 +17,8 @@
 namespace zg {
 
 enum {
-   CCI_COMMAND_PEERINFO = 1667459427, // 'ccic' 
-   CCI_COMMAND_MESSAGE
+   CCI_COMMAND_PEERINFO = 1667459427, // 'ccic'
+   CCI_COMMAND_MESSAGE,
 };
 static const String CCI_NAME_PAYLOAD = "pay";
 
@@ -128,18 +128,29 @@ private:
 };
 DECLARE_REFTYPES(UDPTimeSyncSession);
 
+static const String _inactivityPingIDField("tcp_cs");
+
 // This class handles TCP I/O to/from the ZG server
 class TCPConnectorSession : public AbstractReflectSession
 {
 public:
-   TCPConnectorSession(ClientConnectorImplementation * master, const IPAddressAndPort & timeSyncDest, const MessageRef & peerInfo)
+   TCPConnectorSession(ClientConnectorImplementation * master, const IPAddressAndPort & timeSyncDest, const MessageRef & peerInfo, uint64 inactivityPingTimeMicroseconds)
    : _master(master)
    , _timeSyncDest(timeSyncDest)
-   , _peerInfo(peerInfo) {/* empty */}
+   , _peerInfo(peerInfo)
+   , _inactivityPingTimeMicroseconds(inactivityPingTimeMicroseconds)
+   , _nextInactivityPingTime(MUSCLE_TIME_NEVER)
+   , _lastDataReadTime(0)
+   , _lastInactivityPingTime(0)
+   , _inactivityPingMsg(PR_COMMAND_PING)
+   {
+      // empty
+   }
 
    virtual status_t AttachedToServer()
    {
       MRETURN_ON_ERROR(AbstractReflectSession::AttachedToServer());
+      MRETURN_ON_ERROR(_inactivityPingMsg.AddBool(_inactivityPingIDField, true));
 
       if (_timeSyncDest.IsValid())
       {
@@ -151,10 +162,30 @@ public:
       return B_NO_ERROR;
    }
 
+   virtual int32 DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes)
+   {
+      const int32 ret = AbstractReflectSession::DoInput(receiver, maxBytes);
+      if (ret > 0) RecordThatDataWasRead();
+      return ret;
+   }
+
+   virtual uint64 GetPulseTime(const PulseArgs & args) {return muscleMin(_nextInactivityPingTime, AbstractReflectSession::GetPulseTime(args));}
+
+   virtual void Pulse(const PulseArgs & args)
+   {
+      AbstractReflectSession::Pulse(args);
+      if (args.GetCallbackTime() >= _nextInactivityPingTime)
+      {
+         _lastInactivityPingTime = args.GetCallbackTime();
+         (void) AddOutgoingMessage(DummyMessageRef(_inactivityPingMsg));
+         UpdateNextInactivityPingTime();
+      }
+   }
+
    virtual void AboutToDetachFromServer()
    {
       if (_timeSyncSession()) _timeSyncSession()->EndSession();  // avoid any chance of it holding a dangling-pointer to us
-      AbstractReflectSession::AboutToDetachFromServer(); 
+      AbstractReflectSession::AboutToDetachFromServer();
    }
 
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void *);
@@ -162,10 +193,11 @@ public:
    virtual bool ClientConnectionClosed()
    {
       const bool ret = AbstractReflectSession::ClientConnectionClosed();
-      if (ret) 
+      if (ret)
       {
          if (_timeSyncSession()) _timeSyncSession()->EndSession();  // avoid any chance of it calling methods on us after this
          TimeSyncReceived(0, MUSCLE_TIME_NEVER, GetRunTime64());    // turn off the client-side clock, as we can't sync it with the server's clock if we aren't in touch with the server
+         _nextInactivityPingTime = MUSCLE_TIME_NEVER;
          EndServer();
       }
       return ret;
@@ -215,21 +247,39 @@ private:
          {
             (void) batchMsg.RemoveData(PR_NAME_KEYS, i);
             i--;
-            retPongMessages.AddTail(pongMsg); 
+            retPongMessages.AddTail(pongMsg);
          }
          else if (subMsg()->what == PR_COMMAND_BATCH) StripBatchSyncPings(*subMsg(), retPongMessages);
       }
+   }
+
+   void RecordThatDataWasRead()
+   {
+      _lastDataReadTime = GetRunTime64();
+      UpdateNextInactivityPingTime();
+   }
+
+   void UpdateNextInactivityPingTime()
+   {
+      _nextInactivityPingTime = (_inactivityPingTimeMicroseconds==MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (muscleMax(_lastDataReadTime,_lastInactivityPingTime)+_inactivityPingTimeMicroseconds);
+      InvalidatePulseTime();
    }
 
    ClientConnectorImplementation * _master;
    IPAddressAndPort _timeSyncDest;
    UDPTimeSyncSessionRef _timeSyncSession;
    MessageRef _peerInfo;
+
+   const uint64 _inactivityPingTimeMicroseconds;
+   uint64 _nextInactivityPingTime;
+   uint64 _lastDataReadTime;
+   uint64 _lastInactivityPingTime;
+   Message _inactivityPingMsg;
 };
 
 void UDPTimeSyncSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
 {
-   if (_master) 
+   if (_master)
    {
       const uint64 localReceiveTime = GetRunTime64();
       _master->TimeSyncReceived(localReceiveTime-msg()->GetInt64("ctm"), msg()->GetInt64("stm"), localReceiveTime);
@@ -242,7 +292,7 @@ class MonitorOwnerThreadSession : public AbstractReflectSession
 public:
    MonitorOwnerThreadSession(ClientConnectorImplementation * master, const ConstSocketRef & notifySock)
       : _master(master)
-      , _notifySock(notifySock) 
+      , _notifySock(notifySock)
    {
       // empty
    }
@@ -258,7 +308,7 @@ public:
    }
 
    virtual void MessageReceivedFromGateway(const MessageRef &, void *);
-   
+
    virtual bool ClientConnectionClosed()
    {
       const bool ret = AbstractReflectSession::ClientConnectionClosed();
@@ -291,6 +341,7 @@ public:
       : IDiscoveryNotificationTarget(NULL)
       , _master(master)
       , _reconnectTimeMicroseconds(0)
+      , _inactivityPingTimeMicroseconds(0)
       , _isActive(false)
       , _tcpSession(NULL)
       , _keepGoing(true)
@@ -300,10 +351,10 @@ public:
 
    bool IsActive() const {return _isActive;}
 
-   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds)
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds)
    {
       // If we're already in the desired state, then there's no point in tearing everything down only to set it up again, so instead just smile and nod
-      if ((_isActive)&&(signaturePattern == _signaturePattern)&&(systemNamePattern == _systemNamePattern)&&(AreDiscoveryCriteriaEqual(optAdditionalDiscoveryCriteria,_optAdditionalDiscoveryCriteria))&&(_reconnectTimeMicroseconds == reconnectTimeMicroseconds)) return B_NO_ERROR;
+      if ((_isActive)&&(signaturePattern == _signaturePattern)&&(systemNamePattern == _systemNamePattern)&&(AreDiscoveryCriteriaEqual(optAdditionalDiscoveryCriteria,_optAdditionalDiscoveryCriteria))&&(_reconnectTimeMicroseconds == reconnectTimeMicroseconds)&&(_inactivityPingTimeMicroseconds == inactivityPingTimeMicroseconds)) return B_NO_ERROR;
       else
       {
          Stop();
@@ -313,6 +364,7 @@ public:
          _systemNamePattern              = systemNamePattern;
          _optAdditionalDiscoveryCriteria = optAdditionalDiscoveryCriteria;
          _reconnectTimeMicroseconds      = reconnectTimeMicroseconds;
+         _inactivityPingTimeMicroseconds = inactivityPingTimeMicroseconds;
          _isActive                       = true;
 
          // This is the filter the DiscoveryModule will actually use (it's a superset of the _optAdditionalDiscoveryCriteria because it also specifies what system name(s) we will accept)
@@ -334,6 +386,7 @@ public:
       _systemNamePattern.Clear();
       _optAdditionalDiscoveryCriteria.Reset();
       _reconnectTimeMicroseconds = 0;
+      _inactivityPingTimeMicroseconds = 0;
       _discoFilterRef.Reset();
       _isActive = false;
    }
@@ -343,7 +396,8 @@ public:
    const String & GetSignaturePattern()  const {return _signaturePattern;}
    const String & GetSystemNamePattern() const {return _systemNamePattern;}
    const ConstQueryFilterRef & GetAdditionalDiscoveryCriteria() const {return _optAdditionalDiscoveryCriteria;}
-   uint64 GetAutoReconnectTimeMicroseconds() const {return _reconnectTimeMicroseconds;}
+   uint64 GetAutoReconnectTimeMicroseconds()  const {return _reconnectTimeMicroseconds;}
+   uint64 GetInactivityPingTimeMicroseconds() const {return _inactivityPingTimeMicroseconds;}
 
 private:
    friend class TCPConnectorSession;
@@ -441,7 +495,7 @@ private:
          if (timeSyncUDPPort > 0) timeSyncDest = IPAddressAndPort(iap.GetIPAddress(), timeSyncUDPPort);
       }
 
-      TCPConnectorSession tcs(this, timeSyncDest, peerInfo);   // handle TCP I/O to/from our server
+      TCPConnectorSession tcs(this, timeSyncDest, peerInfo, _inactivityPingTimeMicroseconds);   // handle TCP I/O to/from our server
       MonitorOwnerThreadSession mots(this, GetInternalThreadWakeupSocket());  // handle Messages and shutdown-requests from our owner-thread
 
       status_t ret;
@@ -465,7 +519,7 @@ private:
       if (_reconnectTimeMicroseconds == 0) return B_NO_ERROR;  // nothing to do!
 
       SocketMultiplexer sm;
-      const uint64 waitUntil = GetRunTime64()+_reconnectTimeMicroseconds;
+      const uint64 waitUntil = (_reconnectTimeMicroseconds == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+_reconnectTimeMicroseconds);
       while(GetRunTime64() < waitUntil)
       {
          status_t ret;
@@ -489,13 +543,13 @@ private:
          const int32 numLeft = WaitForNextMessageFromOwner(msgRef, 0);
          if (numLeft  < 0) return B_IO_ERROR;  // it's okay, it just means the owner thread wants us to go away now
          if (numLeft >= 0) MRETURN_ON_ERROR(MessageReceivedFromOwner(msgRef, numLeft));
-         if (numLeft == 0) return B_NO_ERROR; 
+         if (numLeft == 0) return B_NO_ERROR;
       }
    }
 
    virtual status_t MessageReceivedFromOwner(const MessageRef & msgRef, uint32 /*numLeft*/)
    {
-      if (msgRef() == NULL) 
+      if (msgRef() == NULL)
       {
          _keepGoing = false;
          return B_ERROR("Owner thread requested exit.");
@@ -521,6 +575,7 @@ private:
    String _systemNamePattern;
    ConstQueryFilterRef _optAdditionalDiscoveryCriteria;  // additional restrictions that the calling code specified (if any)
    uint64 _reconnectTimeMicroseconds;
+   uint64 _inactivityPingTimeMicroseconds;
    bool _isActive;
    ConstQueryFilterRef _discoFilterRef;  // cached superset of _optAdditionalDiscoveryCriteria
 
@@ -538,12 +593,17 @@ void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 server
 void TCPConnectorSession :: AsyncConnectCompleted()
 {
    AbstractReflectSession::AsyncConnectCompleted();
+   RecordThatDataWasRead();  // start the inactivity-ping-timeout timer now
    _master->SetConnectionPeerInfo(_peerInfo);
 }
 
 void TCPConnectorSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
 {
-   _master->MessageReceivedFromTCPConnection(msg);
+   if ((msg())&&(msg()->what == PR_RESULT_PONG)&&(msg()->GetBool(_inactivityPingIDField)))
+   {
+      // We don't need to do anything here but drop the Message; our DoInput() method was already called and that's all we really wanted
+   }
+   else _master->MessageReceivedFromTCPConnection(msg);
 }
 
 void MonitorOwnerThreadSession :: MessageReceivedFromGateway(const MessageRef &, void *)
@@ -560,7 +620,7 @@ ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    _imp = new ClientConnectorImplementation(this);
 }
 
-ClientConnector :: ~ClientConnector() 
+ClientConnector :: ~ClientConnector()
 {
    MASSERT(IsActive() == false, "~ClientConnector:  You must call Stop() before deleting the ClientConnector object");
    delete _imp;
@@ -583,11 +643,12 @@ void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetw
 }
 
 status_t ClientConnector :: ParseTCPPortFromMessage(const Message & msg, uint16 & retPort) const {return msg.FindInt16("port", retPort);}
-status_t ClientConnector :: Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds) {return _imp->Start(signaturePattern, systemNamePattern, optAdditionalDiscoveryCriteria, reconnectTimeMicroseconds);}
+status_t ClientConnector :: Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds) {return _imp->Start(signaturePattern, systemNamePattern, optAdditionalDiscoveryCriteria, reconnectTimeMicroseconds, inactivityPingTimeMicroseconds);}
 const String & ClientConnector :: GetSignaturePattern()  const {return _imp->GetSignaturePattern();}
 const String & ClientConnector :: GetSystemNamePattern() const {return _imp->GetSystemNamePattern();}
 const ConstQueryFilterRef & ClientConnector :: GetAdditionalDiscoveryCriteria() const {return _imp->GetAdditionalDiscoveryCriteria();}
 uint64 ClientConnector :: GetAutoReconnectTimeMicroseconds() const {return _imp->GetAutoReconnectTimeMicroseconds();}
+uint64 ClientConnector :: GetInactivityPingTimeMicroseconds() const {return _imp->GetInactivityPingTimeMicroseconds();}
 
 void ClientConnector :: Stop() {_imp->Stop();}
 bool ClientConnector :: IsActive() const {return _imp->IsActive();}
@@ -617,7 +678,7 @@ void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
          }
          break;
 
-         default:  
+         default:
             LogTime(MUSCLE_LOG_CRITICALERROR, "ClientConnector %p:  DispatchCallbacks:  Unknown Message type " UINT32_FORMAT_SPEC "\n", next()->what);
          break;
       }
