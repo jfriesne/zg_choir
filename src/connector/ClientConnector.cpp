@@ -394,22 +394,21 @@ private:
       SystemDiscoveryClient discoClient(&threadMechanism, _signaturePattern, _discoFilterRef);
       SetDiscoveryClient(&discoClient);
 
-      status_t ret;
-      if (discoClient.Start().IsError(ret)) return ret;
+      MRETURN_ON_ERROR(discoClient.Start());
 
       // Wait until we either discovered something or the calling thread wants us to go away
       SocketMultiplexer sm;
       while(_discoveries() == NULL)
       {
-         if (sm.RegisterSocketForReadReady(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor()).IsError(ret)) return ret;
-         if (sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()).IsError(ret)) return ret;
+         MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor()));
+         MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
          if (sm.WaitForEvents() < 0) return B_ERROR("ClientConnectorImplementation:  WaitForEvents() failed");
 
          if (sm.IsSocketReadyForRead(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor())) threadMechanism.DispatchCallbacks();
-         if ((sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor()))&&(HandleIncomingMessagesFromOwnerThread().IsError(ret))) return ret;
+         if (sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor())) MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
       }
 
-      return ret;
+      return B_NO_ERROR;
    }
 
    status_t DoConnectionStage()
@@ -487,10 +486,9 @@ private:
       MessageRef msgRef;
       while(1)
       {
-         status_t ret;
          const int32 numLeft = WaitForNextMessageFromOwner(msgRef, 0);
-         if (numLeft < 0) return B_IO_ERROR;  // it's okay, it just means the owner thread wants us to go away now
-         if ((numLeft >= 0)&&(MessageReceivedFromOwner(msgRef, numLeft).IsError(ret))) return ret;
+         if (numLeft  < 0) return B_IO_ERROR;  // it's okay, it just means the owner thread wants us to go away now
+         if (numLeft >= 0) MRETURN_ON_ERROR(MessageReceivedFromOwner(msgRef, numLeft));
          if (numLeft == 0) return B_NO_ERROR; 
       }
    }
