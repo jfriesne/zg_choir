@@ -24,7 +24,6 @@ PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o 
 ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
 ZGTREESERVEROBJS = MessageTreeDatabasePeerSession.o MessageTreeDatabaseObject.o UndoStackMessageTreeDatabaseObject.o ServerSideMessageTreeSession.o ServerSideMessageUtilityFunctions.o DiscoveryServerSession.o ClientDataMessageTreeDatabaseObject.o
 ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o SystemDiscoveryClient.o ClientConnector.o MessageTreeClientConnector.o TestTreeGatewaySubscriber.o
-ZGCALLBACKOBJS = SocketCallbackMechanism.o ICallbackMechanism.o
 ZGUDPOBJS  = UDPMulticastTransceiver.o
 SRCDIR = ../src
 VPATH = . $(SRCDIR) $(SRCDIR)/private $(SRCDIR)/messagetree/gateway $(SRCDIR)/messagetree/client $(SRCDIR)/messagetree/server $(SRCDIR)/clocksync $(SRCDIR)/connector $(SRCDIR)/discovery/server $(SRCDIR)/discovery/client $(SRCDIR)/discovery/common $(SRCDIR)/callback $(SRCDIR)/udp $(MUSCLEDIR)/hashtable $(MUSCLEDIR)/message $(MUSCLEDIR)/iogateway $(MUSCLEDIR)/reflector $(MUSCLEDIR)/regex $(MUSCLEDIR)/util $(MUSCLEDIR)/syslog $(MUSCLEDIR)/system $(MUSCLEDIR)/dataio $(MUSCLEDIR)/zlib $(MUSCLEDIR)/zlib/zlib $(MUSCLEDIR)/zlib/zlib/contrib/minizip
@@ -65,19 +64,19 @@ all : $(EXECUTABLES)
 test_peer : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) test_peer.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-test_udp_multicast_transceiver : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGUDPOBJS) $(ZGCALLBACKOBJS) test_udp_multicast_transceiver.o
+test_udp_multicast_transceiver : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGUDPOBJS) test_udp_multicast_transceiver.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 tree_server : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREESERVEROBJS) tree_server.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-tree_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) $(ZGCALLBACKOBJS) tree_client.o
+tree_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) tree_client.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-connector_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) $(ZGCALLBACKOBJS) connector_client.o
+connector_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) connector_client.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
-discovery_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) $(ZGCALLBACKOBJS) discovery_client.o
+discovery_client : $(ZLIBOBJS) $(MUSCLEOBJS) $(REGEXOBJS) $(ZGOBJS) $(PZGOBJS) $(ZGTREECOMMONOBJS) $(ZGTREECLIENTOBJS) discovery_client.o
 	$(CXX) $(LFLAGS) -o $@ $^ $(LIBS)
 
 clean :

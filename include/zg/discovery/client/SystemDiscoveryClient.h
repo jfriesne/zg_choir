@@ -3,7 +3,8 @@
 
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
-#include "zg/callback/ICallbackSubscriber.h"
+#include "util/ICallbackSubscriber.h"
+#include "zg/ZGNameSpace.h"
 
 namespace zg {
 

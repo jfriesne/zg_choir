@@ -1,4 +1,3 @@
-#include "zg/callback/SocketCallbackMechanism.h"
 #include "zg/connector/ClientConnector.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVER_NAME_*
 #include "zg/discovery/client/IDiscoveryNotificationTarget.h"
@@ -11,6 +10,7 @@
 #include "reflector/ReflectServer.h"
 #include "reflector/StorageReflectConstants.h"  // for PR_COMMAND_BATCH
 #include "util/NetworkInterfaceInfo.h"
+#include "util/SocketCallbackMechanism.h"
 #include "util/SocketMultiplexer.h"
 #include "system/Thread.h"
 

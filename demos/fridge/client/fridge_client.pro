@@ -82,9 +82,7 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/zlib/ZLibUtilityFunctions.cpp           \
 
 
-CLIENT_SOURCES = $$ZG_DIR/src/callback/ICallbackMechanism.cpp                   \
-                 $$ZG_DIR/src/callback/SocketCallbackMechanism.cpp              \
-                 $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp                      \
+CLIENT_SOURCES = $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp                      \
                  $$ZG_DIR/src/connector/ClientConnector.cpp                     \
                  $$ZG_DIR/src/discovery/client/SystemDiscoveryClient.cpp        \
                  $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp    \
@@ -120,6 +118,5 @@ FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.c
 FRIDGE_INCLUDES = FridgeClientWindow.h FridgeClientCanvas.h FridgeChatView.h ClientRosterList.h TimeSyncWidget.h
 
 SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$CLIENT_SOURCES
-HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_INCLUDES \
-          $$ZG_DIR/include/zg/platform/qt/QtCallbackMechanism.h
+HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_DIR/qtsupport/QCallbackMechanism.h
 

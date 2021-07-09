@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "zg/platform/qt/QtCallbackMechanism.h"
+#include "qtsupport/QCallbackMechanism.h"
 #include "FridgeClientWindow.h"
 
 int main(int argc, char ** argv)
@@ -11,7 +11,7 @@ int main(int argc, char ** argv)
 
    // Network I/O threads will rely on this object to call callback
    // methods safely from within the context of the main/GUI/Qt thread.
-   QtSocketCallbackMechanism qcbm;
+   QSocketCallbackMechanism qcbm;
 
    // must be on the heap since we call 
    // setAttribute(Qt::WA_DeleteOnClose) in the FridgeClientWindow constructor

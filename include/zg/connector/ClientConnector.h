@@ -4,7 +4,7 @@
 #include <atomic>
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
-#include "zg/callback/ICallbackSubscriber.h"
+#include "util/ICallbackSubscriber.h"
 #include "zg/clocksync/ZGTimeAverager.h"
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/INetworkTimeProvider.h"
