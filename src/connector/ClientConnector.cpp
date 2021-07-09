@@ -149,6 +149,7 @@ public:
    , _lastDataReadTime(0)
    , _lastInactivityPingTime(0)
    , _inactivityPingMsg(PR_COMMAND_PING)
+   , _inactivityPingResponsePending(false)
    {
       // empty
    }
@@ -183,13 +184,13 @@ public:
       if (args.GetCallbackTime() >= _nextInactivityPingTime)
       {
          _lastInactivityPingTime = args.GetCallbackTime();
-         (void) AddOutgoingMessage(DummyMessageRef(_inactivityPingMsg));
+         if ((_inactivityPingResponsePending == false)&&(AddOutgoingMessage(DummyMessageRef(_inactivityPingMsg)).IsOK())) _inactivityPingResponsePending = true;
 
-         if (_inactivityPingTimeMicroseconds > 0)
+         if ((_inactivityPingTimeMicroseconds > 0)&&(_timeSyncSession()))
          {
             const uint32 overdueCount = (args.GetScheduledTime()-_lastDataReadTime)/_inactivityPingTimeMicroseconds;
-                 if (overdueCount > 4)                         (void) DisconnectSession();                                // connectivity lost, force a failover
-            else if ((overdueCount > 1)&&(_timeSyncSession())) _timeSyncSession()->SchedulePing(args.GetCallbackTime());  // to check up on the server's health ASAP
+                 if (overdueCount >= 5) (void) DisconnectSession();                                // connectivity lost, force a failover
+            else if (overdueCount >= 2) _timeSyncSession()->SchedulePing(args.GetCallbackTime());  // to check up on the server's health ASAP
          }
 
          UpdateNextInactivityPingTime();
@@ -289,6 +290,7 @@ private:
    uint64 _lastDataReadTime;
    uint64 _lastInactivityPingTime;
    Message _inactivityPingMsg;
+   bool _inactivityPingResponsePending;  // true iff we've send a keepalive PR_COMMAND_PING over TCP and are currently waiting for the corresponding PR_RESULT_PONG to come back
 };
 
 void UDPTimeSyncSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
@@ -609,6 +611,7 @@ void TCPConnectorSession :: TimeSyncReceived(uint64 roundTripTime, uint64 server
 void TCPConnectorSession :: AsyncConnectCompleted()
 {
    AbstractReflectSession::AsyncConnectCompleted();
+   _inactivityPingResponsePending = false;  // semi-paranoia
    RecordThatDataWasRead();  // start the inactivity-ping-timeout timer now
    _master->SetConnectionPeerInfo(_peerInfo);
 }
@@ -617,7 +620,7 @@ void TCPConnectorSession :: MessageReceivedFromGateway(const MessageRef & msg, v
 {
    if ((msg())&&(msg()->what == PR_RESULT_PONG)&&(msg()->GetBool(_inactivityPingIDField)))
    {
-      // We don't need to do anything here but drop the Message; our DoInput() method was already called and that's all we really wanted
+      _inactivityPingResponsePending = false;  // We don't need to do anything other than eat the Message; our DoInput() method was already called and that's all we really wanted
    }
    else _master->MessageReceivedFromTCPConnection(msg);
 }
