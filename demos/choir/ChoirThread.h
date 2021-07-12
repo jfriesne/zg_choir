@@ -1,7 +1,7 @@
 #ifndef ChoirThread_h
 #define ChoirThread_h
 
-#include "qtsupport/QMessageTransceiverThread.h"
+#include "platform/qt/QMessageTransceiverThread.h"
 #include "ChoirNameSpace.h"
 #include "ChoirSession.h"
 

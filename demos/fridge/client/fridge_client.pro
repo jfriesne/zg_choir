@@ -118,5 +118,5 @@ FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.c
 FRIDGE_INCLUDES = FridgeClientWindow.h FridgeClientCanvas.h FridgeChatView.h ClientRosterList.h TimeSyncWidget.h
 
 SOURCES = $$FRIDGE_SOURCES $$MUSCLE_SOURCES $$CLIENT_SOURCES
-HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_DIR/qtsupport/QSocketCallbackMechanism.h
+HEADERS = $$FRIDGE_INCLUDES $$MUSCLE_DIR/platform/qt/QSocketCallbackMechanism.h
 

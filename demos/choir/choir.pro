@@ -52,7 +52,7 @@ MUSCLE_SOURCES = \
                  $$MUSCLE_DIR/iogateway/PacketTunnelIOGateway.cpp     \
                  $$MUSCLE_DIR/iogateway/ProxyIOGateway.cpp            \
                  $$MUSCLE_DIR/message/Message.cpp                     \
-                 $$MUSCLE_DIR/qtsupport/QMessageTransceiverThread.cpp \
+                 $$MUSCLE_DIR/platform/qt/QMessageTransceiverThread.cpp \
                  $$MUSCLE_DIR/reflector/AbstractReflectSession.cpp    \
                  $$MUSCLE_DIR/reflector/DataNode.cpp                  \
                  $$MUSCLE_DIR/reflector/DumbReflectSession.cpp        \
@@ -147,7 +147,7 @@ CHOIR_INCLUDES = ChoirWindow.h        \
                  Quasimodo.h          \
                  RosterWidget.h
 
-MUSCLE_INCLUDES = $$MUSCLE_DIR/qtsupport/QMessageTransceiverThread.h
+MUSCLE_INCLUDES = $$MUSCLE_DIR/platform/qt/QMessageTransceiverThread.h
 
 SOURCES = $$CHOIR_SOURCES $$MUSCLE_SOURCES $$ZG_SOURCES $$PZG_SOURCES
 HEADERS = $$CHOIR_INCLUDES $$MUSCLE_INCLUDES

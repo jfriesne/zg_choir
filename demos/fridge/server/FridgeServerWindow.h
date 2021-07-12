@@ -7,7 +7,7 @@
 
 #include "dataio/ChildProcessDataIO.h"
 #include "common/FridgeNameSpace.h"
-#include "qtsupport/QDataIODevice.h"
+#include "platform/qt/QDataIODevice.h"
 #include "util/String.h"
 #include "zg/ZGPeerID.h"
 

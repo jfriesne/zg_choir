@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QThread>
 
-#include "qtsupport/QMessageTransceiverThread.h"
+#include "platform/qt/QMessageTransceiverThread.h"
 
 #include "ChoirNameSpace.h"
 #include "ChoirProtocol.h"

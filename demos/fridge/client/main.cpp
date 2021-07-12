@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "qtsupport/QSocketCallbackMechanism.h"
+#include "platform/qt/QSocketCallbackMechanism.h"
 #include "FridgeClientWindow.h"
 
 int main(int argc, char ** argv)
