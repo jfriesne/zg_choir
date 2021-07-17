@@ -23,7 +23,7 @@ PZGHeartbeatSession :: PZGHeartbeatSession(const ConstPZGHeartbeatSettingsRef & 
    SetThreadPriority(PRIORITY_HIGHER);
 }
 
-void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef & msgFromHeartbeatThread)
+void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef & msgFromHeartbeatThread, uint32 /*numLeft*/)
 {
    switch(msgFromHeartbeatThread()->what)
    {

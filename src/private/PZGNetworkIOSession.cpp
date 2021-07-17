@@ -159,7 +159,7 @@ PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, 
    SetThreadPriority(PRIORITY_HIGH);
 }
 
-void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef & msg)
+void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef & msg, uint32 /*numLeft*/)
 {
    PZGMulticastMessageTag tag;
    if (msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK()) 

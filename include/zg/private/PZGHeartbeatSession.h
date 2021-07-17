@@ -40,7 +40,7 @@ public:
 
 protected:
    virtual void InternalThreadEntry();
-   virtual void MessageReceivedFromInternalThread(const MessageRef & msg);
+   virtual void MessageReceivedFromInternalThread(const MessageRef & msg, uint32 numLeft);
 
 private:
    const ZGPeerID & GetSeniorPeerID() const;

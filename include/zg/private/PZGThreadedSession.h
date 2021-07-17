@@ -49,7 +49,7 @@ protected:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
    /** Must be implemented by the subclass to handle the Message that was received from the internal thread. */
-   virtual void MessageReceivedFromInternalThread(const MessageRef & msgFromInternalThread) = 0;
+   virtual void MessageReceivedFromInternalThread(const MessageRef & msgFromInternalThread, uint32 numLeft) = 0;
 };
 
 };  // end namespace zg_private
