@@ -60,9 +60,7 @@ void PZGDatabaseStateInfo :: PrintToStream() const
 
 String PZGDatabaseStateInfo :: ToString() const
 {
-   char buf[256];
-   sprintf(buf, "DBState:  curDBID=" UINT64_FORMAT_SPEC " oldestID=" UINT64_FORMAT_SPEC " dbChecksum=" UINT32_FORMAT_SPEC , _currentDatabaseStateID, _oldestDatabaseIDInLog, _dbChecksum);
-   return buf;
+   return String("DBState:  curDBID=%1 oldestID=%2 dbChecksum=%3").Arg(_currentDatabaseStateID).Arg(_oldestDatabaseIDInLog).Arg(_dbChecksum);
 }
 
 uint32 PZGDatabaseStateInfo :: CalculateChecksum() const
