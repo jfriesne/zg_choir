@@ -39,6 +39,7 @@ file(GLOB ZG_SRCS
 
 add_library(zg ${ZG_SRCS})
 target_link_libraries(zg muscle)
+target_include_directories(zg PUBLIC include)
 
 if (APPLE)
    target_link_libraries(zg "-framework IOKit")
