@@ -16,10 +16,10 @@ compose interesting sentences.
 
 The user can start up any number of FridgeServers (one per FridgeServer
 window).  Each FridgeServer is set to a particular system-name, and will
-co-operator with any other FridgeServers that have the same system-name
-in the maintenance of the refrigerator-magnet database.  As long as at
-least one FridgeServer with a given system-name is still running, that
-system's database will remain intact.
+co-operate with all other FridgeServers that have the same system-name
+to maintain a refrigerator-magnet database.  As long as at least one
+FridgeServer with a given system-name is still running, that system's
+database will remain intact.
 
 FridgeClient is a simple GUI app that allows the user to view and/or
 manipulate the refrigerator-magnet database.  When FridgeClient is
@@ -29,11 +29,11 @@ connect to (by double-clicking on it), the user is presented with
 a visual display of the magnets in that database.  The user can add
 a new magnet by clicking on the window's background, or move existing
 magnets via click-and-drag.  It's also possible to delete a magnet
-by dragging it off the edge of the window, or clear all the magnets
-from the database to start over from scratch.  Any actions taken
-by the user in one FridgeClient window will be immediately visible
-to all FridgeClients that are connected to the same fridge-system
-(even if they are not connected to the same FridgeServer).
+by dragging it off the edge of the window, clear all the magnets
+from the database to start over from scratch, or undo a previous action.
+Any actions taken by the user in one FridgeClient window will be 
+immediately visible to all FridgeClients that are connected to the same
+fridge-system (even if they are not connected to the same FridgeServer).
 
 
 II. Building FridgeClient and FridgeServer
@@ -41,7 +41,7 @@ II. Building FridgeClient and FridgeServer
 
 In order to build FridgeClient and FridgeServer, you must
 have a C++ compiler and a recent (5.x) version of Qt installed.
-You can check that Qt is installed by opening a Terminal/shell 
+You can check that Qt is installed by opening a Terminal/shell
 window and typing qmake -- if qmake prints a help text, you
 are good to go; OTOH if you get a "command not found" error,
 then Qt is either not installed, or $QTDIR/bin is not in your
@@ -54,7 +54,7 @@ To build FridgeServer:
 	qmake
 	make -j4
 
-... when the build completes, you should have a FridgeServer 
+... when the build completes, you should have a FridgeServer
 executable in your zg_choir/demos/fridge/server directory that
 you can run (either by double-clicking its icon or from the
 shell).
@@ -65,7 +65,7 @@ To build FridgeClient:
 	qmake
 	make -j4
 
-... when the build completes, you should have a FridgeClient 
+... when the build completes, you should have a FridgeClient
 executable in your zg_choir/demos/fridge/client directory that
 you can run (either by double-clicking its icon or from the
 shell).
@@ -97,12 +97,12 @@ When you have multiple FridgeServer windows open, your refrigerator-magnets
 database should remain usable as long as at least one of the FridgeServers
 remains running.  To test this, you can click "Stop Server" on each of
 the FridgeServer window in sequence.  When you stop the server that a
-FridgeClient window is currently connected to, you should see the FridgeClient
+FridgeClient window is currently connected to, you may see the FridgeClient
 window flicker briefly, as the FridgeClient detects the loss of the TCP
-connection and respond by auto-reconnecting to another FridgeServe in
-the same fridge-system.  Beware that if you "Stop Server" on all of 
+connection and responds by auto-reconnecting to another FridgeServe in
+the same fridge-system.  Be aware that if you "Stop Server" on all of
 the FridgeServers in the same system simultaneously, you will lose the
-state of the magnets-database for that system (since there are no 
+state of the magnets-database for that system (since there are no
 servers left to hold a copy of it) -- so you may want to re-start some
 of your stopped FridgeServers before you click "Stop Server" on the last
 one in the system.

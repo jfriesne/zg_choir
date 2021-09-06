@@ -42,15 +42,15 @@ Getting updates back from the server is a little bit trickier, because
 these updates come in asynchronously with respect to what your GUI API's
 event-loop is doing, and therefore we need some mechanism by which
 the updates can be received by the GUI thread in a thread-safe manner,
-and without every blocking the GUI thread from handling its GUI-management
+and without ever blocking the GUI thread from handling its GUI-management
 tasks.
 
-To implement this functionality, ZGChoir supplies the ICallbackMechanism
-interface class (found in zg_choir/include/callback/ICallbackMechanism.h).
+To implement this functionality, ZGChoir uses MUSCLE's ICallbackMechanism
+interface class (found in zg_choir/submodules/muscle/util/ICallbackMechanism.h).
 ICallbackMechanism is an abstract base class representing a mechanism that
 allows a network thread (or any thread, really) to safely call its 
 SignalDispatchMethod() when it wants the main/GUI thread to wake up
-and check its ZGChoir-incoming-events queue.  The subclass of ICallbackMechanism
+and check its incoming-events queue.  The subclass of ICallbackMechanism
 implements SignalDispatchThread() in some appropriate manner, so that 
 shortly after SignalDispatchThread() is called, the main thread will
 respond by calling DispatchCallbacks().  DispatchCallbacks() will, in turn,
@@ -58,10 +58,11 @@ call all of the various callback methods that need calling -- and since
 DisptachCallbacks() is being called from within the main/GUI thread, there
 are no thread-safety issues to worry about.
 
-Different operating systems will use different mechanisms to implement
-the above, but many (most?) operating systems support TCP sockets, so
-as a convenience, ZGChoir supplies a SocketCallbackMechanism subclass
-that implements the signalling functionality using a socket-pair.
+Different operating systems may use different mechanisms to implement
+the above, but since most operating systems support TCP sockets, MUSCLE
+supplies a SocketCallbackMechanism subclass that implements the signalling
+functionality using a socket-pair.
+
 Therefore, for many applications, a single SocketCallbackMechanism object
 should be all you need in order to get callback in your GUI thread.
 You can simply instantiate the SocketCallbackMechanism object near
@@ -70,13 +71,14 @@ to monitor socket returned by SocketCallbackMechanism::GetDispatchThreadNotifier
 is ready-for-read.  When you get that notification, you need to respond to
 it by calling DispatchSockets() on the SocketCallbackMechanism object.
 
-For Qt-based GUI applications, I go a little further and supply a
-QtCallbackMechanism class (in zg_choir/include/platform/qt/QtCallbackMechanism.h)
-which subclasses SocketCallbackMechanism and handles all of the socket-monitoring
-internally.  With this class, all a Qt-based GUI needs to do is instantiate
-the object and the rest is handled automatically.  For other (non-Qt-based)
-GUI APIs, it's usually possible to create a similar subclass that would
-do the same thing for them.
+For Qt-based GUI applications, MUSCLE goes a little further and supplies
+QPostEventCallbackMechanism and QSocketCallbackMechanism classes (in
+zg_choir/submodules/muscle/platform/qt/Q*CallbackMechanism.h)
+which subclass SocketCallbackMechanism and handle all of the details
+internally via Qt-based APIs.  With these class, all a Qt-based GUI needs
+to do is instantiate the object and the rest is handled automatically.
+For other (non-Qt-based) GUI APIs, it's usually possible to create a similar 
+subclass that would do the same thing for them.
 
 
 B. System discovery
