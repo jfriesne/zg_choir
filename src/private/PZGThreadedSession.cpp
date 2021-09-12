@@ -27,7 +27,7 @@ status_t PZGThreadedSession :: AttachedToServer()
    status_t ret;
    if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
 
-   if (GetOwnerWakeupSocket() == NULL) return B_BAD_OBJECT;  // paranoia?
+   if (GetOwnerWakeupSocket()() == NULL) return B_BAD_OBJECT;  // paranoia?
    return StartInternalThread();
 }
 

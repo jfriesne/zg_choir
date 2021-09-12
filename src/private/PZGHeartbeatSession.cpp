@@ -128,7 +128,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
    Queue<MessageRef> messagesForOwnerThread;
 
    ConstSocketRef localTimeSyncUDPSocket = _timeSyncUDPSocket;  // so we can pretend it's gone without affecting the main thread
-   if (localTimeSyncUDPSocket()) (void) RegisterInternalThreadSocket(localTimeSyncUDPSocket(), SOCKET_SET_READ);
+   if (localTimeSyncUDPSocket()) (void) RegisterInternalThreadSocket(localTimeSyncUDPSocket, SOCKET_SET_READ);
 
    MessageIOGateway timeSyncGateway;  // we instantiate this solely so we can call its CallUnflattenHeaderAndMessage() and CallFlattenHeaderAndMessage() methods
 
@@ -160,7 +160,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
       MessageRef msgFromOwner;
       const int32 numMessagesLeft = WaitForNextMessageFromOwner(msgFromOwner, pulseTime);
 
-      if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket(), SOCKET_SET_READ)))
+      if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket, SOCKET_SET_READ)))
       {
          const uint64 currentNetworkTime = _hbtState.GetNetworkTime64ForRunTime64(GetRunTime64());
 
