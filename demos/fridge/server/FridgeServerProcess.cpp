@@ -1,4 +1,5 @@
 #include "reflector/ReflectServer.h"
+#include "system/MessageTransceiverThread.h"
 #include "zg/ZGConstants.h"   // for GetRandomNumber()
 #include "zg/ZGPeerSettings.h"
 #include "zg/discovery/server/DiscoveryServerSession.h"
@@ -181,8 +182,8 @@ int RunFridgeServerProcess(const char * systemName)
    // they can find us without knowing our IP address and port in advance
    DiscoveryServerSession sdss(fridgePeerSession);
 
-   // This object implements the standard MUSCLE event loop and network services
-   ReflectServer server;
+   // This object implements the standard MUSCLE event loop and network services in a child thread
+   MessageTransceiverThread server;
 
    // Allocate a TCP port to accept incoming client connections on
    status_t ret;
@@ -202,18 +203,20 @@ int RunFridgeServerProcess(const char * systemName)
      &&(server.AddNewSession(DummyDiscoveryServerSessionRef(sdss)).IsOK(ret)))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
-      ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
+      ret = server.StartInternalThread();
       if (ret.IsOK())
       {
-         LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
+         LogTime(MUSCLE_LOG_INFO, "Event loop is running in the MessageTransceiverThread object's internal thread;  main thread will wait 1 minute then shut it down and exit.\n");
+         Snooze64(MinutesToMicros(1));
+         LogTime(MUSCLE_LOG_INFO, "Time to die, internal thread!\n");
          exitCode = 0;
       }
       else LogTime(MUSCLE_LOG_ERROR, "Event loop exited with error [%s]\n", ret());
    }
    else LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up sessions [%s]!\n", ret());
 
-   // Required in order to ensure an orderly shutdown
-   server.Cleanup();
+   // Stop the MessageTransceiverThread's internal thread cleanly
+   server.Reset();
 
    return exitCode;
 }
