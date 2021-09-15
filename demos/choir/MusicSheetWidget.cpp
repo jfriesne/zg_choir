@@ -210,11 +210,12 @@ void MusicSheetWidget :: mousePressEvent(QMouseEvent * e)
 {
    if (e->button() == Qt::LeftButton)
    {
-      const uint32 chordIdx = GetChordIndexForX(e->x()); 
+      const QPoint p = e->pos();
+      const uint32 chordIdx = GetChordIndexForX(p.x());
 
-      if (e->y() >= _titleHeightPixels)
+      if (p.y() >= _titleHeightPixels)
       {
-         const uint32 noteIdx = GetNoteForY(e->y());
+         const uint32 noteIdx = GetNoteForY(p.y());
          if ((chordIdx != MUSCLE_NO_LIMIT)&&(noteIdx != MUSCLE_NO_LIMIT)) emit NotePositionClicked(chordIdx, noteIdx);
       }
       else 
@@ -230,9 +231,10 @@ void MusicSheetWidget :: mouseMoveEvent(QMouseEvent * e)
 {
    QWidget::mouseMoveEvent(e);
 
+   const QPoint p = e->pos();
    if (_seekDraggingIndex != MUSCLE_NO_LIMIT)
    {
-      uint32 newIdx = GetChordIndexForX(e->x());
+      const uint32 newIdx = GetChordIndexForX(p.x());
       if ((newIdx != _seekDraggingIndex)&&(newIdx != MUSCLE_NO_LIMIT))
       {
          _seekDraggingIndex = newIdx;
@@ -241,8 +243,8 @@ void MusicSheetWidget :: mouseMoveEvent(QMouseEvent * e)
    }
    else
    {
-      const uint32 newChordIndex = GetChordIndexForX(e->x());
-      const uint32 newNoteIndex  = GetNoteForY(e->y());
+      const uint32 newChordIndex = GetChordIndexForX(p.x());
+      const uint32 newNoteIndex  = GetNoteForY(p.y());
 
       if ((newChordIndex != _ghostChordIndex)||(newNoteIndex != _ghostNoteIndex)) 
       {

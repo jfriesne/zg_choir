@@ -2,7 +2,11 @@
 #define Quasimodo_h
 
 #include <QObject>
-#include <QAudioOutput>
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
+# include <QAudioOutput>
+#else
+# include <QAudioSink>
+#endif
 #include <QIODevice>
 
 #include "ChoirNameSpace.h"
@@ -11,7 +15,7 @@
 namespace choir {
 
 /** This object is in charge of actually ringing the local bells (using QAudioOutput and a mixer algorithm)
-  * This is done within a separate thread, so that the timing of the bell-ringing won't be affected GUI operations
+  * This is done within a separate thread, so that the timing of the bell-ringing won't be affected by GUI operations
   */
 class Quasimodo : public QIODevice
 {
@@ -61,7 +65,12 @@ protected:
 private:
    void MixSamples(int16 * mixTo, uint32 numSamplesToMix, uint32 inputSampleOffset, uint64 notesChord) const;
 
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    QAudioOutput * _audioOutput;
+#else
+   QAudioSink * _audioOutput;
+#endif
+
    uint64 _localNotesChord;
    uint64 _sampleCounter;
 

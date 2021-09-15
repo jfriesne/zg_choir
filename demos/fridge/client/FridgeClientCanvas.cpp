@@ -43,14 +43,16 @@ String FridgeClientCanvas :: GetMagnetAtPoint(const QPoint & pt) const
 
 void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
 {
-   String clickedOn = GetMagnetAtPoint(e->pos());
+   const QPoint p = e->pos();
+
+   const String clickedOn = GetMagnetAtPoint(e->pos());
    if (clickedOn.HasChars())
    {
       const MagnetState & magnet = _magnets[clickedOn];
 
       const Point & ulp = magnet.GetUpperLeftPos();
       _draggingID     = clickedOn;
-      _dragDelta      = QPoint(e->x()-ulp.x(), e->y()-ulp.y());
+      _dragDelta      = QPoint(p.x()-ulp.x(), p.y()-ulp.y());
       _firstMouseMove = true;
 
       (void) BeginUndoSequence(String("Move Magnet \"%1\"").Arg(magnet.GetText()));
@@ -61,7 +63,7 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       // ask the senior peer to return a random word for us to use, rather than generating 
       // the word  ourself.
       MessageRef requestMsg = GetMessageFromPool(FRIDGE_COMMAND_GETRANDOMWORD);
-      if ((requestMsg())&&(requestMsg()->AddPoint("pos", Point(e->x(), e->y())).IsOK()))
+      if ((requestMsg())&&(requestMsg()->AddPoint("pos", Point(p.x(), p.y())).IsOK()))
       {
          const status_t ret = SendMessageToTreeSeniorPeer(requestMsg);
          if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Error, SendMessageToTreeSeniorPeer() failed!  [%s]\n", ret());

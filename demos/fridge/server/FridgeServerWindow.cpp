@@ -25,7 +25,11 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
 
    QBoxLayout * vbl = new QBoxLayout(QBoxLayout::TopToBottom, central);
    vbl->setSpacing(3);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    vbl->setMargin(2);
+#else
+   vbl->setContentsMargins(2,2,2,2);
+#endif
 
    QWidget * headerLine = new QWidget;
    {

@@ -163,13 +163,21 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
          QWidget * topPart = new QWidget;
          {
             QBoxLayout * topPartLayout = new QBoxLayout(QBoxLayout::TopToBottom, topPart);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
             topPartLayout->setMargin(3);
+#else
+            topPartLayout->setContentsMargins(3,3,3,3);
+#endif
             topPartLayout->setSpacing(2);
 
             QWidget * topButtonsRow = new QWidget;
             {
                QBoxLayout * tbrLayout = new QBoxLayout(QBoxLayout::LeftToRight, topButtonsRow);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
                tbrLayout->setMargin(0);
+#else
+               tbrLayout->setContentsMargins(0,0,0,0);
+#endif
 
                _undoButton = new QPushButton(tr("Undo"));
                connect(_undoButton, SIGNAL(clicked()), this, SLOT(Undo()));
@@ -197,7 +205,11 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
             QWidget * bottomButtonsRow = new QWidget;
             {
                QBoxLayout * bbrLayout = new QBoxLayout(QBoxLayout::LeftToRight, bottomButtonsRow);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
                bbrLayout->setMargin(0);
+#else
+               bbrLayout->setContentsMargins(0,0,0,0);
+#endif
 
                bbrLayout->addStretch();
    

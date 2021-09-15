@@ -1,3 +1,8 @@
+#include <QAudioFormat>
+#if (QT_VERSION >= QT_VERSION_CHECK(6,0,0))
+# include <QAudioDevice>
+# include <QMediaDevices>
+#endif
 #include <QFile>
 
 #include "Quasimodo.h"
@@ -74,10 +79,14 @@ void Quasimodo :: SetupTheBells()
    QAudioFormat fmt;
    fmt.setChannelCount(1);
    fmt.setSampleRate(AUDIO_SAMPLE_RATE);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    fmt.setSampleSize(16);
    fmt.setSampleType(QAudioFormat::SignedInt);
    fmt.setByteOrder(QAudioFormat::LittleEndian);
    fmt.setCodec("audio/pcm");
+#else
+   fmt.setSampleFormat(QAudioFormat::Int16);
+#endif
 
    for (uint32 i=0; i<ARRAYITEMS(_noteBufs); i++) 
    {
@@ -85,10 +94,19 @@ void Quasimodo :: SetupTheBells()
       _maxNoteLengthSamples = muscleMax(_maxNoteLengthSamples, (uint32) (_noteBufs[i].size()/sizeof(int16)));
    }
 
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    QAudioDeviceInfo adi(QAudioDeviceInfo::defaultOutputDevice());
+#else
+   QAudioDevice adi(QMediaDevices::defaultAudioOutput());
+#endif
    if (adi.isFormatSupported(fmt) == false) LogTime(MUSCLE_LOG_ERROR, "Audio format not supported by audio device, can't play audio!\n");
 
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    _audioOutput = new QAudioOutput(adi, fmt);
+#else
+   _audioOutput = new QAudioSink(adi, fmt);
+#endif
+
    _audioOutput->setBufferSize(MIX_BUFFER_SIZE_SAMPLES*sizeof(int16));  // for lower latency
    _audioOutput->start(this);
 }

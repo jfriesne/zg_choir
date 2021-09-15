@@ -238,7 +238,7 @@ void RosterWidget :: mouseMoveEvent(QMouseEvent * e)
    QWidget::mouseMoveEvent(e);
    if (_draggingNoteIdx >= 0)  
    {
-      _draggingNoteY = e->y();
+      _draggingNoteY = e->pos().y();
       update();
    }
    e->accept();
@@ -260,11 +260,12 @@ void RosterWidget :: mouseReleaseEvent(QMouseEvent * e)
 
 void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
 {
-   const int logicalY = e->y()+_scrollOffsetY;
+   const QPoint p = e->pos();
+   const int logicalY = p.y()+_scrollOffsetY;
    const uint32 rowIdx = GetRowForY(logicalY);
    if (rowIdx < _onlinePeers.GetNumItems())
    {
-      const uint32 noteIdx = (_draggingNoteIdx >= 0) ? _draggingNoteIdx : GetNoteIndexForX(e->x());
+      const uint32 noteIdx = (_draggingNoteIdx >= 0) ? _draggingNoteIdx : GetNoteIndexForX(p.x());
       if (noteIdx != MUSCLE_NO_LIMIT) 
       {
          const uint64 chord     = _assigns()  ? _assigns()->GetNoteAssignmentsForPeerID(GetPeerIDForRow(rowIdx)) : 0;
@@ -276,13 +277,13 @@ void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
             if (cellHasBell) 
             {
                _draggingNoteIdx     = noteIdx;
-               _draggingNoteY       = e->y();
-               _draggingNoteYStart  = e->y();
+               _draggingNoteY       = p.y();
+               _draggingNoteYStart  = p.y();
                _draggingNoteYOffset = (logicalY-(GetYForRow(rowIdx)+(_rowHeight/2)));
             }
             emitSignal = true;
          }
-         else emitSignal = ((!cellHasBell)&&(muscleAbs(e->y()-_draggingNoteYStart)>5));
+         else emitSignal = ((!cellHasBell)&&(muscleAbs(p.y()-_draggingNoteYStart)>5));
    
          if (emitSignal) emit BellPositionClicked(GetPeerIDForRow(rowIdx), (_draggingNoteIdx>=0)?_draggingNoteIdx:noteIdx);  // remove the existing bell or add one
       }

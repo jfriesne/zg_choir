@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QApplication>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QLabel>
@@ -62,12 +63,20 @@ ChoirWindow :: ChoirWindow()
 
    QBoxLayout * vbl = new QBoxLayout(QBoxLayout::TopToBottom, central);
    vbl->setSpacing(3);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    vbl->setMargin(2);
+#else
+   vbl->setContentsMargins(2,2,2,2);
+#endif
 
    QWidget * musicAndScroll = new QWidget;
    {
       QBoxLayout * sbl = new QBoxLayout(QBoxLayout::TopToBottom, musicAndScroll);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
       sbl->setMargin(0);
+#else
+      sbl->setContentsMargins(0,0,0,0);
+#endif
       sbl->setSpacing(0);
 
       _musicSheetWidget = new MusicSheetWidget(_serverThread.GetNetworkTimeProvider());
@@ -89,7 +98,11 @@ ChoirWindow :: ChoirWindow()
    {
       QBoxLayout * hbl = new QBoxLayout(QBoxLayout::LeftToRight, buttonsRow);
       hbl->setSpacing(3);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
       hbl->setMargin(3);
+#else
+      hbl->setContentsMargins(3,3,3,3);
+#endif
 
       _clearButton = CreateButton(":/choir_clear_song.png", SLOT(ClearSong()), false, hbl);
       hbl->addSpacing(10);
@@ -156,7 +169,11 @@ ChoirWindow :: ChoirWindow()
    QWidget * rosterAndScroll = new QWidget;
    {
       QBoxLayout * hbl = new QBoxLayout(QBoxLayout::LeftToRight, rosterAndScroll);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
       hbl->setMargin(0);
+#else
+      hbl->setContentsMargins(0,0,0,0);
+#endif
       hbl->setSpacing(0);
       {
          _rosterWidget = new RosterWidget(GetLocalPeerID());

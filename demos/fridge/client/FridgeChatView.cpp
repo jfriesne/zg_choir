@@ -16,12 +16,20 @@ FridgeChatView :: FridgeChatView(ITreeGateway * connector, const QString & initi
    , _updateDisplayPending(false)
 {
    QBoxLayout * hbl = new QBoxLayout(QBoxLayout::LeftToRight, this);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
    hbl->setMargin(5);
+#else
+   hbl->setContentsMargins(5,5,5,5);
+#endif
 
    QWidget * leftWidget = new QWidget;
    {
       QBoxLayout * vbl = new QBoxLayout(QBoxLayout::TopToBottom, leftWidget);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
       vbl->setMargin(0);
+#else
+      vbl->setContentsMargins(0,0,0,0);
+#endif
 
       _chatText = new QTextEdit;
       _chatText->setReadOnly(true);
@@ -30,7 +38,11 @@ FridgeChatView :: FridgeChatView(ITreeGateway * connector, const QString & initi
       QWidget * bottomWidget = new QWidget;
       {
          QBoxLayout * bottomLayout = new QBoxLayout(QBoxLayout::LeftToRight, bottomWidget);
+#if (QT_VERSION < QT_VERSION_CHECK(6,0,0))
          bottomLayout->setMargin(0);
+#else
+         bottomLayout->setContentsMargins(0,0,0,0);
+#endif
 
          _userName = new QLineEdit;
          _userName->setFixedWidth(100);
@@ -159,7 +171,7 @@ void FridgeChatView :: AcceptKeyPressEventFromWindow(QKeyEvent * e)
 
 void FridgeChatView :: UserNameDoubleClicked(QListWidgetItem * item)
 {
-   (void) UploadNewChatLine(item->text());
+   (void) UploadNewChatLine(tr("Hey ") + item->text());
 }
 
 QString FridgeChatView :: GetLocalUserName() const 
