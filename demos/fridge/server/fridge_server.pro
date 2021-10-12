@@ -9,7 +9,7 @@ MOC_DIR         = moc
 MUSCLE_DIR      = ../../../submodules/muscle
 ZG_DIR          = ../../..
 INCLUDEPATH    += $$MUSCLE_DIR $$ZG_DIR/include $$ZG_DIR/demos/fridge
-CONFIG         += qt warn_on rtti link_prl c++11
+CONFIG         += qt warn_on rtti link_prl c++11 release
 QMAKE_MACOSX_DEPLOYMENT_TARGET=10.10  # needed for c++11 support
 
 TARGET = FridgeServer
