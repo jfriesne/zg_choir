@@ -272,6 +272,39 @@ protected:
      */
    status_t MoveIndexEntries(const String & nodePath, const String & optBefore, const ConstQueryFilterRef & filterRef, const String & optOpTag = GetEmptyString());
 
+   /** Pass-through to StorageReflectSession::SaveNodeTreeToMessage() on our MessageTreeDatabasePeerSession object
+    * Recursively saves a given subtree of the node database into the given Message object, for safe-keeping.
+    * (It's a bit more efficient than it looks, since all data Messages are reference counted rather than copied)
+    * @param msg the Message to save the subtree into.  This object can later be provided to RestoreNodeTreeFromMessage() to restore the subtree.
+    * @param node The node to begin recursion from (i.e. the root of the subtree)
+    * @param path The path to prepend to the paths of children of the node.  Used in the recursion; you typically want to pass in "" here.
+    * @param saveData Whether or not the payload Message of (node) should be saved.  The payload Messages of (node)'s children will always be saved no matter what, as long as (maxDepth) is greater than zero.
+    * @param maxDepth How many levels of children should be saved to the Message.  If left as MUSCLE_NO_LIMIT (the default),
+    *                 the entire subtree will be saved; otherwise the tree will be clipped to at most (maxDepth) levels.
+    *                 If (maxDepth) is zero, only (node) will be saved.
+    * @param optPruner If set non-NULL, this object will be used as a callback to prune the traversal, and optionally
+    *                  to filter the data that gets saved into (msg).
+    * @returns B_NO_ERROR on success, or an error code on failure.
+    */
+   status_t SaveNodeTreeToMessage(Message & msg, const DataNode & node, const String & path, bool saveData, uint32 maxDepth = MUSCLE_NO_LIMIT, const ITraversalPruner * optPruner = NULL) const;
+
+   /** Pass-through to StorageReflectSession::RestoreNodeTreeFromMessage() on our MessageTreeDatabasePeerSession object
+    * Recursively creates or updates a subtree of the node database from the given Message object.
+    * (It's a bit more efficient than it looks, since all data Messages are reference counted rather than copied)
+    * @param msg the Message to restore the subtree from.  This Message is typically one that was created earlier by SaveNodeTreeToMessage().
+    * @param path The relative path of the root node to add restored nodes into, e.g. "" is your MessageTreeDatabaseObject's rootNodePath-node.
+    * @param loadData Whether or not the payload Message of (node) should be restored.  The payload Messages of (node)'s children will always be restored no matter what.
+    * @param flags Optional bit-chord of SETDATANODE_FLAG_* bits to affect our behavior.  Defaults to no-flags-set.
+    * @param maxDepth How many levels of children should be restored from the Message.  If left as MUSCLE_NO_LIMIT (the default),
+    *                 the entire subtree will be restored; otherwise the tree will be clipped to at most (maxDepth) levels.
+    *                 If (maxDepth) is zero, only (node) will be restored.
+    * @param optPruner If set non-NULL, this object will be used as a callback to prune the traversal, and optionally
+    *                  to filter the data that gets loaded from (msg).
+     * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
+    * @returns B_NO_ERROR on success, or an error code on failure.
+    */
+   status_t RestoreNodeTreeFromMessage(const Message & msg, const String & path, bool loadData, SetDataNodeFlags flags = SetDataNodeFlags(), uint32 maxDepth = MUSCLE_NO_LIMIT, const ITraversalPruner * optPruner = NULL, const String & optOpTag = GetEmptyString());
+
    // A little RIAA class to manage pushing/popping the _opTagStack for us automagically
    class OpTagGuard
    {
