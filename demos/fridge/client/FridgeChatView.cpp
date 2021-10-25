@@ -7,7 +7,6 @@
 
 #include "ClientRosterList.h"
 #include "FridgeChatView.h"
-#include "zg/messagetree/gateway/ITreeGateway.h"  // this include is required in order to avoid linker errors(!?)
 
 namespace fridge {
 

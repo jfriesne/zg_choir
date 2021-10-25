@@ -352,4 +352,6 @@ private:
 
 };  // end namespace zg
 
+#include "zg/messagetree/gateway/ITreeGateway.h"  // here to avoid linker issues with SetGateway()
+
 #endif
