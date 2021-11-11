@@ -146,7 +146,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          dios.Clear();
 
          // Install the new DataIOs
-         dios = _hbSettings()->CreateMulticastDataIOs(true, true);
+         dios = _hbSettings()->CreateMulticastDataIOs(true, _master->GetNetworkInterfaceFilter());
          if (dios.HasItems())
          {
             for (uint32 i=0; i<dios.GetNumItems(); i++) 

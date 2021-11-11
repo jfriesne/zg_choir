@@ -5,6 +5,7 @@
 #include "system/DetectNetworkConfigChangesSession.h"  // for INetworkConfigChangesTarget
 
 #include "zg/INetworkTimeProvider.h"
+#include "zg/INetworkInterfaceFilter.h"
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/ZGStdinSession.h"               // for ITextCommandReceiver
@@ -27,7 +28,7 @@ namespace zg
 /** This is the class that a user program would typically subclass from
   * and add to a ReflectServer in order to participate in a ZG system.
   */
-class ZGPeerSession : public StorageReflectSession, public ITextCommandReceiver, public INetworkConfigChangesTarget, public INetworkTimeProvider, public IDiscoveryServerSessionController
+class ZGPeerSession : public StorageReflectSession, public ITextCommandReceiver, public INetworkConfigChangesTarget, public INetworkInterfaceFilter, public INetworkTimeProvider, public IDiscoveryServerSessionController
 {
 public:
    /** Constructor
@@ -73,6 +74,14 @@ public:
 
    /** Returns the ZGPeerSettings object, as passed to our constructor. */
    const ZGPeerSettings & GetPeerSettings() const {return _peerSettings;}
+
+   /** This is called by the ZG networking code to determine if it is allowed to use the specified
+     * Network Interface.  Default implementation always returns true, but you can override this in
+     * a subclass if you want to limit ZG's networking to only certain interfaces.
+     * @param nii a description of the Network Interface that ZG is considering whether to use or not.
+     * @note this method is part of the INetworkInterfaceFilter interface-class
+     */
+   virtual bool IsOkayToUseNetworkInterface(const NetworkInterfaceInfo & nii) const;
 
    /** Called when the set of available network interfaces on this computer has changed.
      * Default implementation is a no-op.

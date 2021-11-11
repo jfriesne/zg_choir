@@ -93,6 +93,8 @@ public:
 
    IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;
 
+   const INetworkInterfaceFilter * GetNetworkInterfaceFilter() const;
+
 protected:
    virtual void InternalThreadEntry();
    virtual void MessageReceivedFromInternalThread(const MessageRef & msg, uint32 numLeft);

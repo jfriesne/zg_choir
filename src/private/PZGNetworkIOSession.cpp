@@ -369,7 +369,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
          ptGateways.Clear();
 
          // Install the new DataIO
-         dios = _hbSettings()->CreateMulticastDataIOs(false, true);
+         dios = _hbSettings()->CreateMulticastDataIOs(false, GetNetworkInterfaceFilter());
          if (dios.HasItems())
          {
             for (uint32 i=0; i<dios.GetNumItems(); i++)
@@ -689,6 +689,11 @@ uint64 PZGNetworkIOSession :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID)
 uint16 PZGNetworkIOSession :: GetTimeSyncUDPPort() const
 {
    return _hbSession() ? _hbSession()->MainThreadGetTimeSyncUDPPort() : 0;
+}
+
+const INetworkInterfaceFilter * PZGNetworkIOSession :: GetNetworkInterfaceFilter() const
+{
+   return _master;
 }
 
 };  // end namespace zg_private

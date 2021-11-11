@@ -3,6 +3,7 @@
 
 #include "dataio/DataIO.h"
 #include "dataio/PacketDataIO.h"
+#include "zg/INetworkInterfaceFilter.h"
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSettings.h"
 #include "zg/private/PZGNameSpace.h"
@@ -33,10 +34,11 @@ public:
 
    /** Convenience method:  Creates and returns a set of Multicast UDP sockets suitable for use with either heartbeat or data traffic.
      * @param isForHeartbeats If true, this socket is for use carrying heartbeats traffic; if false, it's intended to be used for data-payload traffic
-     * @param includeWiFi If true we'll include DataIOs for any WiFi interfaces as well; if false we'll only include a DataIO for the wired interfaces.
+     * @param optNetworkInterfaceFilter if non-NULL, we'll call IsOkayToUseNetworkInterface() on this object to decide whether or not we are allowed to
+     *                                  use a particular network interface.
      * @returns A list of DataIORefs.  On failure, the list will be empty.
      */
-   Queue<PacketDataIORef> CreateMulticastDataIOs(bool isForHeartbeats, bool includeWiFi) const;
+   Queue<PacketDataIORef> CreateMulticastDataIOs(bool isForHeartbeats, const INetworkInterfaceFilter * optNetworkInterfaceFilter) const;
 
    /** Returns a list of network interfaces that are okay for us to use if we want to */
    Queue<NetworkInterfaceInfo> GetNetworkInterfaceInfos() const;

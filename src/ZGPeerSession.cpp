@@ -619,4 +619,9 @@ Queue<IPAddressAndPort> ZGPeerSession :: GetUnicastIPAddressAndPortsForPeerID(co
    }
 }
 
+bool ZGPeerSession :: IsOkayToUseNetworkInterface(const NetworkInterfaceInfo &) const
+{
+   return true;  // by default, use every network interface we can
+}
+
 };  // end namespace zg

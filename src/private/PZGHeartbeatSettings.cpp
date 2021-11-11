@@ -93,7 +93,7 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
    return UDPSocketDataIORef();
 }
 
-Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isForHeartbeats, bool includeWiFi) const
+Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isForHeartbeats, const INetworkInterfaceFilter * optNetworkInterfaceFilter) const
 {
    const char * dataDesc = isForHeartbeats ? "heartbeats" : "data";
    Queue<PacketDataIORef> ret;
@@ -107,7 +107,6 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
       MULTICAST_MODE_AUTO = 0,  ///< Default mode -- use "real multicast" for wired network interfaces, and "simulated multicast" for Wi-Fi
       MULTICAST_MODE_STANDARD,  ///< Use "real multicast packets" on this network interface
       MULTICAST_MODE_SIMULATED, ///< Use "simulated multicast" on this network interface
-      MULTICAST_MODE_DISABLED,  ///< Don't use this network interface at all
       NUM_MULTICAST_MODES       ///< Guard value
    };
 
@@ -116,8 +115,8 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
       const NetworkInterfaceInfo & nii = niis[i];
 
       IPAddress nextMulticastAddress = multicastAddress;
-      int iidx = nii.GetLocalAddress().GetInterfaceIndex();
-      if ((iidx > 0)&&(iidxQ.Contains(iidx) == false))
+      const int iidx = nii.GetLocalAddress().GetInterfaceIndex();
+      if ((iidx > 0)&&(iidxQ.Contains(iidx) == false)&&((optNetworkInterfaceFilter == NULL)||(optNetworkInterfaceFilter->IsOkayToUseNetworkInterface(nii))))
       {
          nextMulticastAddress.SetInterfaceIndex(iidx);
 
@@ -134,14 +133,10 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
          // Decide which multicast mode to use   
          if (nii.GetHardwareType() == NETWORK_INTERFACE_HARDWARE_TYPE_WIFI)
          {
-            if (includeWiFi)
-            {
-               ifTypeDesc = "WiFi";
+            ifTypeDesc = "WiFi";
 
-               // Prefer simulated-multicast for Wi-Fi (real-multicast over Wi-Fi performs badly)
-               if (modeForThisNIC == MULTICAST_MODE_AUTO) modeForThisNIC = MULTICAST_MODE_SIMULATED;
-            }
-            else modeForThisNIC = MULTICAST_MODE_DISABLED;
+            // Prefer simulated-multicast for Wi-Fi (real-multicast over Wi-Fi performs badly)
+            if (modeForThisNIC == MULTICAST_MODE_AUTO) modeForThisNIC = MULTICAST_MODE_SIMULATED;
          }
          else
          {
