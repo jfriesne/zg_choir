@@ -60,7 +60,22 @@ static ZGPeerID GenerateLocalPeerID()
 
    // And finally some additional salt just to make use of the other 32 low-bits.  This probably isn't necessary, but I'm paranoid
    unsigned int seed = (unsigned int) time(NULL);
-   const uint32 salt = CalculateHashCode(GetCurrentTime64() + GetRunTime64() + GetRandomNumber(&seed));
+   uint32 salt = CalculateHashCode(GetCurrentTime64() + GetRunTime64() + GetRandomNumber(&seed));
+
+   // Add in the counter for cases where multiple ZGPeers are being started at the same time
+   // such that even the current-time values, etc might be all the same
+   {
+      status_t ret;
+      Mutex * m = GetGlobalMuscleLock();
+      if ((m)&&(m->Lock().IsOK(ret)))
+      {
+         static uint32 _counter = 0;
+         salt += ++_counter;
+         (void) m->Unlock();
+      }
+      else LogTime(MUSCLE_LOG_WARNING, "GenerateLocalPeerID():  Couldn't obtain global muscle lock! [%s]\n", ret());
+   }
+
    return ZGPeerID((macAddress<<16)|((uint64)GetNextUniqueObjectID()), (((uint64)processID)<<32)|((uint64)salt));
 }
 
