@@ -1,5 +1,6 @@
 #include "dataio/UDPSocketDataIO.h"
 #include "dataio/SimulatedMulticastDataIO.h"
+#include "util/MiscUtilityFunctions.h"
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
@@ -433,7 +434,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    const uint32 numBytes = defBuf.GetNumBytes();
    if (numBytes < HB_HEADER_SIZE)
    {
-      LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  buffer is too short!  (" UINT32_FORMAT_SPEC " bytes)\n", sourceIAP.ToString()(), numBytes);
+      LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  buffer is too short!  (" UINT32_FORMAT_SPEC " bytes:  %s)\n", sourceIAP.ToString()(), numBytes, HexBytesToString(defBuf)());
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
