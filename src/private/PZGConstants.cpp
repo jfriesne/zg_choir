@@ -30,7 +30,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
            case B_INT64_TYPE:  ret += String(" %1=%2").Arg(fn).Arg(pm.GetInt64(fn));  break;
            case B_INT32_TYPE:  ret += String(" %1=%2").Arg(fn).Arg(pm.GetInt32(fn));  break;
            case B_INT16_TYPE:  ret += String(" %1=%2").Arg(fn).Arg(pm.GetInt16(fn));  break;
-           case B_INT8_TYPE:   ret += String(" %1=%2").Arg(fn).Arg(pm.GetInt8(fn));   break;
+           case B_INT8_TYPE:   ret += String(" %1=%2").Arg(fn).Arg((int)pm.GetInt8(fn)); break;
            case B_STRING_TYPE: ret += String(" %1=%2").Arg(fn).Arg(pm.GetString(fn)); break;
            default:   /* do nothing */ break;
          }

@@ -52,7 +52,7 @@ ConstMessageRef ChoirSession :: GenerateLatenciesMessage() const
       const ZGPeerID & pid = iter.GetKey();
       if ((msg()->AddFlat(CHOIR_NAME_PEER_ID, pid).IsOK())&&(msg()->AddInt64(CHOIR_NAME_PEER_LATENCY, GetEstimatedLatencyToPeer(pid)).IsError())) 
       {
-         (void) msg()->RemoveData(CHOIR_NAME_PEER_ID, msg()->GetNumValuesInName(CHOIR_NAME_PEER_ID-1));  // roll back!
+         (void) msg()->RemoveData(CHOIR_NAME_PEER_ID, msg()->GetNumValuesInName(CHOIR_NAME_PEER_ID)-1);  // roll back!
       }
    }
    return AddConstToRef(msg);
