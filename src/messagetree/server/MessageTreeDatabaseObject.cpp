@@ -295,7 +295,7 @@ void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node,
    s += node.GetNodePath().Pad(indentLevel);
 
    const Message * msg = node.GetData()();
-   s += String(" (msg->what=%1, #Fields=%2, FlattenedSize=%3, #children=%4, indexSize=%5)\n").Arg(msg?msg->what:666).Arg(msg?msg->GetNumNames():666).Arg(msg?msg->FlattenedSize():666).Arg(node.GetNumChildren()).Arg(node.GetIndex()?node.GetIndex()->GetNumItems():0);
+   s += String(" (msg->what=%1, #Fields=%2, FlattenedSize=%3, Checksum=%4 #children=%5, indexSize=%6)\n").Arg(msg?msg->what:666).Arg(msg?msg->GetNumNames():666).Arg(msg?msg->FlattenedSize():666).Arg(msg?msg->CalculateChecksum():666).Arg(node.GetNumChildren()).Arg(node.GetIndex()?node.GetIndex()->GetNumItems():0);
    for (DataNodeRefIterator dnIter(node.GetChildIterator()); dnIter.HasData(); dnIter++) DumpDescriptionToString(*dnIter.GetValue()(), s, indentLevel+2);
 }
 
