@@ -292,7 +292,11 @@ String MessageTreeDatabaseObject :: ToString() const
 
 void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const
 {
-   s += node.GetNodePath().Pad(indentLevel).Append("\n");
+   s += node.GetNodePath().Pad(indentLevel);
+
+   const Message * msg = node.GetData()();
+   s += String(" (msg->what=%1, #Fields=%2, FlattenedSize=%3, #children=%4, indexSize=%5)\n").Arg(msg?msg->what:666).Arg(msg?msg->GetNumNames():666).Arg(msg?msg->FlattenedSize():666).Arg(node.GetNumChildren()).Arg(node.GetIndex()?node.GetIndex()->GetNumItems():0);
+   for (DataNodeRefIterator dnIter(node.GetChildIterator()); dnIter.HasData(); dnIter++) DumpDescriptionToString(*dnIter.GetValue()(), s, indentLevel+2);
 }
 
 status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)

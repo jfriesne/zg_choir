@@ -511,23 +511,24 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
       {
          if (optUpdateData())
          {
-            LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Received full database state from senior peer.\n", _whichDatabase);
+            LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Received full-database-state from senior peer (%s)\n", _whichDatabase, seniorPeerID.ToString()());
             NestCountGuard ncg(_inJuniorDatabaseUpdate);
             if (JuniorExecuteDatabaseReplace(*optUpdateData()).IsOK()) ScheduleLogContentsRescan();
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC ":  Senior peer failed to send full database state to us!\n", _whichDatabase, ubok.GetDatabaseUpdateID());  // now what do we do?
+         else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC ":  Senior peer (%s) failed to send full-database-state to us!\n", _whichDatabase, seniorPeerID.ToString()());  // now what do we do?
       }
       else
       {
          if ((optUpdateData())&&(_updateLog.Put(ubok.GetDatabaseUpdateID(), optUpdateData).IsOK()))
          {
-            LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " received from senior peer.\n", _whichDatabase, ubok.GetDatabaseUpdateID());
+            LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " received from senior peer (%s)\n", _whichDatabase, ubok.GetDatabaseUpdateID(), seniorPeerID.ToString()());
             ScheduleLogContentsRescan();
          }
          else
          {
-            LogTime(MUSCLE_LOG_WARNING, "Database #" UINT32_FORMAT_SPEC ":  Necessary back-order of database update #" UINT64_FORMAT_SPEC " failed, requesting full database to recover.\n", _whichDatabase, ubok.GetDatabaseUpdateID());
-            if (RequestFullDatabaseResendFromSeniorPeer().IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed!\n");
+            LogTime(MUSCLE_LOG_WARNING, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " from senior peer (%s) failed, requesting full database to recover.\n", _whichDatabase, ubok.GetDatabaseUpdateID(), seniorPeerID.ToString()());
+            status_t ret;
+            if (RequestFullDatabaseResendFromSeniorPeer().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Request to senior peer (%s) for full-database-resend failed! [%s]\n", seniorPeerID.ToString()(), ret());
          }
       }
    }
