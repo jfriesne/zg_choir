@@ -85,7 +85,8 @@ ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp                     \
              $$ZG_DIR/src/ZGStdinSession.cpp                    \
              $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp
 
-PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
+PZG_SOURCES = $$ZG_DIR/src/private/PZGCaffeine.cpp              \
+              $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGThreadedSession.cpp       \
               $$ZG_DIR/src/private/PZGHeartbeatSettings.cpp     \
               $$ZG_DIR/src/private/PZGNetworkIOSession.cpp      \
@@ -99,6 +100,8 @@ PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGHeartbeatPeerInfo.cpp     \
               $$ZG_DIR/src/private/PZGHeartbeatSourceState.cpp  \
               $$ZG_DIR/src/private/PZGHeartbeatThreadState.cpp
+
+mac:OBJECTIVE_SOURCES += $$ZG_DIR/src/private/disable_app_nap.mm
 
 SERVER_SOURCES = $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp        \
                  $$ZG_DIR/src/discovery/server/DiscoveryServerSession.cpp           \

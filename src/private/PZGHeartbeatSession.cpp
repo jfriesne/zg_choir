@@ -2,6 +2,7 @@
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
+#include "zg/private/PZGCaffeine.h"
 #include "zg/private/PZGConstants.h"
 #include "zg/private/PZGHeartbeatPacket.h"
 #include "zg/private/PZGHeartbeatSession.h"
@@ -124,6 +125,8 @@ void PZGHeartbeatSession :: EndSession()
 
 void PZGHeartbeatSession :: InternalThreadEntry()
 {
+   const PZGCaffeine caffeine("Sending Heartbeats");  // keep MacOS/X from app-napping on us and causing other peers to think we've gone offline when we don't sent heartbeats on schedule
+
    _hbtState.Initialize(_hbSettings, GetRunTime64());
    Queue<MessageRef> messagesForOwnerThread;
 

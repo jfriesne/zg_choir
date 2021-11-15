@@ -90,7 +90,8 @@ ZG_SOURCES = $$ZG_DIR/src/ZGPeerSession.cpp                     \
              $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp          \
              $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp
 
-PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
+PZG_SOURCES = $$ZG_DIR/src/private/PZGCaffeine.cpp              \
+              $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGThreadedSession.cpp       \
               $$ZG_DIR/src/private/PZGHeartbeatSettings.cpp     \
               $$ZG_DIR/src/private/PZGNetworkIOSession.cpp      \
@@ -104,6 +105,8 @@ PZG_SOURCES = $$ZG_DIR/src/private/PZGHeartbeatSession.cpp      \
               $$ZG_DIR/src/private/PZGHeartbeatPeerInfo.cpp     \
               $$ZG_DIR/src/private/PZGHeartbeatSourceState.cpp  \
               $$ZG_DIR/src/private/PZGHeartbeatThreadState.cpp
+
+mac:OBJECTIVE_SOURCES += $$ZG_DIR/src/private/disable_app_nap.mm
 
 win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
                         $$MUSCLE_DIR/regex/regex/regerror.c     \
@@ -124,7 +127,6 @@ win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
 
 !win32:MUSCLE_SOURCES += $$MUSCLE_DIR/dataio/FileDescriptorDataIO.cpp
 
-mac:OBJECTIVE_SOURCES += disable_app_nap.mm
 mac:LIBS              += -framework Foundation
 
 CHOIR_SOURCES = choir.cpp              \

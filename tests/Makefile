@@ -13,6 +13,9 @@ CXXFLAGS = $(CFLAGS) -O3 $(DEFINES)
 #CXXFLAGS += --analyze -Xanalyzer -analyzer-output=text
 #CFLAGS   += --analyze -Xanalyzer -analyzer-output=text
 
+%.o : %.mm
+	$(CXX) -c $(CXXFLAGS) $< -o $@
+
 LFLAGS      =  
 LIBS        = -lpthread
 EXECUTABLES = test_peer test_udp_multicast_transceiver tree_server tree_client connector_client discovery_client
@@ -20,7 +23,7 @@ ZLIBOBJS    = adler32.o deflate.o trees.o zutil.o inflate.o inftrees.o inffast.o
 MUSCLEOBJS  = Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o StringTokenizer.o SocketMultiplexer.o NetworkUtilityFunctions.o SysLog.o PulseNode.o SetupSystem.o ByteBuffer.o ZLibCodec.o SetupSystem.o ByteBufferPacketDataIO.o ByteBufferDataIO.o FileDataIO.o StdinDataIO.o TCPSocketDataIO.o UDPSocketDataIO.o SimulatedMulticastDataIO.o FileDescriptorDataIO.o MiscUtilityFunctions.o QueryFilter.o FilePathInfo.o ReflectServer.o StringMatcher.o ServerComponent.o AbstractReflectSession.o Thread.o Directory.o SignalHandlerSession.o SignalMultiplexer.o PlainTextMessageIOGateway.o DumbReflectSession.o StorageReflectSession.o PathMatcher.o DataNode.o ZLibUtilityFunctions.o DetectNetworkConfigChangesSession.o ProxyIOGateway.o PacketTunnelIOGateway.o SegmentedStringMatcher.o
 REGEXOBJS   = 
 ZGOBJS      = ZGPeerSession.o ZGStdinSession.o ZGDatabasePeerSession.o ZGTimeAverager.o DiscoveryUtilityFunctions.o
-PZGOBJS     = PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
+PZGOBJS     = PZGCaffeine.o PZGHeartbeatSession.o PZGThreadedSession.o PZGHeartbeatSettings.o PZGNetworkIOSession.o PZGHeartbeatPacket.o PZGUnicastSession.o PZGDatabaseState.o PZGDatabaseStateInfo.o PZGDatabaseUpdate.o PZGConstants.o PZGBeaconData.o PZGHeartbeatPeerInfo.o PZGHeartbeatThreadState.o PZGHeartbeatSourceState.o
 ZGTREECOMMONOBJS = ITreeGatewaySubscriber.o DummyTreeGateway.o ProxyTreeGateway.o MuxTreeGateway.o NetworkTreeGateway.o
 ZGTREESERVEROBJS = MessageTreeDatabasePeerSession.o MessageTreeDatabaseObject.o UndoStackMessageTreeDatabaseObject.o ServerSideMessageTreeSession.o ServerSideMessageUtilityFunctions.o DiscoveryServerSession.o ClientDataMessageTreeDatabaseObject.o
 ZGTREECLIENTOBJS = ClientSideMessageTreeSession.o SystemDiscoveryClient.o ClientConnector.o MessageTreeClientConnector.o TestTreeGatewaySubscriber.o
@@ -45,7 +48,9 @@ ifeq ($(OSTYPE),freebsd4.0)
 endif 
 
 ifeq ($(OSTYPE),darwin) 
-   LIBS += -framework IOKit -framework Carbon -framework SystemConfiguration
+   PZGOBJS += disable_app_nap.o
+
+   LIBS += -framework IOKit -framework Carbon -framework SystemConfiguration -framework Foundation
 
    # Enable C++11 support
    CXXFLAGS += -std=c++11 -stdlib=libc++ -DMUSCLE_USE_CPLUSPLUS11

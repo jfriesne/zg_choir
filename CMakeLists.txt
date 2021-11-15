@@ -36,13 +36,17 @@ file(GLOB ZG_SRCS
    "./src/udp/*.cpp"
    "./src/private/*.cpp"
 ) 
+if (APPLE)
+   file(GLOB MM_SRCS "./src/private/*.mm")
+   set(ZG_SRCS ${ZG_SRCS} ${MM_SRCS})
+endif (APPLE)
 
 add_library(zg ${ZG_SRCS})
 target_link_libraries(zg muscle)
 target_include_directories(zg PUBLIC include)
 
 if (APPLE)
-   target_link_libraries(zg "-framework IOKit")
+   target_link_libraries(zg "-framework IOKit -framework Foundation")
 endif (APPLE)
 
 option(WITH_TESTS "Enable building of zg tests" ON)
