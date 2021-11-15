@@ -76,8 +76,16 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
 
       case PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER:
       {
-         const uint32 whichDB  = msg()->GetInt32(PZG_PEER_NAME_DATABASE_ID);
-         const uint64 updateID = msg()->GetInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID);
+         status_t ret;
+         PZGUpdateBackOrderKey ubok;
+         if (msg()->FindFlat(PZG_PEER_NAME_BACK_ORDER, ubok).IsError(ret))
+         {
+            LogTime(MUSCLE_LOG_ERROR, "PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER:  Couldn't get PZGUpdateBackOrderKey from Message!  [%s]\n", ret());
+            return;
+         }
+
+         const uint32 whichDB  = ubok.GetDatabaseIndex();
+         const uint64 updateID = ubok.GetDatabaseUpdateID();
          if ((updateID == DATABASE_UPDATE_ID_FULL_UPDATE)&&(msg()->HasName(PZG_PEER_NAME_CHECKSUM_MISMATCH))) _master->VerifyOrFixLocalDatabaseChecksum(whichDB);  // so we can recover if the checksum has gone wrong
 
          ConstPZGDatabaseUpdateRef dbUp = _master->GetDatabaseUpdateByID(whichDB, updateID);
@@ -97,14 +105,19 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool();
          if ((dbUp())&&(msg()->FindFlat(PZG_PEER_NAME_DATABASE_UPDATE, *dbUp()).IsError())) dbUp.Reset();
 
-         const uint32 whichDB  = msg()->GetInt32(PZG_PEER_NAME_DATABASE_ID);
-         const uint64 updateID = msg()->GetInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID);
-         const PZGUpdateBackOrderKey ubok(_remotePeerID, whichDB, updateID);
+         status_t ret;
+         PZGUpdateBackOrderKey ubok;
+         if (msg()->FindFlat(PZG_PEER_NAME_BACK_ORDER, ubok).IsError(ret))
+         {
+            LogTime(MUSCLE_LOG_ERROR, "PZG_UNICAST_COMMAND_REPLY_BACK_ORDER:  Couldn't get PZGUpdateBackOrderKey from Message!  [%s]\n", ret());
+            return;
+         }
+
          if (_backorders.Remove(ubok).IsOK())
          {
             _master->BackOrderResultReceived(ubok, dbUp);
          }
-         else LogTime(MUSCLE_LOG_WARNING, "PZGUnicastSession:  Got a back-order reply that I don't remember asking for (db=" UINT32_FORMAT_SPEC " updateID=" UINT64_FORMAT_SPEC ")\n", whichDB, updateID);
+         else LogTime(MUSCLE_LOG_WARNING, "PZGUnicastSession:  Got a back-order reply that I don't remember asking for (%s)\n", ubok.ToString()());
       }
       break;
 
@@ -139,17 +152,12 @@ status_t PZGUnicastSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBack
 {
    if (_backorders.ContainsKey(ubok)) return B_NO_ERROR;  // semi-paranoia:  if it's already on back-order, no need to ask again
 
-   MRETURN_ON_ERROR(_backorders.PutWithDefault(ubok));
-
    MessageRef msg = GetMessageFromPool(PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER);
    MRETURN_OOM_ON_NULL(msg());
-   MRETURN_ON_ERROR(msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID,       ubok.GetDatabaseIndex()));
-   MRETURN_ON_ERROR(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()));
-   MRETURN_ON_ERROR(msg()->CAddBool(PZG_PEER_NAME_CHECKSUM_MISMATCH,  dueToChecksumError));
+   MRETURN_ON_ERROR(msg()->AddFlat(PZG_PEER_NAME_BACK_ORDER,         ubok));
+   MRETURN_ON_ERROR(msg()->CAddBool(PZG_PEER_NAME_CHECKSUM_MISMATCH, dueToChecksumError));
    MRETURN_ON_ERROR(AddOutgoingMessage(msg));
-
-   (void) _backorders.Remove(ubok);  // roll back!
-   return B_NO_ERROR;;
+   return _backorders.PutWithDefault(ubok);
 }
 
 };  // end namespace zg_private

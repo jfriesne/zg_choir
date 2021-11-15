@@ -102,13 +102,13 @@ public:
    /** Returns true iff (tc) equals ZG_PEER_ID_TYPE */
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
 
-   /** Part of the Flattenable pseudo-interface:  2*sizeof(uint64) */
+   /** Part of the Flattenable pseudo-interface:  Returns 2*sizeof(uint64) */
    static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return 2*sizeof(uint64);}
 
    /** Returns a 32-bit checksum for this object. */
    uint32 CalculateChecksum() const {return CalculateChecksumForUint64(_highBits) + (3*CalculateChecksumForUint64(_lowBits));}
 
-   /** Copies this point into an endian-neutral flattened buffer.
+   /** Copies this object into an endian-neutral flattened buffer.
     *  @param buffer Points to an array of at least FlattenedSize() bytes.
     */
    void Flatten(uint8 * buffer) const
@@ -117,7 +117,7 @@ public:
       muscleCopyOut(&buffer[1*sizeof(uint64)], B_HOST_TO_LENDIAN_INT64(_lowBits));
    }
 
-   /** Restores this point from an endian-neutral flattened buffer.
+   /** Restores this object from an endian-neutral flattened buffer.
     *  @param buffer Points to an array of (size) bytes
     *  @param size The number of bytes (buffer) points to (should be at least FlattenedSize())
     *  @return B_NO_ERROR on success, an error code on failure (size was too small)
