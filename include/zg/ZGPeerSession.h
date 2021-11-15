@@ -359,11 +359,12 @@ private:
    status_t SendRequestToSeniorPeer(uint32 whichDatabase, uint32 whatCode, const MessageRef & userMsg);
    status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, bool isMessageMeantForSeniorPeer);
    status_t SendDatabaseUpdateViaMulticast(const zg_private::ConstPZGDatabaseUpdateRef  & dbUp);
-   status_t RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok);
+   status_t RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
    status_t SendUnicastInternalMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
    status_t SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
    status_t SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg);
+   void VerifyOrFixLocalDatabaseChecksum(uint32 whichDB);
 
    // These methods are called from the PZGNetworkIOSession code
    void PrivateMessageReceivedFromPeer(const ZGPeerID & peerID, const MessageRef & msg);

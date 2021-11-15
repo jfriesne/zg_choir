@@ -54,7 +54,7 @@ public:
    status_t SetBeaconData(const ConstPZGBeaconDataRef & optBeaconData);
 
    /** Request that the senior peer send us the specified database update via unicast. */
-   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok);
+   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
 
    /** Returns true iff the specified peer is currently online */
    bool IsPeerOnline(const ZGPeerID & id) const {return GetMainThreadPeers().ContainsKey(id);}
@@ -88,6 +88,7 @@ public:
    const ZGPeerID & GetLocalPeerID() const {return _localPeerID;}
 
    ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const;
+   void VerifyOrFixLocalDatabaseChecksum(uint32 whichDB);
 
    int64 GetToNetworkTimeOffset() const;
 

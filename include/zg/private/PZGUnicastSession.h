@@ -28,7 +28,7 @@ public:
    /** Note that this may return an invalid Peer ID if we don't know who is calling us yet */
    const ZGPeerID & GetRemotePeerID() const {return _remotePeerID;}
 
-   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok);
+   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
 
 private:
    void RegisterMyself();

@@ -300,9 +300,8 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
 
 status_t UndoStackMessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRef & pairMsg)
 {
-   MessageRef doMsg;
-   status_t ret;
-   return pairMsg()->FindMessage(UNDOSTACK_NAME_DOMESSAGE, doMsg).IsOK(ret) ? MessageTreeDatabaseObject::JuniorUpdate(doMsg) : ret;
+   MessageRef doMsg = pairMsg()->GetMessage(UNDOSTACK_NAME_DOMESSAGE);
+   return MessageTreeDatabaseObject::JuniorUpdate(doMsg() ? doMsg : pairMsg);   // if there's no doMsg, it's probably because a subclass requested a custom change
 }
 
 status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)

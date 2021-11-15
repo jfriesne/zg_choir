@@ -8,6 +8,7 @@ const String PZG_PEER_NAME_DATABASE_ID         = "dbi";
 const String PZG_PEER_NAME_DATABASE_UPDATE     = "dbu";
 const String PZG_PEER_NAME_DATABASE_UPDATE_ID  = "dui";
 const String PZG_PEER_NAME_TEXT                = "txt";
+const String PZG_PEER_NAME_CHECKSUM_MISMATCH   = "chk";
 
 /** Return a brief description of the peerInfo data that we can display easily on a single line */
 String PeerInfoToString(const ConstMessageRef & peerInfo)

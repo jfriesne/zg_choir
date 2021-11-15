@@ -71,7 +71,7 @@ MessageRef ZGDatabasePeerSession :: SaveLocalDatabaseToMessage(uint32 whichDatab
 status_t ZGDatabasePeerSession :: SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
-   status_t ret = db->SetFromArchive(newDBStateMsg);
+   const status_t ret = db->SetFromArchive(newDBStateMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
 }

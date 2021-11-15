@@ -52,6 +52,7 @@ public:
    uint64 GetCurrentDatabaseStateID() const {return _localDatabaseStateID;}
 
    void ResetLocalDatabaseToDefaultState();
+   void VerifyOrFixLocalDatabaseChecksum();
 
 private:
    void RescanUpdateLog();
@@ -60,7 +61,7 @@ private:
    void ClearUpdateLog();
    void SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg);
 
-   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok);
+   status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
    uint64 GetTargetDatabaseStateID() const {return muscleMax(_updateLog.GetLastKeyWithDefault(), _seniorDatabaseStateID);}
    bool IsDatabaseUpdateStillNeededToAdvanceJuniorPeerState(uint64 databaseUpdateID) const;
 
@@ -68,7 +69,7 @@ private:
    status_t JuniorExecuteDatabaseUpdate(const PZGDatabaseUpdate & dbUp);
    status_t JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpdate & dbUp);
    void JuniorPeerNeedsMissingUpdate(uint64 missingStateID);
-   status_t RequestFullDatabaseResendFromSeniorPeer();
+   status_t RequestFullDatabaseResendFromSeniorPeer(bool dueToChecksumError);
    bool IsAwaitingFullDatabaseResendReply() const;
 
    ZGPeerSession * _master;

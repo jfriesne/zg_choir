@@ -375,12 +375,12 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    return SendUnicastInternalMessageToPeer(_seniorPeerID, sendMsg);
 }
 
-status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
+status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError)
 {
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
    if (nios == NULL) return B_LOGIC_ERROR;  // paranoia?
    
-   return nios->RequestBackOrderFromSeniorPeer(ubok);
+   return nios->RequestBackOrderFromSeniorPeer(ubok, dueToChecksumError);
 }
 
 status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseUpdateRef & dbUp)
@@ -525,6 +525,12 @@ void ZGPeerSession :: BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok
 {
    const uint32 whichDB = ubok.GetDatabaseIndex();
    if (whichDB < _databases.GetNumItems()) _databases[whichDB].BackOrderResultReceived(ubok, optUpdateData);
+}
+
+void ZGPeerSession :: VerifyOrFixLocalDatabaseChecksum(uint32 whichDB)
+{
+   if (whichDB < _databases.GetNumItems()) _databases[whichDB].VerifyOrFixLocalDatabaseChecksum();
+                                      else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::VerifyOrFixLocalDatabaseChecksum:  Unknown database ID #" UINT32_FORMAT_SPEC "\n", whichDB);
 }
 
 ConstPZGDatabaseUpdateRef ZGPeerSession :: GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const

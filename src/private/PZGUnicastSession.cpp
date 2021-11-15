@@ -78,6 +78,8 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
       {
          const uint32 whichDB  = msg()->GetInt32(PZG_PEER_NAME_DATABASE_ID);
          const uint64 updateID = msg()->GetInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID);
+         if ((updateID == DATABASE_UPDATE_ID_FULL_UPDATE)&&(msg()->HasName(PZG_PEER_NAME_CHECKSUM_MISMATCH))) _master->VerifyOrFixLocalDatabaseChecksum(whichDB);  // so we can recover if the checksum has gone wrong
+
          ConstPZGDatabaseUpdateRef dbUp = _master->GetDatabaseUpdateByID(whichDB, updateID);
          if ((dbUp() == NULL)||(msg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, *dbUp()).IsError())) LogTime(MUSCLE_LOG_ERROR, "PZGUnicastSession::MessageReceivedFromGateway()():  Database #" UINT32_FORMAT_SPEC " doesn't have requested back-order " UINT64_FORMAT_SPEC " to send back to junior peer [%s]\n", whichDB, updateID, _remotePeerID.ToString()());
 
@@ -133,19 +135,21 @@ void PZGUnicastSession :: UnregisterMyself(bool forGood)
    }
 }
 
-status_t PZGUnicastSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
+status_t PZGUnicastSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError)
 {
    if (_backorders.ContainsKey(ubok)) return B_NO_ERROR;  // semi-paranoia:  if it's already on back-order, no need to ask again
 
-   status_t ret;
-   if (_backorders.PutWithDefault(ubok).IsOK(ret))
-   {
-      MessageRef msg = GetMessageFromPool(PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER);
-      MRETURN_OOM_ON_NULL(msg());
-      if ((msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID, ubok.GetDatabaseIndex()).IsOK(ret))&&(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()).IsOK(ret))&&(AddOutgoingMessage(msg).IsOK(ret))) return B_NO_ERROR;
-      (void) _backorders.Remove(ubok);  // roll back!
-   }
-   return ret;
+   MRETURN_ON_ERROR(_backorders.PutWithDefault(ubok));
+
+   MessageRef msg = GetMessageFromPool(PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER);
+   MRETURN_OOM_ON_NULL(msg());
+   MRETURN_ON_ERROR(msg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID,       ubok.GetDatabaseIndex()));
+   MRETURN_ON_ERROR(msg()->AddInt64(PZG_PEER_NAME_DATABASE_UPDATE_ID, ubok.GetDatabaseUpdateID()));
+   MRETURN_ON_ERROR(msg()->CAddBool(PZG_PEER_NAME_CHECKSUM_MISMATCH,  dueToChecksumError));
+   MRETURN_ON_ERROR(AddOutgoingMessage(msg));
+
+   (void) _backorders.Remove(ubok);  // roll back!
+   return B_NO_ERROR;;
 }
 
 };  // end namespace zg_private

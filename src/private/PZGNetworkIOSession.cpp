@@ -653,7 +653,7 @@ void PZGNetworkIOSession :: UnicastMessageReceivedFromPeer(const ZGPeerID & remo
    _master->PrivateMessageReceivedFromPeer(remotePeerID, msg);
 }
 
-status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok)
+status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError)
 {
    if (_hbSettings() == NULL) return B_BAD_OBJECT;  // paranoia
 
@@ -667,7 +667,7 @@ status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBa
    else
    {
       PZGUnicastSessionRef usRef = GetUnicastSessionForPeerID(peerID, true);
-      return usRef() ? usRef()->RequestBackOrderFromSeniorPeer(ubok) : B_DATA_NOT_FOUND;
+      return usRef() ? usRef()->RequestBackOrderFromSeniorPeer(ubok, dueToChecksumError) : B_DATA_NOT_FOUND;
    }
 }
 
@@ -679,6 +679,11 @@ void PZGNetworkIOSession :: BackOrderResultReceived(const PZGUpdateBackOrderKey 
 ConstPZGDatabaseUpdateRef PZGNetworkIOSession :: GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const
 {
    return _master->GetDatabaseUpdateByID(whichDB, updateID);
+}
+
+void PZGNetworkIOSession :: VerifyOrFixLocalDatabaseChecksum(uint32 whichDB)
+{
+   return _master->VerifyOrFixLocalDatabaseChecksum(whichDB);
 }
 
 uint64 PZGNetworkIOSession :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const
