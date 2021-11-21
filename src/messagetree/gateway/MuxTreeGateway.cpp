@@ -31,7 +31,6 @@ ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const Strin
    else return NULL;
 }
 
-
 MuxTreeGateway :: MuxTreeGateway(ITreeGateway * optUpstreamGateway)
    : ProxyTreeGateway(optUpstreamGateway)
    , _isConnected(false)
@@ -468,7 +467,7 @@ bool MuxTreeGateway :: DoesPathMatch(ITreeGatewaySubscriber * sub, const PathMat
 
 void MuxTreeGateway :: EnsureSubscriberInBatchGroup(ITreeGatewaySubscriber * sub)
 {
-   if (_needsCallbackBatchEndsCall.ContainsKey(sub) == false)
+   if ((IGatewaySubscriber::IsInCallbackBatch())&&(_needsCallbackBatchEndsCall.ContainsKey(sub) == false))  // jaf
    {
       (void) _needsCallbackBatchEndsCall.PutWithDefault(sub);
       CallBeginCallbackBatch(sub);
@@ -503,7 +502,7 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    if (_subscriberInfos.ContainsKey(sub))
    {
-      TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
+      (void) TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
       (void) _needsCallbackBatchEndsCall.Remove(sub);
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);

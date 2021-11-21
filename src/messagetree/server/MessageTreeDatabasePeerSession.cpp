@@ -350,6 +350,8 @@ void MessageTreeDatabasePeerSession :: CommandBatchEnds()
 void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, NodeChangeFlags nodeChangeFlags)
 {
 //printf("NotifySubscribersThatNodeChanged node=[%s] payload=%p nodeChangeFlags=%s\n", node.GetNodePath()(), node.GetData()(), nodeChangeFlags.ToHexString()());
+   GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);  // yes, this is necessary
+
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
    if (mtDB) mtDB->MessageTreeNodeUpdated(relativePath, node, oldDataRef, nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED));
@@ -360,6 +362,8 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode
 void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
 {
 //printf("NotifySubscribersThatNodeIndexChanged node=[%s] op=%c index=%u key=[%s]\n", node.GetNodePath()(), op, index, key());
+   GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);  // yes, this is necessary
+
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), &relativePath);
    if (mtDB) mtDB->MessageTreeNodeIndexChanged(relativePath, node, op, index, key);
