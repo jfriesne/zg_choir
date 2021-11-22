@@ -375,7 +375,7 @@ void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const Messag
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
    const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), NULL);
-   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData(), mtDB?mtDB->GetCurrentOpTag():GetEmptyString());
+   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()+1), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData(), mtDB?mtDB->GetCurrentOpTag():GetEmptyString());
 }
 
 void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
@@ -383,7 +383,7 @@ void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
    const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), NULL);
    const String & opTag = mtDB?mtDB->GetCurrentOpTag():GetEmptyString();
-   const String path = node.GetNodePath().Substring(GetSessionRootPath().Length());
+   const String path = node.GetNodePath().Substring(GetSessionRootPath().Length()+1);
    switch(op)
    {
       case INDEX_OP_ENTRYINSERTED: TreeNodeIndexEntryInserted(path, index, key, opTag); break;
