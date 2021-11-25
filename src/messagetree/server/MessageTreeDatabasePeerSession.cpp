@@ -526,13 +526,10 @@ const String & MessageTreeDatabasePeerSession :: GetCurrentOpTagForNodePath(cons
 
 int MessageTreeDatabasePeerSession :: GetSubscribedSessionsCallback(DataNode & node, void * ud)
 {
-   const Hashtable<const String *, AbstractReflectSessionRef> & sessions = GetSessions();
-
    Hashtable<ServerSideMessageTreeSession *, Void> & results = *(static_cast<Hashtable<ServerSideMessageTreeSession *, Void> *>(ud));
-   for (HashtableIterator<String, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
+   for (HashtableIterator<uint32, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
    {
-      const AbstractReflectSessionRef * arsf = sessions.Get(&iter.GetKey());
-      ServerSideMessageTreeSession * ssmts = arsf ? dynamic_cast<ServerSideMessageTreeSession *>(arsf->GetItemPointer()) : NULL;
+      ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(GetSession(iter.GetKey())());
       if (ssmts) (void) results.PutWithDefault(ssmts);
    }
    return node.GetDepth();
