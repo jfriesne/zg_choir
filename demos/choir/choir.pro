@@ -31,7 +31,9 @@ win32:RC_FILE = ./images/bell.png.rc
 mac:ICON      = ./images/bell.png.icns
 
 # Enable C++11 support
-CXXFLAGS += -std=c++11 -stdlib=libc++
+QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
+#QMAKE_CXXFLAGS += -fsanitize=thread -g
+#QMAKE_LFLAGS   += -fsanitize=thread
 
 win32:INCLUDEPATH += $$MUSCLE_DIR/regex/regex 
 

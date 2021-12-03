@@ -114,6 +114,7 @@ private:
    void RegisterUnicastSession(PZGUnicastSession * session);
    void UnregisterUnicastSession(PZGUnicastSession * session);
    void ClearAllUnicastSessions();
+   void ClearHeartbeatSession();
    void UnicastMessageReceivedFromPeer(const ZGPeerID & remotePeerID, const MessageRef & msg);
    void ShutdownChildSessions();
    bool IAmTheSeniorPeer() const {return _seniorPeerID == _localPeerID;}
@@ -134,6 +135,9 @@ private:
    Queue<MessageRef> _messagesSentToSelf;  // just because I think it's silly to serialize and then deserialize a MessageRef to myself
    ZGPeerID _seniorPeerID;
    bool _computerIsAsleep;
+
+   Mutex _hbSessionPtrMutex;
+   PZGHeartbeatSession * _hbSessionPtr; // this separate pointer is maintained just so the main thread can access it without provoking the ThreadSanitizer
 };
 DECLARE_REFTYPES(PZGNetworkIOSession);
 

@@ -155,6 +155,7 @@ PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, 
    , _beaconIntervalMicros(SecondsToMicros(1)/muscleMax((uint32)1, peerSettings.GetBeaconsPerSecond()))
    , _master(master)
    , _computerIsAsleep(false)
+   , _hbSessionPtr(NULL)
 {
    SetThreadPriority(PRIORITY_HIGH);
 }
@@ -224,6 +225,9 @@ status_t PZGNetworkIOSession :: SetupHeartbeatSession()
       return ret;
    }
    _hbSession = hbSessionRef;
+
+   MutexGuard mg(_hbSessionPtrMutex);
+   _hbSessionPtr = _hbSession();
    return B_NO_ERROR;
 }
 
@@ -237,6 +241,19 @@ void PZGNetworkIOSession :: EndSession()
 {
    PZGThreadedSession::EndSession();
    ShutdownChildSessions();
+}
+
+void PZGNetworkIOSession :: ClearHeartbeatSession()
+{
+   if (_hbSession())
+   {
+      {
+         MutexGuard mg(_hbSessionPtrMutex);
+         _hbSessionPtr = NULL;
+      }
+      _hbSession()->EndSession();
+      _hbSession.Reset();
+   }
 }
 
 void PZGNetworkIOSession :: ShutdownChildSessions()
@@ -253,12 +270,7 @@ void PZGNetworkIOSession :: ShutdownChildSessions()
       _dnccSession.Reset();
    }
 
-   if (_hbSession())
-   {
-      _hbSession()->EndSession();
-      _hbSession.Reset();
-   }
-
+   ClearHeartbeatSession();
    ClearAllUnicastSessions();
 
    _master = NULL;
@@ -266,7 +278,8 @@ void PZGNetworkIOSession :: ShutdownChildSessions()
 
 int64 PZGNetworkIOSession :: GetToNetworkTimeOffset() const
 {
-   return _hbSession() ? _hbSession()->MainThreadGetToNetworkTimeOffset() : 0;
+   MutexGuard mg(_hbSessionPtrMutex);  // this is here primary to mollify ThreadSanitizer
+   return _hbSessionPtr ? _hbSessionPtr->MainThreadGetToNetworkTimeOffset() : 0;
 }
 
 void PZGNetworkIOSession :: ClearAllUnicastSessions()
@@ -621,13 +634,8 @@ void PZGNetworkIOSession :: NetworkInterfacesChanged(const Hashtable<String, Voi
 void PZGNetworkIOSession :: ComputerIsAboutToSleep()
 {
    // Might as well disconnect all unicast-TCP connections cleanly now, rather than leaving them to go stale while we sleep
+   ClearHeartbeatSession();
    ClearAllUnicastSessions();
-
-   if (_hbSession()) 
-   {
-      _hbSession()->EndSession();
-      _hbSession.Reset();
-   }
 
    // because we don't know who it will be when we re-awake
    SeniorPeerChanged(_seniorPeerID, ZGPeerID());
