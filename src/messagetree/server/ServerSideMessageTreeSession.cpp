@@ -85,10 +85,10 @@ status_t ServerSideMessageTreeSession :: RemoveAllTreeSubscriptions(TreeGatewayF
    return ret;
 }
 
-status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/)
+status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/, const String & tag)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg);
+   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
    return ret;
 }

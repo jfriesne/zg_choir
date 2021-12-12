@@ -114,9 +114,9 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITre
    return msg()->CAddFlat(NTG_NAME_FLAGS, flags).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
 }
 
-status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & tag)
 {
-   return HandleBasicCommandAux(NTG_COMMAND_REQUESTNODEVALUES, queryString, optFilterRef, flags, GetEmptyString());
+   return HandleBasicCommandAux(NTG_COMMAND_REQUESTNODEVALUES, queryString, optFilterRef, flags, tag);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
@@ -312,7 +312,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    {
       case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,   flags);             break;
       case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,   flags);             break;
-      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags);             break;
+      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags, tag);        break;
       case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,   flags, tag);        break;
       case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload, flags, tag);        break;
       case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optB4,   qfRef, flags, tag); break;

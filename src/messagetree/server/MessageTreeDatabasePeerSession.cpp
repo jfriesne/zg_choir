@@ -95,10 +95,10 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(IT
    return ret;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/, const String & tag)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg);
+   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag);
    if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
    return ret;
 }

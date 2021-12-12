@@ -163,7 +163,7 @@ protected:
      * @note notifications in response to this query will come in the form of some future calls to TreeNodeUpdated().
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags(), const String & tag = GetEmptyString());
 
    /** Call this to request a one-shot (i.e. non-persistent) download of the contents of one or more subtrees of the database.
      * @param queryStrings a set of one or more session-relative paths of the node(s) you wish to download (along with the subtrees of nodes beneath them)

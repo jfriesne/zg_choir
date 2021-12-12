@@ -31,13 +31,14 @@ status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)
    return retMsg()->AddString(PR_NAME_KEYS, "SUBSCRIBE:*");
 }
 
-status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg)
+status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg, const String & tag)
 {
    retMsg = GetMessageFromPool(PR_COMMAND_GETDATA);
    MRETURN_OOM_ON_NULL(retMsg());
 
    return retMsg()->AddString(PR_NAME_KEYS, queryString) 
-        | retMsg()->CAddArchiveMessage(PR_NAME_FILTERS, optFilterRef);
+        | retMsg()->CAddArchiveMessage(PR_NAME_FILTERS, optFilterRef)
+        | retMsg()->AddString(PR_NAME_TREE_REQUEST_ID, tag);
 }
 
 status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, MessageRef & retMsg)

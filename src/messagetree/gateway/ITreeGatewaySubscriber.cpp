@@ -18,9 +18,9 @@ status_t ITreeGatewaySubscriber :: RemoveAllTreeSubscriptions(TreeGatewayFlags f
    return GetGateway()->TreeGateway_RemoveAllSubscriptions(this, flags);
 }
 
-status_t ITreeGatewaySubscriber :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ITreeGatewaySubscriber :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & tag)
 {
-   return GetGateway()->TreeGateway_RequestNodeValues(this, queryString, optFilterRef, flags);
+   return GetGateway()->TreeGateway_RequestNodeValues(this, queryString, optFilterRef, flags, tag);
 }
 
 status_t ITreeGatewaySubscriber :: RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
