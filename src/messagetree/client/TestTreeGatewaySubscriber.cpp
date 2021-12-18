@@ -82,7 +82,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
          if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(), GetEmptyString(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s] [%s]\n", path(), optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s] opTag=[%s]\n", path(), optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error uploading Message to relative path [%s] (%s)\n", path(), ret());
       }
@@ -99,7 +99,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), optBefore, GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s]) [%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s]) opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error uploading indexed Message to relative path [%s] (before [%s]) (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
       }
@@ -112,7 +112,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          if (RequestMoveTreeIndexEntry(path, optBefore, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s] [%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s] opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error moving indexed-node [%s] to before [%s] (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
       }
@@ -124,7 +124,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
        
          if (RequestDeleteTreeNodes(path, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s] [%s]\n", path(), optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s] opTag=[%s]\n", path(), optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error requesting deletion of nodes matching path [%s] (%s)\n", path(), ret());
       }
@@ -134,9 +134,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       {
          const String path = tok();
        
-         if (RequestTreeNodeValues(path).IsOK(ret))
+         if (RequestTreeNodeValues(path, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Requested download of node(s) matching [%s]\n", path());
+            LogTime(MUSCLE_LOG_INFO, "Requested download of node(s) matching [%s] with opTag=[%s]\n", path(), optOpTag());
          }
          else LogTime(MUSCLE_LOG_ERROR, "Error requesting download of nodes matching path [%s] (%s)\n", path(), ret());
       }

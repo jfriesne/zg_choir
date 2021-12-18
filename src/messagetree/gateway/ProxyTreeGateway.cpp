@@ -45,9 +45,9 @@ status_t ProxyTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubs
    return ITreeGatewaySubscriber::RemoveAllTreeSubscriptions(flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+status_t ProxyTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & tag)
 {
-   return ITreeGatewaySubscriber::RequestTreeNodeValues(queryString, optFilterRef, flags);
+   return ITreeGatewaySubscriber::RequestTreeNodeValues(queryString, optFilterRef, flags, tag);
 }
 
 status_t ProxyTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)

@@ -160,10 +160,11 @@ protected:
      * @param queryString the session-relative path of the node(s) you wish to query (e.g. "foo/bar/ba*")
      * @param optFilterRef if non-NULL, a reference to a QueryFilter object that the server should use to limit which nodes match the query.
      * @param flags If specified, these flags can influence the behavior of the subscribe operation.  Currently this argument is ignored.
+     * @param tag an arbitrary string that can be used to identify this download.  It will be passed back to you, verbatim, in the corresponding TreeNodeUpdated() call.
      * @note notifications in response to this query will come in the form of some future calls to TreeNodeUpdated().
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
+   virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags(), const String & tag = GetEmptyString());
 
    /** Call this to request a one-shot (i.e. non-persistent) download of the contents of one or more subtrees of the database.
      * @param queryStrings a set of one or more session-relative paths of the node(s) you wish to download (along with the subtrees of nodes beneath them)

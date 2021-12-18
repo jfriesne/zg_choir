@@ -5,28 +5,30 @@
 
 namespace zg {
 
-String MuxTreeGateway :: GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub) const 
+String MuxTreeGateway :: GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, char markerChar) const
 {
-   return String("_%1_").Arg(GetRegisteredSubscribers()[sub]);
+   char buf[128];
+   muscleSprintf(buf, "%c" UINT32_FORMAT_SPEC "%c", markerChar, GetRegisteredSubscribers()[sub], markerChar);
+   return buf;
 }
 
-String MuxTreeGateway :: PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s) const
+String MuxTreeGateway :: PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar) const
 {
-   return s.Prepend(GetRegistrationIDPrefix(sub)+':');
+   return s.Prepend(GetRegistrationIDPrefix(sub, markerChar)+':');
 }
 
-ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationID(const String & ascii) const
+ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationID(const String & ascii, char markerChar) const
 {
-   return ((ascii.StartsWith('_'))&&(ascii.EndsWith('_'))) ? GetRegistrationIDs()[atol(ascii()+1)] : NULL;
+   return ((ascii.StartsWith(markerChar))&&(ascii.EndsWith(markerChar))) ? GetRegistrationIDs()[atol(ascii()+1)] : NULL;
 }
 
-ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const String & s, String & retSuffix) const
+ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const String & s, String & retSuffix, char markerChar) const
 {
    const int32 colIdx = s.IndexOf(':');
    if (colIdx >= 0)
    {
       retSuffix = s.Substring(colIdx+1);
-      return ParseRegistrationID(s.Substring(0,colIdx));
+      return ParseRegistrationID(s.Substring(0,colIdx), markerChar);
    }
    else return NULL;
 }
@@ -119,7 +121,7 @@ status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscr
    TreeSubscriberInfoRef subs;
    if ((_subscriberInfos.Get(calledBy, subs).IsOK(ret))&&(subs()))
    {
-      const TreeSubscriberInfo temp = *subs(); // make local copy avoid potential re-entrancy issues
+      const TreeSubscriberInfo temp = *subs(); // make local copy to avoid potential re-entrancy issues
       for (HashtableIterator<String, PathMatcherEntry> iter(temp.GetEntries()); iter.HasData(); iter++)
          (void) TreeGateway_RemoveSubscription(calledBy, iter.GetKey(), iter.GetValue().GetFilter(), TreeGatewayFlags()).IsError(ret);  // IsError() will set (ret) on error
       return ret;
@@ -128,6 +130,22 @@ status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscr
 }
 
 status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags)
+{
+   return TreeGateway_RequestNodeSubtreesAux(calledBy, queryStrings, queryFilters, tag, maxDepth, flags, '_');
+}
+
+status_t MuxTreeGateway :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & tag)
+{
+   Queue<String> queryStrings;
+   (void) queryStrings.AddTail(queryString);
+
+   Queue<ConstQueryFilterRef> queryFilters;
+   if (optFilterRef()) (void) queryFilters.AddTail(optFilterRef);
+
+   return TreeGateway_RequestNodeSubtreesAux(calledBy, queryStrings, queryFilters, tag, 1, flags, '=');  // special markerChar '=' marks this request as coming from a RequestNodeValues() call
+}
+
+status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtreesAux(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags, char markerChar)
 {
    if (calledBy     == NULL)  return B_BAD_ARGUMENT;
    if (_isConnected == false) return B_BAD_OBJECT;
@@ -144,7 +162,7 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscribe
       status_t ret;
       if (q->AddTail(tag).IsOK(ret))
       {
-         if (ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, PrependRegistrationIDPrefix(calledBy, tag), maxDepth, flags).IsOK(ret)) return ret;
+         if (ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, PrependRegistrationIDPrefix(calledBy, tag, markerChar), maxDepth, flags).IsOK(ret)) return ret;
          q->RemoveTail();  // oops, roll back!
       }
       if (q->IsEmpty()) (void) _requestedSubtrees.Remove(calledBy);
@@ -348,14 +366,37 @@ void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, co
 
 void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
+   bool isResponseToRequestNodeValues = false;
    String suffix;
    ITreeGatewaySubscriber * untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix));
    Queue<String> * q = _requestedSubtrees.Get(untrustedSubPtr);
+   if (q == NULL)
+   {
+      untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix, '='));  // special markerChar '=' means this is the response to a RequestNodeValues() call
+      q = _requestedSubtrees.Get(untrustedSubPtr);
+      isResponseToRequestNodeValues = true;
+   }
+
    if (q)
    {
       if ((q)&&(q->RemoveFirstInstanceOf(suffix).IsOK()))
       {
-         untrustedSubPtr->SubtreesRequestResultReturned(suffix, subtreeData);
+         if (isResponseToRequestNodeValues)
+         {
+            if (subtreeData())
+            {
+               EnsureSubscriberInBatchGroup(untrustedSubPtr);
+               for (MessageFieldNameIterator fnIter(*subtreeData(), B_MESSAGE_TYPE); fnIter.HasData(); fnIter++)
+               {
+                  const String & path = fnIter.GetFieldName();
+
+                  MessageRef nodeMsg, payloadMsg;
+                  if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) untrustedSubPtr->TreeNodeUpdated(path, payloadMsg, suffix);
+               }
+            }
+         }
+         else untrustedSubPtr->SubtreesRequestResultReturned(suffix, subtreeData);
+
          if (q->IsEmpty()) _requestedSubtrees.Remove(untrustedSubPtr);
       }
    }

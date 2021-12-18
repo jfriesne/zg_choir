@@ -31,9 +31,10 @@ status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg);
   * @param nodePath the session-relative node-path to use to select nodes to send
   * @param optFilterRef an optional QueryFilter object to limit the matching, based on the contents of the matching nodes' data-payloads
   * @param retMsg on success, the created Message is written into this object.
+  * @param tag an arbitrary tag-string to use to identify the results.
   * @returns B_NO_ERROR on success, or some other error code on failure.
   */
-status_t CreateMuscleRequestNodeValuesMessage(const String & nodePath, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg);
+status_t CreateMuscleRequestNodeValuesMessage(const String & nodePath, const ConstQueryFilterRef & optFilterRef, MessageRef & retMsg, const String & tag);
 
 /** Creates a Message that can be passed to a MUSCLE server to request a one-time sending of one or more subtrees of data
   * @param queryStrings a list of session-relative node-paths (wildcards are okay) to use to select nodes to send
