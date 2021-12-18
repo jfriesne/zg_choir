@@ -9,7 +9,6 @@ namespace zg {
 extern const String _opTagFieldName;
 extern const String _opTagPutMap;
 extern const String _opTagRemoveMap;
-extern const String _opTagDummy;
 
 ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upstreamGateway)
    : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)

@@ -34,7 +34,8 @@ protected:
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags); 
-   virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags);
+   virtual status_t TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * calledBy, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & tag);
+   virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags);
    virtual status_t TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags);
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * calledBy, const String & tag, uint32 whichDB, TreeGatewayFlags flags);
@@ -66,6 +67,8 @@ private:
    };
    DECLARE_REFTYPES(TreeSubscriberInfo);
 
+   status_t TreeGateway_RequestNodeSubtreesAux(ITreeGatewaySubscriber * calledBy, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags flags, char markerChar);
+
    status_t UpdateSubscription(const String & subscriptionPath, ITreeGatewaySubscriber * optSubscriber, TreeGatewayFlags flags);
    void UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef, const String & optOpTag);
    void TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify);
@@ -74,10 +77,10 @@ private:
    void DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
    void DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
 
-   String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub) const;
-   String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s) const;
-   ITreeGatewaySubscriber * ParseRegistrationID(const String & ascii) const;
-   ITreeGatewaySubscriber * ParseRegistrationIDPrefix(const String & s, String & retSuffix) const;
+   String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, char markerChar='_') const;
+   String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar='_') const;
+   ITreeGatewaySubscriber * ParseRegistrationID(const String & ascii, char markerChar='_') const;
+   ITreeGatewaySubscriber * ParseRegistrationIDPrefix(const String & s, String & retSuffix, char markerChar='_') const;
 
    Hashtable<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> _subscriberInfos;
    Hashtable<ITreeGatewaySubscriber *, Void> _needsCallbackBatchEndsCall;
