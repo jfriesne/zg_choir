@@ -16,6 +16,7 @@ PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings
    , _dataUDPPort(PER_SYSTEM_PORT_DATA)    // hard-coded, for now (maybe configurable later on?)
    , _hbUDPPort(PER_SYSTEM_PORT_HEARTBEAT) // hard-coded, for now (maybe configurable later on?)
    , _birthdate(GetRunTime64()) 
+   , _versionCode(peerSettings.GetCompatibilityVersionCode())
    , _peerAttributesByteBuffer(GetPeerAttributes()() ? DeflateByteBuffer(GetPeerAttributes()()->FlattenToByteBuffer(),9) : ByteBufferRef())
 {
    // Catch it if the user starts to get greedy.  Better to find out now than in more subtle ways later!

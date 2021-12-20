@@ -501,6 +501,14 @@ void PZGHeartbeatThreadState :: ReceiveMulticastTraffic(PacketDataIO & dio)
          if (newHB())
          {
             const ZGPeerID & pid = newHB()->GetSourcePeerID();
+            if (newHB()->GetVersionCode() != _hbSettings()->GetVersionCode())
+            {
+               // we'll ignore heartbeat packets from ZG peers that are marked with a different version, since we don't know how they behave and therefore we'd rather not communicate with them at all.
+               uint64 * lastTime = _lastMismatchedVersionLogTimes.GetOrPut(pid);
+               if ((lastTime)&&(OnceEvery(SecondsToMicros(1), *lastTime))) LogTime(MUSCLE_LOG_ERROR, "Received heartbeat-packet from peer [%s] with version [%s], but this application requires version [%s]:  Ignoring the packet\n", pid.ToString()(), CompatibilityVersionCodeToString(newHB()->GetVersionCode())(), CompatibilityVersionCodeToString(_hbSettings()->GetCompatibilityVersionCode())());
+               continue;
+            }
+
             PZGHeartbeatSourceKey source(sourceIAP, pid);
 
             if (newHB()->GetSystemKey() == _hbSettings()->GetSystemKey())

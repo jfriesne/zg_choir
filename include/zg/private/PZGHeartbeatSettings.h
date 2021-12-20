@@ -28,6 +28,7 @@ public:
    const ZGPeerID & GetLocalPeerID() const {return _localPeerID;} // unique 128-bit ID of our local peer
    uint16 GetDataTCPPort()           const {return _dataTCPPort;} // port that our peer will listen for incoming TCP data connections on
    uint64 GetBirthdateMicros()       const {return _birthdate;}   // the moment at which this state was created (using the local GetRunTime64() clock)
+   uint32 GetVersionCode()           const {return _versionCode;} // the M.mm.bb.uu version-code we should include in Heartbeat packets we send
 
    /** Pre-flattened byte-buffer from our GetPeerAttributesMessage(), for convenience */
    const ConstByteBufferRef & GetPeerAttributesByteBuffer() const {return _peerAttributesByteBuffer;}
@@ -50,6 +51,7 @@ private:
    const uint16 _dataUDPPort;   // port that we will be listening for multicast data-payload UDP traffic on
    const uint16 _hbUDPPort;     // port that we will be listening for multicast heartbeat UDP traffic on
    const uint64 _birthdate;     // timestamp of the moment at which this state-object was created (as returned by GetRunTime64())
+   const uint32 _versionCode;   // our heartbeat-version-code
 
    const ConstByteBufferRef _peerAttributesByteBuffer;
 };

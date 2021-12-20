@@ -1,3 +1,8 @@
+v1.20 -
+   - Added a compatibilityVersion field to the heartbeat packets,
+     so that in the future, heartbeat-packets from non-identical
+     versions of ZGChoir will be ignored.
+
 v1.10 -
    - Updated the muscle submodule to v7.54
    - Modified the color of the bell-icon when it rings, so that

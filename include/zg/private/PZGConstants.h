@@ -32,6 +32,12 @@ extern const String PZG_PEER_NAME_BACK_ORDER;
 /** Given a PeerInfo Message, tries to return a single-line text description of what's in it (for debugging purposes) */
 String PeerInfoToString(const ConstMessageRef & peerInfo);
 
+/** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
+  * @param versionCode a 32-bit code of the form (M<<24)|(mm<<16)|(bb<<8)|(uu)
+  * @returns an equivalent human-reable string, e.g. "1.2.5.3"
+  */
+String CompatibilityVersionCodeToString(uint32 versionCode);
+
 };  // end namespace zg_private
 
 #endif

@@ -7,6 +7,7 @@ namespace zg_private
 
 PZGHeartbeatPacket :: PZGHeartbeatPacket()
    : _heartbeatPacketID(0)
+   , _versionCode(0)
    , _systemKey(0)
    , _networkSendTimeMicros(0)
    , _tcpAcceptPort(0)
@@ -25,6 +26,7 @@ PZGHeartbeatPacket :: PZGHeartbeatPacket(const PZGHeartbeatSettings & hbSettings
 void PZGHeartbeatPacket :: Initialize(const PZGHeartbeatSettings & hbSettings, uint32 uptimeSeconds, bool isFullyAttached, uint32 packetID)
 {
    _heartbeatPacketID     = packetID;
+   _versionCode           = hbSettings.GetVersionCode();
    _systemKey             = hbSettings.GetSystemKey();
    _networkSendTimeMicros = 0;
    _tcpAcceptPort         = hbSettings.GetDataTCPPort();
@@ -38,7 +40,7 @@ void PZGHeartbeatPacket :: Initialize(const PZGHeartbeatSettings & hbSettings, u
 uint32 PZGHeartbeatPacket :: CalculateChecksum() const
 {
    // _networkSendTimeMicros is deliberately not part of our checksum as it will be sent separately for better accuracy
-   uint32 ret = _heartbeatPacketID + CalculateChecksumForUint64(_systemKey) + _tcpAcceptPort + _peerUptimeSeconds + (_isFullyAttached?666:0) + _sourcePeerID.CalculateChecksum() + _peerType;
+   uint32 ret = _heartbeatPacketID + _versionCode + CalculateChecksumForUint64(_systemKey) + _tcpAcceptPort + _peerUptimeSeconds + (_isFullyAttached?666:0) + _sourcePeerID.CalculateChecksum() + _peerType;
    for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) ret += (i+1)*(_orderedPeersList[i]()->CalculateChecksum());
    if (_peerAttributesBuf()) ret += _peerAttributesBuf()->CalculateChecksum();
    /* deliberately not including _peerAttributesMsg in the checksum since it is redundant with _peerAttributesBuf */
@@ -49,6 +51,7 @@ uint32 PZGHeartbeatPacket :: FlattenedSizeNotIncludingVariableLengthData() const
 {
    return sizeof(uint32)                 // for PZG_HEARTBEAT_PACKET_TYPE_CODE
         + sizeof(_heartbeatPacketID)
+        + sizeof(_versionCode)
         + sizeof(_systemKey)
         // _networkSendTimeMicros is deliberately not part of our flattened-size as it will be sent separately for better accuracy
         + sizeof(_tcpAcceptPort)
@@ -78,6 +81,7 @@ void PZGHeartbeatPacket :: Flatten(uint8 *buffer) const
 
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(PZG_HEARTBEAT_PACKET_TYPE_CODE));        buffer += sizeof(uint32);
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_heartbeatPacketID));                    buffer += sizeof(uint32);
+   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_versionCode));                          buffer += sizeof(uint32);
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_systemKey));                            buffer += sizeof(uint64);
    // _networkSendTimeMicros is deliberately not part of our flattened-data as it will be sent separately for better accuracy
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_tcpAcceptPort));                        buffer += sizeof(uint16);
@@ -117,6 +121,7 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
 
    const uint32 peerIDFlatSize   = ZGPeerID::FlattenedSize();
    _heartbeatPacketID      = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf));  buf += sizeof(uint32); size -= sizeof(uint32);
+   _versionCode            = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf));  buf += sizeof(uint32); size -= sizeof(uint32);
    _systemKey              = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf));  buf += sizeof(uint64); size -= sizeof(uint64);
    _networkSendTimeMicros  = 0; // _networkSendTimeMicros is deliberately not part of our unflattened-data as it will be sent separately for better accuracy
    _tcpAcceptPort          = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf));  buf += sizeof(uint16); size -= sizeof(uint16);
@@ -173,7 +178,7 @@ status_t PZGHeartbeatPacket :: CopyFromImplementation(const Flattenable & copyFr
 String PZGHeartbeatPacket :: ToString() const
 {
    char buf[1024];
-   muscleSprintf(buf, "Heartbeat:  PacketID=" UINT32_FORMAT_SPEC " sysKey=" UINT64_FORMAT_SPEC " netSendTime=" UINT64_FORMAT_SPEC " tcpPort=%u peerType=%u isFullyAttached=%i uptimeSeconds=" UINT32_FORMAT_SPEC " sourcePeerID=[%s] attrSize=" UINT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC, _heartbeatPacketID, _systemKey, _networkSendTimeMicros, _tcpAcceptPort, _peerType, _isFullyAttached, _peerUptimeSeconds, _sourcePeerID.ToString()(), _peerAttributesBuf()?_peerAttributesBuf()->GetNumBytes():666, _peerAttributesBuf()?_peerAttributesBuf()->CalculateChecksum():666);
+   muscleSprintf(buf, "Heartbeat:  PacketID=" UINT32_FORMAT_SPEC " version=[%s] sysKey=" UINT64_FORMAT_SPEC " netSendTime=" UINT64_FORMAT_SPEC " tcpPort=%u peerType=%u isFullyAttached=%i uptimeSeconds=" UINT32_FORMAT_SPEC " sourcePeerID=[%s] attrSize=" UINT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC, _heartbeatPacketID, CompatibilityVersionCodeToString(_versionCode)(), _systemKey, _networkSendTimeMicros, _tcpAcceptPort, _peerType, _isFullyAttached, _peerUptimeSeconds, _sourcePeerID.ToString()(), _peerAttributesBuf()?_peerAttributesBuf()->GetNumBytes():666, _peerAttributesBuf()?_peerAttributesBuf()->CalculateChecksum():666);
 
    String ret = buf;
    for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) 

@@ -10,7 +10,7 @@ namespace zg_private
 {
 
 enum {
-   PZG_NETWORK_COMMAND_SET_SENIOR_PEER_ID = 1886283124, // 'pnet' 
+   PZG_NETWORK_COMMAND_SET_SENIOR_PEER_ID = 1886283124, // 'pnet'
    PZG_NETWORK_COMMAND_SET_BEACON_DATA,
    PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA
 };
@@ -22,7 +22,7 @@ static const String PZG_NETWORK_NAME_MULTICAST_MESSAGE = "mms";
 static const String PZG_NETWORK_NAME_MULTICAST_TAG     = "mgt";
 
 enum {
-   PZG_MULTICAST_MESSAGE_TAG_TYPE = 1886219636 // 'pmmt' 
+   PZG_MULTICAST_MESSAGE_TAG_TYPE = 1886219636 // 'pmmt'
 };
 
 // Convenience class to hold both a ZGPeerID and a Message-ID in a single object
@@ -31,53 +31,57 @@ enum {
 class PZGMulticastMessageTag : public PseudoFlattenable
 {
 public:
-   PZGMulticastMessageTag() : _messageID(0) {/* empty */}
-   PZGMulticastMessageTag(const ZGPeerID & peerID, uint32 messageID) : _peerID(peerID), _messageID(messageID) {/* empty */}
+   PZGMulticastMessageTag() : _versionCode(0), _messageID(0) {/* empty */}
+   PZGMulticastMessageTag(const ZGPeerID & peerID, const uint32 versionCode, uint32 messageID) : _peerID(peerID), _versionCode(versionCode), _messageID(messageID) {/* empty */}
    PZGMulticastMessageTag(const PZGMulticastMessageTag & rhs)
    {
-      _peerID    = rhs._peerID;
-      _messageID = rhs._messageID;
+      _peerID      = rhs._peerID;
+      _versionCode = rhs._versionCode;
+      _messageID   = rhs._messageID;
    }
 
    const ZGPeerID & GetPeerID() const {return _peerID;}
+   uint32 GetCompatibilityVersionCode() const {return _versionCode;}
    uint32 GetMessageID() const {return _messageID;}
 
-   /** Returns a String representation of this tag ID (e.g. "123A:432B.12345") */
+   /** Returns a String representation of this tag ID (e.g. "123A:432B.11420000.12345") */
    String ToString() const
-   {  
-      char buf[256]; muscleSprintf(buf, "." UINT32_FORMAT_SPEC, _messageID);
+   {
+      char buf[256]; muscleSprintf(buf, "." XINT32_FORMAT_SPEC "." UINT32_FORMAT_SPEC, _versionCode, _messageID);
       return _peerID.ToString()+buf;
    }
 
-   bool operator == (const PZGMulticastMessageTag & rhs) const {return ((_peerID == rhs._peerID)&&(_messageID == rhs._messageID));}
+   bool operator == (const PZGMulticastMessageTag & rhs) const {return ((_peerID == rhs._peerID)&&(_versionCode == rhs._versionCode)&&(_messageID == rhs._messageID));}
    bool operator != (const PZGMulticastMessageTag & rhs) const {return !(*this==rhs);}
-   bool operator <  (const PZGMulticastMessageTag & rhs) const {return ((_peerID < rhs._peerID)||((_peerID == rhs._peerID)&&(_messageID < rhs._messageID)));}
-   bool operator >= (const PZGMulticastMessageTag & rhs) const {return !(*this<rhs);}
-   bool operator >  (const PZGMulticastMessageTag & rhs) const {return ((_peerID > rhs._peerID)||((_peerID == rhs._peerID)&&(_messageID > rhs._messageID)));}
-   bool operator <= (const PZGMulticastMessageTag & rhs) const {return !(*this>rhs);}
 
-   PZGMulticastMessageTag & operator = (const PZGMulticastMessageTag & rhs) {_peerID = rhs._peerID; _messageID = rhs._messageID; return *this;}
+   PZGMulticastMessageTag & operator = (const PZGMulticastMessageTag & rhs)
+   {
+      _peerID      = rhs._peerID;
+      _versionCode = rhs._versionCode;
+      _messageID   = rhs._messageID;
+      return *this;
+   }
 
    static bool IsFixedSize() {return true;}
    static uint32 TypeCode() {return PZG_MULTICAST_MESSAGE_TAG_TYPE;}
    static bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
-   static uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(uint32);}
-   uint32 CalculateChecksum() const {return _peerID.CalculateChecksum()+_messageID;}
+   static uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(uint32) + sizeof(uint32);}
+   uint32 CalculateChecksum() const {return _peerID.CalculateChecksum()+_versionCode+_messageID;}
 
    void Flatten(uint8 * buffer) const
    {
-      _peerID.Flatten(buffer);
-      buffer += _peerID.FlattenedSize();
-      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_messageID));
+      _peerID.Flatten(buffer);                                         buffer += _peerID.FlattenedSize();
+      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_versionCode));    buffer += sizeof(_versionCode);
+      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_messageID));    //buffer += sizeof(_messageID);
    }
 
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
       if (size >= FlattenedSize())
       {
-         status_t ret;
-         if (_peerID.Unflatten(buffer, size).IsError(ret)) return ret;
-         _messageID = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer+_peerID.FlattenedSize()));
+         MRETURN_ON_ERROR(_peerID.Unflatten(buffer, size));                      buffer += _peerID.FlattenedSize();
+         _versionCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer));   buffer += sizeof(_versionCode);
+         _messageID   = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer)); //buffer += sizeof(_messageID);
          return B_NO_ERROR;
       }
       else return B_BAD_DATA;
@@ -89,6 +93,7 @@ public:
 
 private:
    ZGPeerID _peerID;
+   uint32 _versionCode;  // M.mm.bb.uu
    uint32 _messageID;
 };
 
@@ -101,7 +106,7 @@ public:
    {
       PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(_master, ZGPeerID()));
       if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return AbstractReflectSessionRef();}
-      return ret; 
+      return ret;
    }
 
 private:
@@ -149,7 +154,7 @@ static ConstPZGBeaconDataRef GetBeaconDataFromMessage(const MessageRef & msg)
    return AddConstToRef(beaconRef);
 }
 
-PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, ZGPeerSession * master) 
+PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, ZGPeerSession * master)
    : _peerSettings(peerSettings)
    , _localPeerID(localPeerID)
    , _beaconIntervalMicros(SecondsToMicros(1)/muscleMax((uint32)1, peerSettings.GetBeaconsPerSecond()))
@@ -163,7 +168,7 @@ PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, 
 void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef & msg, uint32 /*numLeft*/)
 {
    PZGMulticastMessageTag tag;
-   if (msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK()) 
+   if (msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK())
    {
       if (msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)
       {
@@ -173,13 +178,13 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
             if (beaconData()) _master->BeaconDataChanged(beaconData);
                          else LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession:  Unable to get beacon data from internal thread Message\n");
          }
-         else 
+         else
          {
-            // Hmm, race condition caused us to end up with beacon data from the wrong senior peer? 
+            // Hmm, race condition caused us to end up with beacon data from the wrong senior peer?
             // we'd better as the I/O thread to try again
             static Message _retryMsg(PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA);
             if (SendMessageToInternalThread(DummyMessageRef(_retryMsg)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Couldn't send message to invalidate last received beacon data!\n");
-         } 
+         }
       }
       else _master->PrivateMessageReceivedFromPeer(tag.GetPeerID(), msg);
    }
@@ -203,7 +208,7 @@ status_t PZGNetworkIOSession :: AttachedToServer()
    if (AddNewSession(dnccSessionRef).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession! [%s]\n", ret());
-      ShutdownChildSessions(); 
+      ShutdownChildSessions();
       return ret;
    }
    _dnccSession = dnccSessionRef;
@@ -284,7 +289,7 @@ int64 PZGNetworkIOSession :: GetToNetworkTimeOffset() const
 
 void PZGNetworkIOSession :: ClearAllUnicastSessions()
 {
-   for (HashtableIterator<PZGUnicastSessionRef, Void> iter(_registeredUnicastSessions); iter.HasData(); iter++) iter.GetKey()()->EndSession();  
+   for (HashtableIterator<PZGUnicastSessionRef, Void> iter(_registeredUnicastSessions); iter.HasData(); iter++) iter.GetKey()()->EndSession();
    _registeredUnicastSessions.Clear();   // these Clear() calls shouldn't be necessary, since EndSession() should remove everything anyway
    _namedUnicastSessions.Clear();        // but for paranoia's sake I'm leaving them in
 }
@@ -353,7 +358,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
 
    uint32 outgoingMulticastMessageTagCounter = 0; // tagging our outgoing Messages with a unique ID allows us to do de-duplication more easily
    Queue<PacketDataIORef> dios;
-   Queue<PacketTunnelIOGatewayRef> ptGateways; // our mechanism for transporting Message objects by packing them into UDP packets 
+   Queue<PacketTunnelIOGatewayRef> ptGateways; // our mechanism for transporting Message objects by packing them into UDP packets
    QueueGatewayMessageReceiver messageReceiver;   // a place that the ptGateways can store incoming/received Messages for us to collect
    Hashtable<PZGMulticastMessageTag, Void> recentlyReceived;  // PZGMulticastMessageTags that we have received recently
 
@@ -392,7 +397,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
 
                PacketTunnelIOGatewayRef ptRef(newnothrow PacketTunnelIOGateway);
                if ((ptRef())&&(ptGateways.AddTail(ptRef).IsOK())) ptRef()->SetDataIO(dio);
-               else 
+               else
                {
                   LogTime(MUSCLE_LOG_ERROR, "Couldn't create PacketTunnelIOGateway for DataIO #" UINT32_FORMAT_SPEC "\n", i);
                   dios.RemoveItemAt(i--);  // no point in keeping it around if we can't have a gateway for it
@@ -428,9 +433,9 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                break;
 
                case PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE: case PZG_PEER_COMMAND_USER_MESSAGE:
-                  if (msgFromOwner()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, PZGMulticastMessageTag(GetLocalPeerID(), ++outgoingMulticastMessageTagCounter)).IsOK())
+                  if (msgFromOwner()->AddFlat(PZG_NETWORK_NAME_MULTICAST_TAG, PZGMulticastMessageTag(GetLocalPeerID(), _hbSettings()->GetCompatibilityVersionCode(), ++outgoingMulticastMessageTagCounter)).IsOK())
                   {
-                     for (uint32 i=0; i<ptGateways.GetNumItems(); i++) 
+                     for (uint32 i=0; i<ptGateways.GetNumItems(); i++)
                         (void) ptGateways[i]()->AddOutgoingMessage(msgFromOwner);
                   }
                break;
@@ -459,7 +464,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
          else break;  // NULL msgFromOwner means it is time for this thread to exit!
       }
 
-      uint64 now = GetRunTime64();
+      const uint64 now = GetRunTime64();
       if (now >= nextBeaconSendTime)
       {
          if (outgoingBeaconData())
@@ -469,7 +474,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
             {
                // demand-construct a Beacon Message (and cache it so we don't have to do it again every time)
                // The tag will be handled specially by the receiver so it's okay that the tag ID isn't increasing with each send
-               if (outgoingBeaconMsg() == NULL) outgoingBeaconMsg = CreateBeaconDataMessage(outgoingBeaconData, true, PZGMulticastMessageTag(GetLocalPeerID(), 0));
+               if (outgoingBeaconMsg() == NULL) outgoingBeaconMsg = CreateBeaconDataMessage(outgoingBeaconData, true, PZGMulticastMessageTag(GetLocalPeerID(), _hbSettings()->GetCompatibilityVersionCode(), 0));
                if (outgoingBeaconMsg())
                {
                   for (uint32 i=0; i<ptGateways.GetNumItems(); i++) if (ptGateways[i]()->AddOutgoingMessage(outgoingBeaconMsg).IsError()) LogTime(MUSCLE_LOG_ERROR, "Unable to add outgoing beacon to gateway # " UINT32_FORMAT_SPEC "!\n", i);
@@ -491,9 +496,9 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                MessageRef msg;
                while(messageReceiver.RemoveHead(msg).IsOK()) 
                { 
-                  // no point in forwarding-to-owner a dup Message, or a Message that came from us
+                  // no point in forwarding-to-owner a dup Message, or a Message that came from us, or a Message from an incompatibile peer
                   PZGMulticastMessageTag tag;
-                  if ((msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK())&&(tag.GetPeerID() != GetLocalPeerID())&&((msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)||((recentlyReceived.ContainsKey(tag) == false)&&(recentlyReceived.PutWithDefault(tag).IsOK()))))
+                  if ((msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK())&&(tag.GetCompatibilityVersionCode() == _hbSettings()->GetCompatibilityVersionCode())&&(tag.GetPeerID() != GetLocalPeerID())&&((msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)||((recentlyReceived.ContainsKey(tag) == false)&&(recentlyReceived.PutWithDefault(tag).IsOK()))))
                   {
                      if (msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)
                      {

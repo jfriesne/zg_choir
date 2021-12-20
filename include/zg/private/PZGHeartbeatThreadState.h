@@ -107,6 +107,8 @@ private:
 
    Mutex _mainThreadLatenciesLock;
    Hashtable<ZGPeerID, uint64> _mainThreadLatencies;
+
+   Hashtable<ZGPeerID, uint64> _lastMismatchedVersionLogTimes;
 };
 
 };  // end namespace zg_private

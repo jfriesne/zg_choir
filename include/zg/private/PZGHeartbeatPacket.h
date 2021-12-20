@@ -34,6 +34,7 @@ public:
 
    bool IsFullyAttached()        const {return _isFullyAttached;}
    uint32 GetHeartbeatPacketID() const {return _heartbeatPacketID;}
+   uint32 GetVersionCode()       const {return _versionCode;}
    uint64 GetSystemKey()         const {return _systemKey;}
    uint16 GetTCPAcceptPort()     const {return _tcpAcceptPort;}
    uint16 GetPeerType()          const {return _peerType;}
@@ -64,6 +65,7 @@ private:
    // in the flattened version, 32 bits of protocol-version-ID go here
    // in the flattened version, 32 bits of checksum-value go here
    uint32 _heartbeatPacketID;
+   uint32 _versionCode;
    uint64 _systemKey;             // hash-code of our signature and system name, just for sanity checking that we aren't getting crosstalk or random packets
    uint64 _networkSendTimeMicros; // time at which this packet was sent, according to the sender's network-clock
    uint16 _tcpAcceptPort;

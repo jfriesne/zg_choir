@@ -1,7 +1,7 @@
 #ifndef ZGPeerSettings_h
 #define ZGPeerSettings_h
 
-#include "zg/ZGNameSpace.h"
+#include "zg/ZGConstants.h"  // for ZG_VERSION
 #include "message/Message.h"
 
 /** The zg_private namespace is an undocumented namespace where the ZG library keeps all of its private implementation details that user programs aren't supposed to access directly. */
@@ -47,6 +47,7 @@ public:
       , _systemName(systemName)
       , _numDatabases(numDatabases)
       , _systemIsOnLocalhostOnly(systemIsOnLocalhostOnly)
+      , _versionCode(0)
       , _peerType(peerType)
       , _heartbeatsPerSecond(6)  // setting this at >5 avoids the great MacOS/X WiFi-PowerSave-on-200mS-idle problem
       , _heartbeatsBeforeFullyAttached(4)
@@ -55,7 +56,12 @@ public:
       , _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
       , _outgoingHeartbeatPacketIDCounter(0)
    {
-      // empty
+      uint32 temp = ZG_VERSION;    // format is: decimal (Mmmbb)
+      const uint32 bb = temp%100;  temp /= 100;
+      const uint32 mm = temp%100;  temp /= 100;
+      const uint32 M  = temp%256;
+      const uint32 applicationPeerCompatibilityVersion = 0;  // just here to document what the low-byte is reserved for
+      _versionCode = (M<<24) | (mm<<16) | (bb<<8) | (applicationPeerCompatibilityVersion<<0);
    }
 
    /** Returns the ZG program signature (as specified in our constructor) */
@@ -89,6 +95,26 @@ public:
 
    /** Returns the number-of-beacon-packets-to-send-per-second value for this peer (currently defaults to 4) */
    uint32 GetBeaconsPerSecond()                const {return _beaconsPerSecond;}
+
+   /** Return the Application Peer Compatibility code specified for this peer.  Default value is 0.
+     * @param see SetApplicationPeerCompatibilityVersion() for details.
+     */
+   uint8 GetApplicationPeerCompatibilityVersion() const {return (uint8) (_versionCode & 0xFF);}
+
+   /** You can call this if you have changed your ZGChoir-based application in some way that renders its peers
+     * inoperable with peers built using older versions of your application's source code, and you need to make
+     * sure that the newly-built peers do not interact with any older-version peers that are still floating around out there.
+     * @version the application-peer-compatibility-version number this program should include in its heartbeat-packets.
+     *          Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
+     *          number (and the same ZGChoir version numbers too)
+     */
+   void SetApplicationPeerCompatibilityVersion(uint8 version) {_versionCode &= ~0xFF; _versionCode |= (uint32)version;}
+
+   /** Returns the full 32-bit compatibility code used by this application.  This value includes both the ZGChoir version
+     * as hard-coded into the ZG_VERSION number in ZGConstants.h) and and the Application Peer Compatibility version (as
+     * optionally specified by the app via SetApplicationPeerCompatibilityVersion())
+     */
+   uint32 GetCompatibilityVersionCode() const {return _versionCode;}
 
    /** Set the peer attributes that should be associated with this peer.  Default is to have no attributes. 
      * @param peerAttributes Reference to a Message containing our attributes.  Try to keep this small, as a
@@ -157,6 +183,7 @@ private:
    String _systemName;                 // Name of the ZG system we are to participate in
    uint8 _numDatabases;                // how many databases we want to maintain
    bool _systemIsOnLocalhostOnly;      // true iff we are simulating the system on a single host
+   uint32 _versionCode;                // Our M.mm.bb.uu heartbeat-compatibility version-code
    ConstMessageRef _optPeerAttributes; // optional user-specified descriptive attributes for this peer (should be small)
    uint16 _peerType;                   // PEER_TYPE_* value for this peer
    uint32 _heartbeatsPerSecond;        // how many heartbeats we should send per second (and expect to receive per second, from each peer)

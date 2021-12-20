@@ -582,6 +582,11 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
    return zg_private::PeerInfoToString(peerInfo);
 }
 
+String CompatibilityVersionCodeToString(uint32 versionCode)
+{
+   return zg_private::CompatibilityVersionCodeToString(versionCode);
+}
+
 uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & /*pingSource*/)
 {
    if (pingMsg()->what != PR_COMMAND_PING) return MUSCLE_TIME_NEVER;

@@ -41,4 +41,15 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
    return ret.Trim();
 }
 
+String CompatibilityVersionCodeToString(uint32 versionCode)
+{
+   char buf[128];
+   muscleSprintf(buf, "%u.%u.%u.%u",
+      (uint8)((versionCode>>24)&0xFF),
+      (uint8)((versionCode>>16)&0xFF),
+      (uint8)((versionCode>>8) &0xFF),
+      (uint8)((versionCode>>0) &0xFF));
+   return buf;
+}
+
 };  // end namespace zg_private
