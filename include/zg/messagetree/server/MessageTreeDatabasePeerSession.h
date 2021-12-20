@@ -47,6 +47,8 @@ public:
      */
    const String & GetCurrentOpTagForNodePath(const String & nodePath) const;
 
+   virtual void MessageReceivedFromSession(AbstractReflectSession & from, const MessageRef & msg, void * userData);
+
 protected:
    /** This will be called as part of the startup sequence.  It should create
      * a new IDatabaseObject that will represent the specified database and return
@@ -148,6 +150,7 @@ private:
 
    MuxTreeGateway _muxGateway;
    NestCount _inPeerSessionSetupOrTeardown;
+   NestCount _inRequestNodeSubtreesNestCount;
 
    ConstMessageRef _gestaltMessage;
 };

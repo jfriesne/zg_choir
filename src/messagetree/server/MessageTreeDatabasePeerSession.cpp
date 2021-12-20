@@ -107,7 +107,11 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
 {
    MessageRef cmdMsg;
    const status_t ret = CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
+   if (ret.IsOK())
+   {
+      NestCountGuard ncg(_inRequestNodeSubtreesNestCount);
+      MessageReceivedFromGateway(cmdMsg, NULL);
+   }
    return ret;
 }
 
@@ -638,6 +642,17 @@ status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(co
 ConstMessageRef MessageTreeDatabasePeerSession :: TreeGateway_GetGestaltMessage() const
 {
    return _gestaltMessage;
+}
+
+void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflectSession & from, const MessageRef & msg, void * userData)
+{
+   if ((&from == this)&&(_inRequestNodeSubtreesNestCount.IsInBatch())&&(msg()->what == PR_RESULT_DATATREES))
+   {
+      // Gotta handle this locally as it needs to go back to our MuxTreeGateway for local distribution
+      String opTag; if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, opTag).IsOK()) (void) msg()->RemoveName(PR_NAME_TREE_REQUEST_ID);
+      _muxGateway.SubtreesRequestResultReturned(opTag, msg);
+   }
+   else ZGDatabasePeerSession::MessageReceivedFromSession(from, msg, userData);
 }
 
 };  // end namespace zg

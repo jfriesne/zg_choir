@@ -8,6 +8,7 @@
 namespace zg {
 
 class ITreeGatewaySubscriber;
+class MessageTreeDatabasePeerSession;
 
 /** This class contains the logic to multiplex the requests of multiple ITreeGatewaySubscriber objects
   * into a single request-stream for an upstream ITreeGateway to handle, and to demultiplex the results
@@ -59,6 +60,8 @@ protected:
    virtual void UnregisterSubscriber(void * s);
   
 private:
+   friend class MessageTreeDatabasePeerSession;
+
    class TreeSubscriberInfo : public PathMatcher
    {
    public:
