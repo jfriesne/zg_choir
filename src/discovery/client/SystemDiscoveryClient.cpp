@@ -400,7 +400,7 @@ public:
 
    void GrabUpdates(Hashtable<String, MessageRef> & updates)
    {
-      MutexGuard mg(_mutex);
+      DECLARE_MUTEXGUARD(_mutex);
       updates.SwapContents(_pendingUpdates);
    }
 
@@ -437,7 +437,7 @@ protected:
    {
       bool sendSignal = false;
       {
-         MutexGuard mg(_mutex);
+         DECLARE_MUTEXGUARD(_mutex);
          sendSignal = (_pendingUpdates.Put(systemName, msg).IsOK());
       }
       if (sendSignal) ScheduleDiscoveryUpdate();

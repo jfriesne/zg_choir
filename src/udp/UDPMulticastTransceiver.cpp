@@ -355,7 +355,7 @@ public:
    // Called by the main thread
    Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & SwapUpdateBuffers()
    {
-      MutexGuard mg(_mutex);
+      DECLARE_MUTEXGUARD(_mutex);
       _mainThreadPendingUpdates.SwapContents(_ioThreadPendingUpdates);
       return _mainThreadPendingUpdates;  // returning a read/write reference so the calling code can iterate it and then clear it
    }
@@ -412,7 +412,7 @@ protected:
    {
       bool sendSignal = false;
       {
-         MutexGuard mg(_mutex);  // critical section starts here
+         DECLARE_MUTEXGUARD(_mutex);  // critical section starts here
 
          const bool wasEmpty = _ioThreadPendingUpdates.IsEmpty();
          Queue<ByteBufferRef> * q = _ioThreadPendingUpdates.GetOrPut(sourceIAP);

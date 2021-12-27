@@ -136,7 +136,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
       if (_printTimeSynchronizationDeltas) PrintTimeSynchronizationDeltas();
 
       // Update the main-thread-accessible latencies table, just so we don't have to lock our own data structures all the time
-      MutexGuard mg(_mainThreadLatenciesLock);
+      DECLARE_MUTEXGUARD(_mainThreadLatenciesLock);
       for (HashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++)
       {
          const ZGPeerID & peerID = iter.GetKey();
@@ -619,7 +619,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
       {
          (void) _peerIDToIPAddresses.Remove(pid);
 
-         MutexGuard mg(_mainThreadLatenciesLock);
+         DECLARE_MUTEXGUARD(_mainThreadLatenciesLock);
          _mainThreadLatencies.Remove(pid);
       }
 
@@ -649,7 +649,7 @@ void PZGHeartbeatThreadState :: IntroduceSource(const PZGHeartbeatSourceKey & so
 // This method may be called by the main thread!  Hence the MutexGuard
 uint64 PZGHeartbeatThreadState :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const
 {
-   MutexGuard mg(_mainThreadLatenciesLock);
+   DECLARE_MUTEXGUARD(_mainThreadLatenciesLock);
    return _mainThreadLatencies.GetWithDefault(peerID, MUSCLE_TIME_NEVER);
 }
 

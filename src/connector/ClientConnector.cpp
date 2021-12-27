@@ -676,7 +676,7 @@ void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
 {
    // critical section
    {
-      MutexGuard mg(_replyQueueMutex);
+      DECLARE_MUTEXGUARD(_replyQueueMutex);
       _scratchQueue.SwapContents(_replyQueue);
    }
 
@@ -709,7 +709,7 @@ status_t ClientConnector :: SendOutgoingMessageToNetwork(const MessageRef & msg)
 // This method is called from within the I/O thread, so we have to be careful with it!
 void ClientConnector :: MessageReceivedFromIOThread(const MessageRef & msg)
 {
-   MutexGuard mg(_replyQueueMutex);
+   DECLARE_MUTEXGUARD(_replyQueueMutex);
    if (_replyQueue.IsEmpty()) RequestCallbackInDispatchThread();
    (void) _replyQueue.AddTail(msg);
 }

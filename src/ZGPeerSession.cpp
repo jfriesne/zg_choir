@@ -21,7 +21,7 @@ static uint32 GetNextUniqueObjectID()
 {
    static Mutex _counterMutex;
 
-   MutexGuard mg(_counterMutex);
+   DECLARE_MUTEXGUARD(_counterMutex);
    static uint32 _counter = 0;
    return ++_counter;
 }

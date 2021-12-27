@@ -231,7 +231,7 @@ status_t PZGNetworkIOSession :: SetupHeartbeatSession()
    }
    _hbSession = hbSessionRef;
 
-   MutexGuard mg(_hbSessionPtrMutex);
+   DECLARE_MUTEXGUARD(_hbSessionPtrMutex);
    _hbSessionPtr = _hbSession();
    return B_NO_ERROR;
 }
@@ -253,7 +253,7 @@ void PZGNetworkIOSession :: ClearHeartbeatSession()
    if (_hbSession())
    {
       {
-         MutexGuard mg(_hbSessionPtrMutex);
+         DECLARE_MUTEXGUARD(_hbSessionPtrMutex);
          _hbSessionPtr = NULL;
       }
       _hbSession()->EndSession();
@@ -283,7 +283,7 @@ void PZGNetworkIOSession :: ShutdownChildSessions()
 
 int64 PZGNetworkIOSession :: GetToNetworkTimeOffset() const
 {
-   MutexGuard mg(_hbSessionPtrMutex);  // this is here primary to mollify ThreadSanitizer
+   DECLARE_MUTEXGUARD(_hbSessionPtrMutex);  // this is here primary to mollify ThreadSanitizer
    return _hbSessionPtr ? _hbSessionPtr->MainThreadGetToNetworkTimeOffset() : 0;
 }
 
