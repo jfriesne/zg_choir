@@ -261,74 +261,85 @@ void PZGDatabaseState :: RescanUpdateLog()
 
       if (IsAwaitingFullDatabaseResendReply() == false)  // no point replaying our log if we're waiting for the full DB anyway
       {
-         NestCountGuard ncg(_inJuniorDatabaseUpdate);
-
-         // What we want to do is try to move our database state forward as much as possible, hopefully
-         // until it matches the current state of the senior peer.  Ideally we have all the PZGDatabaseUpdates
-         // in our update-log that will tell us how to do this, but if not (e.g. because we didn't
-         // receive the multicast packets for whatever reason), we may have to request a resend of
-         // the missing PZGDatabaseUpdates from the senior peer, and if that doesn't work, our 
-         // ultimate fallback will be to request the full state of the current database from the senior peer.
          const uint64 targetDatabaseStateID = GetTargetDatabaseStateID();
-         while(_localDatabaseStateID < targetDatabaseStateID)
+         if ((_localDatabaseStateID == 0)&&(targetDatabaseStateID > 1))
          {
-            const uint64 nextStateID = _localDatabaseStateID+1;
-            ConstPZGDatabaseUpdateRef dbUp = _updateLog[nextStateID];
-            if (dbUp())
+            // per discussions with Ruurd -- if we're just starting out in the world, it's better to force a
+            // download of the full current state of the database from the senior peer than to reconstuct it
+            // locally by replaing the entire transaction-log, so we'll do that.
+            const status_t ret = RequestFullDatabaseResendFromSeniorPeer(false);
+            if (ret.IsOK()) LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully requested the full/initial database stae from senior peer.\n", _whichDatabase);
+                       else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to request the full/initial database stae from senior peer. [%s]\n", _whichDatabase, ret());
+         }
+         else
+         {
+            // What we want to do is try to move our database state forward as much as possible, hopefully
+            // until it matches the current state of the senior peer.  Ideally we have all the PZGDatabaseUpdates
+            // in our update-log that will tell us how to do this, but if not (e.g. because we didn't
+            // receive the multicast packets for whatever reason), we may have to request a resend of
+            // the missing PZGDatabaseUpdates from the senior peer, and if that doesn't work, our
+            // ultimate fallback will be to request the full state of the current database from the senior peer.
+            NestCountGuard ncg(_inJuniorDatabaseUpdate);
+            while(_localDatabaseStateID < targetDatabaseStateID)
             {
-               status_t ret;
-               if (JuniorExecuteDatabaseUpdate(*dbUp()).IsOK(ret))
+               const uint64 nextStateID = _localDatabaseStateID+1;
+               ConstPZGDatabaseUpdateRef dbUp = _updateLog[nextStateID];
+               if (dbUp())
                {
-                  LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully executed junior update to state #" UINT64_FORMAT_SPEC "\n", _whichDatabase, nextStateID);
-               }
-               else
-               {
-                  LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to execute junior update #" UINT64_FORMAT_SPEC " (%s), will try to recover by requesting full database resend.\n", _whichDatabase, nextStateID, ret());
-                  const status_t ret = RequestFullDatabaseResendFromSeniorPeer(true);
-                  if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
-                  break;
-               }
-            } 
-            else 
-            {
-               const ZGPeerID & seniorPeerID = _master->GetSeniorPeerID();
-               if (seniorPeerID.IsValid())
-               {
-                  if (nextStateID < _seniorOldestIDInLog)
+                  status_t ret;
+                  if (JuniorExecuteDatabaseUpdate(*dbUp()).IsOK(ret))
                   {
-                     LogTime(MUSCLE_LOG_DEBUG, "Next required state ID " UINT64_FORMAT_SPEC " is no longer in senior peer's log (oldest he has is " UINT64_FORMAT_SPEC "), so we'll request a full DB #" UINT32_FORMAT_SPEC " resend instead.\n", nextStateID, _seniorOldestIDInLog, _whichDatabase);
-                     const status_t ret = RequestFullDatabaseResendFromSeniorPeer(false);
-                     if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
+                     LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully executed junior update to state #" UINT64_FORMAT_SPEC "\n", _whichDatabase, nextStateID);
                   }
                   else
                   {
-                     // Oops, we can't update our local DB any further (for now), but we can at least make sure
-                     // that the PZGDatabaseUpdates we need are on back-order from the senior peer
-                     for (uint64 updateID=nextStateID; updateID<=targetDatabaseStateID; updateID++)
+                     LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to execute junior update #" UINT64_FORMAT_SPEC " (%s), will try to recover by requesting full database resend.\n", _whichDatabase, nextStateID, ret());
+                     const status_t ret = RequestFullDatabaseResendFromSeniorPeer(true);
+                     if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
+                     break;
+                  }
+               }
+               else
+               {
+                  const ZGPeerID & seniorPeerID = _master->GetSeniorPeerID();
+                  if (seniorPeerID.IsValid())
+                  {
+                     if (nextStateID < _seniorOldestIDInLog)
                      {
-                        if (_updateLog.ContainsKey(updateID) == false)
+                        LogTime(MUSCLE_LOG_DEBUG, "Next required state ID " UINT64_FORMAT_SPEC " is no longer in senior peer's log (oldest he has is " UINT64_FORMAT_SPEC "), so we'll request a full DB #" UINT32_FORMAT_SPEC " resend instead.\n", nextStateID, _seniorOldestIDInLog, _whichDatabase);
+                        const status_t ret = RequestFullDatabaseResendFromSeniorPeer(false);
+                        if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
+                     }
+                     else
+                     {
+                        // Oops, we can't update our local DB any further (for now), but we can at least make sure
+                        // that the PZGDatabaseUpdates we need are on back-order from the senior peer
+                        for (uint64 updateID=nextStateID; updateID<=targetDatabaseStateID; updateID++)
                         {
-                           const PZGUpdateBackOrderKey ubok(seniorPeerID, _whichDatabase, updateID);
-                           if (_backorders.ContainsKey(ubok) == false)
+                           if (_updateLog.ContainsKey(updateID) == false)
                            {
-                              status_t ret;
-                              if (RequestBackOrderFromSeniorPeer(ubok, false).IsOK(ret))
+                              const PZGUpdateBackOrderKey ubok(seniorPeerID, _whichDatabase, updateID);
+                              if (_backorders.ContainsKey(ubok) == false)
                               {
-                                 LogTime(MUSCLE_LOG_DEBUG, "Database " UINT32_FORMAT_SPEC ":  Placed update #" UINT64_FORMAT_SPEC " on back-order from senior peer [%s]\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID(), ubok.GetTargetPeerID().ToString()());
-                              }
-                              else
-                              {
-                                 LogTime(MUSCLE_LOG_ERROR, "Database " UINT32_FORMAT_SPEC ":  Requested back order of update #" UINT64_FORMAT_SPEC " failed (%s), requesting full resend\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID(), ret());
-                                 ret = RequestFullDatabaseResendFromSeniorPeer(false);
-                                 if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
-                                 break;
+                                 status_t ret;
+                                 if (RequestBackOrderFromSeniorPeer(ubok, false).IsOK(ret))
+                                 {
+                                    LogTime(MUSCLE_LOG_DEBUG, "Database " UINT32_FORMAT_SPEC ":  Placed update #" UINT64_FORMAT_SPEC " on back-order from senior peer [%s]\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID(), ubok.GetTargetPeerID().ToString()());
+                                 }
+                                 else
+                                 {
+                                    LogTime(MUSCLE_LOG_ERROR, "Database " UINT32_FORMAT_SPEC ":  Requested back order of update #" UINT64_FORMAT_SPEC " failed (%s), requesting full resend\n", ubok.GetDatabaseIndex(), ubok.GetDatabaseUpdateID(), ret());
+                                    ret = RequestFullDatabaseResendFromSeniorPeer(false);
+                                    if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
+                                    break;
+                                 }
                               }
                            }
                         }
                      }
                   }
+                  break;
                }
-               break;
             }
          }
       }
