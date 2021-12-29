@@ -527,7 +527,9 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
       DECLARE_OP_TAG_GUARD;
 
       SetDataNodeFlags sdnFlags;
+#ifdef JAF_DELIBERATELY_REMOVED_THIS_LINE_BECAUSE_IT_PREVENTS_DATA_REPLICATION_FROM_WORKING_ACROSS_PEERS
       if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
+#endif
       return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(path), true, sdnFlags);
    }
    else 
