@@ -88,6 +88,11 @@ status_t ITreeGatewaySubscriber :: RequestRedo(uint32 whichDB, const String & op
    return GetGateway()->TreeGateway_RequestRedo(this, whichDB, optOpTag);
 }
 
+uint64 ITreeGatewaySubscriber :: GetSeniorPeerNetworkTime64ForCurrentUpdate() const
+{
+   return GetGateway()->TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate();
+}
+
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const
 {
    return GetGateway()->TreeGateway_IsGatewayConnected();

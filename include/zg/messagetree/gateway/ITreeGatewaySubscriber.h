@@ -319,6 +319,15 @@ protected:
      */
    virtual ConstMessageRef GetGestaltMessage() const;
 
+   /** If called from within a TreeNodeUpdated(), TreeNodeIndexCleared(), TreeNodeIndexEntryInserted(), or TreeNodeIndexEntryRemoved() method-callback,
+     * this method will return the network-time (e.g. as returned by GetNetworkTime64()) that his update was initiated on the ZG senior-peer.
+     * This time can be compared with the time returned by the local GetNetworkTime64() method to get a rough idea of how much time has elapsed
+     * between when the senior peer made the change to its local database and now.
+     * Returns 0 if this information is not available (e.g. if you're calling it from outside one of the above methods, or if the current callback
+     *         wasn't made in response to any particular update on the server)
+     */
+   virtual uint64 GetSeniorPeerNetworkTime64ForCurrentUpdate() const;
+
 private:
    friend class ITreeGateway;
    friend class GatewaySubscriberUndoBatchGuard;

@@ -206,16 +206,16 @@ status_t IDatabaseObject :: RequestUpdateDatabaseState(const MessageRef & databa
    return dbps ? dbps->RequestUpdateDatabaseState(_dbIndex, databaseUpdateMsg) : B_BAD_OBJECT;
 }
 
-bool IDatabaseObject :: IsInSeniorDatabaseUpdateContext() const
+bool IDatabaseObject :: IsInSeniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
 {
    ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
-   return dbps ? dbps->IsInSeniorDatabaseUpdateContext(_dbIndex) : false;
+   return dbps ? dbps->IsInSeniorDatabaseUpdateContext(optRetSeniorNetworkTime64) : false;
 }
 
 bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
 {
    ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
-   return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex, optRetSeniorNetworkTime64) : false;
+   return dbps ? dbps->IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64) : false;
 }
 
 status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB)

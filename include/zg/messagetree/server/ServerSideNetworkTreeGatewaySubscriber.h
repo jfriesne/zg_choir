@@ -41,6 +41,7 @@ private:
    void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName, const String & optOpTag);
    status_t SendOutgoingMessageToNetwork(const MessageRef & msg);
    QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
+   status_t AddSeniorUpdateTime(const MessageRef & msg) const;
 
    INetworkMessageSender * _messageSender;
 };

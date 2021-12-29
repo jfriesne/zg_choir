@@ -19,7 +19,6 @@ PZGDatabaseState :: PZGDatabaseState()
    , _firstUnsentUpdateID(0)
    , _rescanLogPending(false)
    , _printDatabaseStatesComparisonOnNextReplace(false)
-   , _seniorUpdateTimeForJuniorUpdate(0)
 {
    // empty
 }
@@ -79,11 +78,11 @@ void PZGDatabaseState :: ClearUpdateLog()
    _totalElapsedMillisInLog = 0;
 }
 
-void PZGDatabaseState :: SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg, const INetworkTimeProvider & networkTimeProvider)
+void PZGDatabaseState :: SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg)
 {
    // Gotta update our running time and byte tallies as we update dbUp
    _totalElapsedMillisInLog -= dbUp()->GetSeniorElapsedTimeMillis();
-   dbUp()->SetSeniorStartTimeMicros(networkTimeProvider.GetNetworkTime64ForRunTime64(startTime));
+   dbUp()->SetSeniorStartTimeMicros(_master->_seniorUpdateTimeForSeniorUpdate);
    dbUp()->SetSeniorElapsedTimeMicros(GetRunTime64()-startTime);
    _totalElapsedMillisInLog += dbUp()->GetSeniorElapsedTimeMillis();
 
@@ -124,11 +123,13 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
          const uint64 startTime = GetRunTime64();
+         _master->_seniorUpdateTimeForSeniorUpdate = networkTimeProvider.GetNetworkTime64ForRunTime64(startTime);
          {
-            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            NestCountGuard ncg(_master->_inSeniorDatabaseUpdate);
             _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
          }
-         SeniorUpdateCompleted(dbUp, startTime, ConstMessageRef(), networkTimeProvider);
+         SeniorUpdateCompleted(dbUp, startTime, ConstMessageRef());
+         _master->_seniorUpdateTimeForSeniorUpdate = 0;
          return B_NO_ERROR;
       }
       break;
@@ -149,17 +150,20 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
 
          status_t ret;
          const uint64 startTime = GetRunTime64();
+         _master->_seniorUpdateTimeForSeniorUpdate = networkTimeProvider.GetNetworkTime64ForRunTime64(startTime);
          {
-            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            NestCountGuard ncg(_master->_inSeniorDatabaseUpdate);
             ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
          }
      
-         if (ret.IsOK()) SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg, networkTimeProvider);
+         if (ret.IsOK()) SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg);
          else
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state! [%s]\n", _whichDatabase, ret());
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
          }
+
+         _master->_seniorUpdateTimeForSeniorUpdate = 0;
          return ret;
       }
       break;
@@ -178,23 +182,23 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
          MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
          const uint64 startTime = GetRunTime64();
+         _master->_seniorUpdateTimeForSeniorUpdate = networkTimeProvider.GetNetworkTime64ForRunTime64(startTime);
          ConstMessageRef juniorMsg;
          {
-            NestCountGuard ncg(_inSeniorDatabaseUpdate);
+            NestCountGuard ncg(_master->_inSeniorDatabaseUpdate);
             juniorMsg = _master->SeniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
          }
 
-         if (juniorMsg())
-         {
-            SeniorUpdateCompleted(dbUp, startTime, juniorMsg, networkTimeProvider);
-            return B_NO_ERROR;
-         }
+         status_t ret;
+         if (juniorMsg()) SeniorUpdateCompleted(dbUp, startTime, juniorMsg);
          else
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error setting senior database #" UINT32_FORMAT_SPEC " to state!\n", _whichDatabase);
             RemoveDatabaseUpdateFromUpdateLog(dbUp);  // roll back!
-            return B_LOGIC_ERROR;
+            ret = B_LOGIC_ERROR;
          }
+         _master->_seniorUpdateTimeForSeniorUpdate = 0;
+         return ret;
       }
       break;
 
@@ -280,7 +284,7 @@ void PZGDatabaseState :: RescanUpdateLog()
             // receive the multicast packets for whatever reason), we may have to request a resend of
             // the missing PZGDatabaseUpdates from the senior peer, and if that doesn't work, our
             // ultimate fallback will be to request the full state of the current database from the senior peer.
-            NestCountGuard ncg(_inJuniorDatabaseUpdate);
+            NestCountGuard ncg(_master->_inJuniorDatabaseUpdate);
             while(_localDatabaseStateID < targetDatabaseStateID)
             {
                const uint64 nextStateID = _localDatabaseStateID+1;
@@ -440,15 +444,18 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdat
 
 status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpdate & dbUp)
 {
-   _seniorUpdateTimeForJuniorUpdate = dbUp.GetSeniorStartTimeMicros();
+   _master->_seniorUpdateTimeForJuniorUpdate = dbUp.GetSeniorStartTimeMicros();
+
+   status_t ret;
    switch(dbUp.GetUpdateType())
    {
       case PZG_DATABASE_UPDATE_TYPE_NOOP:
-         return B_NO_ERROR;  // that was easy!
+         // empty -- that was easy!
+      break;
 
       case PZG_DATABASE_UPDATE_TYPE_RESET:
          (void) _master->ResetLocalDatabaseToDefault(_whichDatabase, _dbChecksum);
-         return B_NO_ERROR;
+      break;
 
       case PZG_DATABASE_UPDATE_TYPE_REPLACE:
       {
@@ -456,13 +463,15 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          if (userDBStateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message available to replace junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_BAD_OBJECT;
+            ret = B_BAD_OBJECT;
          }
-
-         const status_t ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
-         dbUp.UncachePayloadBufferAsMessage();  // might as well free up the memory, now that we've executed it we won't need the Message again
-         return ret;
+         else
+         {
+            ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
+            dbUp.UncachePayloadBufferAsMessage();  // might as well free up the memory, now that we've executed it we won't need the Message again
+         }
       }
+      break;
 
       case PZG_DATABASE_UPDATE_TYPE_UPDATE:
       {
@@ -470,18 +479,24 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpd
          if (userDBUpdateMsg() == NULL)
          {
             LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdateState:  Error, no user message to update junior database #" UINT32_FORMAT_SPEC "!\n", _whichDatabase);
-            return B_BAD_OBJECT;
+            ret = B_BAD_OBJECT;
          }
-
-         const status_t ret = _master->JuniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
-         dbUp.UncachePayloadBufferAsMessage();  // might as well free up the memory, now that we've executed it we won't need the Message again
-         return ret;
+         else
+         {
+            ret = _master->JuniorUpdateLocalDatabase(_whichDatabase, _dbChecksum, userDBUpdateMsg);
+            dbUp.UncachePayloadBufferAsMessage();  // might as well free up the memory, now that we've executed it we won't need the Message again
+         }
       }
+      break;
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::JuniorExecuteDatabaseUpdateAux:  Unknown update type code " UINT32_FORMAT_SPEC "\n", dbUp.GetUpdateType());
-      return B_UNIMPLEMENTED;
+         ret = B_UNIMPLEMENTED;
+      break;
    }
+
+   _master->_seniorUpdateTimeForJuniorUpdate = 0;
+   return ret;
 }
 
 void PZGDatabaseState :: PrintDatabaseStateInfo() const
@@ -528,7 +543,7 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
          if (optUpdateData())
          {
             LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Received full-database-state from senior peer (%s)\n", _whichDatabase, seniorPeerID.ToString()());
-            NestCountGuard ncg(_inJuniorDatabaseUpdate);
+            NestCountGuard ncg(_master->_inJuniorDatabaseUpdate);
             if (JuniorExecuteDatabaseReplace(*optUpdateData()).IsOK()) ScheduleLogContentsRescan();
          }
          else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC ":  Senior peer (%s) failed to send full-database-state to us!\n", _whichDatabase, seniorPeerID.ToString()());  // now what do we do?
@@ -600,5 +615,16 @@ ConstMessageRef PZGDatabaseState :: GetDatabaseUpdatePayloadByID(uint64 updateID
    const ConstPZGDatabaseUpdateRef * dbur = _updateLog.Get(updateID);
    return dbur ? dbur->GetItemPointer()->GetPayloadBufferAsMessage() : ConstMessageRef();
 }
+
+bool PZGDatabaseState :: IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
+{
+   return _master->IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64);
+}
+
+bool PZGDatabaseState :: IsInSeniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
+{
+   return _master->IsInSeniorDatabaseUpdateContext(optRetSeniorNetworkTime64);
+}
+
 
 };  // end namespace zg_private

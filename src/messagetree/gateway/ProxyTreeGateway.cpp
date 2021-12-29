@@ -115,6 +115,11 @@ status_t ProxyTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySubscriber * /*
    return ITreeGatewaySubscriber::RequestRedo(whichDB, optOpTag);
 }
 
+uint64 ProxyTreeGateway :: TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const
+{
+   return ITreeGatewaySubscriber::GetSeniorPeerNetworkTime64ForCurrentUpdate();
+}
+
 bool ProxyTreeGateway :: TreeGateway_IsGatewayConnected() const
 {
    return ITreeGatewaySubscriber::IsTreeGatewayConnected();

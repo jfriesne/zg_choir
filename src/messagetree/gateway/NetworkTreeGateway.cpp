@@ -54,11 +54,13 @@ static const String NTG_NAME_MAXDEPTH    = "ntg_max";
 static const String NTG_NAME_BEFORE      = "ntg_b4";
 static const String NTG_NAME_INDEX       = "ntg_idx";
 static const String NTG_NAME_NAME        = "ntg_nam";
+static const String NTG_NAME_SENIORTIME  = "ntg_stm";
 
 ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSender * messageSender)
    : ProxyTreeGateway(NULL)
    , _messageSender(messageSender)
    , _isConnected(false)
+   , _currentSeniorUpdateTime(0)
 {
    // empty
 }
@@ -245,6 +247,11 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestRedo(ITreeGatewaySub
    return SendUndoRedoMessage(NTG_COMMAND_REDO, optOpTag, whichDB);
 }
 
+uint64 ClientSideNetworkTreeGateway :: TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const
+{
+   return _currentSeniorUpdateTime;
+}
+
 status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, const String & tag, uint32 whichDB)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
@@ -357,10 +364,16 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
    return B_NO_ERROR; // If we got here, the Message was handled
 }
 
+status_t ServerSideNetworkTreeGatewaySubscriber :: AddSeniorUpdateTime(const MessageRef & msg) const
+{
+printf("AddSeniorUpdateTime %llu\n", GetSeniorPeerNetworkTime64ForCurrentUpdate());
+   return msg() ? msg()->CAddInt64(NTG_NAME_SENIORTIME, GetSeniorPeerNetworkTime64ForCurrentUpdate()) : B_OUT_OF_MEMORY;
+}
+
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_NODEUPDATED);
-   if ((msg())
+   if ((AddSeniorUpdateTime(msg).IsOK())
      &&(msg()->CAddString( NTG_NAME_PATH,      nodePath).IsOK())
      &&(msg()->CAddString( NTG_NAME_TAG,       optOpTag).IsOK())
      &&(msg()->CAddMessage(NTG_NAME_PAYLOAD, payloadMsg).IsOK())) SendOutgoingMessageToNetwork(msg);
@@ -369,7 +382,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeUpdated(const String & no
 void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(NTG_REPLY_INDEXCLEARED);
-   if ((msg())
+   if ((AddSeniorUpdateTime(msg).IsOK())
      &&(msg()->CAddString(NTG_NAME_PATH,     path).IsOK())
      &&(msg()->CAddString(NTG_NAME_TAG,  optOpTag).IsOK())) SendOutgoingMessageToNetwork(msg);
 }
@@ -387,7 +400,7 @@ void ServerSideNetworkTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const S
 void ServerSideNetworkTreeGatewaySubscriber :: HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName, const String & optOpTag)
 {
    MessageRef msg = GetMessageFromPool(whatCode);
-   if ((msg())
+   if ((AddSeniorUpdateTime(msg).IsOK())
      &&(msg()->CAddString(NTG_NAME_PATH,     path).IsOK())
      &&(msg()->CAddString(NTG_NAME_TAG,  optOpTag).IsOK())
      &&(msg()->CAddInt32(NTG_NAME_INDEX,      idx).IsOK())
@@ -434,7 +447,11 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
    const String & name = msg()->GetStringReference(NTG_NAME_NAME);
    MessageRef payload  = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 idx     = msg()->GetInt32(NTG_NAME_INDEX);
-   
+
+   _currentSeniorUpdateTime = msg()->GetInt64(NTG_NAME_SENIORTIME);
+printf("A _currentSeniorUpdateTime=%llu\n", _currentSeniorUpdateTime);
+
+   status_t ret;
    switch(msg()->what)
    {
       case NTG_REPLY_NODEUPDATED:        TreeNodeUpdated(path, payload, tag);              break;
@@ -457,10 +474,13 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
       break;
 
       default:
-         return B_UNIMPLEMENTED;  // unhandled/unknown Message type!
+         ret = B_UNIMPLEMENTED;  // unhandled/unknown Message type!
+      break;
    }
+printf("B _currentSeniorUpdateTime=%llu\n", _currentSeniorUpdateTime);
+   _currentSeniorUpdateTime = 0;
 
-   return B_NO_ERROR; // If we got here, the Message was handled
+   return ret;
 }
 
 status_t ClientSideNetworkTreeGateway :: ConvertPathToSessionRelative(String & path) const

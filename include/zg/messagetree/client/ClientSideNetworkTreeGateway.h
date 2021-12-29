@@ -57,6 +57,7 @@ protected:
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
+   virtual uint64   TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const;
    virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const {return _parameters;}
 
@@ -77,6 +78,8 @@ private:
    bool _isConnected;
    MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
    ConstMessageRef _parameters;
+
+   uint64 _currentSeniorUpdateTime;
 };
 
 /** If (maybeSyncPingMsg) is a local-sync-ping Message, return the corresponding local-sync-pong Message.

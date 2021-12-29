@@ -79,7 +79,13 @@ static ZGPeerID GenerateLocalPeerID()
    return ZGPeerID((macAddress<<16)|((uint64)GetNextUniqueObjectID()), (((uint64)processID)<<32)|((uint64)salt));
 }
 
-ZGPeerSession :: ZGPeerSession(const ZGPeerSettings & zgPeerSettings) : _peerSettings(zgPeerSettings), _localPeerID(GenerateLocalPeerID()), _iAmFullyAttached(false), _setBeaconDataPending(false)
+ZGPeerSession :: ZGPeerSession(const ZGPeerSettings & zgPeerSettings) 
+   : _peerSettings(zgPeerSettings)
+   , _localPeerID(GenerateLocalPeerID())
+   , _iAmFullyAttached(false)
+   , _setBeaconDataPending(false)
+   , _seniorUpdateTimeForSeniorUpdate(0)
+   , _seniorUpdateTimeForJuniorUpdate(0)
 {
    (void) _databases.EnsureSize(_peerSettings.GetNumDatabases(), true);
    for (uint32 i=0; i<_databases.GetNumItems(); i++) 
@@ -566,14 +572,18 @@ String ZGPeerSession :: GetLocalDatabaseContentsAsString(uint32 /*whichDatabase*
    return "(GetLocalDatabaseContentsAsString unimplemented)";
 }
 
-bool ZGPeerSession :: IsInSeniorDatabaseUpdateContext(uint32 whichDB) const
+bool ZGPeerSession :: IsInSeniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
 {
-   return _databases[whichDB].IsInSeniorDatabaseUpdateContext();
+   const bool ret = _inSeniorDatabaseUpdate.IsInBatch();
+   if (optRetSeniorNetworkTime64) *optRetSeniorNetworkTime64 = ret ? _seniorUpdateTimeForSeniorUpdate : 0;
+   return ret;
 }
 
-bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64) const
+bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
 {
-   return _databases[whichDB].IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64);
+   const bool ret = _inJuniorDatabaseUpdate.IsInBatch();
+   if (optRetSeniorNetworkTime64) *optRetSeniorNetworkTime64 = ret ? _seniorUpdateTimeForJuniorUpdate : 0;
+   return ret;
 }
 
 String PeerInfoToString(const ConstMessageRef & peerInfo)

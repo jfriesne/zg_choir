@@ -64,6 +64,7 @@ protected:
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
+   virtual uint64   TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const;
    virtual bool TreeGateway_IsGatewayConnected() const;
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const;
 };

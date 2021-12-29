@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+#include "zg/INetworkTimeProvider.h"
 #include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 #include "MagnetState.h"
 
@@ -16,8 +17,9 @@ Q_OBJECT
 public:
    /** Constructor
      * @param connector the ITreeGateway we should register with and use for our database access
+     * @param networkTimeProvider pointer to an object that can tell us what the network-time is.
      */
-   FridgeClientCanvas(ITreeGateway * connector);
+   FridgeClientCanvas(ITreeGateway * connector, const INetworkTimeProvider * networkTimeProvider);
 
    /** Destructor */
    virtual ~FridgeClientCanvas();
@@ -51,6 +53,7 @@ private:
    String _draggingID;  // if non-empty, we're in the middle of moving a magnet
    QPoint _dragDelta;   // mouse-click position minus upper-left position
 
+   const INetworkTimeProvider * _networkTimeProvider;
    bool _firstMouseMove;
 };
 

@@ -8,8 +8,9 @@
 
 namespace fridge {
 
-FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector) 
+FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector, const INetworkTimeProvider * networkTimeProvider) 
    : ITreeGatewaySubscriber(connector)
+   , _networkTimeProvider(networkTimeProvider)
    , _firstMouseMove(false)
 {
    (void) AddTreeSubscription("project/magnets/*");   // we need to keep track of where the magnets are on the server
@@ -185,6 +186,7 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
 
 void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & /*optOpTag*/)
 {
+printf("TNU %s -> %p:   now=%llu seniorTime=%llu\n", nodePath(), optPayloadMsg(), _networkTimeProvider->GetNetworkTime64(), GetSeniorPeerNetworkTime64ForCurrentUpdate());
    if (nodePath.StartsWith("project/magnets/"))
    {
       const bool hadMagnets = HasMagnets();

@@ -36,6 +36,7 @@ protected:
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber *, uint32, const String &) {return _returnValue;}
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber *, uint32, const String &) {return _returnValue;}
+   virtual uint64   TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const {return 0;}
    virtual bool TreeGateway_IsGatewayConnected() const {return false;}
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const {return ConstMessageRef();}
 

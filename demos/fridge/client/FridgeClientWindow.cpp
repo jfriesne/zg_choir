@@ -198,7 +198,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
             }
             topPartLayout->addWidget(topButtonsRow);
 
-            _canvas = new FridgeClientCanvas(_connection);
+            _canvas = new FridgeClientCanvas(_connection, _connection);
             connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(ScheduleUpdateStatus()));
             topPartLayout->addWidget(_canvas, 1);
  

@@ -46,14 +46,8 @@ public:
    ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint64 updateID, const INetworkTimeProvider & networkTimeProvider) const;
    ConstMessageRef GetDatabaseUpdatePayloadByID(uint64 updateID) const;
 
-   bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
-   {
-      const bool ret = _inJuniorDatabaseUpdate.IsInBatch();
-      if (optRetSeniorNetworkTime64) *optRetSeniorNetworkTime64 = ret ? _seniorUpdateTimeForJuniorUpdate : 0;
-      return ret;
-   }
-
-   bool IsInSeniorDatabaseUpdateContext() const {return _inSeniorDatabaseUpdate.IsInBatch();}
+   bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const;
+   bool IsInSeniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const;
 
    bool UpdateLogContainsUpdate(uint64 tid) const {return _updateLog.ContainsKey(tid);}
    uint64 GetCurrentDatabaseStateID() const {return _localDatabaseStateID;}
@@ -66,7 +60,7 @@ private:
    status_t AddDatabaseUpdateToUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);
    void RemoveDatabaseUpdateFromUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);
    void ClearUpdateLog();
-   void SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg, const INetworkTimeProvider & networkTimeProvider);
+   void SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg);
 
    status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
    uint64 GetTargetDatabaseStateID() const {return muscleMax(_updateLog.GetLastKeyWithDefault(), _seniorDatabaseStateID);}
@@ -96,11 +90,6 @@ private:
    bool _printDatabaseStatesComparisonOnNextReplace;  // for easier debugging
 
    Hashtable<PZGUpdateBackOrderKey, Void> _backorders;  // update-resends we have on order from the senior peer
-
-   NestCount _inJuniorDatabaseUpdate;
-   NestCount _inSeniorDatabaseUpdate;
-
-   uint64 _seniorUpdateTimeForJuniorUpdate;  // only meaningful when we're inside JuniorExecuteDatabaseUpdateAux()
 };
 
 };  // end namespace zg_private

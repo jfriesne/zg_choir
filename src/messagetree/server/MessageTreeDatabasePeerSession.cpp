@@ -328,6 +328,14 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestRedo(ITreeGatewayS
    return UploadUndoRedoRequestToSeniorPeer(UNDOSTACK_COMMAND_REDO, optOpTag, whichDB);
 }
 
+uint64 MessageTreeDatabasePeerSession :: TreeGateway_GetSeniorPeerNetworkTime64ForCurrentUpdate() const
+{
+   uint64 retNetworkTime = 0;
+   return (IAmTheSeniorPeer() 
+         ? IsInSeniorDatabaseUpdateContext(&retNetworkTime) 
+         : IsInJuniorDatabaseUpdateContext(&retNetworkTime)) ? retNetworkTime : 0;
+}
+
 status_t MessageTreeDatabasePeerSession :: UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabelOrOpTag, uint32 whichDB)
 {
    UndoStackMessageTreeDatabaseObject * undoDB = dynamic_cast<UndoStackMessageTreeDatabaseObject *>(GetDatabaseObject(whichDB));
