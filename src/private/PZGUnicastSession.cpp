@@ -31,8 +31,7 @@ PZGUnicastSession :: ~PZGUnicastSession()
 
 status_t PZGUnicastSession :: AttachedToServer()
 {
-   status_t ret;
-   if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+   MRETURN_ON_ERROR(AbstractReflectSession::AttachedToServer());
 
    RegisterMyself();
 

@@ -104,9 +104,8 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
    {
       case PR_COMMAND_BATCH:
       {
-         status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (SeniorMessageTreeUpdate(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) MRETURN_ON_ERROR(SeniorMessageTreeUpdate(subMsg));
       }
       break;
 
@@ -180,9 +179,8 @@ status_t MessageTreeDatabaseObject :: JuniorMessageTreeUpdate(const ConstMessage
    {
       case PR_COMMAND_BATCH:
       {
-         status_t ret;
          MessageRef subMsg;
-         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) if (JuniorMessageTreeUpdate(subMsg).IsError(ret)) return ret;
+         for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) MRETURN_ON_ERROR(JuniorMessageTreeUpdate(subMsg));
       }
       break;
 
@@ -318,11 +316,10 @@ status_t MessageTreeDatabaseObject :: RequestDeleteNodes(const String & path, co
 
    if (optFilter()) MRETURN_ON_ERROR(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()));
 
-   const status_t ret = cmdMsg()->CAddString(MTDO_NAME_PATH,  path)
-                      | cmdMsg()->CAddString(MTDO_NAME_TAG,   optOpTag)
-                      | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS, flags);
-
-   return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDO_NAME_PATH,  path));
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDO_NAME_TAG,   optOpTag));
+   MRETURN_ON_ERROR(cmdMsg()->AddFlat(   MTDO_NAME_FLAGS, flags));
+   return RequestUpdateDatabaseState(cmdMsg);
 }
 
 status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path, const String & optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag)
@@ -332,12 +329,11 @@ status_t MessageTreeDatabaseObject :: RequestMoveIndexEntry(const String & path,
 
    if (optFilter()) MRETURN_ON_ERROR(cmdMsg()->AddArchiveMessage(MTDO_NAME_FILTER, *optFilter()));
 
-   const status_t ret = cmdMsg()->CAddString(MTDO_NAME_PATH,   path)
-                      | cmdMsg()->CAddString(MTDO_NAME_TAG,    optOpTag)
-                      | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags)
-                      | cmdMsg()->CAddString(MTDO_NAME_BEFORE, optBefore);
-
-   return ret.IsOK() ? RequestUpdateDatabaseState(cmdMsg) : ret;
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDO_NAME_PATH,   path));
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDO_NAME_TAG,    optOpTag));
+   MRETURN_ON_ERROR(cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,  flags));
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDO_NAME_BEFORE, optBefore));
+   return RequestUpdateDatabaseState(cmdMsg);
 }
 
 int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, String * optRetRelativePath) const
@@ -472,9 +468,9 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
          // Client wants us to choose an available node ID
          sessionRelativePath--;
 
-         status_t ret;
          uint32 newNodeID;
-         if (zsh->GetUnusedNodeID(sessionRelativePath, newNodeID).IsError(ret)) return ret;
+         MRETURN_ON_ERROR(zsh->GetUnusedNodeID(sessionRelativePath, newNodeID));
+
          char buf[64]; muscleSprintf(buf, "/%s" UINT32_FORMAT_SPEC, flags.IsBitSet(TREE_GATEWAY_FLAG_INDEXED)?"I":"", newNodeID);
          sessionRelativePath += buf;
       }

@@ -368,9 +368,8 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    MessageRef sendMsg = GetMessageFromPool(whatCode);
    MRETURN_OOM_ON_NULL(sendMsg());
 
-   status_t ret;
-   if ((sendMsg()->CAddInt32(PZG_PEER_NAME_DATABASE_ID,    whichDatabase).IsError(ret))||
-       (sendMsg()->CAddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg).IsError(ret))) return ret;
+   MRETURN_ON_ERROR(sendMsg()->CAddInt32(  PZG_PEER_NAME_DATABASE_ID,  whichDatabase));
+   MRETURN_ON_ERROR(sendMsg()->CAddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg));
 
    return SendUnicastInternalMessageToPeer(_seniorPeerID, sendMsg);
 }

@@ -137,16 +137,13 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    _updateBuf.Reset();
    _updateMsg.Reset();
 
-   status_t ret;
-
    _updateType = *buf++; size--;
    (void) buf++;         size--;  // skip the reserved/padding byte
    _databaseIndex           = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    _seniorElapsedTimeMillis = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    /* reserved 16-bit field is here; maybe we'll do something with it someday */ buf += sizeof(uint16); size -= sizeof(uint16);
    _seniorStartTimeMicros   = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
-   if (_sourcePeerID.Unflatten(buf, size).IsError(ret)) return ret;              /* buf/size advancement on next line to avoid compiler warning */
-                                                                                 buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
+   MRETURN_ON_ERROR(_sourcePeerID.Unflatten(buf, size));                         buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
    _updateID                = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
    _preUpdateDBChecksum     = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
    _postUpdateDBChecksum    = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);

@@ -195,9 +195,8 @@ status_t PZGNetworkIOSession :: AttachedToServer()
    PZGUnicastSessionFactoryRef unicastTCPFactoryRef(newnothrow PZGUnicastSessionFactory(this));
    MRETURN_OOM_ON_NULL(unicastTCPFactoryRef());
 
-   status_t ret;
    uint16 tcpAcceptPort;
-   if (PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort).IsError(ret)) return ret;
+   MRETURN_ON_ERROR(PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort));
 
    _hbSettings.SetRef(newnothrow PZGHeartbeatSettings(_peerSettings, _localPeerID, tcpAcceptPort));
    if (_hbSettings() == NULL) {(void) RemoveAcceptFactory(tcpAcceptPort); MRETURN_OUT_OF_MEMORY;}
@@ -205,6 +204,8 @@ status_t PZGNetworkIOSession :: AttachedToServer()
 
    DetectNetworkConfigChangesSessionRef dnccSessionRef(newnothrow DetectNetworkConfigChangesSession);
    MRETURN_OOM_ON_NULL(dnccSessionRef());
+
+   status_t ret;
    if (AddNewSession(dnccSessionRef).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession::AttachedToServer():  Couldn't add DetectNetworkConfigChangesSession! [%s]\n", ret());
@@ -555,13 +556,8 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & 
 {
    for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(GetMainThreadPeers()); iter.HasData(); iter++)
    {
-      if (sendToSelf == false)
-      {
-         if (iter.GetKey() == GetLocalPeerID()) continue;
-      }
-      
-      status_t ret;
-      if (SendUnicastMessageToPeer(iter.GetKey(), msg).IsError(ret)) return ret;
+      if ((sendToSelf == false)&&(iter.GetKey() == GetLocalPeerID())) continue;
+      MRETURN_ON_ERROR(SendUnicastMessageToPeer(iter.GetKey(), msg));
    }
    return B_NO_ERROR;
 }
@@ -574,8 +570,8 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID
    {
       // We'll process this Message-to-ourself asynchronously just to avoid any surprises to the calling code,
       // which probably isn't expecting SendUnicastMessageToPeer() to execute any message-handling code during this call!
-      bool wasEmpty = _messagesSentToSelf.IsEmpty();
-      status_t ret = _messagesSentToSelf.AddTail(msg);
+      const bool wasEmpty = _messagesSentToSelf.IsEmpty();
+      const status_t ret  = _messagesSentToSelf.AddTail(msg);
       if ((wasEmpty)&&(ret.IsOK())) InvalidatePulseTime();  // so we'll wake up and receive our message to ourself ASAP
       return ret;
    }

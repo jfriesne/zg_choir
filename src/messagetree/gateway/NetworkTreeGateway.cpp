@@ -124,19 +124,17 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGa
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_REQUESTNODESUBTREES);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
    const uint32 numQs = queryStrings.GetNumItems();
    for (uint32 i=0; i<numQs; i++)
    {
-      if (msg()->AddString(NTG_NAME_PATH, queryStrings[i]).IsError(ret)) return ret;
-      if ((i<queryFilters.GetNumItems())&&(queryFilters[i]())&&(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *queryFilters[i]()).IsError(ret))) return ret;
+      MRETURN_ON_ERROR(msg()->AddString(NTG_NAME_PATH, queryStrings[i]));
+      if ((i<queryFilters.GetNumItems())&&(queryFilters[i]())) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *queryFilters[i]()));
    }
 
-   ret = msg()->CAddInt32(NTG_NAME_MAXDEPTH, maxDepth, MUSCLE_NO_LIMIT)
-       | msg()->CAddFlat( NTG_NAME_FLAGS,    flags)
-       | msg()->AddString(NTG_NAME_TAG,      tag);
-
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddInt32(NTG_NAME_MAXDEPTH, maxDepth, MUSCLE_NO_LIMIT));
+   MRETURN_ON_ERROR(msg()->CAddFlat( NTG_NAME_FLAGS,    flags));
+   MRETURN_ON_ERROR(msg()->AddString(NTG_NAME_TAG,      tag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
@@ -144,13 +142,12 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewa
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODEVALUE);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret = msg()->CAddString( NTG_NAME_PATH,    path)
-                | msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload)
-                | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
-                | msg()->CAddString( NTG_NAME_BEFORE,  optBefore)
-                | msg()->CAddString( NTG_NAME_TAG,     optOpTag);
-
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString( NTG_NAME_PATH,    path));
+   MRETURN_ON_ERROR(msg()->CAddMessage(NTG_NAME_PAYLOAD, optPayload));
+   MRETURN_ON_ERROR(msg()->CAddFlat(   NTG_NAME_FLAGS,   flags));
+   MRETURN_ON_ERROR(msg()->CAddString( NTG_NAME_BEFORE,  optBefore));
+   MRETURN_ON_ERROR(msg()->CAddString( NTG_NAME_TAG,     optOpTag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
@@ -158,12 +155,11 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGate
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_UPLOADNODESUBTREE);
    MRETURN_OOM_ON_NULL(msg());
 
-   const status_t ret = msg()->CAddString( NTG_NAME_PATH,    basePath)
-                      | msg()->CAddMessage(NTG_NAME_PAYLOAD, valuesMsg)
-                      | msg()->CAddFlat(   NTG_NAME_FLAGS,   flags)
-                      | msg()->CAddString( NTG_NAME_TAG,     optOpTag);
-
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString( NTG_NAME_PATH,    basePath));
+   MRETURN_ON_ERROR(msg()->CAddMessage(NTG_NAME_PAYLOAD, valuesMsg));
+   MRETURN_ON_ERROR(msg()->CAddFlat(   NTG_NAME_FLAGS,   flags));
+   MRETURN_ON_ERROR(msg()->CAddString( NTG_NAME_TAG,     optOpTag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
@@ -178,12 +174,11 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestMoveIndexEntry(ITree
 
    if (optFilterRef()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()));
 
-   const status_t ret = msg()->CAddString(NTG_NAME_PATH,  path)
-                      | msg()->CAddString(NTG_NAME_TAG,   optOpTag)
-                      | msg()->CAddFlat(  NTG_NAME_FLAGS, flags)
-                      | msg()->CAddString(NTG_NAME_BEFORE, optBefore);
-
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_PATH,  path));
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   optOpTag));
+   MRETURN_ON_ERROR(msg()->CAddFlat(  NTG_NAME_FLAGS, flags));
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_BEFORE, optBefore));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * /*calledBy*/, const String & tag, TreeGatewayFlags flags)
@@ -201,10 +196,10 @@ status_t ClientSideNetworkTreeGateway :: PingLocalPeerAux(const String & tag, in
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_PING);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if (msg()->CAddFlat(     NTG_NAME_FLAGS, flags).IsError(ret)) return ret;
-   if (msg()->CAddInt32(    NTG_NAME_INDEX, optWhichDB).IsError(ret)) return ret;
-   return msg()->CAddString(NTG_NAME_TAG,   tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddFlat(  NTG_NAME_FLAGS, flags));
+   MRETURN_ON_ERROR(msg()->CAddInt32( NTG_NAME_INDEX, optWhichDB));
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   tag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & userMsg, uint32 whichDB, const String & tag)
@@ -212,10 +207,10 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITr
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSENIORPEER);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if (msg()->AddMessage(   NTG_NAME_PAYLOAD, userMsg).IsError(ret)) return ret;
-   if (msg()->CAddInt32(    NTG_NAME_INDEX,   whichDB).IsError(ret)) return ret;
-   return msg()->CAddString(NTG_NAME_TAG,     tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->AddMessage(NTG_NAME_PAYLOAD, userMsg));
+   MRETURN_ON_ERROR(msg()->CAddInt32( NTG_NAME_INDEX,   whichDB));
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,     tag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & userMsg, const ConstQueryFilterRef & optFilterRef, const String & tag)
@@ -223,11 +218,11 @@ status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(IT
    MessageRef msg = GetMessageFromPool(NTG_COMMAND_MESSAGETOSUBSCRIBER);
    MRETURN_OOM_ON_NULL(msg());
 
-   status_t ret;
-   if (msg()->CAddString(        NTG_NAME_PATH,        path).IsError(ret))         return ret;
-   if (msg()->AddMessage(        NTG_NAME_PAYLOAD,     userMsg).IsError(ret))      return ret;
-   if (msg()->CAddArchiveMessage(NTG_NAME_QUERYFILTER, optFilterRef).IsError(ret)) return ret;
-   return msg()->CAddString(     NTG_NAME_TAG,         tag).IsOK(ret) ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString(        NTG_NAME_PATH,        path));
+   MRETURN_ON_ERROR(msg()->AddMessage(        NTG_NAME_PAYLOAD,     userMsg));
+   MRETURN_ON_ERROR(msg()->CAddArchiveMessage(NTG_NAME_QUERYFILTER, optFilterRef));
+   MRETURN_ON_ERROR(msg()->CAddString(        NTG_NAME_TAG,         tag));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
@@ -255,8 +250,9 @@ status_t ClientSideNetworkTreeGateway :: SendUndoRedoMessage(uint32 whatCode, co
    MessageRef msg = GetMessageFromPool(whatCode);
    MRETURN_OOM_ON_NULL(msg());
 
-   const status_t ret = msg()->CAddString(NTG_NAME_TAG, tag) | msg()->CAddInt32(NTG_NAME_INDEX, whichDB);
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   tag));
+   MRETURN_ON_ERROR(msg()->CAddInt32( NTG_NAME_INDEX, whichDB));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
@@ -266,11 +262,10 @@ status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, cons
 
    if (optFilterRef()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()));
 
-   const status_t ret = (msg()->CAddString( NTG_NAME_PATH,  subscriptionPath))
-                      | (msg()->CAddString( NTG_NAME_TAG,   optOpTag))
-                      | (msg()->CAddFlat(   NTG_NAME_FLAGS, flags));
-
-   return ret.IsOK() ? SendOutgoingMessageToNetwork(msg) : ret;
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_PATH,  subscriptionPath))
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   optOpTag))
+   MRETURN_ON_ERROR(msg()->CAddFlat(  NTG_NAME_FLAGS, flags));
+   return SendOutgoingMessageToNetwork(msg);
 }
 
 void ClientSideNetworkTreeGateway :: SetParameters(const MessageRef & parameters)

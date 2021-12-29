@@ -149,8 +149,7 @@ public:
 
    virtual status_t AttachedToServer()
    {
-      status_t ret;
-      if (AbstractReflectSession::AttachedToServer().IsError(ret)) return ret;
+      MRETURN_ON_ERROR(AbstractReflectSession::AttachedToServer());
 
       AddNewMulticastUDPSessions();
       return B_NO_ERROR;

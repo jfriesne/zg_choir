@@ -165,8 +165,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
       msgRef  = GetMessageFromPool();
       if (msgRef() == NULL) MRETURN_OUT_OF_MEMORY;
 
-      status_t ret;
-      if (optMagnetState->SaveToArchive(*msgRef()).IsError(ret)) return ret;
+      MRETURN_ON_ERROR(optMagnetState->SaveToArchive(*msgRef()));
    }
       
    return UploadTreeNodeValue(optNodeID.Prepend("project/magnets/"), msgRef, isInterimUpdate?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags());

@@ -106,13 +106,11 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGa
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg);
-   if (ret.IsOK())
-   {
-      NestCountGuard ncg(_inRequestNodeSubtreesNestCount);
-      MessageReceivedFromGateway(cmdMsg, NULL);
-   }
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg));
+
+   NestCountGuard ncg(_inRequestNodeSubtreesNestCount);
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
@@ -185,10 +183,10 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    MessageRef seniorPingMsg = GetMessageFromPool(MTDPS_COMMAND_PINGSENIORPEER);
    MRETURN_OOM_ON_NULL(seniorPingMsg());
 
-   const status_t ret = seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag)
-                      | seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID())
-                      | seniorPingMsg()->CAddFlat(MTDPS_NAME_FLAGS,  flags);
-   return ret.IsOK() ? RequestUpdateDatabaseState(whichDB, seniorPingMsg) : ret;
+   MRETURN_ON_ERROR(seniorPingMsg()->CAddString(MTDPS_NAME_TAG,  tag));
+   MRETURN_ON_ERROR(seniorPingMsg()->CAddFlat(MTDPS_NAME_SOURCE, GetLocalPeerID()));
+   MRETURN_ON_ERROR(seniorPingMsg()->CAddFlat(MTDPS_NAME_FLAGS,  flags));
+   return RequestUpdateDatabaseState(whichDB, seniorPingMsg);
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & msg, uint32 whichDB, const String & tag)
@@ -198,11 +196,11 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(I
    MessageRef seniorCommandMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSENIORPEER);
    MRETURN_OOM_ON_NULL(seniorCommandMsg());
 
-   const status_t ret = seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg)
-                      | seniorCommandMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())
-                      | seniorCommandMsg()->CAddInt32( MTDPS_NAME_WHICHDB, whichDB)
-                      | seniorCommandMsg()->CAddString(MTDPS_NAME_TAG,     tag);
-   return ret.IsOK() ? SendUnicastUserMessageToPeer(GetSeniorPeerID(), seniorCommandMsg) : ret;
+   MRETURN_ON_ERROR(seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg));
+   MRETURN_ON_ERROR(seniorCommandMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID()));
+   MRETURN_ON_ERROR(seniorCommandMsg()->CAddInt32( MTDPS_NAME_WHICHDB, whichDB));
+   MRETURN_ON_ERROR(seniorCommandMsg()->CAddString(MTDPS_NAME_TAG,     tag));
+   return SendUnicastUserMessageToPeer(GetSeniorPeerID(), seniorCommandMsg);
 }
 
 ZGPeerID MessageTreeDatabasePeerSession :: GetPerClientPeerIDForNode(const DataNode & node) const
@@ -281,9 +279,8 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
       // path is e.g. "foo/bar/baz*" -- we want to send the Message on to any ITreeGatewaySubscribers who are subscribed to any of the nodes matching the path
       const bool isGlobal = path.StartsWith('/');
 
-      status_t ret;
       NodePathMatcher matcher;
-      if (matcher.PutPathString(isGlobal?path.Substring(1):path, optFilter).IsError(ret)) return ret;
+      MRETURN_ON_ERROR(matcher.PutPathString(isGlobal?path.Substring(1):path, optFilter));
 
       GetPerClientPeerIDsCallbackArgs args(retPeerIDs);
       (void) matcher.DoTraversal((PathMatchCallback) GetPerClientPeerIDsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &args);
@@ -296,15 +293,15 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(I
    MessageRef cmdMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSUBSCRIBER);
    MRETURN_OOM_ON_NULL(cmdMsg());
 
-   status_t ret = cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        msg)
-                | cmdMsg()->CAddString(MTDPS_NAME_PATH,           subscriberPath)
-                | cmdMsg()->CAddArchiveMessage(MTDPS_NAME_FILTER, optFilterRef)
-                | cmdMsg()->AddString(MTDPS_NAME_TAG,             String("{%1}:%2").Arg(GetLocalPeerID().ToString()).Arg(tag));
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        msg));
+   MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDPS_NAME_PATH,           subscriberPath));
+   MRETURN_ON_ERROR(cmdMsg()->CAddArchiveMessage(MTDPS_NAME_FILTER, optFilterRef));
+   MRETURN_ON_ERROR(cmdMsg()->AddString(MTDPS_NAME_TAG,             String("{%1}:%2").Arg(GetLocalPeerID().ToString()).Arg(tag)));
 
    Hashtable<ZGPeerID, Void> targetPeerIDs;
    if (GetPerClientPeerIDsForPath(subscriberPath, optFilterRef, targetPeerIDs).IsOK())
    {
+      status_t ret;
       for (HashtableIterator<ZGPeerID, Void> iter(targetPeerIDs); iter.HasData(); iter++) ret |= SendUnicastUserMessageToPeer(iter.GetKey(), cmdMsg);
       return ret;
    }

@@ -32,8 +32,7 @@ status_t PZGHeartbeatPeerInfo :: Unflatten(const uint8 *buf, uint32 size)
    if (size < (_peerID.FlattenedSize()+sizeof(uint32))) return B_BAD_DATA;
 
    const uint32 peerIDFlatSize = ZGPeerID::FlattenedSize();
-   status_t ret;
-   if (_peerID.Unflatten(buf, peerIDFlatSize).IsError(ret)) return ret;
+   MRETURN_ON_ERROR(_peerID.Unflatten(buf, peerIDFlatSize));
    buf += peerIDFlatSize; size -= peerIDFlatSize;
 
    _timings.Clear();
@@ -42,12 +41,12 @@ status_t PZGHeartbeatPeerInfo :: Unflatten(const uint8 *buf, uint32 size)
    buf += sizeof(uint32); size -= sizeof(uint32);
    const uint32 tiFlatSize = PZGTimingInfo::FlattenedSize();
 
-   if (size < (numTimings*tiFlatSize))               return B_BAD_DATA;
-   if (_timings.EnsureSize(numTimings).IsError(ret)) return ret;
+   if (size < (numTimings*tiFlatSize)) return B_BAD_DATA;
+   MRETURN_ON_ERROR(_timings.EnsureSize(numTimings));
 
    for (uint32 i=0; i<numTimings; i++)
    {
-      if (_timings.AddTailAndGet()->Unflatten(buf, tiFlatSize).IsError(ret)) return ret;
+      MRETURN_ON_ERROR(_timings.AddTailAndGet()->Unflatten(buf, tiFlatSize));
       buf += tiFlatSize; size -= tiFlatSize;
    }
    return B_NO_ERROR;

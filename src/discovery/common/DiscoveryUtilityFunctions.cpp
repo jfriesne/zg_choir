@@ -28,8 +28,7 @@ static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<Net
    }
    else
    {
-      status_t ret;
-      if (retAddresses.EnsureSize(retAddresses.GetNumItems()+niis.GetNumItems()).IsError(ret)) return ret;
+      MRETURN_ON_ERROR(retAddresses.EnsureSize(retAddresses.GetNumItems()+niis.GetNumItems()));
       for (uint32 i=0; i<niis.GetNumItems(); i++)
       {
          const NetworkInterfaceInfo & nii = niis[i];
@@ -44,9 +43,7 @@ static status_t MakeIPv6MulticastAddresses(const IPAddress & ip, const Queue<Net
 static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 port, const IPAddress & baseKey, const StringMatcher * optNicNameFilter)
 {
    Queue<NetworkInterfaceInfo> niis;
-   GNIIFlags flags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
-   status_t ret = muscle::GetNetworkInterfaceInfos(niis, flags);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(muscle::GetNetworkInterfaceInfos(niis, GNIIFlags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES)));
 
    for (int32 i=niis.GetNumItems()-1; i>=0; i--)
    {
@@ -57,18 +54,15 @@ static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAP
 //for(uint32 i=0; i<niis.GetNumItems(); i++) printf(" --> %s\n", niis[i].ToString()());
 
    Hashtable<IPAddress, bool> q;
-   if (MakeIPv6MulticastAddresses(baseKey, niis, q).IsError(ret)) return ret;
+   MRETURN_ON_ERROR(MakeIPv6MulticastAddresses(baseKey, niis, q));
    for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++) 
    {
       const IPAddressAndPort iap(iter.GetKey(), port);
       const bool isWiFi = iter.GetValue();
-      if (retIAPs.Put(iap, isWiFi).IsOK(ret))
-      {
-         LogTime(MUSCLE_LOG_TRACE, "GetMulticastAddresses:  Using address [%s] isWiFi=%i for baseKey=%s\n", iap.ToString()(), isWiFi, baseKey.ToString()());
-      }
-      else return ret;
+      MRETURN_ON_ERROR(retIAPs.Put(iap, isWiFi));
+      LogTime(MUSCLE_LOG_TRACE, "GetMulticastAddresses:  Using address [%s] isWiFi=%i for baseKey=%s\n", iap.ToString()(), isWiFi, baseKey.ToString()());
    }
-   return ret;
+   return B_NO_ERROR;
 }
 
 status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, uint16 discoPort)

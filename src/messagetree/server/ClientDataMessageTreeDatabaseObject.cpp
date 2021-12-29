@@ -25,8 +25,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
    
-   status_t ret = MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore, optOpTag);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore, optOpTag));
 
    // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
    return ssmts->SetDataNode(localPath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
@@ -38,8 +37,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String &
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   status_t ret = MessageTreeDatabaseObject::UploadNodeSubtree(sharedPath, valuesMsg, flags, optOpTag);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(MessageTreeDatabaseObject::UploadNodeSubtree(sharedPath, valuesMsg, flags, optOpTag));
 
    // Upload the subtree in our local MUSCLE database also, so that we can retransmit it later if we need to
    SetDataNodeFlags sdnFlags;
@@ -53,8 +51,7 @@ status_t ClientDataMessageTreeDatabaseObject :: RequestDeleteNodes(const String 
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   status_t ret = MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, optFilter, flags, optOpTag);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(MessageTreeDatabaseObject::RequestDeleteNodes(sharedPath, optFilter, flags, optOpTag));
 
    return ssmts->RemoveDataNodes(localPath, optFilter, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
@@ -65,8 +62,7 @@ status_t ClientDataMessageTreeDatabaseObject :: RequestMoveIndexEntry(const Stri
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
 
-   const status_t ret = MessageTreeDatabaseObject::RequestMoveIndexEntry(sharedPath, optBefore, optFilter, flags, optOpTag);
-   if (ret.IsError()) return ret;
+   MRETURN_ON_ERROR(MessageTreeDatabaseObject::RequestMoveIndexEntry(sharedPath, optBefore, optFilter, flags, optOpTag));
 
    return ssmts->MoveIndexEntries(localPath, optBefore.HasChars()?&optBefore:NULL, optFilter);
 }

@@ -538,10 +538,9 @@ private:
       const uint64 waitUntil = (_reconnectTimeMicroseconds == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+_reconnectTimeMicroseconds);
       while(GetRunTime64() < waitUntil)
       {
-         status_t ret;
-         if (sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()).IsError(ret)) return ret;
+         MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
          if (sm.WaitForEvents(waitUntil) < 0) return B_ERROR("ClientConnectorImplementation:  WaitForEvents() failed while in delay state");
-         if ((sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor()))&&(HandleIncomingMessagesFromOwnerThread().IsError(ret))) return ret;
+         if (sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor())) MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
       }
       return B_NO_ERROR;
    }

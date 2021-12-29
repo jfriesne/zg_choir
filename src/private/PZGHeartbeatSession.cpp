@@ -105,9 +105,8 @@ status_t PZGHeartbeatSession :: AttachedToServer()
    }
 
    // Do this before the superclass call, so that the socket is ready for use when the internal thread starts
-   status_t ret;
-   if ((BindUDPSocket(_timeSyncUDPSocket, 0, &_timeSyncUDPPort).IsError(ret)) || (SetSocketBlockingEnabled(_timeSyncUDPSocket, false).IsError(ret))) return ret;
-
+   MRETURN_ON_ERROR(BindUDPSocket(_timeSyncUDPSocket, 0, &_timeSyncUDPPort));
+   MRETURN_ON_ERROR(SetSocketBlockingEnabled(_timeSyncUDPSocket, false));
    return PZGThreadedSession::AttachedToServer();  // starts the internal thread
 }
 

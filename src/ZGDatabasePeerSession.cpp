@@ -23,11 +23,7 @@ status_t ZGDatabasePeerSession :: AttachedToServer()
    for (uint32 i=0; i<numDBs; i++)
    {
       IDatabaseObjectRef dbRef = CreateDatabaseObject(i);
-      if (dbRef())
-      {
-         status_t ret;
-         if (_databaseObjects.AddTail(dbRef).IsError(ret)) return ret;
-      }
+      if (dbRef()) {MRETURN_ON_ERROR(_databaseObjects.AddTail(dbRef));}
       else
       {
          LogTime(MUSCLE_LOG_CRITICALERROR, "ZGDatabasePeerSession::AttachedToServer:  CreateDatabaseObject() failed for database #" UINT32_FORMAT_SPEC ", aborting startup!\n", i);
