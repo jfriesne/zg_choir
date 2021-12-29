@@ -82,8 +82,12 @@ private:
 
    String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, char markerChar='_') const;
    String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar='_') const;
+   String TagToExcludeClientFromReplies(ITreeGatewaySubscriber * excludeMe, const String & tag) const;
+
    ITreeGatewaySubscriber * ParseRegistrationID(const String & ascii, char markerChar='_') const;
    ITreeGatewaySubscriber * ParseRegistrationIDPrefix(const String & s, String & retSuffix, char markerChar='_') const;
+
+   const String _muxTreeGatewayIDPrefix;
 
    Hashtable<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> _subscriberInfos;
    Hashtable<ITreeGatewaySubscriber *, Void> _needsCallbackBatchEndsCall;

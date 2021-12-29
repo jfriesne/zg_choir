@@ -33,8 +33,15 @@ ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const Strin
    else return NULL;
 }
 
+static String GenerateUniqueMuxTreeGatewayIDPrefix()
+{
+   const uint64 uniqueID = (GetRunTime64()+GetCurrentTime64())*((uint64)rand());  // good enough for now?
+   return String("[MUX%1]").Arg(uniqueID);
+}
+
 MuxTreeGateway :: MuxTreeGateway(ITreeGateway * optUpstreamGateway)
    : ProxyTreeGateway(optUpstreamGateway)
+   , _muxTreeGatewayIDPrefix(GenerateUniqueMuxTreeGatewayIDPrefix())
    , _isConnected(false)
    , _dummySubscriber(NULL)
 {
@@ -169,10 +176,14 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtreesAux(ITreeGatewaySubscr
    else return B_OUT_OF_MEMORY;
 }
 
+String MuxTreeGateway :: TagToExcludeClientFromReplies(ITreeGatewaySubscriber * excludeMe, const String & optOpTag) const
+{
+   return excludeMe ? PrependRegistrationIDPrefix(excludeMe, optOpTag, '!').Prepend(_muxTreeGatewayIDPrefix) : optOpTag;
+}
+
 status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
-   if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) TreeNodeUpdatedAux(path, optPayload, optOpTag, calledBy);  // if we won't get a reply back from the server, then we'll need to update our other subscribers directly.
-   return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags, optBefore, optOpTag);
+   return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags.WithoutBit(TREE_GATEWAY_FLAG_NOREPLY), optBefore, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)?TagToExcludeClientFromReplies(calledBy,optOpTag):optOpTag);
 }
 
 status_t MuxTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
@@ -199,7 +210,19 @@ status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubsc
 
 void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & nodeMsg, const String & optOpTag)
 {
-   TreeNodeUpdatedAux(path, nodeMsg, optOpTag, NULL);
+   if (optOpTag.StartsWith(_muxTreeGatewayIDPrefix))
+   {
+      String effectiveTag;
+      ITreeGatewaySubscriber * dontNotifyMe = ParseRegistrationIDPrefix(optOpTag.Substring(_muxTreeGatewayIDPrefix.Length()), effectiveTag, '!');
+      TreeNodeUpdatedAux(path, nodeMsg, effectiveTag, dontNotifyMe);
+   }
+   else if (optOpTag.StartsWith("[MUX"))
+   {
+      // If some other MuxTreeGateway specified the [MUX______] prefix, then we still want our subscribers to see this update, but without his prefix
+      const int32 colonIdx = optOpTag.IndexOf(':');  // e.g. "[MUX1234535]!3!:userTag" -> "userTag"
+      TreeNodeUpdatedAux(path, nodeMsg, (colonIdx>=0)?optOpTag.Substring(colonIdx+1):optOpTag, NULL);
+   }
+   else TreeNodeUpdatedAux(path, nodeMsg, optOpTag, NULL);
 }
 
 void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify)
