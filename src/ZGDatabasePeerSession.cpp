@@ -216,10 +216,10 @@ bool IDatabaseObject :: IsInSeniorDatabaseUpdateContext() const
    return dbps ? dbps->IsInSeniorDatabaseUpdateContext(_dbIndex) : false;
 }
 
-bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext() const
+bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
 {
    ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
-   return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex) : false;
+   return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex, optRetSeniorNetworkTime64) : false;
 }
 
 status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB)

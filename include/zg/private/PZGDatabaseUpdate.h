@@ -38,6 +38,7 @@ public:
    uint8 GetUpdateType()               const {return _updateType;}
    uint16 GetDatabaseIndex()           const {return _databaseIndex;}
    uint16 GetSeniorElapsedTimeMillis() const {return _seniorElapsedTimeMillis;}
+   uint64 GetSeniorStartTimeMicros()   const {return _seniorStartTimeMicros;}
    const ZGPeerID & GetSourcePeerID()  const {return _sourcePeerID;}
    uint64 GetUpdateID()                const {return _updateID;}
    uint32 GetPreUpdateDBChecksum()     const {return _preUpdateDBChecksum;}
@@ -48,6 +49,7 @@ public:
 
    void SetUpdateType(uint8 updateType)                {_updateType              = updateType;}
    void SetDatabaseIndex(uint16 databaseIndex)         {_databaseIndex           = databaseIndex;}
+   void SetSeniorStartTimeMicros(uint64 micros)        {_seniorStartTimeMicros   = micros;}  // expressed as a timestamp of the GetNetworkTime64() clock
    void SetSeniorElapsedTimeMicros(uint64 micros)      {_seniorElapsedTimeMillis = (uint16) muscleMin((uint64)65535, (uint64) MicrosToMillis(micros));}
    void SetSourcePeerID(const ZGPeerID & peerID)       {_sourcePeerID            = peerID;}
    void SetUpdateID(uint64 updateID)                   {_updateID                = updateID;}
@@ -68,6 +70,7 @@ private:
    uint8 _updateType;                 // PZG_DATABASE_UPDATE_TYPE_*
    uint16 _databaseIndex;             // Index of the database (within this replicated-database-arena) that this update is intended for
    uint16 _seniorElapsedTimeMillis;   // how many milliseconds it took to execute this update on the senior peer
+   uint64 _seniorStartTimeMicros;     // when SeniorUpdated() started executing on the senior peer, expressed as a timestamp of the GetNetworkTime64() clock
    ZGPeerID _sourcePeerID;            // ID of the peer that requested this update
    uint64 _updateID;                  // State-ID that this update will place the database into when applied.
    uint32 _preUpdateDBChecksum;       // 32-bit checksum of our database as it was before this update was applied

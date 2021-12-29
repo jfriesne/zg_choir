@@ -340,7 +340,7 @@ status_t ZGPeerSession :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerI
       return B_BAD_ARGUMENT;
    }
 
-   return _databases[whichDatabase].HandleDatabaseUpdateRequest(fromPeerID, msg, dbUp);
+   return _databases[whichDatabase].HandleDatabaseUpdateRequest(fromPeerID, msg, dbUp, *this);
 }
 
 status_t ZGPeerSession :: RequestResetDatabaseStateToDefault(uint32 whichDatabase)
@@ -541,7 +541,7 @@ ConstPZGDatabaseUpdateRef ZGPeerSession :: GetDatabaseUpdateByID(uint32 whichDB,
       return ConstPZGDatabaseUpdateRef();
    }
 
-   return _databases[whichDB].GetDatabaseUpdateByID(updateID);
+   return _databases[whichDB].GetDatabaseUpdateByID(updateID, *this);
 }
 
 int64 ZGPeerSession :: GetToNetworkTimeOffset() const
@@ -572,9 +572,9 @@ bool ZGPeerSession :: IsInSeniorDatabaseUpdateContext(uint32 whichDB) const
    return _databases[whichDB].IsInSeniorDatabaseUpdateContext();
 }
 
-bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB) const
+bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64) const
 {
-   return _databases[whichDB].IsInJuniorDatabaseUpdateContext();
+   return _databases[whichDB].IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64);
 }
 
 String PeerInfoToString(const ConstMessageRef & peerInfo)

@@ -122,8 +122,11 @@ protected:
    /** Returns true iff we are currently executing in a context where it okay to
      * update the local database as a junior-peer (e.g. we are running in a function that was
      * called by the ZGPeerSession's JuniorUpdateLocalDatabase() method, or similar)
+     * @param optRetSeniorNetworkTime64 if set non-NULL, this value will be set to the network-64 time
+     *                                  at which this update was originally handled on the senior peer.
+     *                                  If this method returns false, this value will be set to 0.
      */
-   bool IsInJuniorDatabaseUpdateContext() const;
+   bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64 = NULL) const;
 
    /** Should update this object's state using the passed-in senior-do-Message (whose semantics
      * are left up to the subclass to define), and then return a reference to a Message that can

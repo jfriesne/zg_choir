@@ -160,8 +160,11 @@ public:
      * update the local database as a junior-peer (e.g. we are running in a function that was
      * called by the JuniorUpdateLocalDatabase() method, or similar)
      * @param whichDB index of the database we are inquiring about
+     * @param optRetSeniorNetworkTime64 if set non-NULL, this value will be set to the network-64 time
+     *                                  at which this update was originally handled on the senior peer.
+     *                                  If this method returns false, this value will be set to 0.
      */
-   bool IsInJuniorDatabaseUpdateContext(uint32 whichDB) const;
+   bool IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64 = NULL) const;
 
    /** Gets our current estimate of the one-way network latency between us and the specified peer.
      * @param peerID The peer ID to get the latency of

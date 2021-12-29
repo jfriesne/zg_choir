@@ -11,6 +11,7 @@
 namespace zg
 {
 // forward declarations
+class INetworkTimeProvider;
 class ZGPeerID;
 class ZGPeerSession;
 };
@@ -26,7 +27,7 @@ public:
 
    void SetParameters(ZGPeerSession * master, uint32 whichDatabase, uint64 maxPayloadBytesInLog);
 
-   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp);
+   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp, const INetworkTimeProvider & networkTimeProvider);
 
    virtual uint64 GetPulseTime(const PulseArgs & args) {return muscleMin(_rescanLogPending?0:MUSCLE_TIME_NEVER, PulseNode::GetPulseTime(args));}
    virtual void Pulse(const PulseArgs & args);
@@ -42,10 +43,16 @@ public:
    void RescanUpdateLogIfNecessary();
 
    void BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData);
-   ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint64 updateID) const;
+   ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint64 updateID, const INetworkTimeProvider & networkTimeProvider) const;
    ConstMessageRef GetDatabaseUpdatePayloadByID(uint64 updateID) const;
 
-   bool IsInJuniorDatabaseUpdateContext() const {return _inJuniorDatabaseUpdate.IsInBatch();}
+   bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64) const
+   {
+      const bool ret = _inJuniorDatabaseUpdate.IsInBatch();
+      if (optRetSeniorNetworkTime64) *optRetSeniorNetworkTime64 = ret ? _seniorUpdateTimeForJuniorUpdate : 0;
+      return ret;
+   }
+
    bool IsInSeniorDatabaseUpdateContext() const {return _inSeniorDatabaseUpdate.IsInBatch();}
 
    bool UpdateLogContainsUpdate(uint64 tid) const {return _updateLog.ContainsKey(tid);}
@@ -59,7 +66,7 @@ private:
    status_t AddDatabaseUpdateToUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);
    void RemoveDatabaseUpdateFromUpdateLog(const ConstPZGDatabaseUpdateRef & dbUp);
    void ClearUpdateLog();
-   void SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg);
+   void SeniorUpdateCompleted(const PZGDatabaseUpdateRef & dbUp, uint64 startTime, const ConstMessageRef & payloadMsg, const INetworkTimeProvider & networkTimeProvider);
 
    status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
    uint64 GetTargetDatabaseStateID() const {return muscleMax(_updateLog.GetLastKeyWithDefault(), _seniorDatabaseStateID);}
@@ -92,6 +99,8 @@ private:
 
    NestCount _inJuniorDatabaseUpdate;
    NestCount _inSeniorDatabaseUpdate;
+
+   uint64 _seniorUpdateTimeForJuniorUpdate;  // only meaningful when we're inside JuniorExecuteDatabaseUpdateAux()
 };
 
 };  // end namespace zg_private

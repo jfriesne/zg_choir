@@ -1,4 +1,5 @@
 #include "zg/private/PZGDatabaseUpdate.h"
+
 #include "zlib/ZLibUtilityFunctions.h"
 
 namespace zg_private
@@ -29,6 +30,7 @@ PZGDatabaseUpdate :: PZGDatabaseUpdate()
    : _updateType(PZG_DATABASE_UPDATE_TYPE_NOOP)
    , _databaseIndex(0)
    , _seniorElapsedTimeMillis(0)
+   , _seniorStartTimeMicros(0)
    , _updateID(0)
    , _preUpdateDBChecksum(0)
    , _postUpdateDBChecksum(0)
@@ -40,6 +42,7 @@ PZGDatabaseUpdate :: PZGDatabaseUpdate(const PZGDatabaseUpdate & rhs)
    : _updateType(rhs._updateType)
    , _databaseIndex(rhs._databaseIndex)
    , _seniorElapsedTimeMillis(rhs._seniorElapsedTimeMillis)
+   , _seniorStartTimeMicros(rhs._seniorStartTimeMicros)
    , _sourcePeerID(rhs._sourcePeerID)
    , _updateID(rhs._updateID)
    , _preUpdateDBChecksum(rhs._preUpdateDBChecksum)
@@ -55,6 +58,7 @@ PZGDatabaseUpdate & PZGDatabaseUpdate :: operator=(const PZGDatabaseUpdate & rhs
    _updateType              = rhs._updateType;
    _databaseIndex           = rhs._databaseIndex;
    _seniorElapsedTimeMillis = rhs._seniorElapsedTimeMillis;
+   _seniorStartTimeMicros   = rhs._seniorStartTimeMicros;
    _sourcePeerID            = rhs._sourcePeerID;
    _updateID                = rhs._updateID;
    _preUpdateDBChecksum     = rhs._preUpdateDBChecksum;
@@ -66,7 +70,7 @@ PZGDatabaseUpdate & PZGDatabaseUpdate :: operator=(const PZGDatabaseUpdate & rhs
 
 uint32 PZGDatabaseUpdate :: CalculateChecksum() const
 {
-   uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + _sourcePeerID.CalculateChecksum() + CalculateChecksumForUint64(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);
+   uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + CalculateChecksumForUint64(_seniorStartTimeMicros) + _sourcePeerID.CalculateChecksum() + CalculateChecksumForUint64(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);
    const ConstByteBufferRef & updateBuf = GetPayloadBuffer();  // we're deliberately using the buffer version here, not the Message version
    if (updateBuf()) ret += updateBuf()->CalculateChecksum();
    return ret;
@@ -86,6 +90,7 @@ uint32 PZGDatabaseUpdate :: FlattenedSizeNotIncludingPayload() const
           sizeof(uint8)                    + /* this is a reserved byte for now */
           sizeof(_databaseIndex)           +
           sizeof(_seniorElapsedTimeMillis) +
+          sizeof(_seniorStartTimeMicros)   +
           sizeof(uint16)                   + /* this is a reserved word for now */
           _sourcePeerID.FlattenedSize()    +
           sizeof(_updateID)                +
@@ -106,6 +111,7 @@ void PZGDatabaseUpdate :: Flatten(uint8 *buffer) const
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_databaseIndex));                  buffer += sizeof(uint16);
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_seniorElapsedTimeMillis));        buffer += sizeof(uint16);
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(0)); /* this field is reserved */  buffer += sizeof(uint16);
+   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_seniorStartTimeMicros));          buffer += sizeof(uint64);
    _sourcePeerID.Flatten(buffer);                                                   buffer += ZGPeerID::FlattenedSize();
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_updateID));                       buffer += sizeof(uint64);
    muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_preUpdateDBChecksum));            buffer += sizeof(uint32);
@@ -138,6 +144,7 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    _databaseIndex           = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    _seniorElapsedTimeMillis = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
    /* reserved 16-bit field is here; maybe we'll do something with it someday */ buf += sizeof(uint16); size -= sizeof(uint16);
+   _seniorStartTimeMicros   = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
    if (_sourcePeerID.Unflatten(buf, size).IsError(ret)) return ret;              /* buf/size advancement on next line to avoid compiler warning */
                                                                                  buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
    _updateID                = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
@@ -166,8 +173,8 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
 
 String PZGDatabaseUpdate :: ToString() const
 {
-   char buf[256];
-   muscleSprintf(buf, "UpdateID=" UINT64_FORMAT_SPEC " Type=%u db=%u time=%umS sourcePeerID=%s preChk=" UINT32_FORMAT_SPEC " postChk=" UINT32_FORMAT_SPEC " _updateBuf=" INT32_FORMAT_SPEC " _updateMsg=" INT32_FORMAT_SPEC, _updateID, _updateType, _databaseIndex, _seniorElapsedTimeMillis, _sourcePeerID.ToString()(), _preUpdateDBChecksum, _postUpdateDBChecksum, _updateBuf()?_updateBuf()->GetNumBytes():0, _updateMsg()?_updateMsg()->FlattenedSize():0);
+   char buf[512];
+   muscleSprintf(buf, "UpdateID=" UINT64_FORMAT_SPEC " Type=%u db=%u elapsed=%umS seniorTime=" UINT64_FORMAT_SPEC " sourcePeerID=%s preChk=" UINT32_FORMAT_SPEC " postChk=" UINT32_FORMAT_SPEC " _updateBuf=" INT32_FORMAT_SPEC " _updateMsg=" INT32_FORMAT_SPEC, _updateID, _updateType, _databaseIndex, _seniorElapsedTimeMillis, _seniorStartTimeMicros, _sourcePeerID.ToString()(), _preUpdateDBChecksum, _postUpdateDBChecksum, _updateBuf()?_updateBuf()->GetNumBytes():0, _updateMsg()?_updateMsg()->FlattenedSize():0);
    return buf;
 }
 
