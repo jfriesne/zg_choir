@@ -8,6 +8,8 @@ namespace choir {
 
 #define CHOIR_VERSION_STRING "1.00"  /**< The user-visible version string for the ZGChoir application */
 
+#define CHOIR_APP_COMPATIBILITY_VERSION (0) /** I'll increment this when I modify the ZGChoir app in such a way that it breaks backwards-compatibility with older versions */
+
 enum {
    CHOIR_DATABASE_SCORE = 0,     // the music itself
    CHOIR_DATABASE_PLAYBACKSTATE, // what and where we are currently playing at

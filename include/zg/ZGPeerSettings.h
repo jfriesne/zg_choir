@@ -47,7 +47,7 @@ public:
       , _systemName(systemName)
       , _numDatabases(numDatabases)
       , _systemIsOnLocalhostOnly(systemIsOnLocalhostOnly)
-      , _versionCode(((uint32)ZG_COMPATIBILITY_VERSION)<<16)  // the lower 16 bits are for the application-compatibility-version, to be set later
+      , _versionCode(CalculateCompatibilityVersionCode(ZG_COMPATIBILITY_VERSION,0))  // the lower 16 bits are for the application-compatibility-version, to be set later
       , _peerType(peerType)
       , _heartbeatsPerSecond(6)  // setting this at >5 avoids the great MacOS/X WiFi-PowerSave-on-200mS-idle problem
       , _heartbeatsBeforeFullyAttached(4)
@@ -94,16 +94,16 @@ public:
    /** Return the Application Peer Compatibility code specified for this peer.  Default value is 0.
      * @param see SetApplicationPeerCompatibilityVersion() for details.
      */
-   uint16 GetApplicationPeerCompatibilityVersion() const {return (uint16) (_versionCode & 0xFFFF);}
+   uint16 GetApplicationPeerCompatibilityVersion() const {return GetAppVersionFromCompatibilityVersionCode(_versionCode);}
 
    /** You can call this if you have changed your ZGChoir-based application in some way that renders its peers
      * inoperable with peers built using older versions of your application's source code, and you need to make
      * sure that the newly-built peers do not interact with any older-version peers that are still floating around out there.
-     * @version the application-peer-compatibility-version number this program should include in its heartbeat-packets.
-     *          Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
-     *          number (and the same ZGChoir version numbers too)
+     * @appVersion the application-peer-compatibility-version number this program should include in its heartbeat-packets.
+     *             Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
+     *             number (and the same ZGChoir version numbers too)
      */
-   void SetApplicationPeerCompatibilityVersion(uint16 version) {_versionCode &= ~0xFFFF; _versionCode |= ((uint32)version);}
+   void SetApplicationPeerCompatibilityVersion(uint16 appVersion) {_versionCode = CalculateCompatibilityVersionCode(ZG_COMPATIBILITY_VERSION, appVersion);}
 
    /** Returns the full 32-bit compatibility code used by this application.  This value includes both the ZGChoir version
      * as hard-coded into the ZG_COMPATIBILITY_VERSION number in ZGConstants.h) and and the Application Peer Compatibility

@@ -33,7 +33,7 @@ extern const String PZG_PEER_NAME_BACK_ORDER;
 String PeerInfoToString(const ConstMessageRef & peerInfo);
 
 /** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
-  * @param versionCode a 32-bit code of the form (zg_compatibility_version<<16) | (app_compatibility_version)
+  * @param versionCode a 32-bit compatibility-version code, as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
   * @returns an equivalent human-reable string, e.g. "cv0.3"
   */
 String CompatibilityVersionCodeToString(uint32 versionCode);

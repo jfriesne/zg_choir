@@ -1,4 +1,5 @@
 #include "zg/private/PZGConstants.h"
+#include "zg/ZGConstants.h"  // for GetZGVersionFromCompatibilityVersionCode() and GetAppVersionFromCompatibilityVersionCode()
 
 namespace zg_private
 {
@@ -43,8 +44,8 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
 
 String CompatibilityVersionCodeToString(uint32 versionCode)
 {
-   char buf[128];
-   muscleSprintf(buf, "cv%u.%u", (uint16)((versionCode>>16)&0xFF), (uint16)((versionCode>>0)&0xFF));
+   char buf[64];
+   muscleSprintf(buf, "cv%u.%u", GetZGVersionFromCompatibilityVersionCode(versionCode), GetAppVersionFromCompatibilityVersionCode(versionCode));
    return buf;
 }
 

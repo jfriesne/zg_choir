@@ -30,12 +30,22 @@ static const char * GetRandomBabyName(unsigned * seed)
    return _defaultNamesList[GetRandomNumber(seed)%ARRAYITEMS(_defaultNamesList)];
 }
 
+
+/** Returns a QueryFilter object that will only match discovery-results-Messages whose
+  * ZG_DISCOVERY_NAME_CVERSION field matches our own compatibility-version code.  That
+  * way we won't get FridgeClients connecting to FridgeServers that they aren't compatible with.
+  */
+static ConstQueryFilterRef GetFridgeServerFilter()
+{
+   return ConstQueryFilterRef(new Int32QueryFilter(ZG_DISCOVERY_NAME_CVERSION, Int32QueryFilter::OP_EQUAL_TO, CalculateCompatibilityVersionCode(ZG_COMPATIBILITY_VERSION, FRIDGE_APP_COMPATIBILITY_VERSION)));
+}
+
 class FridgeClientCanvas;
 
 FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism) 
    : IDiscoveryNotificationTarget(NULL)  // can't pass in &_discoClient here, it isn't constructed yet!
    , ITreeGatewaySubscriber(NULL)
-   , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE)
+   , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE, GetFridgeServerFilter())
    , _splitter(NULL)
    , _connection(NULL)
    , _canvas(NULL)
@@ -154,7 +164,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
 {
    status_t ret;
    _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism());
-   if (_connection->Start(FRIDGE_PROGRAM_SIGNATURE, systemName).IsOK(ret))
+   if (_connection->Start(FRIDGE_PROGRAM_SIGNATURE, systemName, GetFridgeServerFilter()).IsOK(ret))
    {
       SetGateway(_connection);
 

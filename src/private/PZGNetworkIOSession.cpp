@@ -32,7 +32,7 @@ class PZGMulticastMessageTag : public PseudoFlattenable
 {
 public:
    PZGMulticastMessageTag() : _versionCode(0), _messageID(0) {/* empty */}
-   PZGMulticastMessageTag(const ZGPeerID & peerID, const uint32 versionCode, uint32 messageID) : _peerID(peerID), _versionCode(versionCode), _messageID(messageID) {/* empty */}
+   PZGMulticastMessageTag(const ZGPeerID & peerID, uint32 versionCode, uint32 messageID) : _peerID(peerID), _versionCode(versionCode), _messageID(messageID) {/* empty */}
    PZGMulticastMessageTag(const PZGMulticastMessageTag & rhs)
    {
       _peerID      = rhs._peerID;

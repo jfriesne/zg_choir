@@ -27,6 +27,7 @@ namespace choir {
 static ZGPeerSettings GetChoirPeerSettings()
 {
    ZGPeerSettings settings("ZGChoir", "ZGChoir", NUM_CHOIR_DATABASES, false);
+   settings.SetApplicationPeerCompatibilityVersion(CHOIR_APP_COMPATIBILITY_VERSION);
 
    MessageRef msg = GetMessageFromPool();
    if (msg())

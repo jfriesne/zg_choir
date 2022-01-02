@@ -3,7 +3,9 @@
 
 #include "common/FridgeNameSpace.h"
 
-#define FRIDGE_PROGRAM_SIGNATURE "Fridge"  /**< The program signature string used to identify Fridge servers as Fridge servers (and not some other kind of ZGChoir-based server) */
+#define FRIDGE_PROGRAM_SIGNATURE "Fridge"  ///< The program signature string used to identify Fridge servers as Fridge servers (and not some other kind of ZGChoir-based server)
+
+#define FRIDGE_APP_COMPATIBILITY_VERSION 0 ///< I'll increment this when the Fridge application has changed in a way that breaks backwards compatibility
 
 namespace fridge
 {

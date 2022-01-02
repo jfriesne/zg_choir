@@ -598,6 +598,7 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
    if ((pongMsg() == NULL)
      || (pongMsg()->AddString( ZG_DISCOVERY_NAME_SYSTEMNAME, s.GetSystemName()).IsError())
      || (pongMsg()->AddString( ZG_DISCOVERY_NAME_SIGNATURE,  s.GetSignature()).IsError())
+     || (pongMsg()->AddInt32(  ZG_DISCOVERY_NAME_CVERSION,   s.GetCompatibilityVersionCode()).IsError())
      || (pongMsg()->CAddInt16( ZG_DISCOVERY_NAME_TIMESYNCPORT, nios?nios->GetTimeSyncUDPPort():0).IsError())
      || (pongMsg()->AddFlat(   ZG_DISCOVERY_NAME_PEERID,     GetLocalPeerID()).IsError())) return MUSCLE_TIME_NEVER;
 
