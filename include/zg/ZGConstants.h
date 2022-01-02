@@ -8,7 +8,9 @@ namespace zg
 {
 
 #define ZG_VERSION_STRING "1.20"  /**< The current version of the ZG distribution, expressed as an ASCII string */
-#define ZG_VERSION        12000   /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
+#define ZG_VERSION        (12000) /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
+
+#define ZG_COMPATIBILITY_VERSION (0) /**< I'll increment this value whenever ZG's protocol changes in such a way that it breaks compatibility with older versions of ZG */
 
 #define INVALID_TIME_OFFSET ((int64)(((uint64)-1)/2)) /** Guard value:  Similar to MUSCLE_TIME_NEVER, but for an int64 (relative-offset) time-value rather than an absolute uint64 timestamp */
 
@@ -36,8 +38,8 @@ enum {
 String PeerInfoToString(const ConstMessageRef & peerInfo);
 
 /** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
-  * @param versionCode a 32-bit code of the form (M<<24)|(mm<<16)|(bb<<8)|(uu)
-  * @returns an equivalent human-reable string, e.g. "1.2.5.3"
+  * @param versionCode a 32-bit code of the form (zg_compatibility_version<<16) | (app_compatibility_version)
+  * @returns an equivalent human-reable string, e.g. "cv0.3"
   */
 String CompatibilityVersionCodeToString(uint32 versionCode);
 

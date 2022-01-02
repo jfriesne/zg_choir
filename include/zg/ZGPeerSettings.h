@@ -1,7 +1,7 @@
 #ifndef ZGPeerSettings_h
 #define ZGPeerSettings_h
 
-#include "zg/ZGConstants.h"  // for ZG_VERSION
+#include "zg/ZGConstants.h"  // for ZG_COMPATIBILITY_VERSION
 #include "message/Message.h"
 
 /** The zg_private namespace is an undocumented namespace where the ZG library keeps all of its private implementation details that user programs aren't supposed to access directly. */
@@ -47,7 +47,7 @@ public:
       , _systemName(systemName)
       , _numDatabases(numDatabases)
       , _systemIsOnLocalhostOnly(systemIsOnLocalhostOnly)
-      , _versionCode(0)
+      , _versionCode(((uint32)ZG_COMPATIBILITY_VERSION)<<16)  // the lower 16 bits are for the application-compatibility-version, to be set later
       , _peerType(peerType)
       , _heartbeatsPerSecond(6)  // setting this at >5 avoids the great MacOS/X WiFi-PowerSave-on-200mS-idle problem
       , _heartbeatsBeforeFullyAttached(4)
@@ -56,12 +56,7 @@ public:
       , _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
       , _outgoingHeartbeatPacketIDCounter(0)
    {
-      uint32 temp = ZG_VERSION;    // format is: decimal (Mmmbb)
-      const uint32 bb = temp%100;  temp /= 100;
-      const uint32 mm = temp%100;  temp /= 100;
-      const uint32 M  = temp%256;
-      const uint32 applicationPeerCompatibilityVersion = 0;  // just here to document what the low-byte is reserved for
-      _versionCode = (M<<24) | (mm<<16) | (bb<<8) | (applicationPeerCompatibilityVersion<<0);
+      // empty
    }
 
    /** Returns the ZG program signature (as specified in our constructor) */
@@ -99,7 +94,7 @@ public:
    /** Return the Application Peer Compatibility code specified for this peer.  Default value is 0.
      * @param see SetApplicationPeerCompatibilityVersion() for details.
      */
-   uint8 GetApplicationPeerCompatibilityVersion() const {return (uint8) (_versionCode & 0xFF);}
+   uint16 GetApplicationPeerCompatibilityVersion() const {return (uint16) (_versionCode & 0xFFFF);}
 
    /** You can call this if you have changed your ZGChoir-based application in some way that renders its peers
      * inoperable with peers built using older versions of your application's source code, and you need to make
@@ -108,11 +103,11 @@ public:
      *          Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
      *          number (and the same ZGChoir version numbers too)
      */
-   void SetApplicationPeerCompatibilityVersion(uint8 version) {_versionCode &= ~0xFF; _versionCode |= (uint32)version;}
+   void SetApplicationPeerCompatibilityVersion(uint16 version) {_versionCode &= ~0xFFFF; _versionCode |= ((uint32)version);}
 
    /** Returns the full 32-bit compatibility code used by this application.  This value includes both the ZGChoir version
-     * as hard-coded into the ZG_VERSION number in ZGConstants.h) and and the Application Peer Compatibility version (as
-     * optionally specified by the app via SetApplicationPeerCompatibilityVersion())
+     * as hard-coded into the ZG_COMPATIBILITY_VERSION number in ZGConstants.h) and and the Application Peer Compatibility
+     * version (as optionally specified by the app via SetApplicationPeerCompatibilityVersion())
      */
    uint32 GetCompatibilityVersionCode() const {return _versionCode;}
 
@@ -183,7 +178,7 @@ private:
    String _systemName;                 // Name of the ZG system we are to participate in
    uint8 _numDatabases;                // how many databases we want to maintain
    bool _systemIsOnLocalhostOnly;      // true iff we are simulating the system on a single host
-   uint32 _versionCode;                // Our M.mm.bb.uu heartbeat-compatibility version-code
+   uint32 _versionCode;                // bit-chord of ZG_COMPATIBILITY_VERSION and the application-compatibility-version
    ConstMessageRef _optPeerAttributes; // optional user-specified descriptive attributes for this peer (should be small)
    uint16 _peerType;                   // PEER_TYPE_* value for this peer
    uint32 _heartbeatsPerSecond;        // how many heartbeats we should send per second (and expect to receive per second, from each peer)

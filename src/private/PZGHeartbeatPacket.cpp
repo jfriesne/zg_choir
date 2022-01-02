@@ -178,7 +178,7 @@ status_t PZGHeartbeatPacket :: CopyFromImplementation(const Flattenable & copyFr
 String PZGHeartbeatPacket :: ToString() const
 {
    char buf[1024];
-   muscleSprintf(buf, "Heartbeat:  PacketID=" UINT32_FORMAT_SPEC " version=[%s] sysKey=" UINT64_FORMAT_SPEC " netSendTime=" UINT64_FORMAT_SPEC " tcpPort=%u peerType=%u isFullyAttached=%i uptimeSeconds=" UINT32_FORMAT_SPEC " sourcePeerID=[%s] attrSize=" UINT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC, _heartbeatPacketID, CompatibilityVersionCodeToString(_versionCode)(), _systemKey, _networkSendTimeMicros, _tcpAcceptPort, _peerType, _isFullyAttached, _peerUptimeSeconds, _sourcePeerID.ToString()(), _peerAttributesBuf()?_peerAttributesBuf()->GetNumBytes():666, _peerAttributesBuf()?_peerAttributesBuf()->CalculateChecksum():666);
+   muscleSprintf(buf, "Heartbeat:  PacketID=" UINT32_FORMAT_SPEC " cversion=[%s] sysKey=" UINT64_FORMAT_SPEC " netSendTime=" UINT64_FORMAT_SPEC " tcpPort=%u peerType=%u isFullyAttached=%i uptimeSeconds=" UINT32_FORMAT_SPEC " sourcePeerID=[%s] attrSize=" UINT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC, _heartbeatPacketID, CompatibilityVersionCodeToString(_versionCode)(), _systemKey, _networkSendTimeMicros, _tcpAcceptPort, _peerType, _isFullyAttached, _peerUptimeSeconds, _sourcePeerID.ToString()(), _peerAttributesBuf()?_peerAttributesBuf()->GetNumBytes():666, _peerAttributesBuf()?_peerAttributesBuf()->CalculateChecksum():666);
 
    String ret = buf;
    for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) 
