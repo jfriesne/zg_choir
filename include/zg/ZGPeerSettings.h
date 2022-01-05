@@ -99,9 +99,9 @@ public:
    /** You can call this if you have changed your ZGChoir-based application in some way that renders its peers
      * inoperable with peers built using older versions of your application's source code, and you need to make
      * sure that the newly-built peers do not interact with any older-version peers that are still floating around out there.
-     * @appVersion the application-peer-compatibility-version number this program should include in its heartbeat-packets.
-     *             Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
-     *             number (and the same ZGChoir version numbers too)
+     * @param appVersion the application-peer-compatibility-version number this program should include in its heartbeat-packets.
+     *                   Incoming heartbeat-packets will be ignored unless they contain this same application-peer-compatibility-version
+     *                   number (and the same ZGChoir version numbers too)
      */
    void SetApplicationPeerCompatibilityVersion(uint16 appVersion) {_versionCode = CalculateCompatibilityVersionCode(ZG_COMPATIBILITY_VERSION, appVersion);}
 
