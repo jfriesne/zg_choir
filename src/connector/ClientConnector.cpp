@@ -516,8 +516,8 @@ private:
 
       status_t ret;
       ReflectServer eventLoop;
-      if ((eventLoop.AddNewSession(       DummyAbstractReflectSessionRef(mots)).IsOK(ret))
-       && (eventLoop.AddNewConnectSession(DummyAbstractReflectSessionRef(tcs), iap.GetIPAddress(), iap.GetPort()).IsOK(ret)))
+      if ((eventLoop.AddNewSession(       DummyAbstractReflectSessionRef(mots))    .IsOK(ret))
+       && (eventLoop.AddNewConnectSession(DummyAbstractReflectSessionRef(tcs), iap).IsOK(ret)))
       {
          _tcpSession = &tcs;
             status_t ret;

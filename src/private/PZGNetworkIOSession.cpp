@@ -605,7 +605,7 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
    PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(this, peerID));
    if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return PZGUnicastSessionRef();}
 
-   if (AddNewConnectSession(ret, iap.GetIPAddress(), iap.GetPort(), MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError())
+   if (AddNewConnectSession(ret, iap, MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't connect to peer [%s] at [%s]!\n", peerID.ToString()(), iap.ToString()());
       return PZGUnicastSessionRef();
