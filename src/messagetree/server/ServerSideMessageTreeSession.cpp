@@ -63,41 +63,41 @@ void ServerSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef
 status_t ServerSideMessageTreeSession :: AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t ServerSideMessageTreeSession :: RemoveTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & /*optFilterRef*/, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t ServerSideMessageTreeSession :: RemoveAllTreeSubscriptions(TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleUnsubscribeAllMessage(cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleUnsubscribeAllMessage(cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t ServerSideMessageTreeSession :: RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/, const String & tag)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t ServerSideMessageTreeSession :: RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 void ServerSideMessageTreeSession :: AddApplicationSpecificParametersToParametersResultMessage(Message & parameterResultsMsg) const

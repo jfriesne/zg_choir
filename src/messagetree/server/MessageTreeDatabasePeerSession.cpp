@@ -74,33 +74,37 @@ void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID
 status_t MessageTreeDatabasePeerSession :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleSubscribeMessage(subscriptionPath, optFilterRef, flags, cmdMsg));
+
+   NestCountGuard ncg(_inLocalRequestNestCount);
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriptionPath, const ConstQueryFilterRef & /*optFilterRef*/, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * /*calledBy*/, TreeGatewayFlags /*flags*/)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleUnsubscribeAllMessage(cmdMsg);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleUnsubscribeAllMessage(cmdMsg));
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeValues(ITreeGatewaySubscriber * /*calledBy*/, const String & queryString, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags /*flags*/, const String & tag)
 {
    MessageRef cmdMsg;
-   const status_t ret = CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag);
-   if (ret.IsOK()) MessageReceivedFromGateway(cmdMsg, NULL);
-   return ret;
+   MRETURN_ON_ERROR(CreateMuscleRequestNodeValuesMessage(queryString, optFilterRef, cmdMsg, tag));
+
+   NestCountGuard ncg(_inLocalRequestNestCount);
+   MessageReceivedFromGateway(cmdMsg, NULL);
+   return B_NO_ERROR;
 }
 
 status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber * /*calledBy*/, const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, TreeGatewayFlags /*flags*/)
@@ -108,7 +112,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
    MessageRef cmdMsg;
    MRETURN_ON_ERROR(CreateMuscleRequestNodeSubtreesMessage(queryStrings, queryFilters, tag, maxDepth, cmdMsg));
 
-   NestCountGuard ncg(_inRequestNodeSubtreesNestCount);
+   NestCountGuard ncg(_inLocalRequestNestCount);
    MessageReceivedFromGateway(cmdMsg, NULL);
    return B_NO_ERROR;
 }
@@ -641,15 +645,92 @@ ConstMessageRef MessageTreeDatabasePeerSession :: TreeGateway_GetGestaltMessage(
    return _gestaltMessage;
 }
 
+
+status_t MessageTreeDatabasePeerSession :: ConvertPathToSessionRelative(String & path) const
+{
+   if (GetPathDepth(path()) >= NODE_DEPTH_USER)
+   {
+      path = GetPathClause(NODE_DEPTH_USER, path());
+      return B_NO_ERROR;
+   }
+   return B_BAD_ARGUMENT;
+}
+
 void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflectSession & from, const MessageRef & msg, void * userData)
 {
-   if ((&from == this)&&(_inRequestNodeSubtreesNestCount.IsInBatch())&&(msg()->what == PR_RESULT_DATATREES))
+   if ((&from == this)&&(_inLocalRequestNestCount.IsInBatch()))
    {
-      // Gotta handle this locally as it needs to go back to our MuxTreeGateway for local distribution
-      String opTag; if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, opTag).IsOK()) (void) msg()->RemoveName(PR_NAME_TREE_REQUEST_ID);
-      _muxGateway.SubtreesRequestResultReturned(opTag, msg);
+      // Gotta handle some replies locally as they need to go back to our MuxTreeGateway for local distribution
+      bool handled = true;
+      switch(msg()->what)
+      {
+         case PR_RESULT_DATATREES:
+         {
+            String opTag; if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, opTag).IsOK()) (void) msg()->RemoveName(PR_NAME_TREE_REQUEST_ID);
+            _muxGateway.SubtreesRequestResultReturned(opTag, msg);
+         }
+         break;
+
+         case PR_RESULT_DATAITEMS:
+         {
+            // Handle notifications of removed nodes
+            {
+               String nodePath;
+               for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
+                  if (ConvertPathToSessionRelative(nodePath).IsOK())
+                     _muxGateway.TreeNodeUpdated(nodePath, MessageRef(), GetEmptyString());
+            }
+
+            // Handle notifications of added/updated nodes
+            {
+               uint32 currentFieldNameIndex = 0;
+               MessageRef nodeRef;
+               for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++,currentFieldNameIndex++)
+               {
+                  String nodePath = iter.GetFieldName();
+                  if (ConvertPathToSessionRelative(nodePath).IsOK())
+                     for (uint32 i=0; msg()->FindMessage(iter.GetFieldName(), i, nodeRef).IsOK(); i++)
+                        _muxGateway.TreeNodeUpdated(nodePath, nodeRef, GetEmptyString());
+               }
+            }
+         }
+         break;
+
+         case PR_RESULT_INDEXUPDATED:
+         {
+            // Handle notifications of node-index changes
+            uint32 currentFieldNameIndex = 0;
+            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++,currentFieldNameIndex++)
+            {
+               String sessionRelativePath = iter.GetFieldName();
+               if (ConvertPathToSessionRelative(sessionRelativePath).IsOK())
+               {
+                  const char * indexCmd;
+                  for (int i=0; msg()->FindString(iter.GetFieldName(), i, &indexCmd).IsOK(); i++)
+                  {
+                     const char * colonAt = strchr(indexCmd, ':');
+                     char c = indexCmd[0];
+                     switch(c)
+                     {
+                        case INDEX_OP_CLEARED:       _muxGateway.TreeNodeIndexCleared(      sessionRelativePath, GetEmptyString());                                             break;
+                        case INDEX_OP_ENTRYINSERTED: _muxGateway.TreeNodeIndexEntryInserted(sessionRelativePath, atoi(&indexCmd[1]), colonAt?(colonAt+1):"", GetEmptyString()); break;
+                        case INDEX_OP_ENTRYREMOVED:  _muxGateway.TreeNodeIndexEntryRemoved( sessionRelativePath, atoi(&indexCmd[1]), colonAt?(colonAt+1):"", GetEmptyString()); break;
+                     }
+                  }
+               }
+            }
+         }
+         break;
+
+         default:
+            handled = false;
+         break;
+      }
+
+      if (handled) return;
    }
-   else ZGDatabasePeerSession::MessageReceivedFromSession(from, msg, userData);
+
+   ZGDatabasePeerSession::MessageReceivedFromSession(from, msg, userData);
 }
 
 };  // end namespace zg

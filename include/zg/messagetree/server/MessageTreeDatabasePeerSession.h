@@ -145,12 +145,13 @@ private:
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);
    bool IsInSetupOrTeardown() const {return _inPeerSessionSetupOrTeardown.IsInBatch();}
+   status_t ConvertPathToSessionRelative(String & path) const;
 
    Queue<IDatabaseObjectRef> _databaseObjects;
 
    MuxTreeGateway _muxGateway;
    NestCount _inPeerSessionSetupOrTeardown;
-   NestCount _inRequestNodeSubtreesNestCount;
+   NestCount _inLocalRequestNestCount;
 
    ConstMessageRef _gestaltMessage;
 };

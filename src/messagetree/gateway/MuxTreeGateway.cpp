@@ -563,10 +563,11 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    if (_subscriberInfos.ContainsKey(sub))
    {
-      (void) TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
+      (void) _allowedCallbacks.Remove(sub);
       (void) _needsCallbackBatchEndsCall.Remove(sub);
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);
+      (void) TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
    }
    ProxyTreeGateway::UnregisterSubscriber(s);
 }
