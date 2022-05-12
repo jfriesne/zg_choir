@@ -45,8 +45,8 @@ void PZGThreadedSession :: EndSession()
 void PZGThreadedSession :: MessageReceivedFromGateway(const MessageRef & /*msg*/, void * /*userData*/)
 {
    MessageRef msgFromThread;
-   int32 numLeft;
-   while((numLeft = GetNextReplyFromInternalThread(msgFromThread)) >= 0) MessageReceivedFromInternalThread(msgFromThread, numLeft);
+   uint32 numLeft = 0;
+   while(GetNextReplyFromInternalThread(msgFromThread, 0, &numLeft).IsOK()) MessageReceivedFromInternalThread(msgFromThread, numLeft);
 }
 
 status_t PZGThreadedSession :: TellInternalThreadToRecreateMulticastSockets()

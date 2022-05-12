@@ -419,8 +419,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
 
       // Wait until there is data to receive (or until there is buffer space to send, if we need to send anything), or until we get a Message from the main thread
       MessageRef msgFromOwner;
-      const int32 numMessagesLeft = WaitForNextMessageFromOwner(msgFromOwner, nextBeaconSendTime);
-      if (numMessagesLeft >= 0)
+      if (WaitForNextMessageFromOwner(msgFromOwner, nextBeaconSendTime).IsOK())
       {
          if (msgFromOwner())
          {

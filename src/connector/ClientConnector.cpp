@@ -552,13 +552,16 @@ private:
 
    status_t HandleIncomingMessagesFromOwnerThread()
    {
-      MessageRef msgRef;
       while(1)
       {
-         const int32 numLeft = WaitForNextMessageFromOwner(msgRef, 0);
-         if (numLeft  < 0) return B_IO_ERROR;  // it's okay, it just means the owner thread wants us to go away now
-         if (numLeft >= 0) MRETURN_ON_ERROR(MessageReceivedFromOwner(msgRef, numLeft));
-         if (numLeft == 0) return B_NO_ERROR;
+         MessageRef msgRef;
+         uint32 numLeft = 0;
+         const status_t ret = WaitForNextMessageFromOwner(msgRef, 0, &numLeft);
+         if (ret.IsOK())
+         {
+            MRETURN_ON_ERROR(MessageReceivedFromOwner(msgRef, numLeft));
+         }
+         else return (ret == B_TIMED_OUT) ? B_NO_ERROR : ret;  // B_TIMED_OUT just means there are no more Messages left to receive, for now
       }
    }
 

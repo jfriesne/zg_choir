@@ -160,7 +160,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
 
       const uint64 pulseTime = _hbtState.GetPulseTime();
       MessageRef msgFromOwner;
-      const int32 numMessagesLeft = WaitForNextMessageFromOwner(msgFromOwner, pulseTime);
+      const status_t waitRet = WaitForNextMessageFromOwner(msgFromOwner, pulseTime);
 
       if ((localTimeSyncUDPSocket())&&(IsInternalThreadSocketReady(localTimeSyncUDPSocket, SOCKET_SET_READ)))
       {
@@ -207,7 +207,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          MessageRef nextMsgToOwner;
          while(messagesForOwnerThread.RemoveHead(nextMsgToOwner).IsOK()) (void) SendMessageToOwner(nextMsgToOwner);
       }
-      if (numMessagesLeft >= 0)
+      if (waitRet.IsOK())
       {
          if (msgFromOwner()) _hbtState.MessageReceivedFromOwner(msgFromOwner);
                         else break;  // NULL msgFromOwner means it is time for this thread to exit!

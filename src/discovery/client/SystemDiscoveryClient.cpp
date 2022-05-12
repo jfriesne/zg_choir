@@ -457,7 +457,7 @@ private:
    status_t HandleMessagesFromOwner()
    {
       MessageRef msg;
-      while(WaitForNextMessageFromOwner(msg, 0) >= 0)
+      while(WaitForNextMessageFromOwner(msg, 0).IsOK())
       {
          if (msg())
          {
