@@ -32,7 +32,13 @@ public:
    bool  IsInCommandBatch() const {return _commandBatchCounter.IsInBatch();}
    bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}
 
-   virtual void ShutdownGateway() {while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());}
+   virtual void ShutdownGateway()
+   {
+      if (this != GetDummyTreeGateway())
+      {
+         while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());
+      }
+   }
 
 protected:
    /** Called when our command-batch counter has just gone from 0 to 1.

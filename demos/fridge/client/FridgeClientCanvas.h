@@ -51,6 +51,8 @@ private:
    String _draggingID;  // if non-empty, we're in the middle of moving a magnet
    QPoint _dragDelta;   // mouse-click position minus upper-left position
 
+   MagnetState _lastDraggedMagnet;  // mainly here to test out symlink functionality
+
    bool _firstMouseMove;
 };
 

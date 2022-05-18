@@ -16,6 +16,10 @@ class QPushButton;
 class QSplitter;
 class QStackedWidget;
 
+namespace zg {
+class SymlinkLogicMuxTreeGateway;
+};
+
 namespace fridge {
 
 class FridgeChatView;
@@ -83,6 +87,7 @@ private:
    // chooses a system, and destroyed when the user disconnects from it
    QSplitter * _splitter;
    MessageTreeClientConnector * _connection;
+   SymlinkLogicMuxTreeGateway * _symlinkProxy;
    FridgeClientCanvas * _canvas;
    FridgeChatView * _chatView;
 

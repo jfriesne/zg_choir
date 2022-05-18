@@ -5,6 +5,7 @@
 #include "FridgeClientCanvas.h"
 #include "common/FridgeConstants.h"
 #include "zg/messagetree/gateway/ITreeGateway.h"  // this include is required in order to avoid linker errors(!?)
+#include "zg/messagetree/gateway/SymlinkLogicMuxTreeGateway.h"  // for SYMLINK_FIELD_NAME
 
 namespace fridge {
 
@@ -12,7 +13,8 @@ FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector)
    : ITreeGatewaySubscriber(connector)
    , _firstMouseMove(false)
 {
-   (void) AddTreeSubscription("project/magnets/*");   // we need to keep track of where the magnets are on the server
+   (void) AddTreeSubscription("project/magnets/*");    // we need to keep track of where the magnets are on the server
+   (void) AddTreeSubscription("project/last_dragged"); // test out symlink functionality by subscribing to this node that is actually a "symlink"
 }
 
 FridgeClientCanvas :: ~FridgeClientCanvas()
@@ -30,6 +32,16 @@ void FridgeClientCanvas :: paintEvent(QPaintEvent *)
    {
       const MagnetState & m = iter.GetValue();
       m.Draw(p, m.GetScreenRect(fm));
+   }
+
+   if (_lastDraggedMagnet.GetText().HasChars())
+   {
+      const int margin = 4;
+      QPen thePen(Qt::green);
+      thePen.setWidth(margin+2);
+      p.setPen(thePen);
+      p.setBrush(Qt::NoBrush);
+      p.drawRect(_lastDraggedMagnet.GetScreenRect(fontMetrics()).marginsAdded(QMargins(margin,margin,margin,margin)));
    }
 }
 
@@ -56,6 +68,10 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       _firstMouseMove = true;
 
       (void) BeginUndoSequence(String("Move Magnet \"%1\"").Arg(magnet.GetText()));
+
+      // Experimental:  Set a symlink node to point to the node we are currently dragging
+      MessageRef symlinkMsg = GetMessageFromPool();
+      if ((symlinkMsg())&&(symlinkMsg()->AddString(SYMLINK_FIELD_NAME, _draggingID.Prepend("project/magnets/")).IsOK())) (void) UploadTreeNodeValue("project/last_dragged", symlinkMsg);
    }
    else 
    {
@@ -198,6 +214,13 @@ void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const Messag
       else if (_magnets.Remove(nodeName).IsOK()) update();
 
       if (HasMagnets() != hadMagnets) emit UpdateWindowStatus();  // so the window class can enable or disable the "Clear Magnets" button
+   }
+   else if (nodePath == "project/last_dragged")
+   {
+//printf("LAST_DRAGGED IS: %p\n", optPayloadMsg()); if (optPayloadMsg()) optPayloadMsg()->PrintToStream();
+      if (optPayloadMsg()) (void) _lastDraggedMagnet.SetFromArchive(*optPayloadMsg());
+                      else _lastDraggedMagnet = MagnetState();
+      update();
    }
 }
 

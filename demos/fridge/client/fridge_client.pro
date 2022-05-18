@@ -92,6 +92,7 @@ CLIENT_SOURCES = $$ZG_DIR/src/clocksync/ZGTimeAverager.cpp                      
                  $$ZG_DIR/src/messagetree/gateway/DummyTreeGateway.cpp          \
                  $$ZG_DIR/src/messagetree/gateway/ProxyTreeGateway.cpp          \
                  $$ZG_DIR/src/messagetree/gateway/MuxTreeGateway.cpp            \
+                 $$ZG_DIR/src/messagetree/gateway/SymlinkLogicMuxTreeGateway.cpp \
                  $$ZG_DIR/src/messagetree/gateway/NetworkTreeGateway.cpp
 
 win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \

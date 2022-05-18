@@ -101,7 +101,7 @@ public:
 private:
    Point _upperLeftPos;
    String _text; 
-   QString _qText;   // just I don't want to constantly convert back and forth
+   QString _qText;   // just because I don't want to constantly convert back and forth
 };
 
 }; // end namespace fridge

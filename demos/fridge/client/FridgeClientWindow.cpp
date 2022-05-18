@@ -18,6 +18,7 @@
 #include "zg/ZGConstants.h"  // for GetRandomNumber()
 #include "zg/ZGPeerID.h"
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"  // for ZG_DISCOVERY_NAME_PEERINFO
+#include "zg/messagetree/gateway/SymlinkLogicMuxTreeGateway.h"
 
 namespace fridge {
 
@@ -48,6 +49,7 @@ FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
    , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE, GetFridgeServerFilter())
    , _splitter(NULL)
    , _connection(NULL)
+   , _symlinkProxy(NULL)
    , _canvas(NULL)
    , _chatView(NULL)
    , _clearMagnetsButton(NULL)
@@ -133,10 +135,13 @@ void FridgeClientWindow :: DeleteConnectionPage()
    _clearMagnetsButton = NULL;
    _clearChatButton    = NULL;
 
-   if (_canvas)     {delete _canvas;     _canvas     = NULL;}
-   if (_chatView)   {delete _chatView;   _chatView   = NULL;}
-   if (_connection) {delete _connection; _connection = NULL;}
-   if (_splitter)   {delete _splitter;   _splitter   = NULL;}  // do this last, as it may be parent of the above
+   if (_symlinkProxy) _symlinkProxy->ShutdownGateway();
+
+   if (_canvas)       {delete _canvas;       _canvas       = NULL;}
+   if (_chatView)     {delete _chatView;     _chatView     = NULL;}
+   if (_connection)   {delete _connection;   _connection   = NULL;}
+   if (_symlinkProxy) {delete _symlinkProxy; _symlinkProxy = NULL;}
+   if (_splitter)     {delete _splitter;     _splitter     = NULL;}  // do this last, as it may be parent of the above
 }
 
 void FridgeClientWindow :: SystemItemClicked(QListWidgetItem * item)
@@ -166,7 +171,8 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism());
    if (_connection->Start(FRIDGE_PROGRAM_SIGNATURE, systemName, GetFridgeServerFilter()).IsOK(ret))
    {
-      SetGateway(_connection);
+      _symlinkProxy = new SymlinkLogicMuxTreeGateway(_connection);  // implement symlink logic here?
+      SetGateway(_symlinkProxy);
 
       _splitter = new QSplitter(Qt::Vertical);
       {
@@ -208,7 +214,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
             }
             topPartLayout->addWidget(topButtonsRow);
 
-            _canvas = new FridgeClientCanvas(_connection);
+            _canvas = new FridgeClientCanvas(GetGateway());
             connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(ScheduleUpdateStatus()));
             topPartLayout->addWidget(_canvas, 1);
  
@@ -265,7 +271,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
          _splitter->addWidget(topPart);
    
          unsigned seed = time(NULL);
-         _chatView = new FridgeChatView(_connection, GetRandomBabyName(&seed));
+         _chatView = new FridgeChatView(GetGateway(), GetRandomBabyName(&seed));
          _chatView->setMinimumHeight(100);
          _splitter->addWidget(_chatView);
       }
