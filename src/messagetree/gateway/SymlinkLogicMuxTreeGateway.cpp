@@ -1,5 +1,4 @@
 #include "zg/messagetree/gateway/SymlinkLogicMuxTreeGateway.h"
-#include "util/NestCount.h"
 
 namespace zg {
 
@@ -44,7 +43,7 @@ public:
 
    virtual void TreeGatewayConnectionStateChanged()
    {
-      if (_inPutSymlink.IsInBatch() == false)  // otherwise we clear our tables on the first call to PutSymlink(), wiping out the state we just set up!
+      if (IsTreeGatewayConnected() == false)
       {
          _symlinks.Clear();
          _reverseSymlinks.Clear();
@@ -65,7 +64,6 @@ private:
 
    Hashtable<String, String>              _symlinks; // symlink-source-path -> symlink-destination-path
    Hashtable<String, SymlinkState> _reverseSymlinks; // symlink-destination-path -> symlink-info
-   NestCount _inPutSymlink;
 
    status_t RemoveSymlink(const String & nodePath)
    {
@@ -92,7 +90,6 @@ private:
       SymlinkState * sstate = _reverseSymlinks.GetOrPut(symDest);
       if (sstate)
       {
-         NestCountGuard ncg(_inPutSymlink);
          const bool hadEntries = sstate->_sourcePaths.HasItems();
          if ((sstate->_sourcePaths.PutWithDefault(nodePath).IsOK(ret))&&((hadEntries)||(AddTreeSubscription(symDest, ConstQueryFilterRef()).IsOK(ret))))
          {
