@@ -52,6 +52,8 @@ public:
       ITreeGatewaySubscriber::TreeGatewayConnectionStateChanged();
    }
 
+   bool HasSymlink(const String & nodePath) const {return _symlinks.ContainsKey(nodePath);}
+
 private:
    SymlinkLogicMuxTreeGateway * _master;
 
@@ -77,7 +79,7 @@ private:
             (void) _reverseSymlinks.Remove(*symDest);
          }
 
-         return _symlinks.Remove(*symDest);
+         return _symlinks.Remove(nodePath);
       }
       else return B_DATA_NOT_FOUND;
    }
@@ -122,6 +124,40 @@ SymlinkLogicMuxTreeGateway :: ~SymlinkLogicMuxTreeGateway()
 void SymlinkLogicMuxTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
 {
    if (_symlinkResolver->FilterTreeNodeUpdate(nodePath, payloadMsg) == false) MuxTreeGateway::TreeNodeUpdated(nodePath, payloadMsg, optOpTag);
+}
+
+void SymlinkLogicMuxTreeGateway :: ReceivedPathDropped(ITreeGatewaySubscriber * calledBy, const String & receivedPath)
+{
+   MuxTreeGateway::ReceivedPathDropped(calledBy, receivedPath);
+   if ((_inFlushSymlinkPaths.IsInBatch() == false)&&(_symlinkResolver->HasSymlink(receivedPath))) (void) _droppedSymlinkPaths.PutWithDefault(receivedPath);
+}
+
+status_t SymlinkLogicMuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
+{
+   NestCountGuard ncg(_inRemoveSubscription);
+   const status_t ret = MuxTreeGateway::TreeGateway_RemoveSubscription(calledBy, subscriptionPath, optFilterRef, flags);
+   if (_inRemoveSubscription.IsOutermost()) FlushDroppedSymlinkPaths();
+   return ret;
+}
+
+status_t SymlinkLogicMuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags)
+{
+   NestCountGuard ncg(_inRemoveSubscription);
+   const status_t ret = MuxTreeGateway::TreeGateway_RemoveAllSubscriptions(calledBy, flags);
+   if (_inRemoveSubscription.IsOutermost()) FlushDroppedSymlinkPaths();
+   return ret;
+}
+
+void SymlinkLogicMuxTreeGateway :: FlushDroppedSymlinkPaths()
+{
+   // Let the SymlinkResolver know about any symlink-paths that nobody is subscribing too any longer, so it can stop supporting them
+   NestCountGuard ncg(_inFlushSymlinkPaths);
+   while(_droppedSymlinkPaths.HasItems())
+   {
+      const String & path = *_droppedSymlinkPaths.GetFirstKey();
+      if (IsAnyoneSubscribedToPath(path) == false) (void) _symlinkResolver->FilterTreeNodeUpdate(path, MessageRef());
+      (void) _droppedSymlinkPaths.RemoveFirst();
+   }
 }
 
 };

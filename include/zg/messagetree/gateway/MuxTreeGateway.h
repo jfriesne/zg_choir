@@ -59,6 +59,19 @@ protected:
    virtual void RegisterSubscriber(void * s);
    virtual void UnregisterSubscriber(void * s);
   
+   /** Called when one of our subscribers calls RemoveSubscription() or RemoveAllSubscriptions().
+     * @param calledBy the subscriber who called RemoveSubscription() or RemoveAllSubscriptions()
+     * @param receivedPath the path to a node that this subscriber had received updates about, but no longer will
+     * Default implementation is a no-op.  This method is here primarily so that the SymlinkLogicMuxTreeGateway subclass
+     * can override it to remove symlink-subscriptions that are no longer necessary.
+     */
+   virtual void ReceivedPathDropped(ITreeGatewaySubscriber * calledBy, const String & receivedPath);
+
+   /** Returns true if at least one of our current subscribers has a subscription that matches the specified path.
+     * @param receivedPath a node path that we want to know if anyone is subscribed to
+     */
+   bool IsAnyoneSubscribedToPath(const String & receivedPath) const;
+
 private:
    friend class MessageTreeDatabasePeerSession;
 

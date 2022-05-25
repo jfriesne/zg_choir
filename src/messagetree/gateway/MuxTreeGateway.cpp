@@ -86,6 +86,21 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
    return ret;
 }
 
+void MuxTreeGateway :: ReceivedPathDropped(ITreeGatewaySubscriber * /*calledBy*/, const String & /*receivedPath*/)
+{
+   // empty
+}
+
+bool MuxTreeGateway :: IsAnyoneSubscribedToPath(const String & path) const
+{
+   for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+   {
+      const TreeSubscriberInfo * tsi = iter.GetValue()();
+      if ((tsi)&&(tsi->MatchesPath(path(), NULL, NULL))) return true;
+   }
+   return false;
+}
+
 status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    Queue<SubscriptionInfo> * q = _subscribedStrings.Get(subscriptionPath);
@@ -111,6 +126,16 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
       TreeSubscriberInfoRef hisSubs;
       if ((_subscriberInfos.Get(calledBy, hisSubs).IsOK())&&(hisSubs()))
       {
+         for (HashtableIterator<String, uint32> iter(hisSubs()->_receivedPaths); iter.HasData(); iter++)
+         {
+            const String & receivedPath = iter.GetKey();
+            if (hisSubs()->MatchesPath(receivedPath(), NULL, NULL))
+            {
+               ReceivedPathDropped(calledBy, receivedPath);
+               (void) hisSubs()->_receivedPaths.Remove(receivedPath);
+            }
+         }
+
          (void) hisSubs()->RemovePathString(subscriptionPath.WithoutSuffix("/"));
          if (hisSubs()->GetEntries().IsEmpty()) (void) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
       }
@@ -368,7 +393,7 @@ void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, co
       Hashtable<ITreeGatewaySubscriber *, String> matchingSubscribers;  // subscriber -> matching-node-path
       for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
       {
-         TreeSubscriberInfo * subInfo = iter.GetValue()();
+         const TreeSubscriberInfo * subInfo = iter.GetValue()();
          if (subInfo)
          {
             for (HashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)

@@ -2,6 +2,8 @@
 #define SymlinkLogicMuxTreeGateway_h
 
 #include "zg/messagetree/gateway/MuxTreeGateway.h"
+#include "util/Hashtable.h"
+#include "util/NestCount.h"
 
 namespace zg {
 
@@ -23,12 +25,23 @@ public:
    virtual ~SymlinkLogicMuxTreeGateway();
 
 protected:
+   //  ITreeGateway function-call API
+   virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber * calledBy, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
+   virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber * calledBy, TreeGatewayFlags flags);
+   virtual void ReceivedPathDropped(ITreeGatewaySubscriber * /*calledBy*/, const String & receivedPath);
+
+   // ITreeGatewaySubscriber callback API
    virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
 
 private:
    friend class SymlinkResolver;
 
+   void FlushDroppedSymlinkPaths();
+
    SymlinkResolver * _symlinkResolver;
+   Hashtable<String, Void> _droppedSymlinkPaths;
+   NestCount _inRemoveSubscription;
+   NestCount _inFlushSymlinkPaths;
 };
 
 };  // end namespace zg

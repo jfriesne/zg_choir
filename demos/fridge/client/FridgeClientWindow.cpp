@@ -171,7 +171,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
    _connection = new MessageTreeClientConnector(_discoClient.GetCallbackMechanism());
    if (_connection->Start(FRIDGE_PROGRAM_SIGNATURE, systemName, GetFridgeServerFilter()).IsOK(ret))
    {
-      _symlinkProxy = new SymlinkLogicMuxTreeGateway(_connection);  // implement symlink logic here?
+      _symlinkProxy = new SymlinkLogicMuxTreeGateway(_connection);  // this is just to test out the Symlink logic
       SetGateway(_symlinkProxy);
 
       _splitter = new QSplitter(Qt::Vertical);
