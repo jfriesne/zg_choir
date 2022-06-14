@@ -257,7 +257,7 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef 
       // In this case, it's faster to iterate over just what's allowed
       for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
       {
-         ITreeGatewaySubscriber * sub = iter.GetKey();  // untrusted pointer
+         ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfo * subInfo = _subscriberInfos.GetWithDefault(sub)();
          if ((subInfo)&&(sub != optDontNotify)) UpdateSubscriber(sub, *subInfo, path, DoesPathMatch(sub, subInfo, path, msgRef()) ? msgRef : MessageRef(), optOpTag);
       }
@@ -310,7 +310,7 @@ void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, ui
       // In this case, it's faster to iterate over just what's allowed
       for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
       {
-         ITreeGatewaySubscriber * sub = iter.GetKey();  // untrusted pointer
+         ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfoRef * pmr = _subscriberInfos.Get(sub);
          if ((pmr)&&(DoesPathMatch(sub, pmr->GetItemPointer(), path, NULL))) DoIndexNotificationAux(sub, path, opCode, index, nodeName, optOpTag);
       }
@@ -414,12 +414,12 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
 {
    bool isResponseToRequestNodeValues = false;
    String suffix;
-   ITreeGatewaySubscriber * untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix));
-   Queue<String> * q = _requestedSubtrees.Get(untrustedSubPtr);
+   ITreeGatewaySubscriber * subPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix));
+   Queue<String> * q = _requestedSubtrees.Get(subPtr);
    if (q == NULL)
    {
-      untrustedSubPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix, '='));  // special markerChar '=' means this is the response to a RequestNodeValues() call
-      q = _requestedSubtrees.Get(untrustedSubPtr);
+      subPtr = static_cast<ITreeGatewaySubscriber *>(ParseRegistrationIDPrefix(tag, suffix, '='));  // special markerChar '=' means this is the response to a RequestNodeValues() call
+      q = _requestedSubtrees.Get(subPtr);
       isResponseToRequestNodeValues = true;
    }
 
@@ -431,19 +431,19 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
          {
             if (subtreeData())
             {
-               EnsureSubscriberInBatchGroup(untrustedSubPtr);
+               EnsureSubscriberInBatchGroup(subPtr);
                for (MessageFieldNameIterator fnIter(*subtreeData(), B_MESSAGE_TYPE); fnIter.HasData(); fnIter++)
                {
                   const String & path = fnIter.GetFieldName();
 
                   MessageRef nodeMsg, payloadMsg;
-                  if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) untrustedSubPtr->TreeNodeUpdated(path, payloadMsg, suffix);
+                  if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) subPtr->TreeNodeUpdated(path, payloadMsg, suffix);
                }
             }
          }
-         else untrustedSubPtr->SubtreesRequestResultReturned(suffix, subtreeData);
+         else subPtr->SubtreesRequestResultReturned(suffix, subtreeData);
 
-         if (q->IsEmpty()) _requestedSubtrees.Remove(untrustedSubPtr);
+         if (q->IsEmpty()) _requestedSubtrees.Remove(subPtr);
       }
    }
 }
@@ -588,7 +588,7 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    if (_subscriberInfos.ContainsKey(sub))
    {
-      (void) _allowedCallbacks.Remove(sub);
+      if (_allowedCallbacks.Remove(sub).IsOK()) (void) _allowedCallbacks.PutWithDefault(&_dummySubscriber);  // _dummySubscriber so that if the requester has since unregistered we still won't let callbacks spill out to everyone else
       (void) _needsCallbackBatchEndsCall.Remove(sub);
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);

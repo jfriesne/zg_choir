@@ -15,7 +15,7 @@ public:
 
    // Called whenever the SymlinkLogicMuxTreeGateway gets a TreeNodeUpdated() call.  We use it to intercept
    // nodes containing symlinks and redirect the SymlinkLogicMuxTreeGateway to see the pointed-to node's data instead
-   bool FilterTreeNodeUpdate(const String & nodePath, const MessageRef & payloadMsg)
+   bool FilterTreeNodeUpdate(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag, const Hashtable<ITreeGatewaySubscriber *, Void> & initialModeSubscribers)
    {
       const String & oldSymLinkPath = _symlinks[nodePath];
       const String & newSymLinkPath = payloadMsg() ? payloadMsg()->GetString(SYMLINK_FIELD_NAME) : GetEmptyString();
@@ -25,7 +25,18 @@ public:
          if (newSymLinkPath.HasChars()) (void) PutSymlink(nodePath, newSymLinkPath);
       }
 
-      return newSymLinkPath.HasChars();  // true == don't pass this update on to the normal subscribers (we don't want them to see the symlink-node's payload)
+      if (newSymLinkPath.HasChars())
+      {
+         if (initialModeSubscribers.HasItems())
+         {
+            // Make sure any new subscribers to an already-subscribed-to symlink get an initial update (even though we didn't resubscribe to its target)
+            const SymlinkState * ss = _reverseSymlinks.Get(newSymLinkPath);
+            if ((ss)&&(ss->_payload())) TreeNodeUpdated(newSymLinkPath, ss->_payload, optOpTag);
+         }
+
+         return true; // true == don't pass this update on to the normal subscribers (we don't want them to see the symlink-node's payload)
+      }
+      else return false;  // false == pass this update up to the superclass as usual
    }
 
    // Called by the original MuxTreeGateway when one of the symlink-destination-paths we subscribed to (in PutSymlink()) has been updated
@@ -123,7 +134,7 @@ SymlinkLogicMuxTreeGateway :: ~SymlinkLogicMuxTreeGateway()
 
 void SymlinkLogicMuxTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
 {
-   if (_symlinkResolver->FilterTreeNodeUpdate(nodePath, payloadMsg) == false) MuxTreeGateway::TreeNodeUpdated(nodePath, payloadMsg, optOpTag);
+   if (_symlinkResolver->FilterTreeNodeUpdate(nodePath, payloadMsg, optOpTag, GetSubscribersInInitialResultsMode()) == false) MuxTreeGateway::TreeNodeUpdated(nodePath, payloadMsg, optOpTag);
 }
 
 void SymlinkLogicMuxTreeGateway :: ReceivedPathDropped(ITreeGatewaySubscriber * calledBy, const String & receivedPath)
@@ -155,7 +166,7 @@ void SymlinkLogicMuxTreeGateway :: FlushDroppedSymlinkPaths()
    while(_droppedSymlinkPaths.HasItems())
    {
       const String & path = *_droppedSymlinkPaths.GetFirstKey();
-      if (IsAnyoneSubscribedToPath(path) == false) (void) _symlinkResolver->FilterTreeNodeUpdate(path, MessageRef());
+      if (IsAnyoneSubscribedToPath(path) == false) (void) _symlinkResolver->FilterTreeNodeUpdate(path, MessageRef(), GetEmptyString(), GetSubscribersInInitialResultsMode());
       (void) _droppedSymlinkPaths.RemoveFirst();
    }
 }

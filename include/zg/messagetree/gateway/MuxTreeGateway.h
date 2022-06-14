@@ -72,6 +72,11 @@ protected:
      */
    bool IsAnyoneSubscribedToPath(const String & receivedPath) const;
 
+   /** Returns the set of ITreeGatewaySubscribers that we are currently receiving initial-subscription-results for
+     * (i.e. results for nodes that were already on the server when these subscribers called AddTreeSubscription()
+     */
+   const Hashtable<ITreeGatewaySubscriber *, Void> & GetSubscribersInInitialResultsMode() const {return _allowedCallbacks;}
+
 private:
    friend class MessageTreeDatabasePeerSession;
 
@@ -127,7 +132,7 @@ private:
    Hashtable<String, Queue<SubscriptionInfo> > _subscribedStrings;
 
    bool _isConnected;
-   Hashtable<ITreeGatewaySubscriber *, Void> _allowedCallbacks;  // untrusted pointers, do not dereference
+   Hashtable<ITreeGatewaySubscriber *, Void> _allowedCallbacks;  // table of subscribers that are in their receiving-initial-results period
 
    ITreeGatewaySubscriber _dummySubscriber;  // here solely so that we can place it into (_allowedCallbacks) if necessary
 };
