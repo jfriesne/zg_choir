@@ -347,7 +347,7 @@ private:
 
    bool IsInSetupOrTeardown() const;
    bool IsNodeInThisDatabase(const DataNode & node) const;
-   String DatabaseSubpathToSessionRelativePath(const String & subPath) const {return subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;}
+   String DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const;
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
 
    MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const;

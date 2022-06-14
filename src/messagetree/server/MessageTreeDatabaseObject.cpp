@@ -1,5 +1,6 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/MessageTreeDatabaseObject.h"
+#include "zg/messagetree/gateway/SymlinkLogicMuxTreeGateway.h"  // just for SYMLINK_FIELD_NAME
 #include "reflector/StorageReflectSession.h"  // for NODE_DEPTH_USER
 #include "regex/SegmentedStringMatcher.h"
 #include "util/MiscUtilityFunctions.h"  // for AssembleBatchMessage()
@@ -95,6 +96,18 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
    return juniorMsg;
 }
 
+String MessageTreeDatabaseObject :: DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const
+{
+   const String ret = subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;
+   if (flags.IsBitSet(TREE_GATEWAY_FLAG_TRAVERSE_SYMLINK))
+   {
+      const DataNode * dn = GetDataNode(subPath);
+      const String * symlinkTarget = dn ? dn->GetData()()->GetStringPointer(SYMLINK_FIELD_NAME) : NULL;
+      if (symlinkTarget) return *symlinkTarget;
+   }
+   return ret;
+}
+
 status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessageRef & msg)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
@@ -134,7 +147,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
          ConstQueryFilterRef qfRef    = msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK() ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), optOpTag);
+         return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), optOpTag);
       }
       break;
 
@@ -147,7 +160,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
          ConstQueryFilterRef qfRef    = msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK() ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return MoveIndexEntries(DatabaseSubpathToSessionRelativePath(path), optBefore, qfRef, optOpTag);
+         return MoveIndexEntries(DatabaseSubpathToSessionRelativePath(path, flags), optBefore, qfRef, optOpTag);
       }
       break;
 
@@ -453,16 +466,16 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
-   MessageRef optPayload   = msg.GetMessage(MTDO_NAME_PAYLOAD);
-   const String & path     = msg.GetStringReference(MTDO_NAME_PATH);
-   const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
+   MessageRef optPayload        = msg.GetMessage(MTDO_NAME_PAYLOAD);
+   const String & path          = msg.GetStringReference(MTDO_NAME_PATH);
+   const String & optOpTag      = msg.GetStringReference(MTDO_NAME_TAG);
  
    DECLARE_OP_TAG_GUARD;
 
    if (optPayload())
    {
       const String & optBefore   = msg.GetStringReference(MTDO_NAME_BEFORE);
-      String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path);
+      String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path, flags);
       if ((IsInSeniorDatabaseUpdateContext())&&(sessionRelativePath.EndsWith('/')))
       {
          // Client wants us to choose an available node ID
@@ -480,23 +493,24 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
       const status_t ret = zsh->SetDataNode(sessionRelativePath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
       return ((ret.IsOK())||((ret == B_ACCESS_DENIED)&&(flags.AreAnyOfTheseBitsSet(TREE_GATEWAY_FLAG_DONTCREATENODE, TREE_GATEWAY_FLAG_DONTOVERWRITEDATA)))) ? B_NO_ERROR : ret;
    }
-   else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+   else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
 }
 
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
 status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message & msg)
 {
-   const String & path = msg.GetStringReference(MTDO_NAME_PATH);
+   const String &          path = msg.GetStringReference(MTDO_NAME_PATH);
+   const TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
    if (IsOkayToHandleUpdateMessage(path, TreeGatewayFlags()) == false) return B_NO_ERROR;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path);
+   const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path, flags);
    DataNode * node = zsh->GetDataNode(sessionRelativePath);
    if (node) 
    {
       const String & key      = msg.GetStringReference(MTDO_NAME_KEY);
       const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
-      const int32 index       = msg.GetInt32(MTDO_NAME_INDEX);
+      const int32 index       = msg.GetInt32(          MTDO_NAME_INDEX);
 
       DECLARE_OP_TAG_GUARD;
 
@@ -521,7 +535,7 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
    const String & path = msg.GetStringReference(MTDO_NAME_PATH);
    if (payload())
    {
-      TreeGatewayFlags flags  = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
+      const TreeGatewayFlags flags = msg.GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
       const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
 
       DECLARE_OP_TAG_GUARD;
@@ -530,7 +544,7 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
 #ifdef JAF_DELIBERATELY_REMOVED_THIS_LINE_BECAUSE_IT_PREVENTS_DATA_REPLICATION_FROM_WORKING_ACROSS_PEERS
       if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
 #endif
-      return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(path), true, sdnFlags);
+      return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(path, flags), true, sdnFlags);
    }
    else 
    {
@@ -581,7 +595,7 @@ MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeData
 DataNode * MessageTreeDatabaseObject :: GetDataNode(const String & nodePath) const
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->GetDataNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath)) : NULL;
+   return zsh ? zsh->GetDataNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath, TreeGatewayFlags())) : NULL;
 }
 
 status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags, const String & optInsertBefore, const String & optOpTag)
@@ -589,19 +603,19 @@ status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const
    DECLARE_OP_TAG_GUARD;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath), dataMsgRef, flags, optInsertBefore.HasChars()?&optInsertBefore:NULL) : B_BAD_OBJECT;
+   return zsh ? zsh->SetDataNode(DatabaseSubpathToSessionRelativePath(nodePath, TreeGatewayFlags()), dataMsgRef, flags, optInsertBefore.HasChars()?&optInsertBefore:NULL) : B_BAD_OBJECT;
 }
 
 status_t MessageTreeDatabaseObject :: FindMatchingNodes(const String & nodePath, const ConstQueryFilterRef & filter, Queue<DataNodeRef> & retMatchingNodes, uint32 maxResults) const
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->FindMatchingNodes(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath), filter, retMatchingNodes, maxResults) : B_BAD_OBJECT;
+   return zsh ? zsh->FindMatchingNodes(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath, TreeGatewayFlags()), filter, retMatchingNodes, maxResults) : B_BAD_OBJECT;
 }
 
 DataNodeRef MessageTreeDatabaseObject :: FindMatchingNode(const String & nodePath, const ConstQueryFilterRef & filter) const
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->FindMatchingNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath), filter) : DataNodeRef();
+   return zsh ? zsh->FindMatchingNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath, TreeGatewayFlags()), filter) : DataNodeRef();
 }
 
 status_t MessageTreeDatabaseObject :: SaveNodeTreeToMessage(Message & msg, const DataNode & node, const String & path, bool saveData, uint32 maxDepth, const ITraversalPruner * optPruner) const
@@ -615,7 +629,7 @@ status_t MessageTreeDatabaseObject :: RestoreNodeTreeFromMessage(const Message &
    DECLARE_OP_TAG_GUARD;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->RestoreNodeTreeFromMessage(msg, DatabaseSubpathToSessionRelativePath(path), loadData, flags, maxDepth, optPruner) : B_BAD_OBJECT;
+   return zsh ? zsh->RestoreNodeTreeFromMessage(msg, DatabaseSubpathToSessionRelativePath(path, TreeGatewayFlags()), loadData, flags, maxDepth, optPruner) : B_BAD_OBJECT;
 }
 
 status_t MessageTreeDatabaseObject :: CloneDataNodeSubtree(const DataNode & sourceNode, const String & destPath, SetDataNodeFlags flags, const String * optInsertBefore, const ITraversalPruner * optPruner, const String & optOpTag)
@@ -623,7 +637,7 @@ status_t MessageTreeDatabaseObject :: CloneDataNodeSubtree(const DataNode & sour
    DECLARE_OP_TAG_GUARD;
 
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
-   return zsh ? zsh->CloneDataNodeSubtree(sourceNode, destPath.StartsWith("/") ? destPath : DatabaseSubpathToSessionRelativePath(destPath), flags, optInsertBefore, optPruner) : B_BAD_OBJECT;
+   return zsh ? zsh->CloneDataNodeSubtree(sourceNode, destPath.StartsWith("/") ? destPath : DatabaseSubpathToSessionRelativePath(destPath, TreeGatewayFlags()), flags, optInsertBefore, optPruner) : B_BAD_OBJECT;
 }
 
 void MessageTreeDatabaseObject :: MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag)
