@@ -1,5 +1,5 @@
-#ifndef DiscoveryConstants_h
-#define DiscoveryConstants_h
+#ifndef DiscoveryUtilityFunctions_h
+#define DiscoveryUtilityFunctions_h
 
 #include "regex/StringMatcher.h"
 #include "util/IPAddress.h"
