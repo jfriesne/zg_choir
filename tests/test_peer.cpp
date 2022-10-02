@@ -107,7 +107,7 @@ public:
       }
       else if (text.StartsWith("sendunicast"))
       {
-         StringTokenizer tok(text.Substring(12).Trim()(), NULL);
+         StringTokenizer tok(text.Substring(12).Trim()(), " \t\r\n");  // whitespace chars only
          const char * target = tok();
          if (target)
          {

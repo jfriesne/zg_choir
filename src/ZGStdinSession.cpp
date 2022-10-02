@@ -59,7 +59,7 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
       for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd).IsOK(); i++) 
       {
          nextCmd = nextCmd.Trim();
-         StringTokenizer tok(nextCmd(), ";", NULL);
+         StringTokenizer tok(nextCmd(), ";;");
          const char * t;
          while((t = tok()) != NULL) 
          {
