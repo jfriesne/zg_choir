@@ -25,7 +25,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
    LogTime(MUSCLE_LOG_INFO, "You typed: [%s]\n", textStr());
 
-   StringTokenizer tok(textStr(), " \t\r\n");  // whitespace only!
+   StringTokenizer tok(textStr(), STRING_TOKENIZER_DEFAULT_SOFT_SEPARATOR_CHARS);  // whitespace only!
    const char * cmd = tok();
    if (cmd == NULL) cmd = "";
 
