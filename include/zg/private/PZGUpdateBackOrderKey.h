@@ -2,6 +2,8 @@
 #define PZGUpdateBackOrderKey_h
 
 #include "support/PseudoFlattenable.h"
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zg/ZGPeerID.h"
 
 namespace zg_private
@@ -33,23 +35,23 @@ public:
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
    static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return ZGPeerID::FlattenedSize() + sizeof(_whichDatabase) + sizeof(_updateID);}
 
-   void Flatten(uint8 * buffer) const
+   void Flatten(uint8 * buf) const
    {
-      _targetPeerID.Flatten(buffer);                                  buffer += ZGPeerID::FlattenedSize();
-      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_whichDatabase)); buffer += sizeof(_whichDatabase);
-      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_updateID));      //buffer += sizeof(_updateID);
+      UncheckedDataFlattener flat(buf);
+      flat.WriteFlat(_targetPeerID);
+      flat.WriteInt32(_whichDatabase);
+      flat.WriteInt64(_updateID);
    }
 
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
-      if (size >= FlattenedSize())
-      {
-         MRETURN_ON_ERROR(_targetPeerID.Unflatten(buffer, size));                buffer += ZGPeerID::FlattenedSize();
-         _whichDatabase = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer)); buffer += sizeof(_whichDatabase);
-         _updateID      = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buffer)); //buffer += sizeof(_updateID);
-         return B_NO_ERROR;
-      }
-      else return B_BAD_DATA;
+      if (size < FlattenedSize()) return B_BAD_DATA;
+
+      UncheckedDataUnflattener unflat(buffer, size);
+      MRETURN_ON_ERROR(unflat.ReadFlat(_targetPeerID));
+      _whichDatabase = unflat.ReadInt32();
+      _updateID      = unflat.ReadInt64();
+      return unflat.GetStatus();
    }
 
 private:

@@ -1,3 +1,5 @@
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zg/private/PZGHeartbeatPeerInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -16,59 +18,48 @@ uint32 PZGHeartbeatPeerInfo :: FlattenedSize() const
    return ZGPeerID::FlattenedSize() + sizeof(uint32) + (_timings.GetNumItems()*PZGTimingInfo::FlattenedSize());  // uint32 so we can store a list-size count
 }
 
-void PZGHeartbeatPeerInfo :: Flatten(uint8 *buffer) const
+void PZGHeartbeatPeerInfo :: Flatten(uint8 * buf) const
 {
-   _peerID.Flatten(buffer);                                                buffer += ZGPeerID::FlattenedSize();
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_timings.GetNumItems())); buffer += sizeof(uint32);
-   for (uint32 i=0; i<_timings.GetNumItems(); i++)
-   {
-      _timings[i].Flatten(buffer);
-      buffer += PZGTimingInfo::FlattenedSize();
-   }
+   UncheckedDataFlattener flat( buf);
+   flat.WriteFlat(_peerID);
+   flat.WriteInt32(_timings.GetNumItems());
+   for (uint32 i=0; i<_timings.GetNumItems(); i++) flat.WriteFlat(_timings[i]);
 }
 
-status_t PZGHeartbeatPeerInfo :: Unflatten(const uint8 *buf, uint32 size)
+status_t PZGHeartbeatPeerInfo :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < (_peerID.FlattenedSize()+sizeof(uint32))) return B_BAD_DATA;
 
-   const uint32 peerIDFlatSize = ZGPeerID::FlattenedSize();
-   MRETURN_ON_ERROR(_peerID.Unflatten(buf, peerIDFlatSize));
-   buf += peerIDFlatSize; size -= peerIDFlatSize;
+   UncheckedDataUnflattener unflat(buf, size);
+   MRETURN_ON_ERROR(unflat.ReadFlat(_peerID));
 
-   _timings.Clear();
+   const uint32 numTimings = unflat.ReadInt32();
+   if (unflat.GetNumBytesAvailable() < (numTimings*PZGTimingInfo::FlattenedSize())) return B_BAD_DATA;
+   MRETURN_ON_ERROR(_timings.EnsureSize(numTimings, true));
 
-   const uint32 numTimings = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); 
-   buf += sizeof(uint32); size -= sizeof(uint32);
-   const uint32 tiFlatSize = PZGTimingInfo::FlattenedSize();
-
-   if (size < (numTimings*tiFlatSize)) return B_BAD_DATA;
-   MRETURN_ON_ERROR(_timings.EnsureSize(numTimings));
-
-   for (uint32 i=0; i<numTimings; i++)
-   {
-      MRETURN_ON_ERROR(_timings.AddTailAndGet()->Unflatten(buf, tiFlatSize));
-      buf += tiFlatSize; size -= tiFlatSize;
-   }
-   return B_NO_ERROR;
+   for (uint32 i=0; i<numTimings; i++) MRETURN_ON_ERROR(unflat.ReadFlat(_timings[i]));
+   return unflat.GetStatus();
 }
 
 void PZGHeartbeatPeerInfo :: PZGTimingInfo :: Flatten(uint8 * buf) const
 {
-   muscleCopyOut(buf, B_HOST_TO_LENDIAN_INT16(_sourceTag));         buf += sizeof(uint16);
-   muscleCopyOut(buf, B_HOST_TO_LENDIAN_INT16(0));                  buf += sizeof(uint16);  // reserved/padding for now
-   muscleCopyOut(buf, B_HOST_TO_LENDIAN_INT32(_heartbeatPacketID)); buf += sizeof(uint32);
-   muscleCopyOut(buf, B_HOST_TO_LENDIAN_INT32(_dwellTimeMicros));   buf += sizeof(uint32);
+   UncheckedDataFlattener flat(buf, FlattenedSize());
+   flat.WriteInt16(_sourceTag);
+   flat.WriteInt16(0);                   // reserved/padding for now
+   flat.WriteInt32(_heartbeatPacketID);
+   flat.WriteInt32(_dwellTimeMicros);
 }
 
 status_t PZGHeartbeatPeerInfo :: PZGTimingInfo :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < FlattenedSize()) return B_BAD_DATA;
 
-   _sourceTag         = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
-   /* just skip past the two reserved/padding bytes, for now */             buf += sizeof(uint16); size -= sizeof(uint16);
-   _heartbeatPacketID = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   _dwellTimeMicros   = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   return B_NO_ERROR;
+   UncheckedDataUnflattener unflat(buf, size);
+   _sourceTag         = unflat.ReadInt16();
+   (void)               unflat.ReadInt16();       /* just skip past the two reserved/padding bytes, for now */
+   _heartbeatPacketID = unflat.ReadInt32();
+   _dwellTimeMicros   = unflat.ReadInt32();
+   return unflat.GetStatus();
 }
 
 uint32 PZGHeartbeatPeerInfo :: PZGTimingInfo :: CalculateChecksum() const

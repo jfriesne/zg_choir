@@ -1,6 +1,7 @@
-#include "zg/private/PZGDatabaseUpdate.h"
-
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zlib/ZLibUtilityFunctions.h"
+#include "zg/private/PZGDatabaseUpdate.h"
 
 namespace zg_private
 {
@@ -102,32 +103,34 @@ uint32 PZGDatabaseUpdate :: FlattenedSizeNotIncludingPayload() const
 
 void PZGDatabaseUpdate :: Flatten(uint8 *buffer) const
 {
-   const ConstByteBufferRef & updateBuf = GetPayloadBuffer();
-   uint32 dataSize = updateBuf() ? updateBuf()->GetNumBytes() : 0;
 
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(PZG_DATABASE_UPDATE_TYPE_CODE));   buffer += sizeof(uint32);
-   *buffer++ = _updateType;
-   *buffer++ = 0;  /* this field is reserved for now */
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_databaseIndex));                  buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_seniorElapsedTimeMillis));        buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(0)); /* this field is reserved */  buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_seniorStartTimeMicros));          buffer += sizeof(uint64);
-   _sourcePeerID.Flatten(buffer);                                                   buffer += ZGPeerID::FlattenedSize();
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_updateID));                       buffer += sizeof(uint64);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_preUpdateDBChecksum));            buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_postUpdateDBChecksum));           buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(CalculateChecksum()));             buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(dataSize));                        buffer += sizeof(uint32);
-   if (dataSize > 0) {memcpy(buffer, updateBuf()->GetBuffer(), dataSize);           buffer += dataSize;}
+   UncheckedDataFlattener flat(buffer);
+   flat.WriteInt32(PZG_DATABASE_UPDATE_TYPE_CODE);
+   flat.WriteInt8(_updateType);
+   flat.WriteInt8(0);  /* this field is reserved for now */
+   flat.WriteInt16(_databaseIndex);
+   flat.WriteInt16(_seniorElapsedTimeMillis);
+   flat.WriteInt16(0);  /* this field is reserved */
+   flat.WriteInt64(_seniorStartTimeMicros);
+   flat.WriteFlat(_sourcePeerID);
+   flat.WriteInt64(_updateID);
+   flat.WriteInt32(_preUpdateDBChecksum);
+   flat.WriteInt32(_postUpdateDBChecksum);
+   flat.WriteInt32(CalculateChecksum());
+
+   const ConstByteBufferRef & updateBuf = GetPayloadBuffer();
+   flat.WriteInt32(updateBuf() ? updateBuf()->GetNumBytes() : 0);
+   if (updateBuf()) flat.WriteBytes(*updateBuf());
 
    /** Note that _updateMsg is deliberately NOT part of the flattened data! */
 }
 
-status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
+status_t PZGDatabaseUpdate :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < FlattenedSizeNotIncludingPayload()) return B_BAD_DATA;  // buffer is too short for us to use!
 
-   const uint32 typeCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
+   UncheckedDataUnflattener unflat(buf, size);
+   const uint32 typeCode = unflat.ReadInt32();
    if (typeCode != PZG_DATABASE_UPDATE_TYPE_CODE)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdate::Unflatten():  Got unexpected update typecode " UINT32_FORMAT_SPEC "\n", typeCode);
@@ -137,24 +140,23 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 *buf, uint32 size)
    _updateBuf.Reset();
    _updateMsg.Reset();
 
-   _updateType = *buf++; size--;
-   (void) buf++;         size--;  // skip the reserved/padding byte
-   _databaseIndex           = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
-   _seniorElapsedTimeMillis = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<int16>(buf)); buf += sizeof(uint16); size -= sizeof(uint16);
-   /* reserved 16-bit field is here; maybe we'll do something with it someday */ buf += sizeof(uint16); size -= sizeof(uint16);
-   _seniorStartTimeMicros   = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
-   MRETURN_ON_ERROR(_sourcePeerID.Unflatten(buf, size));                         buf += ZGPeerID::FlattenedSize(); size -= ZGPeerID::FlattenedSize();
-   _updateID                = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<int64>(buf)); buf += sizeof(uint64); size -= sizeof(uint64);
-   _preUpdateDBChecksum     = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   _postUpdateDBChecksum    = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   const uint32 chk         = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-
-   const uint32 dataSize = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<int32>(buf));    buf += sizeof(uint32); size -= sizeof(uint32);
-   if (size < dataSize) return B_BAD_DATA;  // truncated buffer, oh no!
+   _updateType                          = unflat.ReadInt8();
+   (void)                                 unflat.ReadInt8();   // skip the reserved/padding byte
+   _databaseIndex                       = unflat.ReadInt16();
+   _seniorElapsedTimeMillis             = unflat.ReadInt16();
+   (void)                                 unflat.ReadInt16();  // reserved 16-bit field is here; maybe we'll do something with it someday
+   _seniorStartTimeMicros               = unflat.ReadInt64();
+   MRETURN_ON_ERROR(unflat.ReadFlat(_sourcePeerID));
+   _updateID                            = unflat.ReadInt64();
+   _preUpdateDBChecksum                 = unflat.ReadInt32();
+   _postUpdateDBChecksum                = unflat.ReadInt32();
+   const uint32 chk                     = unflat.ReadInt32();
+   const uint32 dataSize                = unflat.ReadInt32();
+   if (unflat.GetNumBytesAvailable() < dataSize) return B_BAD_DATA;  // truncated buffer, oh no!
 
    if (dataSize > 0)  // 0 data is taken to mean a NULL/empty buffer (we don't distinguish between the two)
    {
-      _updateBuf = GetByteBufferFromPool(dataSize, buf);
+      _updateBuf = GetByteBufferFromPool(dataSize, unflat.GetCurrentReadPointer());
       MRETURN_OOM_ON_NULL(_updateBuf());
    }
 

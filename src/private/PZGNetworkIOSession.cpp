@@ -1,5 +1,7 @@
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/PacketTunnelIOGateway.h"
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
@@ -70,21 +72,21 @@ public:
 
    void Flatten(uint8 * buffer) const
    {
-      _peerID.Flatten(buffer);                                         buffer += _peerID.FlattenedSize();
-      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_versionCode));    buffer += sizeof(_versionCode);
-      muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_messageID));    //buffer += sizeof(_messageID);
+      UncheckedDataFlattener flat(buffer);
+      flat.WriteFlat(_peerID);
+      flat.WriteInt32(_versionCode);
+      flat.WriteInt32(_messageID);
    }
 
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
-      if (size >= FlattenedSize())
-      {
-         MRETURN_ON_ERROR(_peerID.Unflatten(buffer, size));                      buffer += _peerID.FlattenedSize();
-         _versionCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer));   buffer += sizeof(_versionCode);
-         _messageID   = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buffer)); //buffer += sizeof(_messageID);
-         return B_NO_ERROR;
-      }
-      else return B_BAD_DATA;
+      if (size < FlattenedSize()) return B_BAD_DATA;
+
+      UncheckedDataUnflattener unflat(buffer, size);
+      MRETURN_ON_ERROR(unflat.ReadFlat(_peerID));
+      _versionCode = unflat.ReadInt32();
+      _messageID   = unflat.ReadInt32();
+      return unflat.GetStatus();
    }
 
    uint32 HashCode() const {return CalculateChecksum();}

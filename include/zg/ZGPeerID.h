@@ -3,6 +3,8 @@
 
 #include <string.h>  // for strchr()
 #include "support/Flattenable.h"
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "util/String.h"
 #include "zg/ZGNameSpace.h"
 
@@ -113,8 +115,9 @@ public:
     */
    void Flatten(uint8 * buffer) const
    {
-      muscleCopyOut(&buffer[0*sizeof(uint64)], B_HOST_TO_LENDIAN_INT64(_highBits));
-      muscleCopyOut(&buffer[1*sizeof(uint64)], B_HOST_TO_LENDIAN_INT64(_lowBits));
+      UncheckedDataFlattener flat(buffer);
+      flat.WriteInt64(_highBits);
+      flat.WriteInt64(_lowBits);
    }
 
    /** Restores this object from an endian-neutral flattened buffer.
@@ -124,13 +127,12 @@ public:
     */
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
-      if (size >= FlattenedSize())
-      {
-         _highBits = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(&buffer[0*sizeof(int64)]));
-         _lowBits  = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(&buffer[1*sizeof(int64)]));
-         return B_NO_ERROR;
-      }
-      else return B_BAD_DATA;
+      if (size < FlattenedSize()) return B_BAD_DATA;
+
+      UncheckedDataUnflattener unflat(buffer, size);
+      _highBits = unflat.ReadInt64();
+      _lowBits  = unflat.ReadInt64();
+      return unflat.GetStatus();
    }
 
    /** This is implemented so that if ZGPeerID is used as the key in a Hashtable, the HashCode() method will be

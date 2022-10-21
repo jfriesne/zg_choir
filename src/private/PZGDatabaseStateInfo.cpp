@@ -1,3 +1,5 @@
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zg/private/PZGDatabaseStateInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -36,21 +38,23 @@ PZGDatabaseStateInfo & PZGDatabaseStateInfo :: operator=(const PZGDatabaseStateI
    return *this;
 }
 
-void PZGDatabaseStateInfo :: Flatten(uint8 *buffer) const
+void PZGDatabaseStateInfo :: Flatten(uint8 * buf) const
 {
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_currentDatabaseStateID)); buffer += sizeof(uint64);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_oldestDatabaseIDInLog));  buffer += sizeof(uint64);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_dbChecksum));             buffer += sizeof(uint32);   
+   UncheckedDataFlattener flat(buf);
+   flat.WriteInt64(_currentDatabaseStateID);
+   flat.WriteInt64(_oldestDatabaseIDInLog);
+   flat.WriteInt32(_dbChecksum);
 }
 
-status_t PZGDatabaseStateInfo :: Unflatten(const uint8 *buf, uint32 size)
+status_t PZGDatabaseStateInfo :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < FlattenedSize()) return B_BAD_DATA;
 
-   _currentDatabaseStateID = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf)); buf += sizeof(uint64);
-   _oldestDatabaseIDInLog  = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf)); buf += sizeof(uint64);
-   _dbChecksum             = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32);
-   return B_NO_ERROR;
+   UncheckedDataUnflattener unflat(buf, size);
+   _currentDatabaseStateID = unflat.ReadInt64();
+   _oldestDatabaseIDInLog  = unflat.ReadInt64();
+   _dbChecksum             = unflat.ReadInt32();
+   return unflat.GetStatus();;
 }
    
 void PZGDatabaseStateInfo :: PrintToStream() const

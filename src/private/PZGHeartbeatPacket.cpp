@@ -1,3 +1,5 @@
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zg/private/PZGHeartbeatPacket.h"
 #include "zg/private/PZGConstants.h"  // for PeerInfoToString()
 #include "zlib/ZLibUtilityFunctions.h"
@@ -56,7 +58,7 @@ uint32 PZGHeartbeatPacket :: FlattenedSizeNotIncludingVariableLengthData() const
         // _networkSendTimeMicros is deliberately not part of our flattened-size as it will be sent separately for better accuracy
         + sizeof(_tcpAcceptPort)
         + sizeof(_peerUptimeSeconds)
-        + ZGPeerID::FlattenedSize()      // for _sourceePeerID
+        + ZGPeerID::FlattenedSize()      // for _sourcePeerID
         + sizeof(_peerType)
         + sizeof(uint16)                 // for _peerType and _isFullyAttached
         + sizeof(uint16)                 // for _orderedPeersList.GetNumItems()
@@ -65,7 +67,7 @@ uint32 PZGHeartbeatPacket :: FlattenedSizeNotIncludingVariableLengthData() const
 
 uint32 PZGHeartbeatPacket :: FlattenedSize() const
 {
-   uint32 ret = FlattenedSizeNotIncludingVariableLengthData();
+   uint32 ret = FlattenedSizeNotIncludingVariableLengthData() + (_orderedPeersList.GetNumItems()*sizeof(uint32));  // include length-headers for each of the peerInfos
    for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) ret += _orderedPeersList[i]()->FlattenedSize();
    if (_peerAttributesBuf()) ret += _peerAttributesBuf()->FlattenedSize();
 
@@ -73,99 +75,85 @@ uint32 PZGHeartbeatPacket :: FlattenedSize() const
    return ret;
 }
 
-void PZGHeartbeatPacket :: Flatten(uint8 *buffer) const
+void PZGHeartbeatPacket :: Flatten(uint8 * buf) const
 {
-   const uint32 peerIDFlatSize   = ZGPeerID::FlattenedSize();
-   const uint32 opListItemCount  = _orderedPeersList.GetNumItems();
-   const uint32 attribBufSize    = _peerAttributesBuf() ? _peerAttributesBuf()->GetNumBytes() : 0;
+   const uint32 opListItemCount = _orderedPeersList.GetNumItems();
+   const uint32 attribBufSize   = _peerAttributesBuf() ? _peerAttributesBuf()->GetNumBytes() : 0;
 
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(PZG_HEARTBEAT_PACKET_TYPE_CODE));        buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_heartbeatPacketID));                    buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_versionCode));                          buffer += sizeof(uint32);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT64(_systemKey));                            buffer += sizeof(uint64);
+   UncheckedDataFlattener flat(buf);
+   flat.WriteInt32(PZG_HEARTBEAT_PACKET_TYPE_CODE);
+   flat.WriteInt32(_heartbeatPacketID);
+   flat.WriteInt32(_versionCode);
+   flat.WriteInt64(_systemKey);
    // _networkSendTimeMicros is deliberately not part of our flattened-data as it will be sent separately for better accuracy
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_tcpAcceptPort));                        buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(_peerUptimeSeconds));                    buffer += sizeof(uint32);
-   _sourcePeerID.Flatten(buffer);                                                         buffer += peerIDFlatSize;
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16(_peerType|(_isFullyAttached?0x8000:0))); buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16((uint16)opListItemCount));               buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16((uint16)attribBufSize));                 buffer += sizeof(uint16);
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT16((uint16)0)); /* reserved for now */      buffer += sizeof(uint16);
-
-   for (uint32 i=0; i<opListItemCount; i++)
-   {
-      const PZGHeartbeatPeerInfo & pi = *_orderedPeersList[i]();
-      pi.Flatten(buffer);
-      buffer += pi.FlattenedSize(); 
-   }
-
-   if (attribBufSize > 0) {_peerAttributesBuf()->Flatten(buffer);                         buffer += attribBufSize;}
+   flat.WriteInt16(_tcpAcceptPort);
+   flat.WriteInt32(_peerUptimeSeconds);
+   flat.WriteFlat(_sourcePeerID);
+   flat.WriteInt16(_peerType|(_isFullyAttached?0x8000:0));
+   flat.WriteInt16(opListItemCount);  // yes, 16 bits is correct!
+   flat.WriteInt16(attribBufSize);    // yes, 16 bits is correct!
+   flat.WriteInt16(0); /* reserved for now */
+   for (uint32 i=0; i<opListItemCount; i++) flat.WriteFlat(*_orderedPeersList[i]());
+   if (attribBufSize > 0) flat.WriteBytes(*_peerAttributesBuf());
    /** Deliberately not flattening _peerAttributesMsg as it is redundant with _peerAttributesBuf */
 }
 
-status_t PZGHeartbeatPacket :: Unflatten(const uint8 *buf, uint32 size)
+status_t PZGHeartbeatPacket :: Unflatten(const uint8 * buf, uint32 size)
 {
    const uint32 staticBytesNeeded = FlattenedSizeNotIncludingVariableLengthData();
    if (size < staticBytesNeeded)
    {
-      LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Got short buffer for step A (" UINT32_FORMAT_SPEC " < " UINT32_FORMAT_SPEC ")\n", size, staticBytesNeeded);
+      LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Packet is too short for static header (" UINT32_FORMAT_SPEC " < " UINT32_FORMAT_SPEC ")\n", size, staticBytesNeeded);
       return B_BAD_DATA;
    }
 
-   const uint32 typeCode = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
+   UncheckedDataUnflattener unflat(buf, size);
+   const uint32 typeCode = unflat.ReadInt32();
    if (typeCode != PZG_HEARTBEAT_PACKET_TYPE_CODE)
    {
       LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Got unexpected heartbeat typecode " UINT32_FORMAT_SPEC "\n", typeCode);
       return B_BAD_DATA;
    }
 
-   const uint32 peerIDFlatSize   = ZGPeerID::FlattenedSize();
-   _heartbeatPacketID      = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf));  buf += sizeof(uint32); size -= sizeof(uint32);
-   _versionCode            = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf));  buf += sizeof(uint32); size -= sizeof(uint32);
-   _systemKey              = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(buf));  buf += sizeof(uint64); size -= sizeof(uint64);
-   _networkSendTimeMicros  = 0; // _networkSendTimeMicros is deliberately not part of our unflattened-data as it will be sent separately for better accuracy
-   _tcpAcceptPort          = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf));  buf += sizeof(uint16); size -= sizeof(uint16);
-   _peerUptimeSeconds      = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf));  buf += sizeof(uint32); size -= sizeof(uint32);
-   (void) _sourcePeerID.Unflatten(buf, peerIDFlatSize);                           buf += peerIDFlatSize; size -= peerIDFlatSize;
-   _peerType               = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf));  buf += sizeof(uint16); size -= sizeof(uint16);
-   _isFullyAttached        = ((_peerType & 0x8000) != 0); _peerType &= ~(0x8000);
-   uint32 opListItemCount  = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf));  buf += sizeof(uint16); size -= sizeof(uint16);
-   uint32 attribBufSize    = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(buf));  buf += sizeof(uint16); size -= sizeof(uint16);
-   /* skip the currently-unused reserved field, for now */                        buf += sizeof(uint16); size -= sizeof(uint16);
+   _heartbeatPacketID            = unflat.ReadInt32();
+   _versionCode                  = unflat.ReadInt32();
+   _systemKey                    = unflat.ReadInt64();
+   _networkSendTimeMicros        = 0; // _networkSendTimeMicros is deliberately not part of our unflattened-data as it will be sent separately for better accuracy
+   _tcpAcceptPort                = unflat.ReadInt16();
+   _peerUptimeSeconds            = unflat.ReadInt32();
+   MRETURN_ON_ERROR(unflat.ReadFlat(_sourcePeerID));
+   _peerType                     = unflat.ReadInt16();
+   _isFullyAttached              = ((_peerType & 0x8000) != 0); _peerType &= ~(0x8000);
+   const uint32 opListItemCount  = unflat.ReadInt16();
+   const uint32 attribBufSize    = unflat.ReadInt16();
+   (void)                          unflat.ReadInt16();   /* skip the currently-unused reserved field, for now */
 
    _orderedPeersList.Clear();
-
    MRETURN_ON_ERROR(_orderedPeersList.EnsureSize(opListItemCount));
-
    for (uint32 i=0; i<opListItemCount; i++)
    {
        PZGHeartbeatPeerInfoRef newPIRef = GetPZGHeartbeatPeerInfoFromPool();
        MRETURN_OOM_ON_NULL(newPIRef());
-       MRETURN_ON_ERROR(newPIRef()->Unflatten(buf, size));
-
-       const uint32 actualPISize = newPIRef()->FlattenedSize();
-       if (actualPISize > size) return B_BAD_DATA;  // wtf?
-       buf  += actualPISize;
-       size -= actualPISize;
-
-       (void) _orderedPeersList.AddTail(newPIRef);
+       MRETURN_ON_ERROR(unflat.ReadFlat(*newPIRef()));
+       MRETURN_ON_ERROR(_orderedPeersList.AddTail(newPIRef));
    }
    
    if (attribBufSize > 0) 
    {
-      if (attribBufSize > size)
+      const uint32 numBytesLeft = unflat.GetNumBytesAvailable();
+      if (attribBufSize > numBytesLeft)
       {
-         LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  attribBufSize too large!  (" UINT32_FORMAT_SPEC " > " UINT32_FORMAT_SPEC ")\n", attribBufSize, size);
+         LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  attribBufSize too large!  (" UINT32_FORMAT_SPEC " > " UINT32_FORMAT_SPEC ")\n", attribBufSize, numBytesLeft);
          return B_BAD_DATA;
       }
-      _peerAttributesBuf = GetByteBufferFromPool(attribBufSize, buf);
+      _peerAttributesBuf = GetByteBufferFromPool(attribBufSize, unflat.GetCurrentReadPointer());
       MRETURN_OOM_ON_NULL(_peerAttributesBuf());
    }
    else _peerAttributesBuf.Reset();
 
    _peerAttributesMsg.Reset();  // this can be demand-allocated later, if necessary
 
-   return B_NO_ERROR;
+   return unflat.GetStatus();
 }
 
 status_t PZGHeartbeatPacket :: CopyFromImplementation(const Flattenable & copyFrom)

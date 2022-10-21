@@ -1,33 +1,28 @@
+#include "util/DataFlattener.h"
+#include "util/DataUnflattener.h"
 #include "zg/private/PZGBeaconData.h"
 
 namespace zg_private
 {
 
-void PZGBeaconData :: Flatten(uint8 *buffer) const
+void PZGBeaconData :: Flatten(uint8 * buffer) const
 {
-   const uint32 numItems    = _dbis.GetNumItems();
-   const uint32 dbiFlatSize = PZGDatabaseStateInfo::FlattenedSize();
-
-   muscleCopyOut(buffer, B_HOST_TO_LENDIAN_INT32(numItems)); buffer += sizeof(uint32);   
-   for (uint32 i=0; i<numItems; i++) {_dbis[i].Flatten(buffer); buffer += dbiFlatSize;}
+   UncheckedDataFlattener flat(buffer);
+   flat.WriteInt32(_dbis.GetNumItems());
+   for (uint32 i=0; i<_dbis.GetNumItems(); i++) flat.WriteFlat(_dbis[i]);
 }
 
-status_t PZGBeaconData :: Unflatten(const uint8 *buf, uint32 size)
+status_t PZGBeaconData :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < sizeof(uint32)) return B_BAD_DATA;
 
-   const uint32 itemFlatSize = PZGDatabaseStateInfo::FlattenedSize();
-   const uint32 newNumItems  = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(buf)); buf += sizeof(uint32); size -= sizeof(uint32);
-   if (size < (newNumItems*itemFlatSize)) return B_BAD_DATA;
+   UncheckedDataUnflattener unflat(buf, size);
+   const uint32 newNumItems = unflat.ReadInt32();
+   if (unflat.GetNumBytesAvailable() < (newNumItems*PZGDatabaseStateInfo::FlattenedSize())) return B_BAD_DATA;
 
    MRETURN_ON_ERROR(_dbis.EnsureSize(newNumItems, true));
-
-   for (uint32 i=0; i<newNumItems; i++)
-   {
-      MRETURN_ON_ERROR(_dbis[i].Unflatten(buf, itemFlatSize));
-      buf += itemFlatSize; size -= itemFlatSize;
-   }
-   return B_NO_ERROR;
+   for (uint32 i=0; i<newNumItems; i++) MRETURN_ON_ERROR(unflat.ReadFlat(_dbis[i]));
+   return unflat.GetStatus();
 }
 
 PZGBeaconDataRef GetBeaconDataFromPool()
