@@ -28,8 +28,8 @@ public:
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
    static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
 
-   void Flatten(uint8 *buffer) const;
-   status_t Unflatten(const uint8 *buf, uint32 size);
+   void Flatten(uint8 * buffer, uint32 flatSize) const;
+   status_t Unflatten(const uint8 * buf, uint32 size);
 
    void PrintToStream() const;
    String ToString() const;

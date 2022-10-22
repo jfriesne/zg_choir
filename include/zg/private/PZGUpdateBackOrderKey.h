@@ -35,9 +35,9 @@ public:
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
    static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return ZGPeerID::FlattenedSize() + sizeof(_whichDatabase) + sizeof(_updateID);}
 
-   void Flatten(uint8 * buf) const
+   void Flatten(uint8 * buf, uint32 flatSize) const
    {
-      UncheckedDataFlattener flat(buf);
+      DataFlattener flat(buf, flatSize);
       flat.WriteFlat(_targetPeerID);
       flat.WriteInt32(_whichDatabase);
       flat.WriteInt64(_updateID);
@@ -45,9 +45,7 @@ public:
 
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
-      if (size < FlattenedSize()) return B_BAD_DATA;
-
-      UncheckedDataUnflattener unflat(buffer, size);
+      DataUnflattener unflat(buffer, size);
       MRETURN_ON_ERROR(unflat.ReadFlat(_targetPeerID));
       _whichDatabase = unflat.ReadInt32();
       _updateID      = unflat.ReadInt64();

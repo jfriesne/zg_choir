@@ -29,7 +29,7 @@ public:
    virtual bool IsFixedSize() const {return false;}
    virtual uint32 TypeCode() const {return PZG_DATABASE_UPDATE_TYPE_CODE;}
    virtual uint32 FlattenedSize() const;
-   virtual void Flatten(uint8 *buffer) const;
+   virtual void Flatten(uint8 * buffer, uint32 flatSize) const;
    virtual status_t Unflatten(const uint8 *buf, uint32 size);
 
    void PrintToStream() const;

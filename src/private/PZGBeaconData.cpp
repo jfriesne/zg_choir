@@ -5,9 +5,9 @@
 namespace zg_private
 {
 
-void PZGBeaconData :: Flatten(uint8 * buffer) const
+void PZGBeaconData :: Flatten(uint8 * buffer, uint32 flatSize) const
 {
-   UncheckedDataFlattener flat(buffer);
+   DataFlattener flat(buffer, flatSize);
    flat.WriteInt32(_dbis.GetNumItems());
    for (uint32 i=0; i<_dbis.GetNumItems(); i++) flat.WriteFlat(_dbis[i]);
 }

@@ -23,7 +23,7 @@ public:
    virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PEER_INFO_TYPE_CODE;}
    virtual uint32 FlattenedSize() const;
 
-   virtual void Flatten(uint8 *buffer) const;
+   virtual void Flatten(uint8 * buffer, uint32 flatSize) const;
    virtual status_t Unflatten(const uint8 *buf, uint32 size);
 
    void PrintToStream() const;
@@ -53,7 +53,7 @@ public:
       static MUSCLE_CONSTEXPR bool IsFixedSize() {return true;}
       static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(uint16)+sizeof(uint16)+sizeof(uint32)+sizeof(uint32);}  // the second uint16 is just reserved/padding for now
 
-      void Flatten(uint8 *buffer) const;
+      void Flatten(uint8 * buffer, uint32 flatSize) const;
       status_t Unflatten(const uint8 *buf, uint32 size);
 
       uint32 CalculateChecksum() const;

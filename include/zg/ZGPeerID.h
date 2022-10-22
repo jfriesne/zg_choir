@@ -112,10 +112,11 @@ public:
 
    /** Copies this object into an endian-neutral flattened buffer.
     *  @param buffer Points to an array of at least FlattenedSize() bytes.
+    *  @param flatSize the result of a recent call to FlattenedSize(), for convenience.
     */
-   void Flatten(uint8 * buffer) const
+   void Flatten(uint8 * buffer, uint32 flatSize) const
    {
-      UncheckedDataFlattener flat(buffer);
+      DataFlattener flat(buffer, flatSize);
       flat.WriteInt64(_highBits);
       flat.WriteInt64(_lowBits);
    }
@@ -127,9 +128,7 @@ public:
     */
    status_t Unflatten(const uint8 * buffer, uint32 size)
    {
-      if (size < FlattenedSize()) return B_BAD_DATA;
-
-      UncheckedDataUnflattener unflat(buffer, size);
+      DataUnflattener unflat(buffer, size);
       _highBits = unflat.ReadInt64();
       _lowBits  = unflat.ReadInt64();
       return unflat.GetStatus();

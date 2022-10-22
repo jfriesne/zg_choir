@@ -70,9 +70,9 @@ public:
    static uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(uint32) + sizeof(uint32);}
    uint32 CalculateChecksum() const {return _peerID.CalculateChecksum()+_versionCode+_messageID;}
 
-   void Flatten(uint8 * buffer) const
+   void Flatten(uint8 * buffer, uint32 flatSize) const
    {
-      UncheckedDataFlattener flat(buffer);
+      DataFlattener flat(buffer, flatSize);
       flat.WriteFlat(_peerID);
       flat.WriteInt32(_versionCode);
       flat.WriteInt32(_messageID);

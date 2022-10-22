@@ -38,9 +38,9 @@ PZGDatabaseStateInfo & PZGDatabaseStateInfo :: operator=(const PZGDatabaseStateI
    return *this;
 }
 
-void PZGDatabaseStateInfo :: Flatten(uint8 * buf) const
+void PZGDatabaseStateInfo :: Flatten(uint8 * buf, uint32 flatSize) const
 {
-   UncheckedDataFlattener flat(buf);
+   DataFlattener flat(buf, flatSize);
    flat.WriteInt64(_currentDatabaseStateID);
    flat.WriteInt64(_oldestDatabaseIDInLog);
    flat.WriteInt32(_dbChecksum);
@@ -50,11 +50,11 @@ status_t PZGDatabaseStateInfo :: Unflatten(const uint8 * buf, uint32 size)
 {
    if (size < FlattenedSize()) return B_BAD_DATA;
 
-   UncheckedDataUnflattener unflat(buf, size);
+   DataUnflattener unflat(buf, size);
    _currentDatabaseStateID = unflat.ReadInt64();
    _oldestDatabaseIDInLog  = unflat.ReadInt64();
    _dbChecksum             = unflat.ReadInt32();
-   return unflat.GetStatus();;
+   return unflat.GetStatus();
 }
    
 void PZGDatabaseStateInfo :: PrintToStream() const

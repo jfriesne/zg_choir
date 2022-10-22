@@ -101,10 +101,9 @@ uint32 PZGDatabaseUpdate :: FlattenedSizeNotIncludingPayload() const
           sizeof(uint32)                   ; /* this will be updateBuf.FlattenedSize() */
 }
 
-void PZGDatabaseUpdate :: Flatten(uint8 *buffer) const
+void PZGDatabaseUpdate :: Flatten(uint8 * buffer, uint32 flatSize) const
 {
-
-   UncheckedDataFlattener flat(buffer);
+   DataFlattener flat(buffer, flatSize);
    flat.WriteInt32(PZG_DATABASE_UPDATE_TYPE_CODE);
    flat.WriteInt8(_updateType);
    flat.WriteInt8(0);  /* this field is reserved for now */

@@ -75,12 +75,12 @@ uint32 PZGHeartbeatPacket :: FlattenedSize() const
    return ret;
 }
 
-void PZGHeartbeatPacket :: Flatten(uint8 * buf) const
+void PZGHeartbeatPacket :: Flatten(uint8 * buf, uint32 flatSize) const
 {
    const uint32 opListItemCount = _orderedPeersList.GetNumItems();
    const uint32 attribBufSize   = _peerAttributesBuf() ? _peerAttributesBuf()->GetNumBytes() : 0;
 
-   UncheckedDataFlattener flat(buf);
+   DataFlattener flat(buf, flatSize);
    flat.WriteInt32(PZG_HEARTBEAT_PACKET_TYPE_CODE);
    flat.WriteInt32(_heartbeatPacketID);
    flat.WriteInt32(_versionCode);
