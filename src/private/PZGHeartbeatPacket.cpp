@@ -93,7 +93,7 @@ void PZGHeartbeatPacket :: Flatten(uint8 * buf, uint32 flatSize) const
    flat.WriteInt16(opListItemCount);  // yes, 16 bits is correct!
    flat.WriteInt16(attribBufSize);    // yes, 16 bits is correct!
    flat.WriteInt16(0); /* reserved for now */
-   for (uint32 i=0; i<opListItemCount; i++) flat.WriteFlatWithoutLengthPrefix(*_orderedPeersList[i]());  // receiver will figure out the lengths from the restored PeerInfo objects
+   for (uint32 i=0; i<opListItemCount; i++) flat.WriteFlat(*_orderedPeersList[i]());  // receiver will figure out the lengths from the restored PeerInfo objects
    if (attribBufSize > 0) flat.WriteBytes(*_peerAttributesBuf());
    /** Deliberately not flattening _peerAttributesMsg as it is redundant with _peerAttributesBuf */
 }
@@ -134,8 +134,7 @@ status_t PZGHeartbeatPacket :: Unflatten(const uint8 * buf, uint32 size)
    {
        PZGHeartbeatPeerInfoRef newPIRef = GetPZGHeartbeatPeerInfoFromPool();
        MRETURN_OOM_ON_NULL(newPIRef());
-       MRETURN_ON_ERROR(newPIRef()->Unflatten(unflat.GetCurrentReadPointer(), unflat.GetNumBytesAvailable()));
-       MRETURN_ON_ERROR(unflat.SeekRelative(newPIRef()->FlattenedSize()));  // move past the peerInfo bytes, now that we know how many there are
+       MRETURN_ON_ERROR(unflat.ReadFlat(*newPIRef()));
        MRETURN_ON_ERROR(_orderedPeersList.AddTail(newPIRef));
    }
    
