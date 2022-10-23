@@ -1,5 +1,4 @@
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zg/private/PZGBeaconData.h"
 
 namespace zg_private
@@ -12,11 +11,8 @@ void PZGBeaconData :: Flatten(uint8 * buffer, uint32 flatSize) const
    for (uint32 i=0; i<_dbis.GetNumItems(); i++) flat.WriteFlat(_dbis[i]);
 }
 
-status_t PZGBeaconData :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGBeaconData :: Unflatten(DataUnflattener & unflat)
 {
-   if (size < sizeof(uint32)) return B_BAD_DATA;
-
-   UncheckedDataUnflattener unflat(buf, size);
    const uint32 newNumItems = unflat.ReadInt32();
    if (unflat.GetNumBytesAvailable() < (newNumItems*PZGDatabaseStateInfo::FlattenedSize())) return B_BAD_DATA;
 

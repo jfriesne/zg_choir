@@ -663,7 +663,7 @@ void ChoirWindow :: OpenSong()
       {
          QByteArray ba = f.readAll();
          Message songMsg;
-         if (songMsg.Unflatten((const uint8 *) ba.data(), ba.size()).IsOK())
+         if (songMsg.UnflattenFromBytes((const uint8 *) ba.data(), ba.size()).IsOK())
          { 
             MusicSheet temp;
             if (temp.SetFromArchive(DummyConstMessageRef(songMsg)).IsOK())

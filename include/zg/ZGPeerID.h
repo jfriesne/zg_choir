@@ -4,7 +4,6 @@
 #include <string.h>  // for strchr()
 #include "support/Flattenable.h"
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "util/String.h"
 #include "zg/ZGNameSpace.h"
 
@@ -122,13 +121,11 @@ public:
    }
 
    /** Restores this object from an endian-neutral flattened buffer.
-    *  @param buffer Points to an array of (size) bytes
-    *  @param size The number of bytes (buffer) points to (should be at least FlattenedSize())
+    *  @param unflat the DataUnflattener to read bytes from.
     *  @return B_NO_ERROR on success, an error code on failure (size was too small)
     */
-   status_t Unflatten(const uint8 * buffer, uint32 size)
+   status_t Unflatten(DataUnflattener & unflat)
    {
-      DataUnflattener unflat(buffer, size);
       _highBits = unflat.ReadInt64();
       _lowBits  = unflat.ReadInt64();
       return unflat.GetStatus();

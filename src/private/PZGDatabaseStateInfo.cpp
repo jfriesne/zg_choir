@@ -1,5 +1,4 @@
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zg/private/PZGDatabaseStateInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -46,11 +45,8 @@ void PZGDatabaseStateInfo :: Flatten(uint8 * buf, uint32 flatSize) const
    flat.WriteInt32(_dbChecksum);
 }
 
-status_t PZGDatabaseStateInfo :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGDatabaseStateInfo :: Unflatten(DataUnflattener & unflat)
 {
-   if (size < FlattenedSize()) return B_BAD_DATA;
-
-   DataUnflattener unflat(buf, size);
    _currentDatabaseStateID = unflat.ReadInt64();
    _oldestDatabaseIDInLog  = unflat.ReadInt64();
    _dbChecksum             = unflat.ReadInt32();

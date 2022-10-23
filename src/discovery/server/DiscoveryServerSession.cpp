@@ -146,7 +146,7 @@ int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*recei
          LogTime(MUSCLE_LOG_TRACE, "Received " INT32_FORMAT_SPEC " bytes of discovery query data from %s\n", bytesRead, iap.ToString()());
 
          MessageRef msg = GetMessageFromPool();
-         if ((msg())&&(msg()->Unflatten(_receiveBuffer()->GetBuffer(), bytesRead).IsOK()))
+         if ((msg())&&(msg()->UnflattenFromBytes(_receiveBuffer()->GetBuffer(), bytesRead).IsOK()))
          {
             const uint64 pongDelayMicros = _master->HandleDiscoveryPing(msg, iap);
             if (pongDelayMicros != MUSCLE_TIME_NEVER)

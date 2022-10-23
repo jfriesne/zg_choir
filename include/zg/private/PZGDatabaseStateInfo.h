@@ -29,7 +29,7 @@ public:
    static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
 
    void Flatten(uint8 * buffer, uint32 flatSize) const;
-   status_t Unflatten(const uint8 * buf, uint32 size);
+   status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;
    String ToString() const;

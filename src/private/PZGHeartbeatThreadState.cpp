@@ -467,7 +467,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
-   if (newHB()->Unflatten(_rawScratchBuf.GetBuffer(), _rawScratchBuf.GetNumBytes()).IsError())
+   if (newHB()->UnflattenFromByteBuffer(_rawScratchBuf).IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Couldn't unflatten PZGHeartbeatPacket from " UINT32_FORMAT_SPEC " bytes of uncompressed data!\n", sourceIAP.ToString()(), _rawScratchBuf.GetNumBytes());
       return PZGHeartbeatPacketWithMetaDataRef();

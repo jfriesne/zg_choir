@@ -1,5 +1,4 @@
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zg/private/PZGHeartbeatPacket.h"
 #include "zg/private/PZGConstants.h"  // for PeerInfoToString()
 #include "zlib/ZLibUtilityFunctions.h"
@@ -98,16 +97,15 @@ void PZGHeartbeatPacket :: Flatten(uint8 * buf, uint32 flatSize) const
    /** Deliberately not flattening _peerAttributesMsg as it is redundant with _peerAttributesBuf */
 }
 
-status_t PZGHeartbeatPacket :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGHeartbeatPacket :: Unflatten(DataUnflattener & unflat)
 {
    const uint32 staticBytesNeeded = FlattenedSizeNotIncludingVariableLengthData();
-   if (size < staticBytesNeeded)
+   if (unflat.GetNumBytesAvailable() < staticBytesNeeded)
    {
-      LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Packet is too short for static header (" UINT32_FORMAT_SPEC " < " UINT32_FORMAT_SPEC ")\n", size, staticBytesNeeded);
+      LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatPacket::Unflatten():  Packet is too short for static header (" UINT32_FORMAT_SPEC " < " UINT32_FORMAT_SPEC ")\n", unflat.GetNumBytesAvailable(), staticBytesNeeded);
       return B_BAD_DATA;
    }
 
-   UncheckedDataUnflattener unflat(buf, size);
    const uint32 typeCode = unflat.ReadInt32();
    if (typeCode != PZG_HEARTBEAT_PACKET_TYPE_CODE)
    {

@@ -26,7 +26,7 @@ public:
    virtual uint32 FlattenedSize() const   {return sizeof(uint32) + (_dbis.GetNumItems()*PZGDatabaseStateInfo::FlattenedSize());}
 
    virtual void Flatten(uint8 * buffer, uint32 flatSize) const;
-   virtual status_t Unflatten(const uint8 *buf, uint32 size);
+   virtual status_t Unflatten(DataUnflattener & unflat);
 
    uint32 CalculateChecksum() const;
 

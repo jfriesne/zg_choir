@@ -3,7 +3,6 @@
 
 #include "support/PseudoFlattenable.h"
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zg/ZGPeerID.h"
 
 namespace zg_private
@@ -43,9 +42,8 @@ public:
       flat.WriteInt64(_updateID);
    }
 
-   status_t Unflatten(const uint8 * buffer, uint32 size)
+   status_t Unflatten(DataUnflattener & unflat)
    {
-      DataUnflattener unflat(buffer, size);
       MRETURN_ON_ERROR(unflat.ReadFlat(_targetPeerID));
       _whichDatabase = unflat.ReadInt32();
       _updateID      = unflat.ReadInt64();

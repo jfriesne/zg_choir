@@ -1,5 +1,4 @@
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zg/private/PZGHeartbeatPeerInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -26,11 +25,8 @@ void PZGHeartbeatPeerInfo :: Flatten(uint8 * buf, uint32 flatSize) const
    for (uint32 i=0; i<_timings.GetNumItems(); i++) flat.WriteFlat(_timings[i]);
 }
 
-status_t PZGHeartbeatPeerInfo :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGHeartbeatPeerInfo :: Unflatten(DataUnflattener & unflat)
 {
-   if (size < (_peerID.FlattenedSize()+sizeof(uint32))) return B_BAD_DATA;
-
-   UncheckedDataUnflattener unflat(buf, size);
    MRETURN_ON_ERROR(unflat.ReadFlat(_peerID));
 
    const uint32 numTimings = unflat.ReadInt32();
@@ -50,11 +46,8 @@ void PZGHeartbeatPeerInfo :: PZGTimingInfo :: Flatten(uint8 * buf, uint32 flatSi
    flat.WriteInt32(_dwellTimeMicros);
 }
 
-status_t PZGHeartbeatPeerInfo :: PZGTimingInfo :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGHeartbeatPeerInfo :: PZGTimingInfo :: Unflatten(DataUnflattener & unflat)
 {
-   if (size < FlattenedSize()) return B_BAD_DATA;
-
-   UncheckedDataUnflattener unflat(buf, size);
    _sourceTag         = unflat.ReadInt16();
    (void)               unflat.ReadInt16();       /* just skip past the two reserved/padding bytes, for now */
    _heartbeatPacketID = unflat.ReadInt32();

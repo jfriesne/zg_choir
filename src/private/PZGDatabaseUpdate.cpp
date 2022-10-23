@@ -1,5 +1,4 @@
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "zlib/ZLibUtilityFunctions.h"
 #include "zg/private/PZGDatabaseUpdate.h"
 
@@ -124,11 +123,8 @@ void PZGDatabaseUpdate :: Flatten(uint8 * buffer, uint32 flatSize) const
    /** Note that _updateMsg is deliberately NOT part of the flattened data! */
 }
 
-status_t PZGDatabaseUpdate :: Unflatten(const uint8 * buf, uint32 size)
+status_t PZGDatabaseUpdate :: Unflatten(DataUnflattener & unflat)
 {
-   if (size < FlattenedSizeNotIncludingPayload()) return B_BAD_DATA;  // buffer is too short for us to use!
-
-   UncheckedDataUnflattener unflat(buf, size);
    const uint32 typeCode = unflat.ReadInt32();
    if (typeCode != PZG_DATABASE_UPDATE_TYPE_CODE)
    {
@@ -166,7 +162,7 @@ status_t PZGDatabaseUpdate :: Unflatten(const uint8 * buf, uint32 size)
       return B_BAD_DATA;
    }
 
-   return B_NO_ERROR;
+   return unflat.GetStatus();
 }
 
 String PZGDatabaseUpdate :: ToString() const

@@ -1,7 +1,6 @@
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/PacketTunnelIOGateway.h"
 #include "util/DataFlattener.h"
-#include "util/DataUnflattener.h"
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
@@ -78,11 +77,8 @@ public:
       flat.WriteInt32(_messageID);
    }
 
-   status_t Unflatten(const uint8 * buffer, uint32 size)
+   status_t Unflatten(DataUnflattener & unflat)
    {
-      if (size < FlattenedSize()) return B_BAD_DATA;
-
-      UncheckedDataUnflattener unflat(buffer, size);
       MRETURN_ON_ERROR(unflat.ReadFlat(_peerID));
       _versionCode = unflat.ReadInt32();
       _messageID   = unflat.ReadInt32();
