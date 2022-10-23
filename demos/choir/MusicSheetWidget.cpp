@@ -193,7 +193,7 @@ int MusicSheetWidget :: GetSeekPointX() const
    else
    {
       int64 timeOffset = _networkTimeProvider->GetNetworkTime64()-_playbackState.GetNetworkStartTimeMicros();
-      int64 loopTime = ((_musicSheet())&&(_playbackState.IsLoop())) ? (_musicSheet()->GetSongLengthInChords(false)*_playbackState.GetMicrosPerChord()) : 0;
+      const int64 loopTime = ((_musicSheet())&&(_playbackState.IsLoop())) ? (_musicSheet()->GetSongLengthInChords(false)*_playbackState.GetMicrosPerChord()) : 0;
       if (loopTime > 0) timeOffset %= loopTime;
       return GetXForMicrosecondsOffset(timeOffset);
    }
@@ -211,7 +211,7 @@ void MusicSheetWidget :: mousePressEvent(QMouseEvent * e)
    if (e->button() == Qt::LeftButton)
    {
       const QPoint p = e->pos();
-      const uint32 chordIdx = GetChordIndexForX(p.x());
+      const uint32 chordIdx = _playbackState.IsPaused() ? GetChordIndexForX(p.x()) : GetSeekPointChordIndex();
 
       if (p.y() >= _titleHeightPixels)
       {
