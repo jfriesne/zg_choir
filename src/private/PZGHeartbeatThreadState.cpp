@@ -198,8 +198,8 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    // Write out the static header bytes
    const uint32 defBufSize = _deflatedScratchBuf.GetNumBytes();
    uint8 * dsb = _deflatedScratchBuf.GetBuffer();
-   muscleCopyOut(dsb, B_HOST_TO_LENDIAN_INT16(HB_HEADER_MAGIC));     // the first two bytes are magic bytes, used for quick bogus-packet filtering
-   muscleCopyOut(dsb+(2*sizeof(uint16))+sizeof(uint64), B_HOST_TO_LENDIAN_INT32(CalculateChecksum(dsb+HB_HEADER_SIZE, defBufSize-HB_HEADER_SIZE)));  // so the receiver can check if the zlib data got corrupted somehow
+   DefaultEndianConverter::Export((uint16)HB_HEADER_MAGIC, dsb);     // the first two bytes are magic bytes, used for quick bogus-packet filtering
+   DefaultEndianConverter::Export(CalculateChecksum(dsb+HB_HEADER_SIZE, defBufSize-HB_HEADER_SIZE), dsb+(2*sizeof(uint16))+sizeof(uint64)); // so the receiver can check if the zlib data got corrupted somehow
 
    for (uint32 i=0; i<_multicastDataIOs.GetNumItems(); i++)
    {
@@ -209,8 +209,8 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       if (tag)
       {
          // Write out the dynamic (per-interface) header bytes
-         muscleCopyOut(dsb+(1*sizeof(uint16)), B_HOST_TO_LENDIAN_INT16(*tag)); // so when we get heartbeats back from a peer later we know which of our interfaces the included timing info corresponds to
-         muscleCopyOut(dsb+(2*sizeof(uint16)), GetNetworkTime64ForRunTime64(GetRunTime64())); // network-clock-at-send-time
+         DefaultEndianConverter::Export(*tag, dsb+(1*sizeof(uint16))); // so when we get heartbeats back from a peer later we know which of our interfaces the included timing info corresponds to
+         DefaultEndianConverter::Export(GetNetworkTime64ForRunTime64(GetRunTime64()), dsb+(2*sizeof(uint16))); // network-clock-at-send-time
 
          const int32 numBytesSent = dio->Write(dsb, defBufSize);
          if (numBytesSent != (int32)defBufSize) LogTime(MUSCLE_LOG_ERROR, "Error sending heartbeat to [%s], sent " INT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC " bytes!\n", dest.ToString()(), numBytesSent, defBufSize);
@@ -439,14 +439,14 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    }
 
    const uint8 * dsb = defBuf.GetBuffer();
-   const uint16 hbMagic = B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(dsb));
+   const uint16 hbMagic = DefaultEndianConverter::Import<uint16>(dsb);
    if (hbMagic != HB_HEADER_MAGIC)
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  bad header magic:  expected %u, got %u\n", sourceIAP.ToString()(), HB_HEADER_MAGIC, hbMagic);
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
-   const uint32 hisChecksum = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(dsb+(2*sizeof(uint16))+sizeof(uint64)));
+   const uint32 hisChecksum = DefaultEndianConverter::Import<uint32>(dsb+(2*sizeof(uint16))+sizeof(uint64));
    const uint32 myChecksum  = CalculateChecksum(dsb+HB_HEADER_SIZE, numBytes-HB_HEADER_SIZE);
    if (hisChecksum != myChecksum) 
    {
@@ -473,8 +473,8 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
       return PZGHeartbeatPacketWithMetaDataRef();
    }
 
-   newHB()->SetNetworkSendTimeMicros(B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(dsb+sizeof(uint16)+sizeof(uint16))));  // sent outside of the zlib-compression, for better timestamp-accuracy
-   newHB()->SetPacketSource(sourceIAP, B_LENDIAN_TO_HOST_INT16(muscleCopyIn<uint16>(dsb+sizeof(uint16))));
+   newHB()->SetNetworkSendTimeMicros(DefaultEndianConverter::Import<uint64>(dsb+sizeof(uint16)+sizeof(uint16)));  // sent outside of the zlib-compression, for better timestamp-accuracy
+   newHB()->SetPacketSource(sourceIAP, DefaultEndianConverter::Import<uint16>(dsb+sizeof(uint16)));
    newHB()->SetLocalReceiveTimeMicros(localReceiveTimeMicros);
    return newHB;
 }

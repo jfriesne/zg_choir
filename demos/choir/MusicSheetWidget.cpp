@@ -158,11 +158,12 @@ void MusicSheetWidget :: paintEvent(QPaintEvent * /*event*/)
       }
    }
 
-   if ((_musicSheet())&&(_ghostChordIndex != MUSCLE_NO_LIMIT)&&(_ghostNoteIndex != MUSCLE_NO_LIMIT)) 
+   const uint32 vpci = _playbackState.IsPaused() ? _ghostChordIndex : GetSeekPointChordIndex();
+   if ((_musicSheet())&&(vpci != MUSCLE_NO_LIMIT)&&(_ghostNoteIndex != MUSCLE_NO_LIMIT)) 
    {
       const uint64 noteBit    = (1LL<<_ghostNoteIndex);
-      const uint64 totalChord = noteBit | _musicSheet()->GetChordsTable()[_ghostChordIndex];
-      (void) DrawChord(p, _ghostChordIndex, noteBit, false, GetStemDirectionForChord(totalChord), 0.25);
+      const uint64 totalChord = noteBit | _musicSheet()->GetChordsTable()[vpci];
+      (void) DrawChord(p, vpci, noteBit, false, GetStemDirectionForChord(totalChord), 0.25);
    }
 
    const int seekPointX = GetSeekPointX();

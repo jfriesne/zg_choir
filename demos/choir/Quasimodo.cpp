@@ -50,7 +50,7 @@ QByteArray ReadWaveFileDataFromResource(const QString & waveFilePath)
             if (file.read(ret.data(), numBytesToLoad) == numBytesToLoad) 
             {
                int16 * buf = (int16 *) ret.data();
-               for (uint32 i=0; i<numSamplesToLoad; i++) buf[i] = ((int16)B_LENDIAN_TO_HOST_INT16(buf[i]))/2;
+               for (uint32 i=0; i<numSamplesToLoad; i++) buf[i] = LittleEndianConverter::Import<int16>(&buf[i])/2;  // yes, always little-endian, because WAV!
                return ret;
             }
             else LogTime(MUSCLE_LOG_ERROR, "Unable to read " UINT32_FORMAT_SPEC " bytes of audio data from [%s]\n", numBytesToLoad,  waveFilePath.toUtf8().constData());
