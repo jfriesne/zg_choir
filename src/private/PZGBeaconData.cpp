@@ -1,12 +1,10 @@
-#include "util/DataFlattener.h"
 #include "zg/private/PZGBeaconData.h"
 
 namespace zg_private
 {
 
-void PZGBeaconData :: Flatten(uint8 * buffer, uint32 flatSize) const
+void PZGBeaconData :: Flatten(DataFlattener flat) const
 {
-   DataFlattener flat(buffer, flatSize);
    flat.WriteInt32(_dbis.GetNumItems());
    for (uint32 i=0; i<_dbis.GetNumItems(); i++) flat.WriteFlat(_dbis[i]);
 }

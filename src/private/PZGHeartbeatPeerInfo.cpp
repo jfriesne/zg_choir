@@ -1,4 +1,3 @@
-#include "util/DataFlattener.h"
 #include "zg/private/PZGHeartbeatPeerInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -17,9 +16,8 @@ uint32 PZGHeartbeatPeerInfo :: FlattenedSize() const
    return ZGPeerID::FlattenedSize() + sizeof(uint32) + (_timings.GetNumItems()*PZGTimingInfo::FlattenedSize());  // uint32 so we can store a list-size count
 }
 
-void PZGHeartbeatPeerInfo :: Flatten(uint8 * buf, uint32 flatSize) const
+void PZGHeartbeatPeerInfo :: Flatten(DataFlattener flat) const
 {
-   DataFlattener flat(buf, flatSize);
    flat.WriteFlat(_peerID);
    flat.WriteInt32(_timings.GetNumItems());
    for (uint32 i=0; i<_timings.GetNumItems(); i++) flat.WriteFlat(_timings[i]);
@@ -37,9 +35,8 @@ status_t PZGHeartbeatPeerInfo :: Unflatten(DataUnflattener & unflat)
    return unflat.GetStatus();
 }
 
-void PZGHeartbeatPeerInfo :: PZGTimingInfo :: Flatten(uint8 * buf, uint32 flatSize) const
+void PZGHeartbeatPeerInfo :: PZGTimingInfo :: Flatten(DataFlattener flat) const
 {
-   DataFlattener flat(buf, flatSize);
    flat.WriteInt16(_sourceTag);
    flat.WriteInt16(0);                   // reserved/padding for now
    flat.WriteInt32(_heartbeatPacketID);

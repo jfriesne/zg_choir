@@ -24,7 +24,7 @@ public:
    virtual bool IsFixedSize() const {return false;}
    virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PACKET_TYPE_CODE;}
    virtual uint32 FlattenedSize() const;
-   virtual void Flatten(uint8 * buffer, uint32 flatSize) const;
+   virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;

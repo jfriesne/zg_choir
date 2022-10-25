@@ -182,7 +182,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    }
 
    MRETURN_ON_ERROR(_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false));
-   hb.Flatten(_rawScratchBuf.GetBuffer(), _rawScratchBuf.GetNumBytes());
+   hb.FlattenToByteBuffer(_rawScratchBuf);
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down
    status_t ret;

@@ -182,7 +182,7 @@ int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
       if (bufRef())
       {
          const IPAddressAndPort & replyTarget = *_outputData.GetFirstKey();
-         next.GetData()()->Flatten(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
+         next.GetData()()->Flatten(DataFlattener(bufRef()->GetBuffer(), bufRef()->GetNumBytes()));
          const int32 bytesSent = SendDataUDP(s, bufRef()->GetBuffer(), bufRef()->GetNumBytes(), false, replyTarget.GetIPAddress(), replyTarget.GetPort());
          if (bytesSent > 0) 
          {

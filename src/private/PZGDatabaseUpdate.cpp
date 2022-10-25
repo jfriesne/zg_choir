@@ -1,4 +1,3 @@
-#include "util/DataFlattener.h"
 #include "zlib/ZLibUtilityFunctions.h"
 #include "zg/private/PZGDatabaseUpdate.h"
 
@@ -100,9 +99,8 @@ uint32 PZGDatabaseUpdate :: FlattenedSizeNotIncludingPayload() const
           sizeof(uint32)                   ; /* this will be updateBuf.FlattenedSize() */
 }
 
-void PZGDatabaseUpdate :: Flatten(uint8 * buffer, uint32 flatSize) const
+void PZGDatabaseUpdate :: Flatten(DataFlattener flat) const
 {
-   DataFlattener flat(buffer, flatSize);
    flat.WriteInt32(PZG_DATABASE_UPDATE_TYPE_CODE);
    flat.WriteInt8(_updateType);
    flat.WriteInt8(0);  /* this field is reserved for now */

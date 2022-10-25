@@ -3,7 +3,6 @@
 
 #include <string.h>  // for strchr()
 #include "support/Flattenable.h"
-#include "util/DataFlattener.h"
 #include "util/String.h"
 #include "zg/ZGNameSpace.h"
 
@@ -110,12 +109,10 @@ public:
    uint32 CalculateChecksum() const {return CalculateChecksumForUint64(_highBits) + (3*CalculateChecksumForUint64(_lowBits));}
 
    /** Copies this object into an endian-neutral flattened buffer.
-    *  @param buffer Points to an array of at least FlattenedSize() bytes.
-    *  @param flatSize the result of a recent call to FlattenedSize(), for convenience.
+    *  @param flat the DataFlattener to use to write out bytes
     */
-   void Flatten(uint8 * buffer, uint32 flatSize) const
+   void Flatten(DataFlattener flat) const
    {
-      DataFlattener flat(buffer, flatSize);
       flat.WriteInt64(_highBits);
       flat.WriteInt64(_lowBits);
    }

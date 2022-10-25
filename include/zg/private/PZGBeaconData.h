@@ -25,7 +25,7 @@ public:
    virtual uint32 TypeCode()      const   {return PZG_BEACON_DATA;}
    virtual uint32 FlattenedSize() const   {return sizeof(uint32) + (_dbis.GetNumItems()*PZGDatabaseStateInfo::FlattenedSize());}
 
-   virtual void Flatten(uint8 * buffer, uint32 flatSize) const;
+   virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
 
    uint32 CalculateChecksum() const;

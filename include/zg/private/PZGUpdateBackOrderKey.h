@@ -2,7 +2,6 @@
 #define PZGUpdateBackOrderKey_h
 
 #include "support/PseudoFlattenable.h"
-#include "util/DataFlattener.h"
 #include "zg/ZGPeerID.h"
 
 namespace zg_private
@@ -34,9 +33,8 @@ public:
    static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
    static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return ZGPeerID::FlattenedSize() + sizeof(_whichDatabase) + sizeof(_updateID);}
 
-   void Flatten(uint8 * buf, uint32 flatSize) const
+   void Flatten(DataFlattener flat) const
    {
-      DataFlattener flat(buf, flatSize);
       flat.WriteFlat(_targetPeerID);
       flat.WriteInt32(_whichDatabase);
       flat.WriteInt64(_updateID);

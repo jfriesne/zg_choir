@@ -1,4 +1,3 @@
-#include "util/DataFlattener.h"
 #include "zg/private/PZGDatabaseStateInfo.h"
 #include "zlib/ZLibUtilityFunctions.h"
 
@@ -37,9 +36,8 @@ PZGDatabaseStateInfo & PZGDatabaseStateInfo :: operator=(const PZGDatabaseStateI
    return *this;
 }
 
-void PZGDatabaseStateInfo :: Flatten(uint8 * buf, uint32 flatSize) const
+void PZGDatabaseStateInfo :: Flatten(DataFlattener flat) const
 {
-   DataFlattener flat(buf, flatSize);
    flat.WriteInt64(_currentDatabaseStateID);
    flat.WriteInt64(_oldestDatabaseIDInLog);
    flat.WriteInt32(_dbChecksum);

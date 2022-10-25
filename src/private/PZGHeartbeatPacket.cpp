@@ -1,4 +1,3 @@
-#include "util/DataFlattener.h"
 #include "zg/private/PZGHeartbeatPacket.h"
 #include "zg/private/PZGConstants.h"  // for PeerInfoToString()
 #include "zlib/ZLibUtilityFunctions.h"
@@ -74,12 +73,11 @@ uint32 PZGHeartbeatPacket :: FlattenedSize() const
    return ret;
 }
 
-void PZGHeartbeatPacket :: Flatten(uint8 * buf, uint32 flatSize) const
+void PZGHeartbeatPacket :: Flatten(DataFlattener flat) const
 {
    const uint32 opListItemCount = _orderedPeersList.GetNumItems();
    const uint32 attribBufSize   = _peerAttributesBuf() ? _peerAttributesBuf()->GetNumBytes() : 0;
 
-   DataFlattener flat(buf, flatSize);
    flat.WriteInt32(PZG_HEARTBEAT_PACKET_TYPE_CODE);
    flat.WriteInt32(_heartbeatPacketID);
    flat.WriteInt32(_versionCode);

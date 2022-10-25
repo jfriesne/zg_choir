@@ -1,6 +1,5 @@
 #include "dataio/UDPSocketDataIO.h"
 #include "iogateway/PacketTunnelIOGateway.h"
-#include "util/DataFlattener.h"
 #include "util/NetworkUtilityFunctions.h"
 
 #include "zg/ZGConstants.h"
@@ -69,9 +68,8 @@ public:
    static uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(uint32) + sizeof(uint32);}
    uint32 CalculateChecksum() const {return _peerID.CalculateChecksum()+_versionCode+_messageID;}
 
-   void Flatten(uint8 * buffer, uint32 flatSize) const
+   void Flatten(DataFlattener flat) const
    {
-      DataFlattener flat(buffer, flatSize);
       flat.WriteFlat(_peerID);
       flat.WriteInt32(_versionCode);
       flat.WriteInt32(_messageID);
