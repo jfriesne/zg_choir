@@ -31,7 +31,7 @@ public:
    uint32 HashCode() const {return _peerID.HashCode()+_source.HashCode();}
 
    String ToString() const {return String("{%1 -> %2}").Arg(_source.ToString()).Arg(_peerID.ToString());}
-  
+
 private:
    IPAddressAndPort _source;
    ZGPeerID _peerID;

@@ -15,7 +15,7 @@ namespace zg {
 class ClientConnectorImplementation;
 
 /** Abstract front-end to ZG's TCP-client-connector logic.
-  * It handles setting up, maintaining, and (if necessary) reconnecting a TCP connection to one of the ZG system's servers. 
+  * It handles setting up, maintaining, and (if necessary) reconnecting a TCP connection to one of the ZG system's servers.
   * Any required functionality while the TCP connection is active is delegated to a concrete subclass.
   */
 class ClientConnector : public ICallbackSubscriber, public INetworkMessageSender, public INetworkTimeProvider, public RefCountable

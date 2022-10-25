@@ -21,7 +21,7 @@ public:
    /** Destructor.  Calls SetUDPMulticastTransceiver(NULL) to auto-unregister this object from the UDPMulticastTransceiver if necessary. */
    virtual ~IUDPMulticastNotificationTarget() {SetUDPMulticastTransceiver(NULL);}
 
-   /** Unregisters this object from any UDPMulticastTransceiver it's currently registered to 
+   /** Unregisters this object from any UDPMulticastTransceiver it's currently registered to
      * (if necessary) and then registers it with (multicastTransceiver).
      * @param multicastTransceiver pointer to the UDPMulticastTransceiver to register with, or NULL to unregister only.
      * @note if this IUDPMulticastNotificationTarget is already registered with (multicastTransceiver),

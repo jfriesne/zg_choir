@@ -34,7 +34,7 @@ enum {
 class ZGPeerSettings
 {
 public:
-   /** Constructor. 
+   /** Constructor.
      * @param signature A developer-chosen string identifying the program this object is a part of.  All peers in a system must use the same signature string.
      * @param systemName Name of the system this peer will participate in.  All peers in a system by definition use the same system name.
      * @param numDatabases The number of replicated databases this system should maintain.
@@ -71,7 +71,7 @@ public:
    /** Returns true iff this ZG system is meant to be contained entirely within a single host computer (as specified in our constructor) */
    bool IsSystemOnLocalhostOnly()              const {return _systemIsOnLocalhostOnly;}
 
-   /** Returns a reference to this peer's peer-attributes Message (as specified earlier via SetPeerAttributes()).  
+   /** Returns a reference to this peer's peer-attributes Message (as specified earlier via SetPeerAttributes()).
      * May return a NULL reference if no peer-attributes were ever specified.
      */
    const ConstMessageRef & GetPeerAttributes() const {return _optPeerAttributes;}
@@ -111,7 +111,7 @@ public:
      */
    uint32 GetCompatibilityVersionCode() const {return _versionCode;}
 
-   /** Set the peer attributes that should be associated with this peer.  Default is to have no attributes. 
+   /** Set the peer attributes that should be associated with this peer.  Default is to have no attributes.
      * @param peerAttributes Reference to a Message containing our attributes.  Try to keep this small, as a
      *                       zlib-compressed copy of this Message will be included in every heartbeat packet we send!
      */
@@ -155,7 +155,7 @@ public:
 
    /** Returns the current ZG_MULTICAST_BEHAVIOR_* value */
    uint32 GetMulticastBehavior() const {return _multicastBehavior;}
-  
+
    /** Call this to set the maximum number of bytes of RAM the specified database should be allowed
      * to use for its database-update-log records.  If not specified for a given database, a default
      * limit of two megabytes will be used.

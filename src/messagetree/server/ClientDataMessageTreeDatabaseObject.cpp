@@ -2,7 +2,7 @@
 #include "zg/messagetree/server/MessageTreeDatabasePeerSession.h"
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 
-namespace zg 
+namespace zg
 {
 
 // Command codes used internally by ClientDataMessageTreeDatabaseObject implementation
@@ -13,7 +13,7 @@ enum {
 static const String CLIENTDATA_NAME_PATH    = "pth";
 static const String CLIENTDATA_NAME_PAYLOAD = "pay";
 
-ClientDataMessageTreeDatabaseObject :: ClientDataMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
+ClientDataMessageTreeDatabaseObject :: ClientDataMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath)
    : MessageTreeDatabaseObject(session, dbIndex, rootNodePath)
 {
    // empty
@@ -24,7 +24,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
-   
+
    MRETURN_ON_ERROR(MessageTreeDatabaseObject::UploadNodeValue(sharedPath, optPayload, flags, optBefore, optOpTag));
 
    // Also Update the node in our server-local MUSCLE database, so that we can retransmit it later if we need to
@@ -126,7 +126,7 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
          }
       }
 
-      if (nodesToDelete.HasChars()) 
+      if (nodesToDelete.HasChars())
       {
          LogTime(MUSCLE_LOG_INFO, "ClientDataMessageTreeDatabaseObject assuming senior-peer status, flushing nodes for offline peers [%s]\n", nodesToDelete());
          MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
@@ -162,7 +162,7 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
          {
             ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()());
             if (ssmts)
-            { 
+            {
                MessageRef subtreeMsg = GetMessageFromPool();
                if (subtreeMsg())
                {
@@ -180,7 +180,7 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
                      if (replyMsg())
                      {
                         const status_t ret = replyMsg()->AddString(CLIENTDATA_NAME_PATH, sharedPath) | replyMsg()->AddMessage(CLIENTDATA_NAME_PAYLOAD, subtreeMsg);
-                        if (ret.IsError()) 
+                        if (ret.IsError())
                         {
                            LogTime(MUSCLE_LOG_ERROR, "ClientDataMessageTreeDatabaseObject:  Unable to populate CLIENTDATA_COMMAND_LOCALDATA Message!  [%s]\n", ret());
                            return;

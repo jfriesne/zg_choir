@@ -13,7 +13,7 @@
 namespace zg {
 
 enum {
-   UDP_COMMAND_SEND_MULTICAST_PACKET = 1969516660, // 'udpt' 
+   UDP_COMMAND_SEND_MULTICAST_PACKET = 1969516660, // 'udpt'
    UDP_COMMAND_SEND_UNICAST_PACKET
 };
 
@@ -81,7 +81,7 @@ public:
                case UDP_COMMAND_SEND_MULTICAST_PACKET:
                {
                   const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
-                  if (bytesSent > 0) 
+                  if (bytesSent > 0)
                   {
                      ret += bytesSent;
                      if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p sent " INT32_FORMAT_SPEC " bytes of multicast-packet %s\n", this, bytesSent, _multicastIAP.ToString()());
@@ -95,7 +95,7 @@ public:
                   if (m.FindFlat(UDP_NAME_ADDRESS, targetAddress).IsOK())
                   {
                      const int32 bytesSent = udpIO.WriteTo(bufRef()->GetBuffer(), bufRef()->GetNumBytes(), targetAddress);
-                     if (bytesSent > 0) 
+                     if (bytesSent > 0)
                      {
                         ret += bytesSent;
                         if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p sent " INT32_FORMAT_SPEC " bytes of unicast-packet %s\n", this, bytesSent, targetAddress.ToString()());
@@ -121,7 +121,7 @@ private:
    const IPAddressAndPort _multicastIAP;
    const bool _useSimulatedMulticast;
    MulticastUDPClientManagerSession * _manager;
-   
+
    ByteBufferRef _receiveBuffer;
 };
 DECLARE_REFTYPES(MulticastUDPSession);
@@ -130,7 +130,7 @@ DECLARE_REFTYPES(MulticastUDPSession);
 class MulticastUDPClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive, uint32 multicastBehavior, const String & nicNameFilter) 
+   MulticastUDPClientManagerSession(UDPMulticastTransceiverImplementation * imp, const String & transmissionKey, bool enableReceive, uint32 multicastBehavior, const String & nicNameFilter)
       : _imp(imp)
       , _transmissionKey(transmissionKey)
       , _enableReceive(enableReceive)
@@ -156,13 +156,13 @@ public:
    }
 
    virtual void AboutToDetachFromServer()
-   {  
+   {
       EndExistingMulticastUDPSessions();
       AbstractReflectSession::AboutToDetachFromServer();
    }
 
    virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & /*optInterfaceNames*/)
-   {  
+   {
       LogTime(MUSCLE_LOG_DEBUG, "MulticastUDPClientManagerSession:  NetworkInterfacesChanged!  Recreating MulticastUDPSessions...\n");
       EndExistingMulticastUDPSessions();
       AddNewMulticastUDPSessions();
@@ -170,7 +170,7 @@ public:
 
    virtual void ComputerIsAboutToSleep();
    virtual void ComputerJustWokeUp();
- 
+
    void UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes);
 
    virtual void MessageReceivedFromGateway(const MessageRef &, void *);
@@ -210,7 +210,7 @@ private:
    {
       // First, tell any existing MulticastUDPSessions to go away
       for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
-      {  
+      {
          MulticastUDPSession * lds = dynamic_cast<MulticastUDPSession *>(iter.GetValue()());
          if (lds) lds->EndSession();
       }
@@ -243,7 +243,7 @@ private:
             status_t ret;
             MulticastUDPSessionRef msRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
 
-                 if (msRef() == NULL) MWARN_OUT_OF_MEMORY; 
+                 if (msRef() == NULL) MWARN_OUT_OF_MEMORY;
             else if (AddNewSession(msRef).IsOK(ret))
             {
                const int iidx = iap.GetIPAddress().GetInterfaceIndex();
@@ -335,7 +335,7 @@ public:
    }
 
    // Called by the main thread
-   status_t Start(uint32 multicastBehavior, const String & nicNameFilter) 
+   status_t Start(uint32 multicastBehavior, const String & nicNameFilter)
    {
       Stop();  // paranoia
       _multicastBehavior = multicastBehavior;
@@ -344,7 +344,7 @@ public:
    }
 
    // Called by the main thread
-   void Stop() 
+   void Stop()
    {
       (void) ShutdownInternalThread();
       _ioThreadPendingUpdates.Clear();
@@ -444,7 +444,7 @@ private:
       MessageRef msg;
       while(WaitForNextMessageFromOwner(msg, 0).IsOK())
       {
-         if (msg()) 
+         if (msg())
          {
             managerSession->HandleMessageFromOwner(msg);
          }
@@ -471,7 +471,7 @@ void MulticastUDPClientManagerSession :: ComputerIsAboutToSleep() {_imp->ReportS
 void MulticastUDPClientManagerSession :: ComputerJustWokeUp()     {_imp->ReportSleepNotification(false);}
 void MulticastUDPClientManagerSession :: UDPPacketReceived(const IPAddressAndPort & sourceIAP, const ByteBufferRef & packetBytes) {_imp->UDPPacketReceived(sourceIAP, packetBytes);}
 
-UDPMulticastTransceiver :: UDPMulticastTransceiver(ICallbackMechanism * mechanism) 
+UDPMulticastTransceiver :: UDPMulticastTransceiver(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
    , _perSenderMaxBacklogDepth(1)
    , _multicastBehavior(ZG_MULTICAST_BEHAVIOR_AUTO)
@@ -497,7 +497,7 @@ status_t UDPMulticastTransceiver :: Start(const String & transmissionKey, uint32
    _perSenderMaxBacklogDepth = perSenderMaxBacklogDepth;
 
    status_t ret;
-   if (_imp->Start(_multicastBehavior, _nicNameFilter).IsOK(ret)) 
+   if (_imp->Start(_multicastBehavior, _nicNameFilter).IsOK(ret))
    {
       _isActive = true;
       return B_NO_ERROR;
@@ -536,7 +536,7 @@ void UDPMulticastTransceiver :: DispatchCallbacks(uint32 eventTypeBits)
       Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & mainThreadPendingUpdates = _imp->SwapUpdateBuffers();  // safely swaps the contents of _ioThreadPendingUpdates and _mainThreadPendingUpdates
 
       // Notify all the targets of incoming packet
-      for (HashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(mainThreadPendingUpdates); iter.HasData(); iter++) 
+      for (HashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(mainThreadPendingUpdates); iter.HasData(); iter++)
       {
          const IPAddressAndPort & sourceIAP = iter.GetKey();
          const Queue<ByteBufferRef> & bbq = iter.GetValue();
@@ -569,7 +569,7 @@ void UDPMulticastTransceiver :: RegisterTarget(IUDPMulticastNotificationTarget *
    (void) _targets.PutWithDefault(newTarget);
 }
 
-void UDPMulticastTransceiver :: UnregisterTarget(IUDPMulticastNotificationTarget * target) 
+void UDPMulticastTransceiver :: UnregisterTarget(IUDPMulticastNotificationTarget * target)
 {
    (void) _targets.Remove(target);
 }

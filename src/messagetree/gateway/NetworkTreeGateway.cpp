@@ -15,7 +15,7 @@ extern const String _opTagRemoveMap = "_op_rm";  // int32 field; values are (opT
 
 // Command-codes for Messages sent from client to server
 enum {
-   NTG_COMMAND_ADDSUBSCRIPTION = 1852269360,  // 'ngc0' 
+   NTG_COMMAND_ADDSUBSCRIPTION = 1852269360,  // 'ngc0'
    NTG_COMMAND_REMOVESUBSCRIPTION,
    NTG_COMMAND_REMOVEALLSUBSCRIPTIONS,
    NTG_COMMAND_REQUESTNODESUBTREES,
@@ -35,7 +35,7 @@ enum {
 
 // Reply-codes for Messages sent from server to client
 enum {
-   NTG_REPLY_NODEUPDATED = 1852273200,  // 'ngr0' 
+   NTG_REPLY_NODEUPDATED = 1852273200,  // 'ngr0'
    NTG_REPLY_INDEXCLEARED,
    NTG_REPLY_INDEXENTRYINSERTED,
    NTG_REPLY_INDEXENTRYREMOVED,
@@ -62,7 +62,7 @@ ClientSideNetworkTreeGateway :: ClientSideNetworkTreeGateway(INetworkMessageSend
 {
    // empty
 }
-   
+
 ClientSideNetworkTreeGateway :: ~ClientSideNetworkTreeGateway()
 {
    // empty
@@ -280,7 +280,7 @@ ServerSideNetworkTreeGatewaySubscriber :: ServerSideNetworkTreeGatewaySubscriber
    // empty
 }
 
-status_t ServerSideNetworkTreeGatewaySubscriber :: SendOutgoingMessageToNetwork(const MessageRef & msg) 
+status_t ServerSideNetworkTreeGatewaySubscriber :: SendOutgoingMessageToNetwork(const MessageRef & msg)
 {
    return _messageSender->SendOutgoingMessageToNetwork(msg);
 }
@@ -327,7 +327,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
          const String * nextString;
          for (uint32 i=0; msg()->FindString(NTG_NAME_PATH, i, &nextString).IsOK(); i++)
          {
-            if (queryStrings.AddTail(*nextString).IsOK()) 
+            if (queryStrings.AddTail(*nextString).IsOK())
             {
                QueryFilterRef nextQF = (i==0) ? qfRef : InstantiateQueryFilterAux(*msg(), i);
                if (nextQF()) (void) queryFilters.AddTail(nextQF);
@@ -434,7 +434,7 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
    const String & name = msg()->GetStringReference(NTG_NAME_NAME);
    MessageRef payload  = msg()->GetMessage(NTG_NAME_PAYLOAD);
    const int32 idx     = msg()->GetInt32(NTG_NAME_INDEX);
-   
+
    switch(msg()->what)
    {
       case NTG_REPLY_NODEUPDATED:        TreeNodeUpdated(path, payload, tag);              break;
@@ -448,11 +448,11 @@ status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(c
                   else TreeLocalPeerPonged(tag);
       break;
 
-      case NTG_REPLY_MESSAGEFROMSENIORPEER: 
+      case NTG_REPLY_MESSAGEFROMSENIORPEER:
          MessageReceivedFromTreeSeniorPeer(idx, tag, payload);
       break;
 
-      case NTG_REPLY_MESSAGEFROMSUBSCRIBER: 
+      case NTG_REPLY_MESSAGEFROMSUBSCRIBER:
          MessageReceivedFromSubscriber(path, payload, tag);
       break;
 
@@ -499,16 +499,16 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
    switch(msg()->what)
    {
       case PR_RESULT_DATATREES:
-      {  
+      {
          String tag;
          if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, tag).IsOK())
          {
             MessageRef sessionRelativeMsg = GetMessageFromPool();
             if (sessionRelativeMsg())
-            {  
+            {
                // Convert the absolute paths back into user-friendly relative paths
                for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
-               {  
+               {
                   String sessionRelativeString = iter.GetFieldName();
                   if (ConvertPathToSessionRelative(sessionRelativeString).IsOK()) (void) msg()->ShareName(iter.GetFieldName(), *sessionRelativeMsg(), sessionRelativeString);
                }

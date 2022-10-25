@@ -74,7 +74,7 @@ public:
          if (bufRef())
          {
             const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
-            if (bytesSent > 0) 
+            if (bytesSent > 0)
             {
                ret += bytesSent;
                LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
@@ -90,7 +90,7 @@ public:
 private:
    const IPAddressAndPort _multicastIAP;
    DiscoveryClientManagerSession * _manager;
-   
+
    ByteBufferRef _receiveBuffer;
 };
 DECLARE_REFTYPES(DiscoverySession);
@@ -99,7 +99,7 @@ DECLARE_REFTYPES(DiscoverySession);
 class DiscoveryClientManagerSession : public AbstractReflectSession, public INetworkConfigChangesTarget
 {
 public:
-   DiscoveryClientManagerSession(DiscoveryImplementation * imp, const ConstQueryFilterRef & optFilter, uint64 pingInterval) 
+   DiscoveryClientManagerSession(DiscoveryImplementation * imp, const ConstQueryFilterRef & optFilter, uint64 pingInterval)
       : _imp(imp)
       , _pingInterval(pingInterval)
       , _nextPingTime(GetRunTime64())
@@ -129,13 +129,13 @@ public:
    }
 
    virtual void AboutToDetachFromServer()
-   {  
+   {
       EndExistingDiscoverySessions();
       AbstractReflectSession::AboutToDetachFromServer();
    }
 
    virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & /*optInterfaceNames*/)
-   {  
+   {
       LogTime(MUSCLE_LOG_DEBUG, "DiscoveryClientManagerSession:  NetworkInterfacesChanged!  Recreating DiscoverySessions...\n");
       EndExistingDiscoverySessions();
       AddNewDiscoverySessions();
@@ -153,7 +153,7 @@ public:
       const int64 lateBy = now-args.GetScheduledTime();
       if ((lateBy >= 0)&&(((uint64)lateBy) >= _pingInterval))
       {
-         // If our timing has been thrown way off because of App Nap, then we'll just pretend we got an incoming network 
+         // If our timing has been thrown way off because of App Nap, then we'll just pretend we got an incoming network
          // packet from everybody.  That way we avoid spurious system-is-gone updates due to Apple not waking up our
          // process at the time(s) we asked it to be awoken.
          const uint64 expTime = GetExpirationTime(now);
@@ -169,7 +169,7 @@ public:
          {
             if (now >= iter.GetValue().GetExpirationTime())
             {
-               (void) _rawDiscoveryResults.Remove(iter.GetKey());  
+               (void) _rawDiscoveryResults.Remove(iter.GetKey());
                _updateResultSetPending = true;
             }
          }
@@ -212,7 +212,7 @@ private:
    {
       // First, tell any existing DiscoverySessions to go away
       for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
-      {  
+      {
          DiscoverySession * lds = dynamic_cast<DiscoverySession *>(iter.GetValue()());
          if (lds) lds->EndSession();
       }
@@ -230,7 +230,7 @@ private:
             const IPAddressAndPort & iap = iter.GetKey();
             status_t ret;
             DiscoverySessionRef ldsRef(newnothrow DiscoverySession(iap, this));
-                 if (ldsRef() == NULL) MWARN_OUT_OF_MEMORY; 
+                 if (ldsRef() == NULL) MWARN_OUT_OF_MEMORY;
             else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
          }
       }
@@ -253,7 +253,7 @@ private:
             if (systemTable) (void) systemTable->Put(peerID, result);
          }
       }
- 
+
       // Convert results into a set of Messages, one per system
       Hashtable<String, MessageRef> ret;
       for (HashtableIterator<String, Hashtable<ZGPeerID, MessageRef> > iter(systemNameToPeerIDToInfo); iter.HasData(); iter++)
@@ -292,7 +292,7 @@ private:
       }
 
       bool operator > (const RawDiscoveryKey & rhs) const {return ((*this != rhs)&&(!(*this < rhs)));}
-    
+
       uint32 HashCode() const {return _localIAP.HashCode() + (3*_sourceIAP.HashCode()) + _peerID.HashCode();}
 
       String ToString() const {return String("RDK:  local=[%1] source=[%2] serial=[%3]").Arg(_localIAP.ToString()).Arg(_sourceIAP.ToString()).Arg(_peerID.ToString());}
@@ -386,13 +386,13 @@ public:
       Stop();  // paranoia
    }
 
-   status_t Start() 
+   status_t Start()
    {
       Stop();  // paranoia
       return StartInternalThread();
    }
 
-   void Stop() 
+   void Stop()
    {
       (void) ShutdownInternalThread();
       _pendingUpdates.Clear();
@@ -508,7 +508,7 @@ void DiscoveryClientManagerSession :: UpdateResultSet()
    _reportedCookedResults.SwapContents(newCookedResults);
 }
 
-SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, const String & signaturePattern, const ConstQueryFilterRef & optFilter) 
+SystemDiscoveryClient :: SystemDiscoveryClient(ICallbackMechanism * mechanism, const String & signaturePattern, const ConstQueryFilterRef & optFilter)
    : ICallbackSubscriber(mechanism)
    , _pingInterval(0)
 {
@@ -608,7 +608,7 @@ void SystemDiscoveryClient :: RegisterTarget(IDiscoveryNotificationTarget * newT
    if (_targets.Put(newTarget, true).IsOK()) _imp->ScheduleDiscoveryUpdate(); // make sure the new guys learns ASAP about whatever we already know
 }
 
-void SystemDiscoveryClient :: UnregisterTarget(IDiscoveryNotificationTarget * target) 
+void SystemDiscoveryClient :: UnregisterTarget(IDiscoveryNotificationTarget * target)
 {
    (void) _targets.Remove(target);
 }

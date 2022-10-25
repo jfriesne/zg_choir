@@ -87,7 +87,7 @@ protected:
      * @param toPeerID the ID of the ZGPeer that the subscriber is directly connected to
      * @param tag the tag-String to use to direct the Message to the correct subscriber (as was previously passed in to MessageReceivedFromTreeGatewaySubscriber())
      * @param payload the Message to send to the subscriber
-     * @param optWhichDB optional index of the database-object that this reply is coming from.  
+     * @param optWhichDB optional index of the database-object that this reply is coming from.
      *                   Pass in -1 if the reply Message isn't meant to be associated with a particular database-object.
      * @returns B_NO_ERROR on success, or an error code on failure.
      */

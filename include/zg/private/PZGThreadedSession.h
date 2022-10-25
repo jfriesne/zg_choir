@@ -11,10 +11,10 @@ namespace zg_private
 class IThreadedMaster;
 
 enum {
-   PZG_THREADED_SESSION_RECREATE_SOCKETS = 1887073384 // 'pzth' 
+   PZG_THREADED_SESSION_RECREATE_SOCKETS = 1887073384 // 'pzth'
 };
 
-/** This semi-abstract class represents a session that is managing an internal thread.  
+/** This semi-abstract class represents a session that is managing an internal thread.
   * The internal thread may communicate only with this session; it is hidden from the rest of the process.
   *
   * This class is intended to be subclassed in order to implement specific functionality.

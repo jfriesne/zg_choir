@@ -14,19 +14,19 @@ const String PZG_PEER_NAME_BACK_ORDER          = "ubok";
 
 /** Return a brief description of the peerInfo data that we can display easily on a single line */
 String PeerInfoToString(const ConstMessageRef & peerInfo)
-{  
+{
    if (peerInfo() == NULL) return("No peer info");
-   
+
    const Message & pm = *peerInfo();
    String ret;
    for (MessageFieldNameIterator fnIter(pm); fnIter.HasData(); fnIter++)
-   {  
+   {
       const String & fn = fnIter.GetFieldName();
       uint32 fieldTypeCode;
       if (pm.GetInfo(fn, &fieldTypeCode).IsOK())
-      {  
+      {
          switch(fieldTypeCode)
-         { 
+         {
            case B_BOOL_TYPE:   ret += String(" %1=%2").Arg(fn).Arg(pm.GetBool(fn)?"true":"false"); break;
            case B_DOUBLE_TYPE: ret += String(" %1=%2").Arg(fn).Arg(pm.GetDouble(fn)); break;
            case B_FLOAT_TYPE:  ret += String(" %1=%2").Arg(fn).Arg(pm.GetFloat(fn));  break;
@@ -38,7 +38,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
            default:   /* do nothing */ break;
          }
       }
-   } 
+   }
    return ret.Trim();
 }
 

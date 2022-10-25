@@ -82,7 +82,7 @@ static ZGPeerID GenerateLocalPeerID()
 ZGPeerSession :: ZGPeerSession(const ZGPeerSettings & zgPeerSettings) : _peerSettings(zgPeerSettings), _localPeerID(GenerateLocalPeerID()), _iAmFullyAttached(false), _setBeaconDataPending(false)
 {
    (void) _databases.EnsureSize(_peerSettings.GetNumDatabases(), true);
-   for (uint32 i=0; i<_databases.GetNumItems(); i++) 
+   for (uint32 i=0; i<_databases.GetNumItems(); i++)
    {
       _databases[i].SetParameters(this, i, zgPeerSettings.GetMaximumUpdateLogSizeForDatabase(i));
       (void) PutPulseChild(&_databases[i]);  // So the PZGDatabaseState objects can use GetPulseTime() and Pulse() directly
@@ -115,19 +115,19 @@ status_t ZGPeerSession :: AttachedToServer()
 
 void ZGPeerSession :: AboutToDetachFromServer()
 {
-   ShutdownChildSessions();  
+   ShutdownChildSessions();
    StorageReflectSession::AboutToDetachFromServer();
 }
 
 void ZGPeerSession :: EndSession()
 {
-   ShutdownChildSessions();  
+   ShutdownChildSessions();
    StorageReflectSession::EndSession();
 }
 
 void ZGPeerSession :: ShutdownChildSessions()
 {
-   if (_networkIOSession()) 
+   if (_networkIOSession())
    {
       _networkIOSession()->EndSession();
       _networkIOSession.Reset();
@@ -150,7 +150,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg).IsOK()))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to all peers.\n", cmd());
-         return TextCommandReceived(cmd); 
+         return TextCommandReceived(cmd);
       }
       else
       {
@@ -158,7 +158,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
          return true;
       }
    }
-   else if (s.StartsWith("senior peer")) 
+   else if (s.StartsWith("senior peer"))
    {
       // Take the remainder of the Message and send it to the senior peer
       String cmd = s.Substring(11).Trim();
@@ -174,12 +174,12 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
          return true;
       }
    }
-   else if (s.StartsWith("print sessions")) 
+   else if (s.StartsWith("print sessions"))
    {
-      PrintFactoriesInfo(); 
+      PrintFactoriesInfo();
       PrintSessionsInfo();
    }
-   else if (s.StartsWith("print network interfaces")) 
+   else if (s.StartsWith("print network interfaces"))
    {
       const PZGNetworkIOSession * nios = static_cast<const PZGNetworkIOSession *>(_networkIOSession());
       const PZGHeartbeatSettings * s = nios ? nios->GetPZGHeartbeatSettings()() : NULL;
@@ -192,11 +192,11 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
          printf(UINT32_FORMAT_SPEC ". %s\n", i, nii.ToString()());
       }
    }
-   else if ((s.StartsWith("print peers"))||(s == "pp")) 
+   else if ((s.StartsWith("print peers"))||(s == "pp"))
    {
       if (_networkIOSession())
       {
-         int i=0; 
+         int i=0;
          for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(static_cast<PZGNetworkIOSession*>(_networkIOSession())->GetMainThreadPeers()); iter.HasData(); iter++,i++)
             printf("Peer #%i: %s%s%s\n", i+1, iter.GetKey().ToString()(), (iter.GetKey()==GetLocalPeerID())?" <-- THIS PEER":"", (i==0)?" (SENIOR)":"");
       }
@@ -234,7 +234,7 @@ void ZGPeerSession :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMes
 
 void ZGPeerSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const ZGPeerID & newSeniorPeerID)
 {
-   if (newSeniorPeerID.IsValid()) 
+   if (newSeniorPeerID.IsValid())
    {
       if (oldSeniorPeerID.IsValid()) LogTime(MUSCLE_LOG_INFO, "Senior peer has changed from [%s] to [%s]\n", oldSeniorPeerID.ToString()(), newSeniorPeerID.ToString()());
                                 else LogTime(MUSCLE_LOG_INFO, "Senior peer has been set to [%s]\n", newSeniorPeerID.ToString()());
@@ -245,7 +245,7 @@ void ZGPeerSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const 
    _seniorPeerID = newSeniorPeerID;
    const bool iAmSeniorPeer = IAmTheSeniorPeer();
 
-   if (iWasSeniorPeer != iAmSeniorPeer) 
+   if (iWasSeniorPeer != iAmSeniorPeer)
    {
       LogTime(MUSCLE_LOG_INFO, "I am %s the senior peer of %s system [%s]!\n", IAmTheSeniorPeer()?"now":"no longer", GetPeerSettings().GetSignature()(), GetPeerSettings().GetSystemName()());
       LocalSeniorPeerStatusChanged();
@@ -334,7 +334,7 @@ status_t ZGPeerSession :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerI
    }
    else whichDatabase = msg()->GetInt32(PZG_PEER_NAME_DATABASE_ID);
 
-   if (whichDatabase >= _databases.GetNumItems()) 
+   if (whichDatabase >= _databases.GetNumItems())
    {
       LogTime(MUSCLE_LOG_ERROR, "HandleDatabaseUpdateRequest:  Message " UINT32_FORMAT_SPEC " received from [%s] references database #" UINT32_FORMAT_SPEC ", but only " UINT32_FORMAT_SPEC " databases exist on this peer!\n", msg()->what, fromPeerID.ToString()(), whichDatabase, _databases.GetNumItems());
       return B_BAD_ARGUMENT;
@@ -378,7 +378,7 @@ status_t ZGPeerSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrde
 {
    PZGNetworkIOSession * nios = static_cast<PZGNetworkIOSession *>(_networkIOSession());
    if (nios == NULL) return B_LOGIC_ERROR;  // paranoia?
-   
+
    return nios->RequestBackOrderFromSeniorPeer(ubok, dueToChecksumError);
 }
 
@@ -609,7 +609,7 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
 
    // Do any client-specified filtering vs the pong-messages we're about to send back
    MessageRef qfMsg = pingMsg()->GetMessage(ZG_DISCOVERY_NAME_FILTER);
-   if (qfMsg()) 
+   if (qfMsg())
    {
       QueryFilterRef qfRef = GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg());
       if ((qfRef())&&(qfRef()->Matches(pongMsg, NULL) == false)) return MUSCLE_TIME_NEVER;  // Nope!  We're not his type

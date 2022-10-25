@@ -10,14 +10,14 @@ namespace zg_private
 {
 
 enum {
-   PZG_UNICAST_COMMAND_ANNOUNCE_UNICAST_PEER_ID = 1970170211,   // 'unic' 
+   PZG_UNICAST_COMMAND_ANNOUNCE_UNICAST_PEER_ID = 1970170211,   // 'unic'
    PZG_UNICAST_COMMAND_REQUEST_BACK_ORDER,
    PZG_UNICAST_COMMAND_REPLY_BACK_ORDER
 };
 
 static const String PZG_UNICAST_NAME_PEER_ID = "pid";
 
-PZGUnicastSession :: PZGUnicastSession(PZGNetworkIOSession * master, const ZGPeerID & remotePeerID) 
+PZGUnicastSession :: PZGUnicastSession(PZGNetworkIOSession * master, const ZGPeerID & remotePeerID)
    : _remotePeerID(remotePeerID)
    , _master(master)
 {
@@ -48,15 +48,15 @@ void PZGUnicastSession :: AboutToDetachFromServer()
 {
    UnregisterMyself(true);
    AbstractReflectSession::AboutToDetachFromServer();
-}   
+}
 
 void PZGUnicastSession :: EndSession()
 {
    UnregisterMyself(true);
    AbstractReflectSession::EndSession();
-} 
+}
 
-void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, void *) 
+void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
 {
    switch(msg()->what)
    {
@@ -65,7 +65,7 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
          UnregisterMyself(false);  // unregister from our old ID (actually from our old lack-of-ID)
 
          _backorders.Clear();
-         if (msg()->FindFlat(PZG_UNICAST_NAME_PEER_ID, _remotePeerID).IsOK()) 
+         if (msg()->FindFlat(PZG_UNICAST_NAME_PEER_ID, _remotePeerID).IsOK())
          {
             RegisterMyself(); // re-register under our new ID, now that we know what it is
          }
@@ -91,7 +91,7 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
          if ((dbUp() == NULL)||(msg()->AddFlat(PZG_PEER_NAME_DATABASE_UPDATE, *dbUp()).IsError())) LogTime(MUSCLE_LOG_ERROR, "PZGUnicastSession::MessageReceivedFromGateway()():  Database #" UINT32_FORMAT_SPEC " doesn't have requested back-order " UINT64_FORMAT_SPEC " to send back to junior peer [%s]\n", whichDB, updateID, _remotePeerID.ToString()());
 
          msg()->what = PZG_UNICAST_COMMAND_REPLY_BACK_ORDER;  // we're going to send this Message right back as our reply
-         if (AddOutgoingMessage(msg).IsError()) 
+         if (AddOutgoingMessage(msg).IsError())
          {
             LogTime(MUSCLE_LOG_ERROR, "Unable to send back-order reply back to junior peer [%s]\n", _remotePeerID.ToString()());
             EndSession();  // semi-paranoia:  might as well terminate the connection, so that at least the remote peer won't wait forever for his reply
@@ -133,14 +133,14 @@ void PZGUnicastSession :: RegisterMyself()
 
 void PZGUnicastSession :: UnregisterMyself(bool forGood)
 {
-   if (_master) 
+   if (_master)
    {
       // If we have any back-orders outstanding, make sure the master knows they aren't going to happen
       for (HashtableIterator<PZGUpdateBackOrderKey, Void> iter(_backorders); iter.HasData(); iter++) _master->BackOrderResultReceived(iter.GetKey(), ConstPZGDatabaseUpdateRef());
    }
    _backorders.Clear();
 
-   if (_master) 
+   if (_master)
    {
       _master->UnregisterUnicastSession(this);
       if (forGood) _master = NULL;

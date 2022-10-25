@@ -12,11 +12,11 @@ class ServerSideMessageTreeSession;
   * to hold database state that is bound to a particular client connection.
   * Data posted by the client to this subtree will be tied to the lifetime
   * of the client's connection, and it will automatically get deleted when
-  * the client disconnects from the system.  This can be useful for things 
+  * the client disconnects from the system.  This can be useful for things
   * like registries of currently-connected clients, their locations within
   * the system, and other data that is specific to a particular client-connection.
   */
-class ClientDataMessageTreeDatabaseObject : public MessageTreeDatabaseObject 
+class ClientDataMessageTreeDatabaseObject : public MessageTreeDatabaseObject
 {
 public:
    /** Constructor

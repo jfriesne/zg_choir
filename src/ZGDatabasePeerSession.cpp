@@ -4,7 +4,7 @@ namespace zg
 {
 
 enum {
-   DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT = 1684172915, // 'dbps' 
+   DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT = 1684172915, // 'dbps'
 };
 
 static const String DBPEERSESSION_NAME_PAYLOAD     = "pay";  // Message field-name

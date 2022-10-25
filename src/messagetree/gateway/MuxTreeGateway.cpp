@@ -577,7 +577,7 @@ void MuxTreeGateway :: CallbackBatchEnds()
 }
 
 void MuxTreeGateway :: RegisterSubscriber(void * s)
-{  
+{
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    ProxyTreeGateway::RegisterSubscriber(s);
    (void) _subscriberInfos.Put(sub, TreeSubscriberInfoRef());

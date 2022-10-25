@@ -45,7 +45,7 @@ void ServerSideMessageTreeSession :: AboutToDetachFromServer()
 void ServerSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * userData)
 {
    NestCountGuard ncg(_isInMessageReceivedFromGateway);
-   if (IncomingTreeMessageReceivedFromClient(msg) == B_UNIMPLEMENTED) 
+   if (IncomingTreeMessageReceivedFromClient(msg) == B_UNIMPLEMENTED)
    {
       switch(msg()->what)
       {
@@ -126,7 +126,7 @@ ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITree
 AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
 {
    ServerSideMessageTreeSessionRef ret(newnothrow ServerSideMessageTreeSession(GetGateway()));
-   if (ret()) 
+   if (ret())
    {
       ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
    }
@@ -141,9 +141,9 @@ static status_t GetOrPutOpTagIndex(Message & subscriptionMessage, const String &
 
    const String * nextStr;
    for (; subscriptionMessage.FindString(_opTagFieldName, arrayLen, &nextStr).IsOK(); arrayLen++)
-   {  
+   {
       if (*nextStr == optOpTag)
-      {  
+      {
          opTagIndex = arrayLen;
          return B_NO_ERROR;
       }
@@ -162,18 +162,18 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & sub
    MRETURN_ON_ERROR(StorageReflectSession::UpdateSubscriptionMessage(subscriptionMessage, nodePath, optMessageData));
 
    if (opTagIndex >= 0)
-   {  
+   {
       if (optMessageData())
-      {  
+      {
          // Harder case:  for each Message placed, we need to store its (fieldIndex,valueIndex) along with our own (opTagIndex)
          uint32 numValuesInField = 0;
          MRETURN_ON_ERROR(subscriptionMessage.GetInfo(nodePath, NULL, &numValuesInField));
-         
+
          // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
          const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionMessage.IndexOfName(nodePath) : (subscriptionMessage.GetNumNames()-1);
          MRETURN_ON_ERROR(subscriptionMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
-      }   
-      else 
+      }
+      else
       {
          uint32 removeMapLength = 0, dataItemsLength = 0;
          (void) subscriptionMessage.GetInfo(_opTagRemoveMap,           NULL, &removeMapLength);
@@ -182,7 +182,7 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & sub
          MRETURN_ON_ERROR(subscriptionMessage.ReplaceInt32(true, _opTagRemoveMap, dataItemsLength-1, opTagIndex)); // since PR_NAME_REMOVED_DATAITEMS is just a single list we only need to record the (opTagIndex) each item corresponds to
       }
    }
-   
+
    return B_NO_ERROR;
 }
 
@@ -195,11 +195,11 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message 
    MRETURN_ON_ERROR(StorageReflectSession::UpdateSubscriptionIndexMessage(subscriptionIndexMessage, nodePath, op, index, key));
 
    if (opTagIndex >= 0)
-   {  
+   {
       // Harder case:  for each String placed, we need to store its (fieldIndex,valueIndex) along with our own (opTagIndex)
       uint32 numValuesInField = 0;
       MRETURN_ON_ERROR(subscriptionIndexMessage.GetInfo(nodePath, NULL, &numValuesInField));
-      
+
       // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
       const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionIndexMessage.IndexOfName(nodePath) : (subscriptionIndexMessage.GetNumNames()-1);
       MRETURN_ON_ERROR(subscriptionIndexMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
@@ -215,7 +215,7 @@ status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subs
    {
       uint32 nextEntry = 0;
       for (uint32 i=0; subscriptionMessage.FindInt32(_opTagPutMap, i, nextEntry).IsOK(); i++)
-      { 
+      {
          const uint32 opTagIndex     = (nextEntry >> 24) & 0xFFF;
          const uint32 fieldNameIndex = (nextEntry >> 12) & 0xFFF;
          const uint32 valueIndex     = (nextEntry >> 00) & 0xFFF;

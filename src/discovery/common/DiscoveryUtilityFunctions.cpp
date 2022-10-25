@@ -55,7 +55,7 @@ static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAP
 
    Hashtable<IPAddress, bool> q;
    MRETURN_ON_ERROR(MakeIPv6MulticastAddresses(baseKey, niis, q));
-   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++) 
+   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++)
    {
       const IPAddressAndPort iap(iter.GetKey(), port);
       const bool isWiFi = iter.GetValue();
@@ -72,7 +72,7 @@ status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retI
 
 static IPAddressAndPort GetTransceiverMulticastKey(const String & transmissionKey)
 {
-   const uint64 tHash = transmissionKey.HashCode64(); 
+   const uint64 tHash = transmissionKey.HashCode64();
    IPAddress ip = Inet_AtoN("::a1:a2:a3:a4");  // base core multicast address, not including any multicast prefix
    ip.SetLowBits(ip.GetLowBits()+tHash);
    return IPAddressAndPort(ip, ((uint16)(tHash%30000))+20000);  // I guess?
@@ -86,15 +86,15 @@ status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & re
 
 // Some network interfaces we just shouldn't try to use!
 bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii)
-{  
+{
 #ifdef __APPLE__
    if (nii.GetName().StartsWith("utun")) return false;
    if (nii.GetName().StartsWith("llw"))  return false;
    if (nii.GetName().StartsWith("awdl")) return false;
-#else 
+#else
    (void) nii;  // avoid compiler warning
 #endif
-   
+
    return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
 }
 

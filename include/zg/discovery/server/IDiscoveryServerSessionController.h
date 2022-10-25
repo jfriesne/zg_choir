@@ -25,7 +25,7 @@ public:
      *                   our "pong" reply will be sent back to)
      * @returns How many microseconds from now the "pong" Message should be sent back.
      *          e.g. return 0 to have the "pong" Message sent back ASAP, or MillisToMicros(100) to have
-     *          it sent back after a 100mS delay, and so on.  Return MUSCLE_TIME_NEVER if you don't 
+     *          it sent back after a 100mS delay, and so on.  Return MUSCLE_TIME_NEVER if you don't
      *          want the "pong" Message to ever be sent back.
      */
    virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource) = 0;

@@ -32,32 +32,32 @@ public:
      */
    ZGPeerID(const ZGPeerID & rhs) : _highBits(rhs._highBits), _lowBits(rhs._lowBits) {/* empty */}
 
-   /** Equality operator; returns true iff this ZGPeerID is equal to (rhs) 
+   /** Equality operator; returns true iff this ZGPeerID is equal to (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator == (const ZGPeerID & rhs) const {return ((_highBits == rhs._highBits)&&(_lowBits == rhs._lowBits));}
 
-   /** Inequality operator; returns true iff this ZGPeerID is not equal to (rhs) 
+   /** Inequality operator; returns true iff this ZGPeerID is not equal to (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator != (const ZGPeerID & rhs) const {return !(*this==rhs);}
 
-   /** Comparison operator; returns true iff this ZGPeerID is less than (rhs) 
+   /** Comparison operator; returns true iff this ZGPeerID is less than (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator <  (const ZGPeerID & rhs) const {return ((_highBits < rhs._highBits)||((_highBits == rhs._highBits)&&(_lowBits < rhs._lowBits)));}
 
-   /** Comparison operator; returns true iff this ZGPeerID is greater than or equal to (rhs) 
+   /** Comparison operator; returns true iff this ZGPeerID is greater than or equal to (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator >= (const ZGPeerID & rhs) const {return !(*this<rhs);}
 
-   /** Comparison operator; returns true iff this ZGPeerID is greater than (rhs) 
+   /** Comparison operator; returns true iff this ZGPeerID is greater than (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator >  (const ZGPeerID & rhs) const {return ((_highBits > rhs._highBits)||((_highBits == rhs._highBits)&&(_lowBits > rhs._lowBits)));}
 
-   /** Comparison operator; returns true iff this ZGPeerID is less than or equal to (rhs) 
+   /** Comparison operator; returns true iff this ZGPeerID is less than or equal to (rhs)
      * @param rhs The ZGPeerID to compare to
      */
    bool operator <= (const ZGPeerID & rhs) const {return !(*this>rhs);}
@@ -70,7 +70,7 @@ public:
    /** Returns true iff the ZGPeerID has any non-zero bits in it.  (An all-zero ZGPeerID is considered an invalid/null ID) */
    bool IsValid() const {return ((_highBits != 0)||(_lowBits != 0));}
 
-   /** Sets this peer ID from the specified String representation (in the format used by ToString()), or to zero if the string isn't parsed 
+   /** Sets this peer ID from the specified String representation (in the format used by ToString()), or to zero if the string isn't parsed
      * @param s A human-readable string (e.g. "123A:432B") that we will set this ZGPeerID's state from
      */
    void FromString(const String & s)

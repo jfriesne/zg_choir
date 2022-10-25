@@ -50,7 +50,7 @@ status_t PZGDatabaseStateInfo :: Unflatten(DataUnflattener & unflat)
    _dbChecksum             = unflat.ReadInt32();
    return unflat.GetStatus();
 }
-   
+
 void PZGDatabaseStateInfo :: PrintToStream() const
 {
    printf("%s\n", ToString()());

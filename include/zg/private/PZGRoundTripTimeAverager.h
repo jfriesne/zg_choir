@@ -22,9 +22,9 @@ public:
    virtual ~PZGRoundTripTimeAverager() {/* empty */}
 
    /** Set the current heartbeat packet that we have from this source, and when it should expire */
-   void SetHeartbeatPacket(const PZGHeartbeatPacketWithMetaDataRef & hbPacket, uint64 localExpirationTimeMicros) 
+   void SetHeartbeatPacket(const PZGHeartbeatPacketWithMetaDataRef & hbPacket, uint64 localExpirationTimeMicros)
    {
-      _hbPacket = hbPacket; 
+      _hbPacket = hbPacket;
       _localExpirationTimeMicros = localExpirationTimeMicros;
    }
 
@@ -33,7 +33,7 @@ public:
 
    /** Returns the time at which this source will be marked as offline if we don't receive any further heartbeats from it */
    uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
- 
+
 private:
    PZGHeartbeatPacketWithMetaDataRef _hbPacket;
    uint64 _localExpirationTimeMicros;

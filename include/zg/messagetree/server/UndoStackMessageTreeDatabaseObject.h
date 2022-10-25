@@ -16,11 +16,11 @@ enum {
 };
 
 /** This is a special subclass of MessageTreeDatabaseObject that implements
-  * a per-client undo/redo stack as part of its operation.  You can use this 
+  * a per-client undo/redo stack as part of its operation.  You can use this
   * if you want to be able to support undo and redo operations as part of
   * your user interface.
   */
-class UndoStackMessageTreeDatabaseObject : public MessageTreeDatabaseObject 
+class UndoStackMessageTreeDatabaseObject : public MessageTreeDatabaseObject
 {
 public:
    /** Constructor

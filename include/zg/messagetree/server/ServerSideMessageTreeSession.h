@@ -18,7 +18,7 @@ class ServerSideMessageTreeSession : public StorageReflectSession, public Server
 {
 public:
    /** Constructor
-     * @param upstreamGateway the ITreeGateway we will access to request database-update operations 
+     * @param upstreamGateway the ITreeGateway we will access to request database-update operations
      */
    ServerSideMessageTreeSession(ITreeGateway * upstreamGateway);
 

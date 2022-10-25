@@ -31,11 +31,11 @@ public:
    /** Enqueues the given Message object to be sent to the specified peer via unicast/TCP.
      * @param peerID The peer ID to send the Message to.
      * @param msg The Message to send to the specified peer.
-     * @returns B_NO_ERROR on success, or an error code on failure. 
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t SendUnicastMessageToPeer(const ZGPeerID & peerID, const MessageRef & msg);
 
-   /** Sends the specified Message to all peers via multicast/UDP/PacketTunnel.   
+   /** Sends the specified Message to all peers via multicast/UDP/PacketTunnel.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
@@ -48,7 +48,7 @@ public:
      */
    status_t SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
 
-   /** Tells the multicast I/O thread what beacon data to transmit periodically (if any) 
+   /** Tells the multicast I/O thread what beacon data to transmit periodically (if any)
      * @param optBeaconData If non-NULL, this is the data to transmit every so often.  If NULL, no beacon data should be transmitted.
      */
    status_t SetBeaconData(const ConstPZGBeaconDataRef & optBeaconData);
@@ -127,7 +127,7 @@ private:
    ConstPZGHeartbeatSettingsRef _hbSettings;
 
    // all the stuff below should be accessed from the main thread only
-   ZGPeerSession * _master; 
+   ZGPeerSession * _master;
    DetectNetworkConfigChangesSessionRef _dnccSession;  // notifies us when network interfaces have come online or gone offline
    PZGHeartbeatSessionRef _hbSession;       // handles sending/receiving of heartbeat packets and updates the ordered-online-peers-list for us
    Hashtable<ZGPeerID, Queue<PZGUnicastSessionRef> > _namedUnicastSessions;  // unicast sessions whose remote endpoint we do know

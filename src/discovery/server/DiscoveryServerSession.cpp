@@ -12,14 +12,14 @@ class DiscoveryDetectNetworkConfigChangesSession : public DetectNetworkConfigCha
 {
 public:
    explicit DiscoveryDetectNetworkConfigChangesSession(DiscoveryServerSession * master)
-      : _master(master) 
+      : _master(master)
    {
       // empty
    }
 
    virtual void EndSession() {_master = NULL; DetectNetworkConfigChangesSession::EndSession();}
 
-   virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames) 
+   virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames)
    {
       DetectNetworkConfigChangesSession::NetworkInterfacesChanged(optInterfaceNames);
       if (_master) _master->NetworkInterfacesChanged(optInterfaceNames);
@@ -101,7 +101,7 @@ ConstSocketRef DiscoveryServerSession :: CreateDefaultSocket()
          const IPAddressAndPort & iap = iter.GetKey();
 
          if (AddSocketToMulticastGroup(udpSocket, iap.GetIPAddress()).IsOK()) numAddedGroups++;
-         else 
+         else
          {
             LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::CreateDefaultSocket:  Unable to add socket to multicast group [%s]!\n", Inet_NtoA(iap.GetIPAddress())());
          }
@@ -153,7 +153,7 @@ int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*recei
             {
                const UDPReply * r = _queuedOutputData.Get(iap);
                (void) _queuedOutputData.Put(iap, UDPReply(muscleMin(r?r->GetSendTime():MUSCLE_TIME_NEVER, (pongDelayMicros>0)?(now+pongDelayMicros):0), msg));
-               InvalidatePulseTime(); 
+               InvalidatePulseTime();
             }
          }
          ret += bytesRead;
@@ -184,7 +184,7 @@ int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
          const IPAddressAndPort & replyTarget = *_outputData.GetFirstKey();
          next.GetData()()->Flatten(DataFlattener(bufRef()->GetBuffer(), bufRef()->GetNumBytes()));
          const int32 bytesSent = SendDataUDP(s, bufRef()->GetBuffer(), bufRef()->GetNumBytes(), false, replyTarget.GetIPAddress(), replyTarget.GetPort());
-         if (bytesSent > 0) 
+         if (bytesSent > 0)
          {
             ret += bytesSent;
             LogTime(MUSCLE_LOG_TRACE, "Sent " INT32_FORMAT_SPEC "/" INT32_FORMAT_SPEC " bytes of Discovery pong to %s\n", bytesSent, bufRef()->GetNumBytes(), replyTarget.ToString()());

@@ -15,7 +15,7 @@ namespace zg_private
 
 
 enum {
-   PZG_HEARTBEAT_COMMAND_PEERS_UPDATE = 1751281781 // 'hbpu' 
+   PZG_HEARTBEAT_COMMAND_PEERS_UPDATE = 1751281781 // 'hbpu'
 };
 
 static const String PZG_HEARTBEAT_NAME_PEERINFO = "hpi";
@@ -29,15 +29,15 @@ static PZGHeartbeatPacketWithMetaDataRef GetHeartbeatPacketWithMetaDataFromPool(
 
 PZGHeartbeatThreadState :: PZGHeartbeatThreadState() : _zlibCodec(9)
 {
-   // empty 
+   // empty
 }
 
 PZGHeartbeatThreadState :: ~PZGHeartbeatThreadState()
 {
-   // empty 
+   // empty
 }
 
-void PZGHeartbeatThreadState :: Initialize(const ConstPZGHeartbeatSettingsRef & hbSettings, uint64 startTime) 
+void PZGHeartbeatThreadState :: Initialize(const ConstPZGHeartbeatSettingsRef & hbSettings, uint64 startTime)
 {
    _hbSettings                        = hbSettings;
    _heartbeatThreadStateBirthdate     = startTime;
@@ -79,7 +79,7 @@ void PZGHeartbeatThreadState :: EnsureHeartbeatSourceTagsTableUpdated()
       const IPAddressAndPort & iap = _multicastDataIOs[i]()->GetPacketSendDestination();
       if (iap.IsValid()) (void) dests.AddTail(iap);  // semi-paranoia; they should always be valid
    }
-   
+
    for (HashtableIterator<IPAddressAndPort, uint16> iter(_heartbeatSourceDestToTag); iter.HasData(); iter++)
    {
       const IPAddressAndPort & iap = iter.GetKey();
@@ -168,12 +168,12 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    if (hbRef()) hbRef()->Initialize(*_hbSettings(), (uint32) MicrosToSeconds(_now-_heartbeatThreadStateBirthdate), IsFullyAttached(), ++_hbSettings()->_outgoingHeartbeatPacketIDCounter);
 
    PZGHeartbeatPacketWithMetaData & hb = *hbRef();
-   if ((_hbSettings()->GetPeerType() == PEER_TYPE_FULL_PEER)&&(_now >= _halfAttachedTime)) 
+   if ((_hbSettings()->GetPeerType() == PEER_TYPE_FULL_PEER)&&(_now >= _halfAttachedTime))
    {
       const Queue<ZGPeerID> pids = CalculateOrderedPeersList();
       Queue<ConstPZGHeartbeatPeerInfoRef> & hpis = hb.GetOrderedPeersList();
       (void) hpis.EnsureSize(pids.GetNumItems());
-      for (uint32 i=0; i<pids.GetNumItems(); i++) 
+      for (uint32 i=0; i<pids.GetNumItems(); i++)
       {
          ConstPZGHeartbeatPeerInfoRef hpiRef = GetPZGHeartbeatPeerInfoRefFor(_now, pids[i]);
          if (hpiRef()) hpis.AddTail(hpiRef);
@@ -221,7 +221,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
    if ((_recentlySentHeartbeatLocalSendTimes.Put(hb.GetHeartbeatPacketID(), _now).IsOK())&&(_recentlySentHeartbeatLocalSendTimes.GetNumItems() > 100)) (void) _recentlySentHeartbeatLocalSendTimes.RemoveFirst();
 
    return B_NO_ERROR;
-} 
+}
 
 
 void PZGHeartbeatThreadState :: PrintTimeSynchronizationDeltas() const
@@ -247,7 +247,7 @@ void PZGHeartbeatThreadState :: UpdateToNetworkTimeOffset()
          const Queue<IPAddressAndPort> * sourceQ = _peerIDToIPAddresses.Get(seniorPID);
          PZGHeartbeatSourceState * hss = ((sourceQ)&&(sourceQ->HasItems())) ? _onlineSources[PZGHeartbeatSourceKey(sourceQ->Head(), seniorPID)]() : NULL;
          const PZGHeartbeatPacketWithMetaData * seniorHB = hss ? hss->GetHeartbeatPacket()() : NULL;
-         if (seniorHB) 
+         if (seniorHB)
          {
             const uint64 roundTripTimeMicros = hss->GetPreferredAverageValue(_now-_heartbeatExpirationTimeMicros);
             const uint64 seniorNetTime = seniorHB->GetNetworkSendTimeMicros();
@@ -290,7 +290,7 @@ PZGHeartbeatSourceKey PZGHeartbeatThreadState :: GetKingmakerPeerSource() const
    {
       const PZGHeartbeatPacketWithMetaData & hbPacket = *iter.GetValue()()->GetHeartbeatPacket()();
       const ZGPeerID & nextPID = hbPacket.GetSourcePeerID();
-      if (((minPeerID.IsValid() == false)||(nextPID < minPeerID))&&(PeersListMatchesIgnoreOrdering(hbPacket.GetOrderedPeersList()))) 
+      if (((minPeerID.IsValid() == false)||(nextPID < minPeerID))&&(PeersListMatchesIgnoreOrdering(hbPacket.GetOrderedPeersList())))
       {
          ret       = iter.GetKey();
          minPeerID = nextPID;
@@ -407,7 +407,7 @@ ConstPZGHeartbeatPeerInfoRef PZGHeartbeatThreadState :: GetPZGHeartbeatPeerInfoR
                phb.SetHaveSentTimingReply(true);
                ret()->PutTimingInfo(phb.GetSourceTag(), phb.GetHeartbeatPacketID(), (uint32) muscleMin(now-phb.GetLocalReceiveTimeMicros(), (uint64)((uint32)-1)));
             }
-         } 
+         }
       }
    }
 
@@ -448,7 +448,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
 
    const uint32 hisChecksum = DefaultEndianConverter::Import<uint32>(dsb+(2*sizeof(uint16))+sizeof(uint64));
    const uint32 myChecksum  = CalculateChecksum(dsb+HB_HEADER_SIZE, numBytes-HB_HEADER_SIZE);
-   if (hisChecksum != myChecksum) 
+   if (hisChecksum != myChecksum)
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Bad checksum on " UINT32_FORMAT_SPEC "-byte heartbeat packet; expected " UINT32_FORMAT_SPEC", got " UINT32_FORMAT_SPEC ".\n", sourceIAP.ToString()(), numBytes, myChecksum, hisChecksum);
       return PZGHeartbeatPacketWithMetaDataRef();
@@ -615,7 +615,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
 
       const ZGPeerID & pid = sourceInfo()->GetHeartbeatPacket()()->GetSourcePeerID();
       Queue<IPAddressAndPort> * q = _peerIDToIPAddresses.Get(pid);
-      if ((q)&&(q->RemoveFirstInstanceOf(source.GetIPAddressAndPort()).IsOK())&&(q->IsEmpty())) 
+      if ((q)&&(q->RemoveFirstInstanceOf(source.GetIPAddressAndPort()).IsOK())&&(q->IsEmpty()))
       {
          (void) _peerIDToIPAddresses.Remove(pid);
 

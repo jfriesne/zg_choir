@@ -8,14 +8,14 @@
 namespace zg_private
 {
 
-PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort) 
+PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort)
    : zg::ZGPeerSettings(peerSettings)
    , _systemKey(GetSignature().HashCode64() + GetSystemName().HashCode64())
    , _localPeerID(localPeerID)
    , _dataTCPPort(dataTCPPort)
    , _dataUDPPort(PER_SYSTEM_PORT_DATA)    // hard-coded, for now (maybe configurable later on?)
    , _hbUDPPort(PER_SYSTEM_PORT_HEARTBEAT) // hard-coded, for now (maybe configurable later on?)
-   , _birthdate(GetRunTime64()) 
+   , _birthdate(GetRunTime64())
    , _versionCode(peerSettings.GetCompatibilityVersionCode())
    , _peerAttributesByteBuffer(GetPeerAttributes()() ? DeflateByteBuffer(GetPeerAttributes()()->FlattenToByteBuffer(),9) : ByteBufferRef())
 {
@@ -55,7 +55,7 @@ Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() c
    return niis;
 }
 
-// For Wi-Fi we'll use a separate multicast address, just so we can keep the Wi-Fi simulated-multicast-control-packets 
+// For Wi-Fi we'll use a separate multicast address, just so we can keep the Wi-Fi simulated-multicast-control-packets
 // off of the multicast address used by the real-multicast (non-Wi-Fi) packets.  That will keep the real-multicast packet-parsers
 // from complaining about the unexpected traffic every 10 seconds
 static IPAddress MungeMulticastAddress(const IPAddress & origMulticastAddress)
@@ -131,7 +131,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
 
          const char * ifTypeDesc = "other";
 
-         // Decide which multicast mode to use   
+         // Decide which multicast mode to use
          if (nii.GetHardwareType() == NETWORK_INTERFACE_HARDWARE_TYPE_WIFI)
          {
             ifTypeDesc = "WiFi";
@@ -150,7 +150,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
             case MULTICAST_MODE_SIMULATED:
             {
                SimulatedMulticastDataIORef wifiIO(newnothrow SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
-               if ((wifiIO())&&(ret.AddTail(wifiIO).IsOK())) 
+               if ((wifiIO())&&(ret.AddTail(wifiIO).IsOK()))
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);

@@ -7,7 +7,7 @@
 namespace zg_private
 {
 
-enum {PZG_HEARTBEAT_PACKET_TYPE_CODE = 2053597282}; // 'zghb' 
+enum {PZG_HEARTBEAT_PACKET_TYPE_CODE = 2053597282}; // 'zghb'
 
 /** This class represents a single heartbeat-packet.  Heartbeat packets are sent out periodically by all peers,
   * so the other peers can know of their existence and status.  If no heartbeats are received from a peer for an
@@ -49,7 +49,7 @@ public:
    // The current network-time (according to the sender) at the moment this packet was sent.
    // note that this value is NOT flattened/unflattened along with the rest of the data in this object.
    // That is because we want to send it separately for better accuracy (otherwise we'd have to place
-   // a value into this object before we zlib-compressed the heartbeat data, and the zlib-compression 
+   // a value into this object before we zlib-compressed the heartbeat data, and the zlib-compression
    // time would get added in to the network-delay measurement)
    void SetNetworkSendTimeMicros(uint64 networkSendTimeMicros) {_networkSendTimeMicros = networkSendTimeMicros;}
    uint64 GetNetworkSendTimeMicros() const {return _networkSendTimeMicros;}
@@ -74,7 +74,7 @@ private:
    bool _isFullyAttached;
 
    ConstByteBufferRef _peerAttributesBuf; // flattened version of _peerAttributesMsg
-   mutable MessageRef _peerAttributesMsg; // unflattened version of _peerAttributesBuf (demand-allocated)   
+   mutable MessageRef _peerAttributesMsg; // unflattened version of _peerAttributesBuf (demand-allocated)
 };
 DECLARE_REFTYPES(PZGHeartbeatPacket);
 

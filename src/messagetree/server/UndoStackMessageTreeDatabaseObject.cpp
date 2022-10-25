@@ -3,7 +3,7 @@
 #include "zg/messagetree/server/ServerSideMessageTreeSession.h"
 #include "reflector/StorageReflectConstants.h"  // for INDEX_OP_*
 
-namespace zg 
+namespace zg
 {
 
 static const String UNDOSTACK_NAME_DOMESSAGE       = "_do";
@@ -20,7 +20,7 @@ static const String UNDOSTACK_NODENAME_REDO = "redo";
 static const String UNDOSTACK_NODENAME_UNDO_SLASH = UNDOSTACK_NODENAME_UNDO + '/';
 static const String UNDOSTACK_NODENAME_REDO_SLASH = UNDOSTACK_NODENAME_REDO + '/';
 
-UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
+UndoStackMessageTreeDatabaseObject :: UndoStackMessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath)
    : MessageTreeDatabaseObject(session, dbIndex, rootNodePath)
 {
    // empty
@@ -148,7 +148,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
 
                newClientPayload = seqPayload;  // for clients who just want to track the latest state by subscribing to their per-client node
             }
-            else 
+            else
             {
                newClientPayload = GetLightweightCopyOfMessageFromPool(oldClientPayload);
                MRETURN_OOM_ON_NULL(newClientPayload());
@@ -187,7 +187,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
             newClientPayload = seqPayload;
          }
 
-         if (newClientPayload()) 
+         if (newClientPayload())
          {
             clientNode->SetData(newClientPayload, mtdps);
             return B_NO_ERROR;
@@ -337,10 +337,10 @@ const String & UndoStackMessageTreeDatabaseObject :: GetActiveClientUndoKey() co
 }
 
 bool UndoStackMessageTreeDatabaseObject :: IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const
-{  
+{
    if (_inUndoRedoContextNestCount.IsInBatch() == false) return true;  // always handle everything when outside of an "undo" or "redo" op
 
-   // No need to execute interim-updates (e.g. updates generated during the middle of a mouse-drag) 
+   // No need to execute interim-updates (e.g. updates generated during the middle of a mouse-drag)
    // when doing an undo or a redo, since they are intended to be idempotent wrt the updates that came
    // before or after them.
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_INTERIM)) return false;

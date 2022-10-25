@@ -448,7 +448,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                }
                break;
 
-               case PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA: 
+               case PZG_NETWORK_COMMAND_INVALIDATE_LAST_RECEIVED_BEACON_DATA:
                   lastReceivedBeaconData.Reset();  // so that we'll resend to the owner thread when that happens
                break;
 
@@ -490,8 +490,8 @@ void PZGNetworkIOSession :: InternalThreadEntry()
             while(ptGateways[i]()->DoInput(messageReceiver) > 0)
             {
                MessageRef msg;
-               while(messageReceiver.RemoveHead(msg).IsOK()) 
-               { 
+               while(messageReceiver.RemoveHead(msg).IsOK())
+               {
                   // no point in forwarding-to-owner a dup Message, or a Message that came from us, or a Message from an incompatibile peer
                   PZGMulticastMessageTag tag;
                   if ((msg()->FindFlat(PZG_NETWORK_NAME_MULTICAST_TAG, tag).IsOK())&&(tag.GetCompatibilityVersionCode() == _hbSettings()->GetCompatibilityVersionCode())&&(tag.GetPeerID() != GetLocalPeerID())&&((msg()->what == PZG_NETWORK_COMMAND_SET_BEACON_DATA)||((recentlyReceived.ContainsKey(tag) == false)&&(recentlyReceived.PutWithDefault(tag).IsOK()))))
@@ -511,13 +511,13 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                                     lastReceivedBeaconData = incomingBeaconData;
                                     if (SendMessageToOwner(CreateBeaconDataMessage(incomingBeaconData, false, tag)).IsError()) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send beacon data to main thread!\n");
                                  }
-                              } 
+                              }
                               else LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to retrieve beacon data from incoming multicast Message!\n");
                            }
-                           else if (_master->IAmFullyAttached()) LogTime(MUSCLE_LOG_WARNING, "Multicast thread received beacon data from peer [%s], but peer [%s] is the senior peer.  Multiple senior peers present?\n", tag.GetPeerID().ToString()(), seniorPeerID.ToString()()); 
+                           else if (_master->IAmFullyAttached()) LogTime(MUSCLE_LOG_WARNING, "Multicast thread received beacon data from peer [%s], but peer [%s] is the senior peer.  Multiple senior peers present?\n", tag.GetPeerID().ToString()(), seniorPeerID.ToString()());
                         }
                      }
-                     else 
+                     else
                      {
                         (void) recentlyReceived.MoveToBack(tag);  // might as well use the full LRU semantics
                         if (SendMessageToOwner(msg).IsError()) LogTime(MUSCLE_LOG_ERROR, "Multicast thread:  Unable to send Message to main thread!\n");
@@ -591,7 +591,7 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
 
    // If we got here, we're going to have to create one
    IPAddressAndPort iap = GetUnicastIPAddressAndPortForPeerID(peerID);
-   if (iap.IsValid() == false) 
+   if (iap.IsValid() == false)
    {
       LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't find IP address for peer [%s]!\n", peerID.ToString()());
       return PZGUnicastSessionRef();
@@ -637,7 +637,7 @@ void PZGNetworkIOSession :: ComputerIsAboutToSleep()
    SeniorPeerChanged(_seniorPeerID, ZGPeerID());
 
    // Since when we wake up we won't know who is online anymore
-   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(_master->GetOnlinePeers()); iter.HasData(); iter++) 
+   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(_master->GetOnlinePeers()); iter.HasData(); iter++)
    {
       const ZGPeerID temp = iter.GetKey();  // copy this out first to avoid re-entrancy problems
       PeerHasGoneOffline(temp, iter.GetValue());

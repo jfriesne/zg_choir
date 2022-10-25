@@ -30,7 +30,7 @@ bool ClientSideMessageTreeSession :: ClientConnectionClosed()
 {
    const bool ret = AbstractReflectSession::ClientConnectionClosed();
    _networkGateway.SetNetworkConnected(false);
-   return ret; 
+   return ret;
 }
 
 void ClientSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * /*userData*/)

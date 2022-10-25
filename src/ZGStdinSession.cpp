@@ -7,7 +7,7 @@
 
 namespace zg {
 
-ZGStdinSession :: ZGStdinSession(ITextCommandReceiver & target, bool endServerOnClose) : _target(target), _endServerOnClose(endServerOnClose), _calledEndServer(false) 
+ZGStdinSession :: ZGStdinSession(ITextCommandReceiver & target, bool endServerOnClose) : _target(target), _endServerOnClose(endServerOnClose), _calledEndServer(false)
 {
    /* empty */
 }
@@ -28,7 +28,7 @@ bool ZGStdinSession :: IsReallyStdin() const
 bool ZGStdinSession :: ClientConnectionClosed()
 {
    bool isReallyStdin = IsReallyStdin();
-   if (_endServerOnClose) 
+   if (_endServerOnClose)
    {
       if (isReallyStdin) LogTime(MUSCLE_LOG_DEBUG, "ZGStdinSession:  stdin was closed -- this process will end shortly!\n");
       EndServer();  // we want our process to go away if we lose the stdin/stdout connection to the parent process
@@ -56,12 +56,12 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
    if ((msg())&&(msg()->what == PR_COMMAND_TEXT_STRINGS))
    {
       String nextCmd;
-      for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd).IsOK(); i++) 
+      for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd).IsOK(); i++)
       {
          nextCmd = nextCmd.Trim();
          StringTokenizer tok(nextCmd(), ";;");
          const char * t;
-         while((t = tok()) != NULL) 
+         while((t = tok()) != NULL)
          {
             String nc = t; nc = nc.Trim();  // yes, the Trim() is necessary!
             if ((nc == "quit")||(nc == "exit"))
@@ -100,7 +100,7 @@ static void LogAux(const String & s, uint32 sev)
 static bool HandleSetLogLevelCommand(const char * p, bool isDisplay)
 {
    while((*p)&&(muscleInRange(*p, 'A', 'Z') == false)&&(muscleInRange(*p, 'a', 'z') == false)) p++;
-            
+
    uint32 logLevel = NUM_MUSCLE_LOGLEVELS;
    String lvl = p;  lvl = lvl.Trim();
    if (lvl.HasChars())

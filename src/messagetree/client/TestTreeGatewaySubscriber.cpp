@@ -14,7 +14,7 @@ TestTreeGatewaySubscriber :: ~TestTreeGatewaySubscriber()
    /* empty */
 }
 
-bool TestTreeGatewaySubscriber :: IsReadyForTextCommands() const 
+bool TestTreeGatewaySubscriber :: IsReadyForTextCommands() const
 {
    return IsTreeGatewayConnected();
 }
@@ -37,8 +37,8 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case '?':
       {
          LogTime(MUSCLE_LOG_INFO, "tree_client command set is as follows:\n");
-         LogTime(MUSCLE_LOG_INFO, "  p <tag>       -- Ping the client's local server with the given tag-string\n"); 
-         LogTime(MUSCLE_LOG_INFO, "  P <tag>       -- Ping the senior peer with the given tag-string\n"); 
+         LogTime(MUSCLE_LOG_INFO, "  p <tag>       -- Ping the client's local server with the given tag-string\n");
+         LogTime(MUSCLE_LOG_INFO, "  P <tag>       -- Ping the senior peer with the given tag-string\n");
          LogTime(MUSCLE_LOG_INFO, "  s dbs/db_0/x  -- set a DataNode at the given path\n");
          LogTime(MUSCLE_LOG_INFO, "  d dbs/db_0/*  -- delete one or more nodes or node-subtrees\n");
          LogTime(MUSCLE_LOG_INFO, "  g dbs/db_*/*  -- submit a one-time query for the current state of nodes matching this path\n");
@@ -55,29 +55,29 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'p':
       {
          const String pingTag = tok();
-         if (PingTreeLocalPeer(pingTag).IsOK(ret)) 
+         if (PingTreeLocalPeer(pingTag).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Sent server-ping with tag [%s]\n", pingTag());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send server-ping with tag [%s] (%s)\n", pingTag(), ret()); 
+         else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send server-ping with tag [%s] (%s)\n", pingTag(), ret());
       }
       break;
 
       case 'P':
       {
          const String pingTag = tok();
-         if (PingTreeSeniorPeer(pingTag).IsOK(ret))   // assuming we want the ping to route through the update-path of database #0, for now 
+         if (PingTreeSeniorPeer(pingTag).IsOK(ret))   // assuming we want the ping to route through the update-path of database #0, for now
          {
             LogTime(MUSCLE_LOG_INFO, "Sent senior-peer-ping with tag [%s]\n", pingTag());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send senior-peer-ping with tag [%s] (%s)\n", pingTag(), ret()); 
+         else LogTime(MUSCLE_LOG_ERROR, "Error, couldn't send senior-peer-ping with tag [%s] (%s)\n", pingTag(), ret());
       }
       break;
 
       case 's':
       {
          const String path = tok();
-       
+
          MessageRef payloadMsg = GetMessageFromPool(1234);
          payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
          if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(), GetEmptyString(), GenerateOpTag(optOpTag)).IsOK(ret))
@@ -91,7 +91,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'i':
       {
          const String path = tok();
-       
+
          MessageRef payloadMsg = GetMessageFromPool(1234);
          payloadMsg()->AddString("This indexed node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
 
@@ -121,7 +121,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'd':
       {
          const String path = tok();
-       
+
          if (RequestDeleteTreeNodes(path, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Requested deletion of node(s) matching [%s] opTag=[%s]\n", path(), optOpTag());
@@ -133,7 +133,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'g':
       {
          const String path = tok();
-       
+
          if (RequestTreeNodeValues(path, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Requested download of node(s) matching [%s] with opTag=[%s]\n", path(), optOpTag());
@@ -147,7 +147,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          const String path        = tok();
          const String tag         = tok();
          const String maxDepthStr = tok();
-       
+
          const uint32 maxDepth = ((maxDepthStr.HasChars())&&(muscleInRange(maxDepthStr[0], '0', '9'))) ? atol(maxDepthStr()) : MUSCLE_NO_LIMIT;
 
          Queue<String> paths; (void) paths.AddTail(path);
@@ -162,7 +162,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'S':
       {
          const String path = tok();
-       
+
          if (AddTreeSubscription(path).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Subscribed to node(s) matching [%s]\n", path());
@@ -174,7 +174,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
       case 'U':
       {
          const String path = tok();
-       
+
          if (RemoveTreeSubscription(path).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Unsubscribed from node(s) matching [%s]\n", path());

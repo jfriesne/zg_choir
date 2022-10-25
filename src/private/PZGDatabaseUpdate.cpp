@@ -183,7 +183,7 @@ status_t PZGDatabaseUpdate :: CopyFromImplementation(const Flattenable & copyFro
 }
 
 void PZGDatabaseUpdate :: UncachePayloadBufferAsMessage() const
-{  
+{
    // we don't think we'll be needing the Message version again anytime soon, so we'll free up its memory
    // ... but only if we still have a flattened version.  (we're not savages)
    if (_updateBuf()) _updateMsg.Reset();

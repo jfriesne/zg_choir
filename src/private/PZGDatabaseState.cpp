@@ -24,9 +24,9 @@ PZGDatabaseState :: PZGDatabaseState()
    // empty
 }
 
-void PZGDatabaseState :: SetParameters(ZGPeerSession * master, uint32 whichDatabase, uint64 maxPayloadBytesInLog) 
+void PZGDatabaseState :: SetParameters(ZGPeerSession * master, uint32 whichDatabase, uint64 maxPayloadBytesInLog)
 {
-   _master               = master; 
+   _master               = master;
    _whichDatabase        = whichDatabase;
    _maxPayloadBytesInLog = maxPayloadBytesInLog;
 }
@@ -153,7 +153,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
             NestCountGuard ncg(_inSeniorDatabaseUpdate);
             ret = _master->SetLocalDatabaseFromMessage(_whichDatabase, _dbChecksum, userDBStateMsg);
          }
-     
+
          if (ret.IsOK()) SeniorUpdateCompleted(dbUp, startTime, userDBStateMsg, networkTimeProvider);
          else
          {
@@ -205,7 +205,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
             const status_t ret = AddDatabaseUpdateToUpdateLog(optDBUp);
             if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  Unable to add junior update to update log! [%s]\n", ret());
             return ret;
-         } 
+         }
          else LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseState::HandleDatabaseUpdateRequest:  No PZGDatabaseUpdate provided in Message " UINT32_FORMAT_SPEC "\n", msg()->what);
       }
       break;
@@ -404,7 +404,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdate(const PZGDatabaseUpdate
 
    _localDatabaseStateID = newDatabaseStateID;
    return B_NO_ERROR;  // success!
-} 
+}
 
 status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdate & dbUp)
 {
@@ -435,7 +435,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseReplace(const PZGDatabaseUpdat
 
    _localDatabaseStateID = newDatabaseStateID;
    LogTime(MUSCLE_LOG_DEBUG, "Junior database #" UINT32_FORMAT_SPEC " is now replaced by the senior database at state #" UINT64_FORMAT_SPEC "\n", _whichDatabase, _localDatabaseStateID);
-   return B_NO_ERROR;   
+   return B_NO_ERROR;
 }
 
 status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdateAux(const PZGDatabaseUpdate & dbUp)
@@ -491,7 +491,7 @@ void PZGDatabaseState :: PrintDatabaseStateInfo() const
    if (recalculatedChecksum == _dbChecksum) muscleSprintf(buf, "checksum=" UINT32_FORMAT_SPEC, _dbChecksum);
                                        else muscleSprintf(buf, "[[[ERROR running DB checksum is " UINT32_FORMAT_SPEC ", but recalculated checksum is " UINT32_FORMAT_SPEC "]]]", _dbChecksum, recalculatedChecksum);
 
-   printf("DB #" UINT32_FORMAT_SPEC ":  UpdateLog has " UINT32_FORMAT_SPEC " items (" UINT64_FORMAT_SPEC "/" UINT64_FORMAT_SPEC " bytes, " UINT64_FORMAT_SPEC " millis), %s, state=" UINT64_FORMAT_SPEC ", FirstUnsentID=" UINT64_FORMAT_SPEC "\n", _whichDatabase, _updateLog.GetNumItems(), _totalPayloadBytesInLog, _maxPayloadBytesInLog, _totalElapsedMillisInLog, buf, _localDatabaseStateID, _firstUnsentUpdateID);  
+   printf("DB #" UINT32_FORMAT_SPEC ":  UpdateLog has " UINT32_FORMAT_SPEC " items (" UINT64_FORMAT_SPEC "/" UINT64_FORMAT_SPEC " bytes, " UINT64_FORMAT_SPEC " millis), %s, state=" UINT64_FORMAT_SPEC ", FirstUnsentID=" UINT64_FORMAT_SPEC "\n", _whichDatabase, _updateLog.GetNumItems(), _totalPayloadBytesInLog, _maxPayloadBytesInLog, _totalElapsedMillisInLog, buf, _localDatabaseStateID, _firstUnsentUpdateID);
 }
 
 void PZGDatabaseState :: PrintDatabaseUpdateLog() const

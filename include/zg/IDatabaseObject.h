@@ -17,7 +17,7 @@ class IDatabaseObject : public RefCountable, public INetworkTimeProvider
 public:
    /** Default constructor for an IDatabaseObject that is to be used outside the context of a ZGDatabasePeerSession */
    IDatabaseObject() : _session(NULL), _dbIndex(-1) {/* empty */}
-   
+
    /** Constructor for an IDatabaseObject that is created via ZGDatabasePeerSession::CreateDatabaseObject()
      * @param session pointer to the ZGDatabasePeerSession object that created us, or NULL if we weren't created by a ZGDatabasePeerSession
      * @param dbIndex our position within the ZGDatabasePeerSession's databases-list, or -1 if we weren't created by a ZGDatabasePeerSession
@@ -30,7 +30,7 @@ public:
    /** Should be implemented to set this object to its default/just-default-constructed state */
    virtual void SetToDefaultState() = 0;
 
-   /** Should be implemented to replace this object's entire state with the state contained in (archive) 
+   /** Should be implemented to replace this object's entire state with the state contained in (archive)
      * @param archive a Message containing state information, that was previously created by calling SaveToArchive()
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
@@ -43,10 +43,10 @@ public:
    virtual status_t SaveToArchive(const MessageRef & archive) const = 0;
 
    /** Should return the current checksum of this object.  This checksum should always correspond exactly
-     * to this object's current state, and unless this object is quite small, it should be implemented as 
-     * a running checksum so that this call can just return a known value rather than recalculating the 
-     * checksum from the data during this call.  That is because this method will be called rather often (e.g. 
-     * once after any other call that changes this object's state) and therefore it is better if this call 
+     * to this object's current state, and unless this object is quite small, it should be implemented as
+     * a running checksum so that this call can just return a known value rather than recalculating the
+     * checksum from the data during this call.  That is because this method will be called rather often (e.g.
+     * once after any other call that changes this object's state) and therefore it is better if this call
      * can be made as inexpensive as possible.
      */
    virtual uint32 GetCurrentChecksum() const = 0;
@@ -77,10 +77,10 @@ public:
    int32 GetDatabaseIndex() const {return _dbIndex;}
 
 protected:
-   /** Returns a read-only pointer to the specified IDatabaseObject held by our 
+   /** Returns a read-only pointer to the specified IDatabaseObject held by our
      * ZGDatabasePeerSession, or NULL if we don't have a ZGDatabasePeerSession
      * or if the specified database doesn't exist.
-     * @param whichDatabase index of the database object we want to access 
+     * @param whichDatabase index of the database object we want to access
      */
    const IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const;
 
@@ -109,7 +109,7 @@ protected:
    virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const;
 
    /** Returns the number of microseconds that should be added to a GetRunTime64() value to turn it into a GetNetworkTime64() value,
-     * or subtracted to do the inverse operation.  Note that this value will vary from one moment to the next! 
+     * or subtracted to do the inverse operation.  Note that this value will vary from one moment to the next!
      */
    virtual int64 GetToNetworkTimeOffset() const;
 
@@ -131,7 +131,7 @@ protected:
    /** Should update this object's state using the passed-in senior-do-Message (whose semantics
      * are left up to the subclass to define), and then return a reference to a Message that can
      * be used later to update the junior copies of this database to the same final state that this
-     * object is now in.  
+     * object is now in.
      * @param seniorDoMsg a Message containing instructions on how to update this object's state.
      * @returns on Success, a reference to a Message that can be used to update the junior peers'
      *          instances of this database to the same state that this object is now in, or
@@ -143,7 +143,7 @@ protected:
      * returned by a call to SeniorUpdate() on the senior peer's instance of this object)
      * @param juniorDoMsg A Message containing instrutions on how to update this object's state.
      * @returns B_NO_ERROR on success, or an error code on failure.
-     */ 
+     */
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg) = 0;
 
    /** Called when our ZGDatabasePeerSession becomes the senior peer, or stops being the senior peer.

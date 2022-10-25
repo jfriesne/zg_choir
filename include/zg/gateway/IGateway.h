@@ -13,7 +13,7 @@ class ITreeGateway;
 
 extern ITreeGateway * GetDummyTreeGateway();
 
-/** Abstract base class for objects that want to server as a gateway to a number of IGatewaySubscriber objects 
+/** Abstract base class for objects that want to server as a gateway to a number of IGatewaySubscriber objects
  *  The GatewaySubscriberType template-argument should be either IGatewaySubscriber or a subclass thereof.
  *  The GatewaySubclass template-argument should be type of the gateway subclass itself (just so we can declare IGatewaySubscriber<GatewaySubclass> as a friend, argh)
  */
@@ -64,21 +64,21 @@ protected:
    const Hashtable<uint32, GatewaySubscriberType *> & GetRegistrationIDs() const {return _registrationIDs;}
 
 protected:
-   virtual void RegisterSubscriber(void * s) 
+   virtual void RegisterSubscriber(void * s)
    {
       const uint32 registrationID = ++_registrationIDCounter;
       GatewaySubscriberType * sub = static_cast<GatewaySubscriberType *>(s);
       if ((_registeredSubscribers.Put(sub, registrationID).IsError())||(_registrationIDs.Put(registrationID, sub).IsError())) MCRASH("IGateway::RegisterSubscriber:  Registration failed!");
    }
 
-   virtual void UnregisterSubscriber(void * s) 
+   virtual void UnregisterSubscriber(void * s)
    {
       GatewaySubscriberType * sub = static_cast<GatewaySubscriberType *>(s);
       uint32 registrationID = 0;  // just to avoid a compiler warning
       if (_registeredSubscribers.Remove(sub, registrationID).IsOK()) (void) _registrationIDs.Remove(registrationID);
                                                                 else MCRASH("IGateway::UnregisterSubscriber:  Unknown subscriber!");
    }
-   
+
 private:
    friend class IGatewaySubscriber<GatewaySubclass>;
 
@@ -110,18 +110,18 @@ template<class GatewayType> void IGatewaySubscriber<GatewayType> :: SetGateway(G
 template<class GatewayType> bool IGatewaySubscriber<GatewayType>::BeginCallbackBatch()
 {
    const bool ret = _callbackBatchCounter.Increment();
-   if (ret) 
+   if (ret)
    {
       (void) BeginCommandBatch();   // might as well auto-enter a command-batch when we start the callback batch
       CallbackBatchBegins();        // that way the user-code doesn't have to remember when to do so
-   } 
+   }
    return ret;
 }
 
 template<class GatewayType> bool IGatewaySubscriber<GatewayType>::EndCallbackBatch()
 {
    const bool ret = _callbackBatchCounter.IsOutermost();
-   if (ret) 
+   if (ret)
    {
       CallbackBatchEnds();
       (void) EndCommandBatch();

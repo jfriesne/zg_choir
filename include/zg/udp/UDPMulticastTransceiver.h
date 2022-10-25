@@ -62,13 +62,13 @@ public:
      */
    status_t SendUnicastPacket(const IPAddressAndPort & targetAddress, const ByteBufferRef & payloadBytes);
 
-   /** Returns the current transmission-key string we are using (as specified previously in your call to Start()). 
+   /** Returns the current transmission-key string we are using (as specified previously in your call to Start()).
      *  Only valid if we are currently active.
-     */ 
+     */
    const String & GetTransmissionKey() const {return _transmissionKey;}
 
    /** Returns our current per-sender maximum backlog depth (as specified previously in your call to Start()).
-     * Only valid if we are currently active. 
+     * Only valid if we are currently active.
      */
    uint32 GetPerSenderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
 

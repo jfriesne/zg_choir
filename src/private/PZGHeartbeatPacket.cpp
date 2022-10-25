@@ -60,7 +60,7 @@ uint32 PZGHeartbeatPacket :: FlattenedSizeNotIncludingVariableLengthData() const
         + sizeof(_peerType)
         + sizeof(uint16)                 // for _peerType and _isFullyAttached
         + sizeof(uint16)                 // for _orderedPeersList.GetNumItems()
-        + sizeof(uint16);                // reserved for now 
+        + sizeof(uint16);                // reserved for now
 }
 
 uint32 PZGHeartbeatPacket :: FlattenedSize() const
@@ -133,8 +133,8 @@ status_t PZGHeartbeatPacket :: Unflatten(DataUnflattener & unflat)
        MRETURN_ON_ERROR(unflat.ReadFlat(*newPIRef()));
        MRETURN_ON_ERROR(_orderedPeersList.AddTail(newPIRef));
    }
-   
-   if (attribBufSize > 0) 
+
+   if (attribBufSize > 0)
    {
       const uint32 numBytesLeft = unflat.GetNumBytesAvailable();
       if (attribBufSize > numBytesLeft)
@@ -165,7 +165,7 @@ String PZGHeartbeatPacket :: ToString() const
    muscleSprintf(buf, "Heartbeat:  PacketID=" UINT32_FORMAT_SPEC " cversion=[%s] sysKey=" UINT64_FORMAT_SPEC " netSendTime=" UINT64_FORMAT_SPEC " tcpPort=%u peerType=%u isFullyAttached=%i uptimeSeconds=" UINT32_FORMAT_SPEC " sourcePeerID=[%s] attrSize=" UINT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC, _heartbeatPacketID, CompatibilityVersionCodeToString(_versionCode)(), _systemKey, _networkSendTimeMicros, _tcpAcceptPort, _peerType, _isFullyAttached, _peerUptimeSeconds, _sourcePeerID.ToString()(), _peerAttributesBuf()?_peerAttributesBuf()->GetNumBytes():666, _peerAttributesBuf()?_peerAttributesBuf()->CalculateChecksum():666);
 
    String ret = buf;
-   for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) 
+   for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++)
    {
       muscleSprintf(buf, "\n   OP #" UINT32_FORMAT_SPEC ": ", i);
       ret += buf;
@@ -173,7 +173,7 @@ String PZGHeartbeatPacket :: ToString() const
    }
 
    ConstMessageRef attribMsg = GetPeerAttributesAsMessage();
-   if (attribMsg()) 
+   if (attribMsg())
    {
       ret += " ";
       ret += PeerInfoToString(attribMsg);
@@ -221,7 +221,7 @@ PZGHeartbeatPacketWithMetaData :: PZGHeartbeatPacketWithMetaData()
 {
    // empty
 }
-   
+
 PZGHeartbeatPacketWithMetaData :: PZGHeartbeatPacketWithMetaData(const PZGHeartbeatSettings & hbSettings, uint32 uptimeSeconds, bool isFullyAttached, uint32 packetID)
    : PZGHeartbeatPacket(hbSettings, uptimeSeconds, isFullyAttached, packetID)
    , _localReceiveTimeMicros(0)

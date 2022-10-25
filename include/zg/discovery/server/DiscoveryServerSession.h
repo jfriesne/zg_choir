@@ -15,7 +15,7 @@ class IDiscoveryServerSessionController;
 class DiscoveryServerSession : public AbstractReflectSession
 {
 public:
-   /** Constructor 
+   /** Constructor
      * @param master IDiscoverySessionController to get our pong Messages from.
      * @param discoveryPort the port that we should listen for incoming discovery-query UDP packets on.  Defaults to DEFAULT_ZG_DISCOVERY_PORT.
      */
@@ -34,7 +34,7 @@ public:
    virtual ConstSocketRef CreateDefaultSocket();
 
    /** Returns true iff we have data pending, or any of our subscribers have notified us
-    *  that they have data they want to send. 
+    *  that they have data they want to send.
     */
    virtual bool HasBytesToOutput() const {return (_outputData.HasItems());}
 
@@ -69,7 +69,7 @@ private:
    public:
       UDPReply() {/* empty */}
       UDPReply(uint64 sendTime, const MessageRef & data) : _sendTime(sendTime), _data(data) {/* empty */}
-   
+
       uint64 GetSendTime() const {return _sendTime;}
       MessageRef GetData() const {return _data;}
 

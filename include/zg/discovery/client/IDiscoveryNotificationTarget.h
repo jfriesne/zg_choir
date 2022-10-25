@@ -20,7 +20,7 @@ public:
    /** Destructor.  Calls SetDiscoveryClient(NULL) to auto-unregister this object from the SystemDiscoveryClient if necessary. */
    virtual ~IDiscoveryNotificationTarget() {SetDiscoveryClient(NULL);}
 
-   /** Unregisters this object from any SystemDiscoveryClient it's currently registered to 
+   /** Unregisters this object from any SystemDiscoveryClient it's currently registered to
      * (if necessary) and then registers it with (discoveryClient).
      * @param discoveryClient pointer to the SystemDiscoveryClient to register with, or NULL to unregister only.
      * @note if this IDiscoveryNotificationTarget is already registered with (discoveryClient),

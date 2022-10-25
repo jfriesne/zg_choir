@@ -10,7 +10,7 @@ namespace zg_private
 {
 
 enum {
-   PZG_BEACON_DATA = 2053595748 // 'zgbd' 
+   PZG_BEACON_DATA = 2053595748 // 'zgbd'
 };
 
 /** This class holds all the data that the senior peer will send out periodically to keep

@@ -116,14 +116,14 @@ public:
      */
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData) {(void) tag; (void) subtreeData;}
 
-   /** Called when the connection between our gateway and its upstream database has been severed, or has become usable again. 
+   /** Called when the connection between our gateway and its upstream database has been severed, or has become usable again.
      * Default implementation is a no-op.  (You can call IsTreeGatewayConnected() to see what the current state is)
-     */ 
+     */
    virtual void TreeGatewayConnectionStateChanged() {/* empty */}
 
    /** Called just before our gateway gets destroyed -- this is your last chance to talk to the gateway before its demise.
      * Default implementation is a no-op.
-     */ 
+     */
    virtual void TreeGatewayShuttingDown() {/* empty */}
 
 protected:
@@ -233,7 +233,7 @@ protected:
      */
    virtual status_t PingTreeLocalPeer(const String & tag, TreeGatewayFlags flags = TreeGatewayFlags());
 
-   /** Sends a "Ping" message to the senior peer.  This Ping message will go through the entire ZG-database-update meat-grinder before 
+   /** Sends a "Ping" message to the senior peer.  This Ping message will go through the entire ZG-database-update meat-grinder before
      * coming back to you in the form of a call to TreeSeniorPeerPonged(), which is useful if you are trying to synchronize your actions
      * with respect to how a database is being updated system-wide.
      * @param tag an arbitrary string to send with the ping-message.  Will be sent back verbatim in the corresponding SeniorPeerPonged() callback.
@@ -261,18 +261,18 @@ protected:
      * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
      *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-return-address (as was passed to you by a previous
      *                      call to MessageReceivedFromSubscriber().  In the former case, your (msg) will be sent to all
-     *                      ITreeGatewaySubscribers that are currently subscribed to at least one of the nodes matched by the path 
-     *                      (wildcards in the path are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber 
+     *                      ITreeGatewaySubscribers that are currently subscribed to at least one of the nodes matched by the path
+     *                      (wildcards in the path are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber
      *                      identified by the subscriber-return-address.
      * @param msg the Message to send to one or more other ITreeGatewaySubscribers.
      * @param optFilterRef an optional reference to a QueryFilter object to use to filter which nodes will be matched by (subscriberPath).
      *                     If non-NULL, only nodes whose payloads match the QueryFilter's criteria will be considered when deciding whom
      *                     to forward (msg) to.  Note that this argument is ignored if (subscriberPath) is a return-address String.
      * @param returnAddress Optional string to form part of the return-address that will be passed to the receivers of the Message.
-     *                      In general you want to just leave this at its default value; it is here primarily to support routing during 
+     *                      In general you want to just leave this at its default value; it is here primarily to support routing during
      *                      intermediate stages of the Message-sending process.
      * @returns B_NO_ERROR on success, or an error code on failure.
-     * @note as an optimization, node-paths passed in to the (subscriberPath) argument that match only nodes that within 
+     * @note as an optimization, node-paths passed in to the (subscriberPath) argument that match only nodes that within
      *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
      *       being forwarded only to subscribers on the peers matching those nodes.
      */
@@ -281,7 +281,7 @@ protected:
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply
      *                         yet, you can pass an empty String here and specify a string later on in your EndUndoSequence() call.
-     * @param whichDB index of the database the undo-sequence should be uploaded into.  This database must be implemented via a 
+     * @param whichDB index of the database the undo-sequence should be uploaded into.  This database must be implemented via a
      *                UndoStackMessageTreeDatabaseObject.  Defaults to zero.
      */
    virtual status_t BeginUndoSequence(const String & optSequenceLabel = GetEmptyString(), uint32 whichDB = 0);
@@ -289,7 +289,7 @@ protected:
    /** Tells the database that an undoable sequence of changes has been completely uploaded.
      * @param optSequenceLabel An optional user-readable label describing the undo-operation that was completed.
      *                         If non-empty, this string will be used instead of the string that was earlier passed to BeginUndoSequence().
-     * @param whichDB index of the database the undo-sequence was uploaded into.  This database must be implemented via a 
+     * @param whichDB index of the database the undo-sequence was uploaded into.  This database must be implemented via a
      *                UndoStackMessageTreeDatabaseObject.  Defaults to zero.
      * @note this method must be called exactly once for each call to BeginUndoSequence().
      */
@@ -339,13 +339,13 @@ public:
    {
       if (_optSub) _optSub->BeginUndoSequence(label, whichDB);
    }
-    
+
    /**
     * Destructor
     * Calls EndUndoSequence on the subscriber object
     */
    ~GatewaySubscriberUndoBatchGuard() {if (_optSub) _optSub->EndUndoSequence(_label, _whichDB);}
-    
+
 private:
    ITreeGatewaySubscriber * _optSub;
    const String _label;

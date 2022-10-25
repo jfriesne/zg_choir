@@ -8,7 +8,7 @@
 namespace zg_private
 {
 
-enum {PZG_HEARTBEAT_PEER_INFO_TYPE_CODE = 2053597282}; // 'zghb' 
+enum {PZG_HEARTBEAT_PEER_INFO_TYPE_CODE = 2053597282}; // 'zghb'
 
 /** This class represents some of the data included in a PZGHeartbeatPacket
   * This is the data within the packet that pertains to a particular peer.
@@ -44,7 +44,7 @@ public:
       PZGTimingInfo() : _sourceTag(0), _heartbeatPacketID(0), _dwellTimeMicros(0) {/* empty */}
 
       /** Constructor
-        * @param sourceTag an ID that is meaningful to the receiver of this packet, regarding which interface this packet is about 
+        * @param sourceTag an ID that is meaningful to the receiver of this packet, regarding which interface this packet is about
         * @param sourceHeartbeatPacketID The heartbeat-packet-ID of the last heartbeat packet we received from that peer
         * @param dwellTimeMicros How many microseconds it has been since we received that packet, or ((uint32)-1) if that info isn't available.
         */

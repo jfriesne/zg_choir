@@ -46,7 +46,7 @@ private:
    const ZGPeerID & GetSeniorPeerID() const;
 
    ConstPZGHeartbeatSettingsRef _hbSettings;
-   PZGNetworkIOSession * _master; 
+   PZGNetworkIOSession * _master;
 
    Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > _mainThreadPeers;  // Queue because each peer may be coming in from multiple sources
 

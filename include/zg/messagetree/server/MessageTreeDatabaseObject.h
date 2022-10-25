@@ -11,7 +11,7 @@ namespace zg
 
 class MessageTreeDatabasePeerSession;
 
-/** This is a concrete implementation of IDatabaseObject that uses a subtree of the MUSCLE 
+/** This is a concrete implementation of IDatabaseObject that uses a subtree of the MUSCLE
   * Message-tree database as the data structure it synchronizes across peers.
   */
 class MessageTreeDatabaseObject : public IDatabaseObject
@@ -61,7 +61,7 @@ public:
 
    /** Sends a request to the senior peer that the specified node-value be uploaded to the message-tree database.
      * @param path session-relative path of the database node to upload (may be wildcarded, but only if (optPayload) is a NULL reference)
-     * @param optPayload reference to the Message payload you want added/updated at the given path, or a NULL reference if you want 
+     * @param optPayload reference to the Message payload you want added/updated at the given path, or a NULL reference if you want
      *                   node(s) matching the given path to be deleted.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
      * @param optBefore if non-mpety, the name of the sibling node that this node should be placed before, or empty if you want the
@@ -106,7 +106,7 @@ public:
 
    /** This callback method is called when a node in this database-object's subtree is created, updated, or destroyed.
      * @param relativePath the path to this node (relative to this database-object's root-node)
-     * @param node a reference to the node's current state -- see node.GetData() for the node's current (post-change) payload. 
+     * @param node a reference to the node's current state -- see node.GetData() for the node's current (post-change) payload.
      * @param oldDataRef a reference to the node's payload as it was before this change (or a NULL reference if this node is being created now)
      * @param isBeingRemoved true iff this node is being deleted by this change
      * @note be sure to call up to the parent implementation of this method if you override it!
@@ -129,7 +129,7 @@ public:
      * @param fromPeerID the ID of the ZGPeer that the subscriber is directly connected to
      * @param payload the Message that the subscriber sent to us
      * @param tag a tag-string that can be used to route replies back to the originating subscriber, if desired.
-     * @note Default implementation just prints an error to the log saying that the Message wasn't handled.  
+     * @note Default implementation just prints an error to the log saying that the Message wasn't handled.
      */
    virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag);
 
@@ -139,8 +139,8 @@ public:
      * @param payload the Message to send to the subscriber
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
-   virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload); 
-     
+   virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload);
+
    /** Returns a reference to our currently-active operation-tag, or a reference to an empty string if there isn't one. */
    const String & GetCurrentOpTag() const {return *_opTagStack.TailWithDefault(&GetEmptyString());}
 
@@ -335,7 +335,7 @@ private:
    {
    public:
       SafeQueryFilter(const MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj) {/* empty */}
-   
+
       virtual bool Matches(ConstMessageRef & /*msg*/, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
       virtual uint32 TypeCode() const {return 0;}  // okay because we never save/restore this type anyway
       virtual status_t SaveToArchive(Message &) const  {MCRASH("SafeQueryFilter shouldn't be saved to an archive"); return B_UNIMPLEMENTED;}

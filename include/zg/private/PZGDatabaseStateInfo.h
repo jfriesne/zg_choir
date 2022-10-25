@@ -8,7 +8,7 @@ namespace zg_private
 {
 
 enum {
-   PZG_DATABASE_STATE_INFO = 2053596258, // 'zgdb' 
+   PZG_DATABASE_STATE_INFO = 2053596258, // 'zgdb'
 };
 
 /** This class contains some advertised info about the current state of a given replicated-database.  This information is periodically
@@ -37,7 +37,7 @@ public:
    uint64 GetCurrentDatabaseStateID() const {return _currentDatabaseStateID;}
    uint64 GetOldestDatabaseIDInLog()  const {return _oldestDatabaseIDInLog;}
    uint32 GetDBChecksum()             const {return _dbChecksum;}
-  
+
    /** Calculates and returns a 32-bit checksum based on all the current contents of this object; not to be confused with the DBChecksum field! */
    uint32 CalculateChecksum() const;
 

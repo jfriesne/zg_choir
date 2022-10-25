@@ -11,7 +11,7 @@ status_t CreateMuscleSubscribeMessage(const String & subscriptionPath, const Con
    MRETURN_OOM_ON_NULL(retMsg());
 
    const String pathArg = subscriptionPath.Prepend("SUBSCRIBE:");
-   return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true)) 
+   return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true))
         | (retMsg()->CAddBool(PR_NAME_SUBSCRIBE_QUIETLY, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)));
 }
 

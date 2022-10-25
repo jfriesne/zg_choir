@@ -13,7 +13,7 @@ class TestTreeGatewaySubscriber : public ITreeGatewaySubscriber, public ITextCom
 {
 public:
    /** Constructor
-     * @param gateway the ITreeGateway we will use for network access 
+     * @param gateway the ITreeGateway we will use for network access
      */
    TestTreeGatewaySubscriber(ITreeGateway * gateway);
 

@@ -5,12 +5,12 @@
 #include "regex/SegmentedStringMatcher.h"
 #include "util/MiscUtilityFunctions.h"  // for AssembleBatchMessage()
 
-namespace zg 
+namespace zg
 {
 
 // Command-codes that can be used in both SeniorUpdate() and JuniorUpdate()
 enum {
-   MTDO_COMMAND_NOOP = 1836344163, // 'mtcc' 
+   MTDO_COMMAND_NOOP = 1836344163, // 'mtcc'
    MTDO_COMMAND_UPDATENODEVALUE,
    MTDO_COMMAND_UPDATESUBTREE,
    MTDO_COMMAND_INSERTINDEXENTRY,
@@ -19,13 +19,13 @@ enum {
 
 // Command-codes that can be used only in SeniorUpdate()
 enum {
-   MTDO_SENIOR_COMMAND_REQUESTDELETENODES = 1836348259, // 'mtsc' 
+   MTDO_SENIOR_COMMAND_REQUESTDELETENODES = 1836348259, // 'mtsc'
    MTDO_SENIOR_COMMAND_MOVEINDEXENTRY,
 };
 
 // Command-codes that can be used only in JuniorUpdate()
 enum {
-   MTDO_JUNIOR_COMMAND_UNUSED = 1836345955, // 'mtjc' 
+   MTDO_JUNIOR_COMMAND_UNUSED = 1836345955, // 'mtjc'
 };
 
 static const String MTDO_NAME_PATH    = "pth";
@@ -37,7 +37,7 @@ static const String MTDO_NAME_INDEX   = "idx";
 static const String MTDO_NAME_KEY     = "key";
 static const String MTDO_NAME_TAG     = "tag";
 
-MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath) 
+MessageTreeDatabaseObject :: MessageTreeDatabaseObject(MessageTreeDatabasePeerSession * session, int32 dbIndex, const String & rootNodePath)
    : IDatabaseObject(session, dbIndex)
    , _rootNodePathWithoutSlash(rootNodePath.WithoutSuffix("/"))
    , _rootNodePathWithSlash(rootNodePath.WithSuffix("/"))
@@ -364,18 +364,18 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
          if (optRetRelativePath) *optRetRelativePath = GetPathClause(_rootNodeDepth, path());
          return (pathDepth-_rootNodeDepth);
       }
-      else return -1; 
+      else return -1;
    }
    else if (path == _rootNodePathWithoutSlash)
    {
       if (optRetRelativePath) optRetRelativePath->Clear();
-      return 0; 
+      return 0;
    }
    else if ((_rootNodePathWithoutSlash.IsEmpty())||((path.StartsWith(_rootNodePathWithSlash))))
    {
       String temp = _rootNodePathWithoutSlash.IsEmpty() ? path : path.Substring(_rootNodePathWithSlash.Length());
       const uint32 ret = temp.GetNumInstancesOf('/')+1;
-      if (optRetRelativePath) 
+      if (optRetRelativePath)
       {
          optRetRelativePath->SwapContents(temp);
          if ((path.EndsWith('/'))&&(!optRetRelativePath->EndsWith('/'))) *optRetRelativePath += '/';  // for when the user is requesting a new node ID in the db-subtree-root
@@ -469,7 +469,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
    MessageRef optPayload        = msg.GetMessage(MTDO_NAME_PAYLOAD);
    const String & path          = msg.GetStringReference(MTDO_NAME_PATH);
    const String & optOpTag      = msg.GetStringReference(MTDO_NAME_TAG);
- 
+
    DECLARE_OP_TAG_GUARD;
 
    if (optPayload())
@@ -506,7 +506,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    const String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path, flags);
    DataNode * node = zsh->GetDataNode(sessionRelativePath);
-   if (node) 
+   if (node)
    {
       const String & key      = msg.GetStringReference(MTDO_NAME_KEY);
       const String & optOpTag = msg.GetStringReference(MTDO_NAME_TAG);
@@ -519,7 +519,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
 //printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node?node->GetIndex()->GetNumItems():666);
       return B_NO_ERROR;
    }
-   else 
+   else
    {
       LogTime(MUSCLE_LOG_CRITICALERROR, "HandleNodeIndexUpdateMessage:  Couldn't find node for path [%s] to update node-index!\n", sessionRelativePath());
       return B_DATA_NOT_FOUND;
@@ -546,7 +546,7 @@ status_t MessageTreeDatabaseObject :: HandleSubtreeUpdateMessage(const Message &
 #endif
       return zsh->RestoreNodeTreeFromMessage(*payload(), DatabaseSubpathToSessionRelativePath(path, flags), true, sdnFlags);
    }
-   else 
+   else
    {
       LogTime(MUSCLE_LOG_ERROR, "HandleSubtreeUpdateMessage():  No payload found for path [%s]\n", path());
       return B_BAD_ARGUMENT;
@@ -587,7 +587,7 @@ status_t MessageTreeDatabaseObject :: MoveIndexEntries(const String & nodePath, 
    return zsh->MoveIndexEntries(nodePath, optBefore.HasChars()?&optBefore:NULL, DummyConstQueryFilterRef(andQF));
 }
 
-MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeDatabasePeerSession() const 
+MessageTreeDatabasePeerSession * MessageTreeDatabaseObject :: GetMessageTreeDatabasePeerSession() const
 {
    return static_cast<MessageTreeDatabasePeerSession *>(GetDatabasePeerSession());
 }

@@ -7,7 +7,7 @@
 namespace zg_private
 {
 
-enum {PZG_DATABASE_UPDATE_TYPE_CODE = 1684174192}; // 'dbup' 
+enum {PZG_DATABASE_UPDATE_TYPE_CODE = 1684174192}; // 'dbup'
 
 enum {
    PZG_DATABASE_UPDATE_TYPE_NOOP = 0, // Doesn't do anything to the database at all

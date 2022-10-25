@@ -11,7 +11,7 @@ PZGHeartbeatSourceState :: PZGHeartbeatSourceState(uint32 maxMeasurements) : _ma
 status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & multicastAddr, uint64 newMeasurementMicros, uint64 now)
 {
    PZGRoundTripTimeAveragerRef * rtt = _rttAveragers.Get(multicastAddr);
-   if (rtt == NULL) 
+   if (rtt == NULL)
    {
       PZGRoundTripTimeAveragerRef r(newnothrow PZGRoundTripTimeAverager(_maxMeasurements));
       MRETURN_OOM_ON_NULL(r());
@@ -27,12 +27,12 @@ uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasur
    bool isFirstKey = true;
    for (HashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter(_rttAveragers); iter.HasData(); iter++)
    {
-      const PZGRoundTripTimeAverager * rtt = iter.GetValue()(); 
+      const PZGRoundTripTimeAverager * rtt = iter.GetValue()();
       if (rtt->GetLastMeasurementTime() >= mustHaveMeasurementsAfterThisTime)
       {
          const uint64 ret = rtt->GetAverageValueIgnoringOutliers();
          if (isFirstKey == false)
-         {  
+         {
             // Let's move the unacceptable averagers to the back; that way we'll stay on our new preference even if they come back
             // That way we avoid "flapping" back and forth if there is a marginal averager for some reason.
             for (HashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter2(_rttAveragers); iter2.HasData(); iter2++)
@@ -44,12 +44,12 @@ uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasur
          return ret;
       }
       isFirstKey = false;
-   } 
+   }
    return 0;
 }
 
 String PZGHeartbeatSourceState :: ToString(const INetworkTimeProvider & ntp) const
-{  
+{
    const PZGHeartbeatPacketWithMetaData * hb = GetHeartbeatPacket()();
    const uint64 localReceivedAt   = hb ? hb->GetLocalReceiveTimeMicros() : 0;
    const uint64 advertisedNetTime = hb ? hb->GetNetworkSendTimeMicros()  : 0;

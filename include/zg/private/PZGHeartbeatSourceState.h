@@ -46,16 +46,16 @@ public:
    uint64 GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime);
 
    /** Set the current heartbeat packet that we have from this source, and when it should expire */
-   void SetHeartbeatPacket(const PZGHeartbeatPacketWithMetaDataRef & hbPacket, uint64 localExpirationTimeMicros) 
+   void SetHeartbeatPacket(const PZGHeartbeatPacketWithMetaDataRef & hbPacket, uint64 localExpirationTimeMicros)
    {
-      _hbPacket = hbPacket; 
+      _hbPacket = hbPacket;
       _localExpirationTimeMicros = localExpirationTimeMicros;
    }
    const PZGHeartbeatPacketWithMetaDataRef & GetHeartbeatPacket() const {return _hbPacket;}
 
    // Time at which this source will be marked as offline if we don't get any further heartbeats from it
    uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
- 
+
    // Returns our current state as a human-readable string, for debugging
    String ToString(const INetworkTimeProvider & ntp) const;
 

@@ -9,7 +9,7 @@ namespace zg
 {
 
 enum {
-   MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp' 
+   MTDPS_COMMAND_PINGSENIORPEER = 1836344432, // 'mtdp'
    MTDPS_COMMAND_MESSAGETOSENIORPEER,
    MTDPS_COMMAND_MESSAGEFROMSENIORPEER,
    MTDPS_COMMAND_MESSAGETOSUBSCRIBER,
@@ -46,7 +46,7 @@ status_t MessageTreeDatabasePeerSession :: AttachedToServer()
          {
             LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeDatabasePeerSession::AttachedToServer:  Database #" UINT32_FORMAT_SPEC " has the same root-path [%s] as previously added database #" UINT32_FORMAT_SPEC "!\n", i, idb->GetRootPathWithoutSlash()(), j);
             return B_LOGIC_ERROR;
-         } 
+         }
       }
    }
 
@@ -64,7 +64,7 @@ void MessageTreeDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID
 {
    const bool wasFullyAttached = IAmFullyAttached();
    ZGDatabasePeerSession::PeerHasComeOnline(peerID, peerInfo);
-   if ((wasFullyAttached == false)&&(IAmFullyAttached())) 
+   if ((wasFullyAttached == false)&&(IAmFullyAttached()))
    {
       GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);
       ProxyTreeGateway::TreeGatewayConnectionStateChanged();  // notify our subscribers that we're now connected to the database.
@@ -122,7 +122,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGate
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
    if (mtDB) return mtDB->UploadNodeValue(relativePath, optPayload, flags, optBefore, optOpTag);
-   else 
+   else
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeValue():  No database found for path [%s]!\n", path());
       return B_BAD_ARGUMENT;
@@ -147,7 +147,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
       (void) mtDB->RequestDeleteNodes(relativePath, ConstQueryFilterRef(), TreeGatewayFlags(), optOpTag);  // we want a full overwrite of the specified subtree, not an add-to
       return mtDB->UploadNodeSubtree(relativePath, effMsg, flags, optOpTag);
    }
-   else 
+   else
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::TreeGateway_UploadNodeSubtree():  No database found for path [%s]!\n", basePath());
       return B_BAD_ARGUMENT;
@@ -167,7 +167,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestMoveIndexEntry(ITr
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
    if (mtDB) return mtDB->RequestMoveIndexEntry(relativePath, optBefore, optFilterRef, flags, optOpTag);
-   else 
+   else
    {
       LogTime(MUSCLE_LOG_ERROR, "TreeGateway_RequestMoveIndexEntry:  No database found for path [%s]\n", path());
       return B_BAD_ARGUMENT;
@@ -267,7 +267,7 @@ static ZGPeerID GetPeerIDFromReturnAddress(const String & path, String * optRetS
    }
    return ZGPeerID();  // failure
 }
- 
+
 
 // Note:  If this method returns an error-code, that means we should send to all peers
 status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const String & path, const ConstQueryFilterRef & optFilter, Hashtable<ZGPeerID, Void> & retPeerIDs)
@@ -276,7 +276,7 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
    if (peerID.IsValid())
    {
       // path is something like "{f01898e8e4810001:fa4c50daa9eb}:_3_:_4_:" -- we'll use this to route it back to exactly one ITreeGatewaySubscriber
-      return retPeerIDs.PutWithDefault(peerID);      
+      return retPeerIDs.PutWithDefault(peerID);
    }
    else
    {
@@ -555,9 +555,9 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
             {
                MessageReceivedFromTreeGatewaySubscriber(sourcePeerID, payload, whichDB, tag);
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
+            else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but I am not the senior peer!\n", GetLocalPeerID().ToString()()); 
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but I am not the senior peer!\n", GetLocalPeerID().ToString()());
       break;
 
       case MTDPS_COMMAND_MESSAGEFROMSENIORPEER:
@@ -570,7 +570,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
          {
             MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()());
       }
       break;
 
@@ -595,7 +595,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
                {
                   MessageReceivedFromSubscriber(suffix, payload, tag);
                }
-               else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER addressed to peer [%s]!\n", GetLocalPeerID().ToString()(), targetPeerID.ToString()()); 
+               else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER addressed to peer [%s]!\n", GetLocalPeerID().ToString()(), targetPeerID.ToString()());
             }
             else
             {
@@ -610,7 +610,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
                for (HashtableIterator<ServerSideMessageTreeSession *, Void> iter(subscribedSessions); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(path, payload, tag);
             }
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER, but it has no payload!\n", GetLocalPeerID().ToString()()); 
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER, but it has no payload!\n", GetLocalPeerID().ToString()());
       }
       break;
 

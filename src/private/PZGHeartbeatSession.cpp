@@ -13,7 +13,7 @@ namespace zg_private
 {
 
 enum {
-   PZG_HEARTBEAT_COMMAND_PEERS_UPDATE = 1751281781 // 'hbpu' 
+   PZG_HEARTBEAT_COMMAND_PEERS_UPDATE = 1751281781 // 'hbpu'
 };
 
 static const String PZG_HEARTBEAT_NAME_PEERINFO = "hpi";
@@ -35,10 +35,10 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
          for (uint32 i=0; i<numPeers; i++)
          {
             FlatCountableRef fcRef;  // deliberately doing it this way to avoid a flatten/unflatten cycle, which would have the side effect of losing the source IP address value
-            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, fcRef).IsOK()) 
+            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, fcRef).IsOK())
             {
                PZGHeartbeatPacketWithMetaDataRef hbRef(fcRef, true);
-               if (hbRef()) 
+               if (hbRef())
                {
                   Queue<ConstPZGHeartbeatPacketWithMetaDataRef> * q = newPeers.GetOrPut(hbRef()->GetSourcePeerID());
                   if (q) (void) q->AddTail(hbRef);
@@ -46,16 +46,16 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
                else LogTime(MUSCLE_LOG_CRITICALERROR, "PZG_HEARTBEAT_COMMAND_PEERS_UPDATE didn't contain the expected PZGHeartbeatPacket object!\n");
             }
          }
-   
+
          const ZGPeerID oldSeniorPeerID = GetSeniorPeerID();  // deliberately making a copy of the ZGPeerID object on this line
-   
+
          // First, notify the user-code about any existing peers that have gone away (or changed in such as way that we will treat them as if they had gone away)
          for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(_mainThreadPeers); iter.HasData(); iter++)
          {
             const ZGPeerID & peerID = iter.GetKey();
             const Queue<ConstPZGHeartbeatPacketWithMetaDataRef> & oldInfoQ = iter.GetValue();
             const Queue<ConstPZGHeartbeatPacketWithMetaDataRef> * newInfoQ = newPeers.Get(peerID);
-            if ((newInfoQ == NULL)||(newInfoQ->Head()()->IsEqualIgnoreTransients(*oldInfoQ.Head()()) == false)) 
+            if ((newInfoQ == NULL)||(newInfoQ->Head()()->IsEqualIgnoreTransients(*oldInfoQ.Head()()) == false))
             {
                ZGPeerID tempPeerID = peerID;  // gotta make a copy here since the Remove() will invalidate the (peerID) reference
                ConstPZGHeartbeatPacketWithMetaDataRef optOldRef = oldInfoQ.Head();  // take a reference to it here to avoid premature deletion below
@@ -63,7 +63,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
                _master->PeerHasGoneOffline(tempPeerID, optOldRef()?optOldRef()->GetPeerAttributesAsMessage():ConstMessageRef());  // yes, tempPeerID is necessary!
             }
          }
-   
+
          // Then, notify the user-code about any new peers that have appeared
          const ZGPeerID * optPrevID = NULL;
          for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(newPeers); iter.HasData(); iter++)
@@ -83,7 +83,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
 
             optPrevID = &peerID;
          }
-   
+
          const ZGPeerID & newSeniorPeerID = GetSeniorPeerID();
          if (newSeniorPeerID != oldSeniorPeerID) _master->SeniorPeerChanged(oldSeniorPeerID, newSeniorPeerID);
       }
@@ -151,7 +151,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          dios = _hbSettings()->CreateMulticastDataIOs(true, _master->GetNetworkInterfaceFilter());
          if (dios.HasItems())
          {
-            for (uint32 i=0; i<dios.GetNumItems(); i++) 
+            for (uint32 i=0; i<dios.GetNumItems(); i++)
                if (RegisterInternalThreadSocket(dios[i]()->GetReadSelectSocket(), SOCKET_SET_READ).IsError())
                   LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatSession:  Couldn't register Multicast DataIO #" UINT32_FORMAT_SPEC "!\n", i);
          }
@@ -200,7 +200,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
       }
 
       _hbtState._now = GetRunTime64();
-      if (_hbtState._now >= pulseTime) 
+      if (_hbtState._now >= pulseTime)
       {
          _hbtState.Pulse(messagesForOwnerThread);
 
@@ -222,7 +222,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
    }
 }
 
-const ZGPeerID & PZGHeartbeatSession :: GetSeniorPeerID() const 
+const ZGPeerID & PZGHeartbeatSession :: GetSeniorPeerID() const
 {
    if (_mainThreadPeers.IsEmpty()) return GetDefaultObjectForType<ZGPeerID>();
 

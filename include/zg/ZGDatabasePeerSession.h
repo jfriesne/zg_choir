@@ -8,7 +8,7 @@ namespace zg
 {
 
 /** This is a convenience class; it is the same as a ZGPeerSession except that it also knows
-  * how to create and manage some user-provided IDatabaseObjects (one per database) so that 
+  * how to create and manage some user-provided IDatabaseObjects (one per database) so that
   * the subclass doesn't have to implement all of the Message<->IDatabaseObject plumbing manually.
   */
 class ZGDatabasePeerSession : public ZGPeerSession
@@ -22,7 +22,7 @@ public:
    /** Overridden to create and set up our IDatabaseObjects */
    virtual status_t AttachedToServer();
 
-   /** Convenience method:  Returns a read/write pointer to the specified IDatabaseObject that we hold. 
+   /** Convenience method:  Returns a read/write pointer to the specified IDatabaseObject that we hold.
      * @param whichDatabase The index of the database that we need an object to represent.
      * @returns a pointer to the nth database object, or a NULL pointer if (whichDatabase) isn't a valid database index.
      */
