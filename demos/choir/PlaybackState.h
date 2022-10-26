@@ -2,6 +2,7 @@
 #define PlaybackState_h
 
 #include "MusicData.h"
+#include "util/TimeUtilityFunctions.h"
 
 namespace choir {
 

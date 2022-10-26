@@ -15,7 +15,7 @@ enum {ZG_PEER_ID_TYPE = 2053597540}; /**< 'zgid' -- the type code of the ZGPeerI
   * A peer's ZGPeerID is assigned to at startup, and will never change over the course of the peer's lifetime.
   * It will be different for each ZG peer process that is started.
   */
-class ZGPeerID : public PseudoFlattenable
+class ZGPeerID : public PseudoFlattenable<ZGPeerID>
 {
 public:
    /** Default constructor -- sets the ZGPeerID to its invalid state (all zeroes) */
@@ -98,9 +98,6 @@ public:
 
    /** Part of the Flattenable pseudo-interface:  Returns ZG_PEER_ID_TYPE */
    static MUSCLE_CONSTEXPR uint32 TypeCode() {return ZG_PEER_ID_TYPE;}
-
-   /** Returns true iff (tc) equals ZG_PEER_ID_TYPE */
-   static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
 
    /** Part of the Flattenable pseudo-interface:  Returns 2*sizeof(uint64) */
    static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return 2*sizeof(uint64);}

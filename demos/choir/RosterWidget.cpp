@@ -1,7 +1,9 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QFont>
+
 #include "RosterWidget.h"
+#include "util/TimeUtilityFunctions.h"
 
 namespace choir {
 

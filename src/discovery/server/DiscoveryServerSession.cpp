@@ -178,11 +178,10 @@ int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
    while((_outputData.HasItems())&&(ret < maxBytes))
    {
       const UDPReply & next = *_outputData.GetFirstValue();
-      ByteBufferRef bufRef = GetByteBufferFromPool(next.GetData()()->FlattenedSize());
+      ByteBufferRef bufRef = GetFlattenedByteBufferFromPool(*next.GetData()());
       if (bufRef())
       {
          const IPAddressAndPort & replyTarget = *_outputData.GetFirstKey();
-         next.GetData()()->Flatten(DataFlattener(bufRef()->GetBuffer(), bufRef()->GetNumBytes()));
          const int32 bytesSent = SendDataUDP(s, bufRef()->GetBuffer(), bufRef()->GetNumBytes(), false, replyTarget.GetIPAddress(), replyTarget.GetPort());
          if (bytesSent > 0)
          {

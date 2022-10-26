@@ -4,6 +4,7 @@
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 #include "util/ICallbackSubscriber.h"
+#include "util/TimeUtilityFunctions.h"
 #include "zg/ZGNameSpace.h"
 
 namespace zg {

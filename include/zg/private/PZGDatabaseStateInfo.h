@@ -14,7 +14,7 @@ enum {
 /** This class contains some advertised info about the current state of a given replicated-database.  This information is periodically
   * shared between peers so that they can keep tabs on each others' progress in updating their local databases.
   */
-class PZGDatabaseStateInfo : public PseudoFlattenable
+class PZGDatabaseStateInfo : public PseudoFlattenable<PZGDatabaseStateInfo>
 {
 public:
    PZGDatabaseStateInfo();
@@ -23,10 +23,9 @@ public:
 
    PZGDatabaseStateInfo & operator=(const PZGDatabaseStateInfo & rhs);
 
-   static MUSCLE_CONSTEXPR bool IsFixedSize()             {return true;}
-   static MUSCLE_CONSTEXPR uint32 TypeCode()              {return PZG_DATABASE_STATE_INFO;}
-   static MUSCLE_CONSTEXPR bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
-   static MUSCLE_CONSTEXPR uint32 FlattenedSize()         {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
+   static MUSCLE_CONSTEXPR bool IsFixedSize()     {return true;}
+   static MUSCLE_CONSTEXPR uint32 TypeCode()      {return PZG_DATABASE_STATE_INFO;}
+   static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
 
    void Flatten(DataFlattener flat) const;
    status_t Unflatten(DataUnflattener & unflat);

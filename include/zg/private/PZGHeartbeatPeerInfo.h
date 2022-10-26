@@ -37,7 +37,7 @@ public:
    status_t PutTimingInfo(uint16 srcTag, uint32 sourceHeartbeatPacketID, uint32 dwellTimeMicros);
 
    /** This class contains timing information for a specified network interface within this peer */
-   class PZGTimingInfo : public PseudoFlattenable
+   class PZGTimingInfo : public PseudoFlattenable<PZGTimingInfo>
    {
    public:
       /** Default Constructor */

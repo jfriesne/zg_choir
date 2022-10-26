@@ -5,6 +5,7 @@
 #include <QScrollBar>
 #include <QTextEdit>
 
+#include "util/TimeUtilityFunctions.h"  // for GetCurrentTime64()
 #include "ClientRosterList.h"
 #include "FridgeChatView.h"
 

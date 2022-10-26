@@ -4,6 +4,7 @@
 #include "zg/messagetree/gateway/ProxyTreeGateway.h"
 #include "regex/PathMatcher.h"
 #include "util/Hashtable.h"
+#include "util/TimeUtilityFunctions.h"
 
 namespace zg {
 

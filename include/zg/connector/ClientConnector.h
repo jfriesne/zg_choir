@@ -5,6 +5,7 @@
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 #include "util/ICallbackSubscriber.h"
+#include "util/TimeUtilityFunctions.h"
 #include "zg/clocksync/ZGTimeAverager.h"
 #include "zg/gateway/INetworkMessageSender.h"
 #include "zg/INetworkTimeProvider.h"

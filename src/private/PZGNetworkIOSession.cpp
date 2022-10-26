@@ -28,7 +28,7 @@ enum {
 // Convenience class to hold both a ZGPeerID and a Message-ID in a single object
 // We use this to de-duplicate multicasted Messages so the higher levels don't have
 // to deal with multiple copies of them on hosts with multiple network interfaces.
-class PZGMulticastMessageTag : public PseudoFlattenable
+class PZGMulticastMessageTag : public PseudoFlattenable<PZGMulticastMessageTag>
 {
 public:
    PZGMulticastMessageTag() : _versionCode(0), _messageID(0) {/* empty */}
@@ -62,10 +62,9 @@ public:
       return *this;
    }
 
-   static bool IsFixedSize() {return true;}
-   static uint32 TypeCode() {return PZG_MULTICAST_MESSAGE_TAG_TYPE;}
-   static bool AllowsTypeCode(uint32 tc) {return (TypeCode()==tc);}
-   static uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(uint32) + sizeof(uint32);}
+   static bool IsFixedSize()        {return true;}
+   static uint32 TypeCode()         {return PZG_MULTICAST_MESSAGE_TAG_TYPE;}
+   static uint32 FlattenedSize()    {return ZGPeerID::FlattenedSize() + sizeof(uint32) + sizeof(uint32);}
    uint32 CalculateChecksum() const {return _peerID.CalculateChecksum()+_versionCode+_messageID;}
 
    void Flatten(DataFlattener flat) const

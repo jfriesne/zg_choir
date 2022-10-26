@@ -3,6 +3,7 @@
 
 #include "zg/ITextCommandReceiver.h"
 #include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
+#include "util/TimeUtilityFunctions.h"
 
 namespace zg {
 
