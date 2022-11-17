@@ -200,7 +200,7 @@ public:
          break;
 
          default:
-            LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Unknown what-code " UINT32_FORMAT_SPEC "\n");
+            LogTime(MUSCLE_LOG_ERROR, "UDPMulticastTransceiverImplementation::HandleMessagesFromOwner():  Unknown what-code " UINT32_FORMAT_SPEC "\n", msg()->what);
          break;
       }
    }

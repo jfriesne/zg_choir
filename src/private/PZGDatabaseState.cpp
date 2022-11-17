@@ -379,7 +379,7 @@ status_t PZGDatabaseState :: JuniorExecuteDatabaseUpdate(const PZGDatabaseUpdate
    if ((_localDatabaseStateID+1) != newDatabaseStateID)
    {
       // This should be unnecessary since the calling code's logic should have already guaranteed this, but I'm paranoid
-      LogTime(MUSCLE_LOG_ERROR, "Error, junior update #" UINT64_FORMAT_SPEC " isn't the right update to advance current state " UINT64_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC "\n", _dbChecksum, _whichDatabase, dbUp.GetPreUpdateDBChecksum(), newDatabaseStateID);
+      LogTime(MUSCLE_LOG_ERROR, "Error, junior update #" UINT64_FORMAT_SPEC " isn't the right update to advance current state " UINT64_FORMAT_SPEC " of database #" UINT32_FORMAT_SPEC "\n", newDatabaseStateID, _localDatabaseStateID, _whichDatabase);
       return B_BAD_OBJECT;
    }
    if (_dbChecksum != dbUp.GetPreUpdateDBChecksum())

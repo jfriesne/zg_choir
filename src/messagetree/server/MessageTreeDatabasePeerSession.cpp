@@ -625,7 +625,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromTreeGatewaySubscriber(
    // Default implementation will try to pass the Message on to one of our Database objects
    MessageTreeDatabaseObject * db = dynamic_cast<MessageTreeDatabaseObject *>(GetDatabaseObject(whichDB));
    if (db) db->MessageReceivedFromTreeGatewaySubscriber(fromPeerID, payload, tag);
-      else LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::MessageReceivedFromTreeGatewaySubscriber:  Database #" UINT32_FORMAT_SPEC " is not a MessageTreeDatabaseObject!\n");
+      else LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::MessageReceivedFromTreeGatewaySubscriber:  Database #" UINT32_FORMAT_SPEC " is not a MessageTreeDatabaseObject!\n", whichDB);
 }
 
 status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload, int32 optWhichDB)

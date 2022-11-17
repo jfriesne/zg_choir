@@ -700,7 +700,7 @@ void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
          break;
 
          default:
-            LogTime(MUSCLE_LOG_CRITICALERROR, "ClientConnector %p:  DispatchCallbacks:  Unknown Message type " UINT32_FORMAT_SPEC "\n", next()->what);
+            LogTime(MUSCLE_LOG_CRITICALERROR, "ClientConnector %p:  DispatchCallbacks:  Unknown Message type " UINT32_FORMAT_SPEC "\n", this, next()->what);
          break;
       }
    }
