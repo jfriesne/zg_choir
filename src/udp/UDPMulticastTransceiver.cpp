@@ -58,13 +58,13 @@ public:
       AddOutgoingMessage(msg);
    }
 
-   virtual int32 DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
+   virtual io_status_t DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
 
-   virtual int32 DoOutput(uint32 maxBytes)
+   virtual io_status_t DoOutput(uint32 maxBytes)
    {
       TCHECKPOINT;
 
-      if (GetGateway()() == NULL) return -1;  // abort sessions that couldn't create a socket
+      if (GetGateway()() == NULL) return B_BAD_OBJECT;  // abort sessions that couldn't create a socket
 
       PacketDataIO & udpIO = dynamic_cast<PacketDataIO &>(*GetGateway()()->GetDataIO()());
       Queue<MessageRef> & oq = GetGateway()()->GetOutgoingMessageQueue();
@@ -80,7 +80,7 @@ public:
             {
                case UDP_COMMAND_SEND_MULTICAST_PACKET:
                {
-                  const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
+                  const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes()).GetByteCount();
                   if (bytesSent > 0)
                   {
                      ret += bytesSent;
@@ -94,7 +94,7 @@ public:
                   IPAddressAndPort targetAddress;
                   if (m.FindFlat(UDP_NAME_ADDRESS, targetAddress).IsOK())
                   {
-                     const int32 bytesSent = udpIO.WriteTo(bufRef()->GetBuffer(), bufRef()->GetNumBytes(), targetAddress);
+                     const int32 bytesSent = udpIO.WriteTo(bufRef()->GetBuffer(), bufRef()->GetNumBytes(), targetAddress).GetByteCount();
                      if (bytesSent > 0)
                      {
                         ret += bytesSent;
@@ -264,7 +264,7 @@ private:
    Hashtable<int, MulticastUDPSessionRef> _udpSessions;  // interface index -> sessionRef
 };
 
-int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
+io_status_t MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
 {
    PacketDataIO & udpIO = *(dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()()));
 
@@ -272,7 +272,7 @@ int32 MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 ma
    while(ret < maxBytes)
    {
       IPAddressAndPort sourceLoc;
-      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc);
+      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc).GetByteCount();
       if (bytesRead > 0)
       {
          if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());

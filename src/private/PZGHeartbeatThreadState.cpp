@@ -212,8 +212,8 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
          DefaultEndianConverter::Export(*tag, dsb+(1*sizeof(uint16))); // so when we get heartbeats back from a peer later we know which of our interfaces the included timing info corresponds to
          DefaultEndianConverter::Export(GetNetworkTime64ForRunTime64(GetRunTime64()), dsb+(2*sizeof(uint16))); // network-clock-at-send-time
 
-         const int32 numBytesSent = dio->Write(dsb, defBufSize);
-         if (numBytesSent != (int32)defBufSize) LogTime(MUSCLE_LOG_ERROR, "Error sending heartbeat to [%s], sent " INT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC " bytes!\n", dest.ToString()(), numBytesSent, defBufSize);
+         const io_status_t numBytesSent = dio->Write(dsb, defBufSize);
+         if (numBytesSent.GetByteCount() != (int32)defBufSize) LogTime(MUSCLE_LOG_ERROR, "Error [%s] sending heartbeat to [%s], sent " INT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC " bytes!\n", numBytesSent.GetStatus()(), dest.ToString()(), numBytesSent.GetByteCount(), defBufSize);
       }
    }
 
@@ -483,18 +483,18 @@ void PZGHeartbeatThreadState :: ReceiveMulticastTraffic(PacketDataIO & dio)
 {
    while(_deflatedScratchBuf.SetNumBytes(2048, false).IsOK())  // we want to start each read with the full space available
    {
-      int32 numBytesRead;
-      if ((numBytesRead = dio.Read(_deflatedScratchBuf.GetBuffer(), _deflatedScratchBuf.GetNumBytes())) != 0)
+      io_status_t numBytesRead = dio.Read(_deflatedScratchBuf.GetBuffer(), _deflatedScratchBuf.GetNumBytes());
+      if (numBytesRead.GetByteCount() != 0)
       {
          const uint64 localReceiveTimeMicros = GetRunTime64();
 
-         if (numBytesRead < 0)
+         if (numBytesRead.IsError())
          {
-            LogTime(MUSCLE_LOG_ERROR, "ReceiveMulticastTraffic:  Error reading from multicast socket! (read " INT32_FORMAT_SPEC " bytes)\n", numBytesRead);
+            LogTime(MUSCLE_LOG_ERROR, "ReceiveMulticastTraffic:  Error [%s] reading from multicast socket!\n", numBytesRead.GetStatus()());
             break;
          }
 
-         (void) _deflatedScratchBuf.SetNumBytes(numBytesRead, true);  // we only care about valid bytes now
+         (void) _deflatedScratchBuf.SetNumBytes(numBytesRead.GetByteCount(), true);  // we only care about valid bytes now
 
          const IPAddressAndPort & sourceIAP = dio.GetSourceOfLastReadPacket();
          PZGHeartbeatPacketWithMetaDataRef newHB = ParseHeartbeatPacketBuffer(_deflatedScratchBuf, sourceIAP, localReceiveTimeMicros);

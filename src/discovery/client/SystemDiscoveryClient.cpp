@@ -58,13 +58,14 @@ public:
       AddOutgoingMessage(msg);
    }
 
-   virtual int32 DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
+   virtual io_status_t DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
 
-   virtual int32 DoOutput(uint32 maxBytes)
+   virtual io_status_t DoOutput(uint32 maxBytes)
    {
       TCHECKPOINT;
 
-      if (GetGateway()() == NULL) return -1;  // abort sessions that couldn't create a socket
+      if (GetGateway()() == NULL) return B_BAD_OBJECT;  // abort sessions that couldn't create a socket
+
       DataIO & udpIO = *GetGateway()()->GetDataIO()();
       Queue<MessageRef> & oq = GetGateway()()->GetOutgoingMessageQueue();
       uint32 ret = 0;
@@ -73,7 +74,7 @@ public:
          ByteBufferRef bufRef = oq.Head()()->FlattenToByteBuffer();
          if (bufRef())
          {
-            const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes());
+            const int32 bytesSent = udpIO.Write(bufRef()->GetBuffer(), bufRef()->GetNumBytes()).GetByteCount();
             if (bytesSent > 0)
             {
                ret += bytesSent;
@@ -338,7 +339,7 @@ private:
    bool _updateResultSetPending;
 };
 
-int32 DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
+io_status_t DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
 {
    PacketDataIO & udpIO = *(dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()()));
 
@@ -346,7 +347,7 @@ int32 DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBy
    while(ret < maxBytes)
    {
       IPAddressAndPort sourceLoc;
-      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc);
+      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc).GetByteCount();
       if (bytesRead > 0)
       {
          LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());

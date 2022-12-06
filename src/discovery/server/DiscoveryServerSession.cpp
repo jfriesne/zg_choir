@@ -128,10 +128,10 @@ void DiscoveryServerSession :: Pulse(const PulseArgs & args)
    }
 }
 
-int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*receiver*/, uint32 maxBytes)
+io_status_t DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*receiver*/, uint32 maxBytes)
 {
    const ConstSocketRef & s = GetSessionReadSelectSocket();
-   if ((s() == NULL)||(_master == NULL)) return -1;
+   if ((s() == NULL)||(_master == NULL)) return B_BAD_OBJECT;
 
    const uint64 now = GetRunTime64();
    uint32 ret = 0;
@@ -139,7 +139,7 @@ int32 DiscoveryServerSession :: DoInput(AbstractGatewayMessageReceiver & /*recei
    {
       IPAddress sourceIP;
       uint16 sourcePort;
-      const int32 bytesRead = ReceiveDataUDP(s, _receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), false, &sourceIP, &sourcePort);
+      const int32 bytesRead = ReceiveDataUDP(s, _receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), false, &sourceIP, &sourcePort).GetByteCount();
       if (bytesRead > 0)
       {
          const IPAddressAndPort iap(sourceIP, sourcePort);
@@ -169,10 +169,10 @@ void DiscoveryServerSession :: MessageReceivedFromSession(AbstractReflectSession
    // deliberately empty
 }
 
-int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
+io_status_t DiscoveryServerSession :: DoOutput(uint32 maxBytes)
 {
    const ConstSocketRef & s = GetSessionWriteSelectSocket();
-   if (s() == NULL) return -1;
+   if (s() == NULL) return B_BAD_OBJECT;
 
    uint32 ret = 0;
    while((_outputData.HasItems())&&(ret < maxBytes))
@@ -182,7 +182,7 @@ int32 DiscoveryServerSession :: DoOutput(uint32 maxBytes)
       if (bufRef())
       {
          const IPAddressAndPort & replyTarget = *_outputData.GetFirstKey();
-         const int32 bytesSent = SendDataUDP(s, bufRef()->GetBuffer(), bufRef()->GetNumBytes(), false, replyTarget.GetIPAddress(), replyTarget.GetPort());
+         const int32 bytesSent = SendDataUDP(s, bufRef()->GetBuffer(), bufRef()->GetNumBytes(), false, replyTarget.GetIPAddress(), replyTarget.GetPort()).GetByteCount();
          if (bytesSent > 0)
          {
             ret += bytesSent;

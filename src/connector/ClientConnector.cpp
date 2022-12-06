@@ -169,10 +169,10 @@ public:
       return B_NO_ERROR;
    }
 
-   virtual int32 DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes)
+   virtual io_status_t DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes)
    {
-      const int32 ret = AbstractReflectSession::DoInput(receiver, maxBytes);
-      if (ret > 0) RecordThatDataWasRead();
+      const io_status_t ret = AbstractReflectSession::DoInput(receiver, maxBytes);
+      if (ret.GetByteCount() > 0) RecordThatDataWasRead();
       return ret;
    }
 

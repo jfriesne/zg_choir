@@ -172,11 +172,11 @@ void PZGHeartbeatSession :: InternalThreadEntry()
          {
             IPAddress fromAddr;
             uint16 fromPort;
-            const int32 numTimeSyncBytesRead = ReceiveDataUDP(localTimeSyncUDPSocket, buf, sizeof(buf), false, &fromAddr, &fromPort);
-            if (numTimeSyncBytesRead > 0)
+            const io_status_t numTimeSyncBytesRead = ReceiveDataUDP(localTimeSyncUDPSocket, buf, sizeof(buf), false, &fromAddr, &fromPort);
+            if (numTimeSyncBytesRead.GetByteCount() > 0)
             {
                // Parse the incoming ping-Message
-               inputBB.AdoptBuffer(numTimeSyncBytesRead, buf);
+               inputBB.AdoptBuffer(numTimeSyncBytesRead.GetByteCount(), buf);
                MessageRef pingMsg = timeSyncGateway.CallUnflattenHeaderAndMessage(DummyConstByteBufferRef(inputBB));
                if ((pingMsg())&&(pingMsg()->AddInt64("stm", currentNetworkTime).IsOK()))
                {
@@ -189,10 +189,10 @@ void PZGHeartbeatSession :: InternalThreadEntry()
                }
                (void) inputBB.ReleaseBuffer();
             }
-            else if (numTimeSyncBytesRead == 0) break;  // nothing more to read, for now
-            else if (numTimeSyncBytesRead < 0)
+            else if (numTimeSyncBytesRead.GetByteCount() == 0) break;  // nothing more to read, for now
+            else if (numTimeSyncBytesRead.IsError())
             {
-               LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSession:  Time Sync socket had a read-error, abandoning it!\n");
+               LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSession:  Time Sync socket had a read-error [%s], abandoning it!\n", numTimeSyncBytesRead.GetStatus()());
                (void) UnregisterInternalThreadSocket(localTimeSyncUDPSocket, SOCKET_SET_READ);
                localTimeSyncUDPSocket.Reset();
             }

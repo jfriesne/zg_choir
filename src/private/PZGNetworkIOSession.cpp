@@ -486,7 +486,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
          if (IsInternalThreadSocketReady(dio()->GetReadSelectSocket(), SOCKET_SET_READ))
          {
             // Read incoming multicast data
-            while(ptGateways[i]()->DoInput(messageReceiver) > 0)
+            while(ptGateways[i]()->DoInput(messageReceiver).GetByteCount() > 0)
             {
                MessageRef msg;
                while(messageReceiver.RemoveHead(msg).IsOK())
@@ -528,7 +528,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
          }
 
          if (IsInternalThreadSocketReady(dio()->GetWriteSelectSocket(), SOCKET_SET_WRITE))
-            while(ptGateways[i]()->DoOutput() > 0) {/* empty */} // Write outgoing multicast data
+            while(ptGateways[i]()->DoOutput().GetByteCount() > 0) {/* empty */} // Write outgoing multicast data
       }
    }
 }

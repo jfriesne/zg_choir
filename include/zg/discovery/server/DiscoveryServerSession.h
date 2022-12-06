@@ -39,10 +39,10 @@ public:
    virtual bool HasBytesToOutput() const {return (_outputData.HasItems());}
 
    // Overridden to read UDP data from our UDP socket directly
-   virtual int32 DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes);
+   virtual io_status_t DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes);
 
    // Overridden to send UDP data to our UDP socket directly
-   virtual int32 DoOutput(uint32 maxBytes);
+   virtual io_status_t DoOutput(uint32 maxBytes);
 
    // Overridden to do nothing -- we don't care about Messages from our neighbors!
    virtual void MessageReceivedFromSession(AbstractReflectSession &, const MessageRef &, void *);

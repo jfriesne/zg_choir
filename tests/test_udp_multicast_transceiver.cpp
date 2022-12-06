@@ -104,7 +104,7 @@ int main(int argc, char ** argv)
             if (sm.IsSocketReadyForRead(stdinSocket))
             {
                QueueGatewayMessageReceiver incomingText;
-               while(plainTextGateway.DoInput(incomingText) > 0) {/* empty */} // just calling fgets() would be simpler, but it wouldn't work correctly under Windows
+               while(plainTextGateway.DoInput(incomingText).GetByteCount() > 0) {/* empty */} // just calling fgets() would be simpler, but it wouldn't work correctly under Windows
                const Queue<MessageRef> & mq = incomingText.GetMessages();
                for (uint32 i=0; i<mq.GetNumItems(); i++)
                {

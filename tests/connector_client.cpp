@@ -45,10 +45,10 @@ int main(int argc, char ** argv)
                QueueGatewayMessageReceiver stdinQ;
                while(1)
                {
-                  const int32 numStdinBytesRead = stdinGateway.DoInput(stdinQ);
-                  if (numStdinBytesRead < 0)
+                  const io_status_t numStdinBytesRead = stdinGateway.DoInput(stdinQ);
+                  if (numStdinBytesRead.IsError())
                   {
-                     LogTime(MUSCLE_LOG_CRITICALERROR, "Stdin closed, exiting!\n");
+                     LogTime(MUSCLE_LOG_CRITICALERROR, "Stdin closed, exiting! [%s]\n", numStdinBytesRead.GetStatus()());
                      keepGoing = false;
                      break;
                   }
@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
                         for (int32 i=0; nextMsg()->FindString(PR_NAME_TEXT_LINE, i, &nextLine).IsOK(); i++) testTreeGatewaySubscriber.TextCommandReceived(*nextLine);
                      }
 
-                     if (numStdinBytesRead == 0) break;
+                     if (numStdinBytesRead.GetByteCount() == 0) break;
                   }
                }
             } 
