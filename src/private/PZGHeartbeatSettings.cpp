@@ -74,7 +74,8 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
       if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())
       {
          const uint8 dummyBuf = 0;  // doesn't matter what this is, I just want to make sure I can actually send on this socket
-         if (SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort()) == 0)
+         const io_status_t sr = SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort());
+         if (sr.IsOK())
          {
             if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK())
             {
@@ -85,7 +86,7 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
             }
             else LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s]\n", multicastIAP.GetIPAddress().ToString()());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s]\n", multicastIAP.ToString()());
+         else LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s] [%s]\n", multicastIAP.ToString()(), sr());
       }
       else LogTime(MUSCLE_LOG_ERROR, "Unable to bind multicast socket to UDP port %u!\n", multicastIAP.GetPort());
    }
