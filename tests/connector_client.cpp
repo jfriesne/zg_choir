@@ -34,7 +34,7 @@ int main(int argc, char ** argv)
       {
          (void) sm.RegisterSocketForReadReady(scm.GetDispatchThreadNotifierSocket().GetFileDescriptor());
          (void) sm.RegisterSocketForReadReady(stdinDataIO.GetReadSelectSocket().GetFileDescriptor());
-         if (sm.WaitForEvents() >= 0) 
+         if (sm.WaitForEvents().IsOK(ret))
          {
             // Handle dispatch-callback-signals from our SocketCallbackMechanism
             if (sm.IsSocketReadyForRead(scm.GetDispatchThreadNotifierSocket().GetFileDescriptor())) scm.DispatchCallbacks();
@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
          }
          else
          {
-            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting!\n");
+            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", ret());
             break; 
          }
       }

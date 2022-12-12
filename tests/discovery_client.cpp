@@ -61,10 +61,10 @@ int main(int argc, char ** argv)
       while(true)
       {
          (void) sm.RegisterSocketForReadReady(scm.GetDispatchThreadNotifierSocket().GetFileDescriptor());
-         if (sm.WaitForEvents() >= 0) scm.DispatchCallbacks();
+         if (sm.WaitForEvents().IsOK(ret)) scm.DispatchCallbacks();
          else
          {
-            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", B_ERRNO());
+            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", ret());
             break;
          }
       }

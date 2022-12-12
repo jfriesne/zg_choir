@@ -472,7 +472,7 @@ private:
       {
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor()));
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
-         if (sm.WaitForEvents() < 0) return B_ERROR("ClientConnectorImplementation:  WaitForEvents() failed");
+         MRETURN_ON_ERROR(sm.WaitForEvents());
 
          if (sm.IsSocketReadyForRead(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor())) threadMechanism.DispatchCallbacks();
          if (sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor())) MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
@@ -539,7 +539,8 @@ private:
       while(GetRunTime64() < waitUntil)
       {
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
-         if (sm.WaitForEvents(waitUntil) < 0) return B_ERROR("ClientConnectorImplementation:  WaitForEvents() failed while in delay state");
+         MRETURN_ON_ERROR(sm.WaitForEvents(waitUntil));
+
          if (sm.IsSocketReadyForRead(GetInternalThreadWakeupSocket().GetFileDescriptor())) MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
       }
       return B_NO_ERROR;

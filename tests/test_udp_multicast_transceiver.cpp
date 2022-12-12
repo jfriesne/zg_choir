@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
          (void) sm.RegisterSocketForReadReady(notifySocket);
          (void) sm.RegisterSocketForReadReady(stdinSocket);
 
-         if (sm.WaitForEvents() >= 0)
+         if (sm.WaitForEvents(ret).IsOK())
          {
             // Respond to notifications about incoming UDP packets
             if (sm.IsSocketReadyForRead(notifySocket)) scm.DispatchCallbacks();
@@ -142,7 +142,7 @@ int main(int argc, char ** argv)
          }
          else
          {
-            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", B_ERRNO());
+            LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", ret());
             break;
          }
       }
