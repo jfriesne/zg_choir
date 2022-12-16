@@ -79,7 +79,7 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
    }
 }
 
-static void LogAux(const String & s, uint32 sev)
+static void LogAux(const String & s, int sev)
 {
    String logText = s.Substring(s.IndexOf(' ')+1);
    if ((logText.Length() >= 2)&&(logText.StartsWith("/")))
