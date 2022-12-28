@@ -34,16 +34,11 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
          Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > newPeers; (void) newPeers.EnsureSize(numPeers);
          for (uint32 i=0; i<numPeers; i++)
          {
-            FlatCountableRef fcRef;  // deliberately doing it this way to avoid a flatten/unflatten cycle, which would have the side effect of losing the source IP address value
-            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, fcRef).IsOK())
+            PZGHeartbeatPacketWithMetaDataRef hbRef;
+            if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, hbRef).IsOK())
             {
-               PZGHeartbeatPacketWithMetaDataRef hbRef(fcRef, true);
-               if (hbRef())
-               {
-                  Queue<ConstPZGHeartbeatPacketWithMetaDataRef> * q = newPeers.GetOrPut(hbRef()->GetSourcePeerID());
-                  if (q) (void) q->AddTail(hbRef);
-               }
-               else LogTime(MUSCLE_LOG_CRITICALERROR, "PZG_HEARTBEAT_COMMAND_PEERS_UPDATE didn't contain the expected PZGHeartbeatPacket object!\n");
+               Queue<ConstPZGHeartbeatPacketWithMetaDataRef> * q = newPeers.GetOrPut(hbRef()->GetSourcePeerID());
+               if (q) (void) q->AddTail(hbRef);
             }
          }
 

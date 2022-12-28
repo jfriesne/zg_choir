@@ -121,8 +121,7 @@ static MessageRef CreateBeaconDataMessage(const ConstPZGBeaconDataRef & beaconDa
    {
       if (serializeBeaconData)
       {
-         FlatCountableRef fcRef(CastAwayConstFromRef(beaconData));
-         if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef).IsError()) return MessageRef();
+         if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, CastAwayConstFromRef(beaconData)).IsError()) return MessageRef();
       }
       else if (msg()->AddFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconData()).IsError()) return MessageRef();
    }
@@ -136,15 +135,11 @@ static MessageRef CreateBeaconDataMessage(const ConstPZGBeaconDataRef & beaconDa
 // retrieve and return the PZGBeaconDataRef from the Message.  Returns NULL ref on failure.
 static ConstPZGBeaconDataRef GetBeaconDataFromMessage(const MessageRef & msg)
 {
-   FlatCountableRef fcRef;
-   if (msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, fcRef).IsOK())
-   {
-      PZGBeaconDataRef beaconRef(fcRef.GetRefCountableRef(), true);
-      if (beaconRef()) return AddConstToRef(beaconRef);
-   }
+   PZGBeaconDataRef beaconRef;
+   if (msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, beaconRef).IsOK()) return AddConstToRef(beaconRef);
 
    // Didn't work?  Okay, let's try to unflatten some bytes instead
-   PZGBeaconDataRef beaconRef = GetBeaconDataFromPool();
+   beaconRef = GetBeaconDataFromPool();
    if ((beaconRef())&&(msg()->FindFlat(PZG_NETWORK_NAME_BEACON_DATA, *beaconRef()).IsError())) beaconRef.Reset();
    return AddConstToRef(beaconRef);
 }

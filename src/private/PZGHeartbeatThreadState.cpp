@@ -597,7 +597,7 @@ MessageRef PZGHeartbeatThreadState :: UpdateOfficialPeersList(bool forceUpdate)
             {
                const PZGHeartbeatSourceStateRef * sourceInfo = _onlineSources.Get(iter.GetKey());
                PZGHeartbeatPacketWithMetaDataRef hbRef; if (sourceInfo) hbRef = sourceInfo->GetItemPointer()->GetHeartbeatPacket();
-               if ((hbRef())&&(hbRef()->IsFullyAttached())) (void) ret()->AddFlat(PZG_HEARTBEAT_NAME_PEERINFO, FlatCountableRef(hbRef, false));
+               if ((hbRef())&&(hbRef()->IsFullyAttached())) (void) ret()->AddFlat(PZG_HEARTBEAT_NAME_PEERINFO, hbRef);
             }
          }
       }
