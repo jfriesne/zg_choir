@@ -117,7 +117,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
    {
       case PR_COMMAND_BATCH:
       {
-         MessageRef subMsg;
+         ConstMessageRef subMsg;
          for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) MRETURN_ON_ERROR(SeniorMessageTreeUpdate(subMsg));
       }
       break;
@@ -141,7 +141,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
 
       case MTDO_SENIOR_COMMAND_REQUESTDELETENODES:
       {
-         MessageRef qfMsg;
+         ConstMessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
          const String & path          = msg()->GetStringReference(MTDO_NAME_PATH);
          const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
@@ -153,7 +153,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
 
       case MTDO_SENIOR_COMMAND_MOVEINDEXENTRY:
       {
-         MessageRef qfMsg;
+         ConstMessageRef qfMsg;
          const TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(MTDO_NAME_FLAGS);
          const String & path          = msg()->GetStringReference(MTDO_NAME_PATH);
          const String & optBefore     = msg()->GetStringReference(MTDO_NAME_BEFORE);
@@ -192,7 +192,7 @@ status_t MessageTreeDatabaseObject :: JuniorMessageTreeUpdate(const ConstMessage
    {
       case PR_COMMAND_BATCH:
       {
-         MessageRef subMsg;
+         ConstMessageRef subMsg;
          for (int32 i=0; msg()->FindMessage(PR_NAME_KEYS, i, subMsg).IsOK(); i++) MRETURN_ON_ERROR(JuniorMessageTreeUpdate(subMsg));
       }
       break;

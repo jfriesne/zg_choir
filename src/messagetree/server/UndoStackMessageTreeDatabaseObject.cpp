@@ -242,7 +242,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                      {
                         if (payload()->GetStringReference(UNDOSTACK_NAME_UNDOKEY) == clientKey)  // only undo or redo actions that were uploaded by our own client!
                         {
-                           MessageRef subMsg;
+                           ConstMessageRef subMsg;
                            if (payload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK()) MRETURN_ON_ERROR(SeniorMessageTreeUpdateAux(subMsg));
                         }
                      }

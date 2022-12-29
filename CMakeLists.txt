@@ -23,8 +23,21 @@ else (!WIN32)
    endif (APPLE)
 endif (WIN32)
 
+# No sense compiling the tests and examples folders in the muscle sub-project
+option(WITH_TESTS "Enable building of mslicommon test executables" ON)
+set(WITH_TESTS_SAVED "${WITH_TESTS}")
+option(WITH_TESTS "Enable MUSCLE tests" OFF)
+set(WITH_TESTS OFF)
+set(WITH_EXAMPLES_SAVED "${WITH_EXAMPLES}")
+option(WITH_EXAMPLES "Enable MUSCLE examples" OFF)
+set(WITH_EXAMPLES OFF)
+
 include_directories(include submodules/muscle)
 add_subdirectory(submodules/muscle)
+
+# But we may want to compile our own tests and examples
+set(WITH_TESTS    "${WITH_TESTS_SAVED}")
+set(WITH_EXAMPLES "${WITH_EXAMPLES_SAVED}")
 
 file(GLOB ZG_SRCS 
    "./src/*.cpp"

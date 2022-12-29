@@ -287,7 +287,7 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: SendOutgoingMessageToNetwork(
 
 QueryFilterRef ServerSideNetworkTreeGatewaySubscriber :: InstantiateQueryFilterAux(const Message & msg, uint32 which)
 {
-   MessageRef qfMsg;
+   ConstMessageRef qfMsg;
    return (msg.FindMessage(NTG_NAME_QUERYFILTER, which, qfMsg).IsOK()) ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 }
 

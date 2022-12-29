@@ -140,7 +140,7 @@ static const String _inactivityPingIDField("tcp_cs");
 class TCPConnectorSession : public AbstractReflectSession
 {
 public:
-   TCPConnectorSession(ClientConnectorImplementation * master, const IPAddressAndPort & timeSyncDest, const MessageRef & peerInfo, uint64 inactivityPingTimeMicroseconds)
+   TCPConnectorSession(ClientConnectorImplementation * master, const IPAddressAndPort & timeSyncDest, const ConstMessageRef & peerInfo, uint64 inactivityPingTimeMicroseconds)
    : _master(master)
    , _timeSyncDest(timeSyncDest)
    , _peerInfo(peerInfo)
@@ -283,7 +283,7 @@ private:
    ClientConnectorImplementation * _master;
    IPAddressAndPort _timeSyncDest;
    UDPTimeSyncSessionRef _timeSyncSession;
-   MessageRef _peerInfo;
+   ConstMessageRef _peerInfo;
 
    const uint64 _inactivityPingTimeMicroseconds;
    uint64 _nextInactivityPingTime;
@@ -443,7 +443,7 @@ private:
          {
             const status_t ret = DoConnectionStage();
             if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Connection stage encountered an error!  [%s]\n", ret());
-            SetConnectionPeerInfo(MessageRef());  // tell owner thread we're disconnected
+            SetConnectionPeerInfo(ConstMessageRef());  // tell owner thread we're disconnected
          }
 
          // If we got here, then our TCP connection failed.  Wait the specified delay time before going back to discovery-mode
@@ -488,7 +488,7 @@ private:
       _discoveries.Reset();
 
       // Find an amenable server to connect to
-      MessageRef peerInfo;
+      ConstMessageRef peerInfo;
       IPAddressAndPort iap;
       for (int32 i=0; discoveries()->FindMessage(ZG_DISCOVERY_NAME_PEERINFO, i, peerInfo).IsOK(); i++)
       {
@@ -582,10 +582,10 @@ private:
       if ((wrapper())&&(wrapper()->AddMessage(CCI_NAME_PAYLOAD, msgRef).IsOK())) _master->MessageReceivedFromIOThread(wrapper);
    }
 
-   void SetConnectionPeerInfo(const MessageRef & optPeerInfo)
+   void SetConnectionPeerInfo(const ConstMessageRef & optPeerInfo)
    {
       MessageRef wrapper = GetMessageFromPool(CCI_COMMAND_PEERINFO);
-      if ((wrapper())&&(wrapper()->CAddMessage(CCI_NAME_PAYLOAD, optPeerInfo).IsOK())) _master->MessageReceivedFromIOThread(wrapper);
+      if ((wrapper())&&(wrapper()->CAddMessage(CCI_NAME_PAYLOAD, CastAwayConstFromRef(optPeerInfo)).IsOK())) _master->MessageReceivedFromIOThread(wrapper);
    }
 
    ClientConnector * _master;

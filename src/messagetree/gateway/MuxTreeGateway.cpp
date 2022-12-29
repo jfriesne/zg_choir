@@ -436,7 +436,8 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
                {
                   const String & path = fnIter.GetFieldName();
 
-                  MessageRef nodeMsg, payloadMsg;
+                  ConstMessageRef nodeMsg;
+                  MessageRef payloadMsg;
                   if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) subPtr->TreeNodeUpdated(path, payloadMsg, suffix);
                }
             }
