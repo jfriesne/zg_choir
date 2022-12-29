@@ -95,7 +95,7 @@ int main(int argc, char ** argv)
          (void) sm.RegisterSocketForReadReady(notifySocket);
          (void) sm.RegisterSocketForReadReady(stdinSocket);
 
-         if (sm.WaitForEvents(ret).IsOK())
+         if (sm.WaitForEvents().IsOK(ret))
          {
             // Respond to notifications about incoming UDP packets
             if (sm.IsSocketReadyForRead(notifySocket)) scm.DispatchCallbacks();
