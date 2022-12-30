@@ -407,7 +407,7 @@ public:
       _isActive = false;
    }
 
-   status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
+   status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg) {return SendMessageToInternalThread(CastAwayConstFromRef(msg));}
 
    const String & GetSignaturePattern()  const {return _signaturePattern;}
    const String & GetSystemNamePattern() const {return _systemNamePattern;}
@@ -707,7 +707,7 @@ void ClientConnector :: DispatchCallbacks(uint32 /*eventTypeBits*/)
    }
 }
 
-status_t ClientConnector :: SendOutgoingMessageToNetwork(const MessageRef & msg) {return _imp->SendOutgoingMessageToNetwork(msg);}
+status_t ClientConnector :: SendOutgoingMessageToNetwork(const ConstMessageRef & msg) {return _imp->SendOutgoingMessageToNetwork(msg);}
 
 // This method is called from within the I/O thread, so we have to be careful with it!
 void ClientConnector :: MessageReceivedFromIOThread(const MessageRef & msg)

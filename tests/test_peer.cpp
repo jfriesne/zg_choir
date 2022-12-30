@@ -297,7 +297,7 @@ private:
       return m;
    }
 
-   String TestInstructionsToString(const MessageRef & msg) const
+   String TestInstructionsToString(const ConstMessageRef & msg) const
    {
       String ret = msg() ? UnparseArgs(*msg()) : "???";
       ret.Replace('\n', ' ');  // we want a single-line output, please

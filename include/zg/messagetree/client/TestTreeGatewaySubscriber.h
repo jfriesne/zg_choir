@@ -24,7 +24,7 @@ public:
    // ITreeGatewaySubscriber API
    virtual void CallbackBatchBegins();
    virtual void CallbackBatchEnds();
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag);
    virtual void TreeNodeIndexCleared(const String & path, const String & optOpTag);
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag);
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag);

@@ -52,7 +52,7 @@ protected:
    virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
 
 private:
-   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx);
+   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const ConstMessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx);
 
    Queue<IDatabaseObjectRef> _databaseObjects;
 

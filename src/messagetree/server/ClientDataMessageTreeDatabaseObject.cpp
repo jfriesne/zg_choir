@@ -19,7 +19,7 @@ ClientDataMessageTreeDatabaseObject :: ClientDataMessageTreeDatabaseObject(Messa
    // empty
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & localPath, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & localPath, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
@@ -31,7 +31,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
    return ssmts->SetDataNode(localPath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
 }
 
-status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
+status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);

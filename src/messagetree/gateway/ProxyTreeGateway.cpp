@@ -55,12 +55,12 @@ status_t ProxyTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscri
    return ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, tag, maxDepth, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t ProxyTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    return ITreeGatewaySubscriber::UploadTreeNodeValue(path, optPayload, flags, optBefore, optOpTag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
+status_t ProxyTreeGateway :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    return ITreeGatewaySubscriber::UploadTreeNodeSubtree(basePath, valuesMsg, flags, optOpTag);
 }
@@ -85,12 +85,12 @@ status_t ProxyTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *
    return ITreeGatewaySubscriber::PingTreeSeniorPeer(tag, whichDB, flags);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & msg, uint32 whichDB, const String & tag)
+status_t ProxyTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const ConstMessageRef & msg, uint32 whichDB, const String & tag)
 {
    return ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, tag);
 }
 
-status_t ProxyTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
+status_t ProxyTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const ConstMessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    return ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, optFilterRef, tag);
 }
@@ -137,7 +137,7 @@ void ProxyTreeGateway :: CallbackBatchEnds()
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) CallEndCallbackBatch(iter.GetKey());
 }
 
-void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & nodeMsg, const String & optOpTag)
+void ProxyTreeGateway :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & nodeMsg, const String & optOpTag)
 {
    for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeNodeUpdated(nodePath, nodeMsg, optOpTag);
 }

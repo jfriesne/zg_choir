@@ -33,8 +33,8 @@ public:
    virtual ~ClientDataMessageTreeDatabaseObject() {/* empty */}
 
    // MessageTreeDatabaseObject API
-   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
-   virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag);
+   virtual status_t UploadNodeValue(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
+   virtual status_t UploadNodeSubtree(const String & path, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag);
    virtual status_t RequestDeleteNodes(const String & path, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag);
    virtual status_t RequestMoveIndexEntry(const String & path, const String & optBefore, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag);
 

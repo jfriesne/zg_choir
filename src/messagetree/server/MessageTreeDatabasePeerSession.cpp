@@ -117,7 +117,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestNodeSubtrees(ITree
    return B_NO_ERROR;
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * /*calledBy*/, const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(path, &relativePath);
@@ -129,7 +129,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeValue(ITreeGate
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber * /*calledBy*/, const String & basePath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    String relativePath;
    MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(basePath, &relativePath);
@@ -137,7 +137,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
    {
       // I'm not sure if this is the correct logic to use, but it works for now --jaf
       status_t ret;
-      MessageRef effMsg = valuesMsg;
+      ConstMessageRef effMsg = valuesMsg;
       if (valuesMsg()->FindMessage(basePath, effMsg).IsError())
       {
          LogTime(MUSCLE_LOG_ERROR, "Couldn't find basePath Message [%s] in subtree-upload! [%s]\n", basePath(), ret());
@@ -193,14 +193,14 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_PingSeniorPeer(ITreeGatew
    return RequestUpdateDatabaseState(whichDB, seniorPingMsg);
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const MessageRef & msg, uint32 whichDB, const String & tag)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * /*calledBy*/, const ConstMessageRef & msg, uint32 whichDB, const String & tag)
 {
    if (GetSeniorPeerID().IsValid() == false) return B_ERROR("SendMessageToSeniorPeer:  Senior peer not available");
 
    MessageRef seniorCommandMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSENIORPEER);
    MRETURN_OOM_ON_NULL(seniorCommandMsg());
 
-   MRETURN_ON_ERROR(seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, msg));
+   MRETURN_ON_ERROR(seniorCommandMsg()->AddMessage(MTDPS_NAME_PAYLOAD, CastAwayConstFromRef(msg)));
    MRETURN_ON_ERROR(seniorCommandMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID()));
    MRETURN_ON_ERROR(seniorCommandMsg()->CAddInt32( MTDPS_NAME_WHICHDB, whichDB));
    MRETURN_ON_ERROR(seniorCommandMsg()->CAddString(MTDPS_NAME_TAG,     tag));
@@ -292,12 +292,12 @@ status_t MessageTreeDatabasePeerSession :: GetPerClientPeerIDsForPath(const Stri
    }
 }
 
-status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
+status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * /*calledBy*/, const String & subscriberPath, const ConstMessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGETOSUBSCRIBER);
    MRETURN_OOM_ON_NULL(cmdMsg());
 
-   MRETURN_ON_ERROR(cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        msg));
+   MRETURN_ON_ERROR(cmdMsg()->AddMessage(MTDPS_NAME_PAYLOAD,        CastAwayConstFromRef(msg)));
    MRETURN_ON_ERROR(cmdMsg()->CAddString(MTDPS_NAME_PATH,           subscriberPath));
    MRETURN_ON_ERROR(cmdMsg()->CAddArchiveMessage(MTDPS_NAME_FILTER, optFilterRef));
    MRETURN_ON_ERROR(cmdMsg()->AddString(MTDPS_NAME_TAG,             String("{%1}:%2").Arg(GetLocalPeerID().ToString()).Arg(tag)));
@@ -352,7 +352,7 @@ void MessageTreeDatabasePeerSession :: CommandBatchEnds()
    if (IsAttachedToServer()) PushSubscriptionMessages();  // make sure any subscription updates go out in a timely fashion
 }
 
-void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const MessageRef & oldDataRef, NodeChangeFlags nodeChangeFlags)
+void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeChanged(DataNode & node, const ConstMessageRef & oldDataRef, NodeChangeFlags nodeChangeFlags)
 {
 //printf("NotifySubscribersThatNodeChanged node=[%s] payload=%p nodeChangeFlags=%s\n", node.GetNodePath()(), node.GetData()(), nodeChangeFlags.ToHexString()());
    GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);  // yes, this is necessary
@@ -376,11 +376,11 @@ void MessageTreeDatabasePeerSession :: NotifySubscribersThatNodeIndexChanged(Dat
    ZGDatabasePeerSession::NotifySubscribersThatNodeIndexChanged(node, op, index, key);
 }
 
-void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const MessageRef & /*oldData*/, NodeChangeFlags nodeChangeFlags)
+void MessageTreeDatabasePeerSession :: NodeChanged(DataNode & node, const ConstMessageRef & /*oldData*/, NodeChangeFlags nodeChangeFlags)
 {
    // deliberately NOT calling up to superclass, as I don't want any MUSCLE-update messages to be generated for this session
    const MessageTreeDatabaseObject * mtDB = GetDatabaseForNodePath(node.GetNodePath(), NULL);
-   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()+1), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?MessageRef():node.GetData(), mtDB?mtDB->GetCurrentOpTag():GetEmptyString());
+   TreeNodeUpdated(node.GetNodePath().Substring(GetSessionRootPath().Length()+1), nodeChangeFlags.IsBitSet(NODE_CHANGE_FLAG_ISBEINGREMOVED)?ConstMessageRef():node.GetData(), mtDB?mtDB->GetCurrentOpTag():GetEmptyString());
 }
 
 void MessageTreeDatabasePeerSession :: NodeIndexChanged(DataNode & node, char op, uint32 index, const String & key)
@@ -628,12 +628,12 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromTreeGatewaySubscriber(
       else LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabasePeerSession::MessageReceivedFromTreeGatewaySubscriber:  Database #" UINT32_FORMAT_SPEC " is not a MessageTreeDatabaseObject!\n", whichDB);
 }
 
-status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload, int32 optWhichDB)
+status_t MessageTreeDatabasePeerSession :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const ConstMessageRef & payload, int32 optWhichDB)
 {
    MessageRef replyMsg = GetMessageFromPool(MTDPS_COMMAND_MESSAGEFROMSENIORPEER);
    MRETURN_OOM_ON_NULL(replyMsg());
 
-   const status_t ret = replyMsg()->AddMessage(MTDPS_NAME_PAYLOAD, payload)
+   const status_t ret = replyMsg()->AddMessage(MTDPS_NAME_PAYLOAD, CastAwayConstFromRef(payload))
                       | replyMsg()->CAddFlat(  MTDPS_NAME_SOURCE,  GetLocalPeerID())
                       | replyMsg()->CAddInt32( MTDPS_NAME_WHICHDB, optWhichDB)
                       | replyMsg()->CAddString(MTDPS_NAME_TAG,     tag);
@@ -678,7 +678,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflec
                String nodePath;
                for (int i=0; msg()->FindString(PR_NAME_REMOVED_DATAITEMS, i, nodePath).IsOK(); i++)
                   if (ConvertPathToSessionRelative(nodePath).IsOK())
-                     _muxGateway.TreeNodeUpdated(nodePath, MessageRef(), GetEmptyString());
+                     _muxGateway.TreeNodeUpdated(nodePath, ConstMessageRef(), GetEmptyString());
             }
 
             // Handle notifications of added/updated nodes

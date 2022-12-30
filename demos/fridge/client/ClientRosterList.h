@@ -27,7 +27,7 @@ public:
    virtual ~ClientRosterList();
 
    // ITreeGatewaySubscriber API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag);
    virtual void MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress);
    virtual void TreeGatewayConnectionStateChanged();
    virtual void CallbackBatchEnds();
@@ -48,12 +48,12 @@ private:
 
    struct CompareMessageRefFunctor
    {
-      int Compare(const MessageRef & m1, const MessageRef & m2, void *) const
+      int Compare(const ConstMessageRef & m1, const ConstMessageRef & m2, void *) const
       {
          return muscleCompare(m1()->GetString("user"), m2()->GetString("user"));
       }
    };
-   OrderedValuesHashtable<String, MessageRef, CompareMessageRefFunctor> _clientRoster;
+   OrderedValuesHashtable<String, ConstMessageRef, CompareMessageRefFunctor> _clientRoster;
    bool _updateDisplayPending;
 
    String _pingTargetPath;  // used during PingUser() calls

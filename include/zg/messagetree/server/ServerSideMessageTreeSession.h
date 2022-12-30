@@ -43,12 +43,12 @@ public:
 
 protected:
    // StorageReflectSession overrides
-   virtual status_t UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const MessageRef & optMessageData);
+   virtual status_t UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const ConstMessageRef & optMessageData);
    virtual status_t UpdateSubscriptionIndexMessage(Message & subscriptionIndexMessage, const String & nodePath, char op, uint32 index, const String & key);
    virtual status_t PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath);
 
    virtual void AddApplicationSpecificParametersToParametersResultMessage(Message & parameterResultsMsg) const;
-   virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
+   virtual status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg) {return AddOutgoingMessage(CastAwayConstFromRef(msg));}
 
    // These are overridden here so that we can tap directly into the MUSCLE-level subscription mechanisms
    // rather than relying on our upstream ITreeGateway to handle subscription.  That way we can easily support

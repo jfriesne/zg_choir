@@ -29,7 +29,7 @@ ClientRosterList :: ~ClientRosterList()
    // empty
 }
 
-void ClientRosterList :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag)
+void ClientRosterList :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag)
 {
    ITreeGatewaySubscriber::TreeNodeUpdated(nodePath, optPayloadMsg, optOpTag);
 
@@ -84,7 +84,7 @@ void ClientRosterList :: UpdateDisplay()
    const QString prevSel = currentItem() ? currentItem()->text() : QString();
 
    clear();
-   for (HashtableIterator<String, MessageRef> iter(_clientRoster); iter.HasData(); iter++)
+   for (HashtableIterator<String, ConstMessageRef> iter(_clientRoster); iter.HasData(); iter++)
    {
       const QString nextClientName = iter.GetValue()()->GetString("user")();
 

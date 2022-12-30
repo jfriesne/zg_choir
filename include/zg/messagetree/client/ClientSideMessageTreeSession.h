@@ -26,7 +26,7 @@ public:
 
 private:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
-   virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) {return AddOutgoingMessage(msg);}
+   virtual status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg) {return AddOutgoingMessage(CastAwayConstFromRef(msg));}
 
    ClientSideNetworkTreeGateway _networkGateway;
 };

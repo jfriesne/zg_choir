@@ -77,7 +77,7 @@ FridgeChatView :: ~FridgeChatView()
    // empty
 }
 
-void FridgeChatView :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag)
+void FridgeChatView :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag)
 {
    ITreeGatewaySubscriber::TreeNodeUpdated(nodePath, optPayloadMsg, optOpTag);
 

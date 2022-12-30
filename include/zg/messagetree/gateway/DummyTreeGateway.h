@@ -24,14 +24,14 @@ protected:
    virtual status_t TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscriber *, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeValues(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags, const String &) {return _returnValue;}
    virtual status_t TreeGateway_RequestNodeSubtrees(ITreeGatewaySubscriber *, const Queue<String> &, const Queue<ConstQueryFilterRef> &, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
-   virtual status_t TreeGateway_UploadNodeValue(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags, const String &, const String &) {return _returnValue;}
-   virtual status_t TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber *, const String &, const MessageRef &, TreeGatewayFlags, const String &) {return _returnValue;}
+   virtual status_t TreeGateway_UploadNodeValue(ITreeGatewaySubscriber *, const String &, const ConstMessageRef &, TreeGatewayFlags, const String &, const String &) {return _returnValue;}
+   virtual status_t TreeGateway_UploadNodeSubtree(ITreeGatewaySubscriber *, const String &, const ConstMessageRef &, TreeGatewayFlags, const String &) {return _returnValue;}
    virtual status_t TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags, const String &) {return _returnValue;}
    virtual status_t TreeGateway_RequestMoveIndexEntry(ITreeGatewaySubscriber *, const String &, const String &, const ConstQueryFilterRef &, TreeGatewayFlags, const String &) {return _returnValue;}
    virtual status_t TreeGateway_PingLocalPeer(ITreeGatewaySubscriber *, const String &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber *, const String &, uint32, TreeGatewayFlags) {return _returnValue;}
-   virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber *, const MessageRef &, uint32, const String &) {return _returnValue;}
-   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber *, const String &, const MessageRef &, const ConstQueryFilterRef &, const String &) {return _returnValue;}
+   virtual status_t TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber *, const ConstMessageRef &, uint32, const String &) {return _returnValue;}
+   virtual status_t TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber *, const String &, const ConstMessageRef &, const ConstQueryFilterRef &, const String &) {return _returnValue;}
    virtual status_t TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber *, const String &, uint32) {return _returnValue;}
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber *, uint32, const String &) {return _returnValue;}

@@ -125,7 +125,7 @@ protected:
    virtual void MessageReceivedFromNetwork(const MessageRef & msg) = 0;
 
    // INetworkMessageSender API -- sends (msg) out over our TCP connection
-   virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg);
+   virtual status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg);
 
 private:
    friend class ClientConnectorImplementation;

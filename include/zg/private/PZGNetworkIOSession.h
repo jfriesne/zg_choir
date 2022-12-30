@@ -33,20 +33,20 @@ public:
      * @param msg The Message to send to the specified peer.
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SendUnicastMessageToPeer(const ZGPeerID & peerID, const MessageRef & msg);
+   status_t SendUnicastMessageToPeer(const ZGPeerID & peerID, const ConstMessageRef & msg);
 
    /** Sends the specified Message to all peers via multicast/UDP/PacketTunnel.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SendMulticastMessageToAllPeers(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
+   status_t SendMulticastMessageToAllPeers(const ConstMessageRef & msg) {return SendMessageToInternalThread(CastAwayConstFromRef(msg));}
 
    /** Sends the specified Message to all peers via unicast/TCP.
      * @param msg Should be one of the PZG_PEER_COMMAND_* Message types.
      * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
+   status_t SendUnicastMessageToAllPeers(const ConstMessageRef & msg, bool sendToSelf = true);
 
    /** Tells the multicast I/O thread what beacon data to transmit periodically (if any)
      * @param optBeaconData If non-NULL, this is the data to transmit every so often.  If NULL, no beacon data should be transmitted.
@@ -132,7 +132,7 @@ private:
    PZGHeartbeatSessionRef _hbSession;       // handles sending/receiving of heartbeat packets and updates the ordered-online-peers-list for us
    Hashtable<ZGPeerID, Queue<PZGUnicastSessionRef> > _namedUnicastSessions;  // unicast sessions whose remote endpoint we do know
    Hashtable<PZGUnicastSessionRef, Void> _registeredUnicastSessions;         // all unicast sessions (whether we know their endpoint or not)
-   Queue<MessageRef> _messagesSentToSelf;  // just because I think it's silly to serialize and then deserialize a MessageRef to myself
+   Queue<ConstMessageRef> _messagesSentToSelf;  // just because I think it's silly to serialize and then deserialize a MessageRef to myself
    ZGPeerID _seniorPeerID;
    bool _computerIsAsleep;
 

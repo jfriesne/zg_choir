@@ -29,7 +29,7 @@ public:
    
    // ITreeGatewaySubscriber API
    virtual void TreeGatewayConnectionStateChanged();
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag);
    virtual void MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload);
 
    /** Uploads a request to the server to clear all the magnets from the fridge */

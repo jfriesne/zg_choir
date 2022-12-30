@@ -31,7 +31,7 @@ protected:
    virtual void ReceivedPathDropped(ITreeGatewaySubscriber * /*calledBy*/, const String & receivedPath);
 
    // ITreeGatewaySubscriber callback API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag);
 
 private:
    friend class SymlinkResolver;

@@ -50,7 +50,7 @@ public:
      * @param optOpTag If the entity responsible for this database change specified an operation-tag for the change, that tag will appear in this argument.
      * Default implementation is a no-op.
      */
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag) {(void) nodePath; (void) optPayloadMsg; (void) optOpTag;}
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag) {(void) nodePath; (void) optPayloadMsg; (void) optOpTag;}
 
    /** Called by the upstream gateway to notify this subscriber when the node-index of a subscribed-to database node has been cleared.
      * @param nodePath the session-relative path of the database node in question.
@@ -192,7 +192,7 @@ protected:
      *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t UploadTreeNodeValue(const String & nodePath, const MessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optBefore = GetEmptyString(), const String & optOpTag = GetEmptyString());
+   virtual status_t UploadTreeNodeValue(const String & nodePath, const ConstMessageRef & optPayload, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optBefore = GetEmptyString(), const String & optOpTag = GetEmptyString());
 
    /** Request that a subtree of nodes be uploaded to the specified location in the database.
      * @param basePath the session-relative path indicating where the root of the subtree should be created.
@@ -202,7 +202,7 @@ protected:
      *                 callbacks that subscribed ITreeGatewaySubscriber objects receive as a result of this operation.  Defaults to an empty string.
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
-   virtual status_t UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optOpTag = GetEmptyString());
+   virtual status_t UploadTreeNodeSubtree(const String & basePath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags = TreeGatewayFlags(), const String & optOpTag = GetEmptyString());
 
    /** Request that one of more nodes be deleted from the database.
      * @param nodePath Session-relative path to the node (or nodes) to delete.  May be wildcarded.
@@ -255,7 +255,7 @@ protected:
      *       functionality is useful only when you've overridden MessageReceivedFromSubscriber() in a subclass on the server,
      *       with some code that reacts appropriately to the incoming Messages.
      */
-   virtual status_t SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB = 0, const String & tag = GetEmptyString());
+   virtual status_t SendMessageToTreeSeniorPeer(const ConstMessageRef & msg, uint32 whichDB = 0, const String & tag = GetEmptyString());
 
    /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects in the system.
      * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
@@ -276,7 +276,7 @@ protected:
      *       one or more peer-specific subtrees (as defined by a ClientDataMessageTreeDatabaseObject) will result in (msg)
      *       being forwarded only to subscribers on the peers matching those nodes.
      */
-   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), const String & returnAddress = GetEmptyString());
+   virtual status_t SendMessageToSubscriber(const String & subscriberPath, const ConstMessageRef & msg, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), const String & returnAddress = GetEmptyString());
 
    /** Tells the database that an undoable sequence of changes is about to be uploaded.
      * @param optSequenceLabel A user-readable string describing what the sequence does.  If you don't have a good string to supply

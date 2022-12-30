@@ -153,7 +153,7 @@ static status_t GetOrPutOpTagIndex(Message & subscriptionMessage, const String &
    return subscriptionMessage.AddString(_opTagFieldName, optOpTag);
 }
 
-status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const MessageRef & optMessageData)
+status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & subscriptionMessage, const String & nodePath, const ConstMessageRef & optMessageData)
 {
    int32 opTagIndex = -1;  // this will be set to the index of our optOptTag string within the _opTagFieldName field
    const String & optOpTag = _dbSession ? _dbSession->GetCurrentOpTagForNodePath(nodePath) : GetEmptyString();

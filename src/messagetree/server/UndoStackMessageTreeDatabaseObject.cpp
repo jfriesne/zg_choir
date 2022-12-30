@@ -218,7 +218,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
             const Queue<DataNodeRef> * indexQ = fromClientNode->GetIndex();
             if ((indexQ)&&(indexQ->HasItems()))
             {
-               MessageRef payload      = indexQ->Tail()()->GetData();
+               ConstMessageRef payload = indexQ->Tail()()->GetData();
                const uint64 seqStartID = payload()->GetInt64(UNDOSTACK_NAME_STARTDBID);
                const uint64 seqEndID   = payload()->GetInt64(UNDOSTACK_NAME_ENDDBID);
                if (seqEndID >= seqStartID)
@@ -300,7 +300,7 @@ status_t UndoStackMessageTreeDatabaseObject :: JuniorUpdate(const ConstMessageRe
    return MessageTreeDatabaseObject::JuniorUpdate(doMsg() ? doMsg : pairMsg);   // if there's no doMsg, it's probably because a subclass requested a custom change
 }
 
-status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
+status_t UndoStackMessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const ConstMessageRef & oldPayload, const ConstMessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
 {
    // File the do-action as usual for our Junior Peers to use
    MRETURN_ON_ERROR(MessageTreeDatabaseObject::SeniorRecordNodeUpdateMessage(relativePath, oldPayload, newPayload, assemblingMessage, prepend, optOpTag));

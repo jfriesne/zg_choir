@@ -306,7 +306,7 @@ void ZGPeerSession :: PrivateMessageReceivedFromPeer(const ZGPeerID & fromPeerID
    }
 }
 
-status_t ZGPeerSession :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, bool isMessageMeantForSeniorPeer)
+status_t ZGPeerSession :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const ConstMessageRef & msg, bool isMessageMeantForSeniorPeer)
 {
    const bool iAmSenior = IAmTheSeniorPeer();
    if (isMessageMeantForSeniorPeer != iAmSenior)
@@ -360,7 +360,7 @@ status_t ZGPeerSession :: RequestUpdateDatabaseState(uint32 whichDatabase, const
    return SendRequestToSeniorPeer(whichDatabase, PZG_PEER_COMMAND_UPDATE_SENIOR_DATABASE, databaseUpdateMsg);
 }
 
-status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 whatCode, const MessageRef & userMsg)
+status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 whatCode, const ConstMessageRef & userMsg)
 {
    if (whichDatabase >= _peerSettings.GetNumDatabases()) return B_BAD_ARGUMENT;  // invalid database index!
    if (_seniorPeerID.IsValid() == false) return B_BAD_OBJECT;  // can't send to senior peer if we don't know who he is!
@@ -369,7 +369,7 @@ status_t ZGPeerSession :: SendRequestToSeniorPeer(uint32 whichDatabase, uint32 w
    MRETURN_OOM_ON_NULL(sendMsg());
 
    MRETURN_ON_ERROR(sendMsg()->CAddInt32(  PZG_PEER_NAME_DATABASE_ID,  whichDatabase));
-   MRETURN_ON_ERROR(sendMsg()->CAddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg));
+   MRETURN_ON_ERROR(sendMsg()->CAddMessage(PZG_PEER_NAME_USER_MESSAGE, CastAwayConstFromRef(userMsg)));
 
    return SendUnicastInternalMessageToPeer(_seniorPeerID, sendMsg);
 }
@@ -393,18 +393,18 @@ status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseU
    return nios->SendMulticastMessageToAllPeers(wrapMsg);
 }
 
-static MessageRef WrapUserMessage(const MessageRef & userMsg)
+static MessageRef WrapUserMessage(const ConstMessageRef & userMsg)
 {
    MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, userMsg).IsOK())) ? wrapMsg : MessageRef();
+   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, CastAwayConstFromRef(userMsg)).IsOK())) ? wrapMsg : MessageRef();
 }
 
-status_t ZGPeerSession :: SendMulticastUserMessageToAllPeers(const MessageRef & userMsg)
+status_t ZGPeerSession :: SendMulticastUserMessageToAllPeers(const ConstMessageRef & userMsg)
 {
    return SendMulticastInternalMessageToAllPeers(WrapUserMessage(userMsg));
 }
 
-status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg)
+status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const ConstMessageRef & internalMsg)
 {
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 
@@ -412,12 +412,12 @@ status_t ZGPeerSession :: SendMulticastInternalMessageToAllPeers(const MessageRe
    return nios ? nios->SendMulticastMessageToAllPeers(internalMsg) : B_BAD_OBJECT;
 }
 
-status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const MessageRef & userMsg, bool sendToSelf)
+status_t ZGPeerSession :: SendUnicastUserMessageToAllPeers(const ConstMessageRef & userMsg, bool sendToSelf)
 {
    return SendUnicastInternalMessageToAllPeers(WrapUserMessage(userMsg), sendToSelf);
 }
 
-status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef & internalMsg, bool sendToSelf)
+status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const ConstMessageRef & internalMsg, bool sendToSelf)
 {
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 
@@ -425,12 +425,12 @@ status_t ZGPeerSession :: SendUnicastInternalMessageToAllPeers(const MessageRef 
    return nios ? nios->SendUnicastMessageToAllPeers(internalMsg, sendToSelf) : B_BAD_OBJECT;
 }
 
-status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & userMsg)
+status_t ZGPeerSession :: SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const ConstMessageRef & userMsg)
 {
    return SendUnicastInternalMessageToPeer(destinationPeerID, WrapUserMessage(userMsg));
 }
 
-status_t ZGPeerSession :: SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & internalMsg)
+status_t ZGPeerSession :: SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const ConstMessageRef & internalMsg)
 {
    if (internalMsg() == NULL) return B_BAD_ARGUMENT;
 

@@ -356,7 +356,7 @@ void FridgeClientWindow :: UpdateStatus()
    if (_clearMagnetsButton) _clearMagnetsButton->setEnabled(_canvas->HasMagnets());
 }
 
-void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb)
+void FridgeClientWindow :: UpdateUndoRedoButton(QPushButton * button, const ConstMessageRef & msgRef, const QString & verb)
 {
    if (button)
    {
@@ -436,7 +436,7 @@ void FridgeClientWindow :: SubtreesRequestResultReturned(const String & tag, con
    }
 }
 
-void FridgeClientWindow :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & /*optOpTag*/)
+void FridgeClientWindow :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & /*optOpTag*/)
 {
    if (nodePath == _undoStackTopPath)
    {

@@ -27,7 +27,7 @@ public:
 
    void SetParameters(ZGPeerSession * master, uint32 whichDatabase, uint64 maxPayloadBytesInLog);
 
-   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp, const INetworkTimeProvider & networkTimeProvider);
+   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const ConstMessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp, const INetworkTimeProvider & networkTimeProvider);
 
    virtual uint64 GetPulseTime(const PulseArgs & args) {return muscleMin(_rescanLogPending?0:MUSCLE_TIME_NEVER, PulseNode::GetPulseTime(args));}
    virtual void Pulse(const PulseArgs & args);

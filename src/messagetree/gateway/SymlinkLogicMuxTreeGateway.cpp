@@ -15,7 +15,7 @@ public:
 
    // Called whenever the SymlinkLogicMuxTreeGateway gets a TreeNodeUpdated() call.  We use it to intercept
    // nodes containing symlinks and redirect the SymlinkLogicMuxTreeGateway to see the pointed-to node's data instead
-   bool FilterTreeNodeUpdate(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag, const Hashtable<ITreeGatewaySubscriber *, Void> & initialModeSubscribers)
+   bool FilterTreeNodeUpdate(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag, const Hashtable<ITreeGatewaySubscriber *, Void> & initialModeSubscribers)
    {
       const String & oldSymLinkPath = _symlinks[nodePath];
       const String & newSymLinkPath = payloadMsg() ? payloadMsg()->GetString(SYMLINK_FIELD_NAME) : GetEmptyString();
@@ -40,7 +40,7 @@ public:
    }
 
    // Called by the original MuxTreeGateway when one of the symlink-destination-paths we subscribed to (in PutSymlink()) has been updated
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag)
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag)
    {
       // When we get the result of one of our subscriptions, feed it back to our master gateway's subscribers as if it was associated with the symlink-nodes they subscribed to
       SymlinkState * sstate = _reverseSymlinks.Get(nodePath);
@@ -72,7 +72,7 @@ private:
    {
    public:
       Hashtable<String, Void> _sourcePaths;  // set of source-paths known to be pointing to our destination-path
-      MessageRef _payload;                   // MessageRef associated with the destination node (if known)
+      ConstMessageRef _payload;              // ConstMessageRef associated with the destination node (if known)
    };
 
    Hashtable<String, String>              _symlinks; // symlink-source-path -> symlink-destination-path
@@ -132,7 +132,7 @@ SymlinkLogicMuxTreeGateway :: ~SymlinkLogicMuxTreeGateway()
    delete _symlinkResolver;
 }
 
-void SymlinkLogicMuxTreeGateway :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
+void SymlinkLogicMuxTreeGateway :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag)
 {
    if (_symlinkResolver->FilterTreeNodeUpdate(nodePath, payloadMsg, optOpTag, GetSubscribersInInitialResultsMode()) == false) MuxTreeGateway::TreeNodeUpdated(nodePath, payloadMsg, optOpTag);
 }

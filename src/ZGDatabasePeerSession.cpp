@@ -106,12 +106,12 @@ void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
    for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->LocalSeniorPeerStatusChanged();
 }
 
-status_t ZGDatabasePeerSession :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx)
+status_t ZGDatabasePeerSession :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const ConstMessageRef & msg, uint32 targetDBIdx, uint32 sourceDBIdx)
 {
    MessageRef wrapperMsg = GetMessageFromPool(DBPEERSESSION_COMMAND_MESSAGEFORDBOBJECT);
    MRETURN_OOM_ON_NULL(wrapperMsg());
 
-   MRETURN_ON_ERROR(wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     msg)
+   MRETURN_ON_ERROR(wrapperMsg()->AddMessage(DBPEERSESSION_NAME_PAYLOAD,     CastAwayConstFromRef(msg))
                   | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_TARGETDBIDX, targetDBIdx)
                   | wrapperMsg()->CAddInt32( DBPEERSESSION_NAME_SOURCEDBIDX, sourceDBIdx));
 
@@ -218,7 +218,7 @@ bool IDatabaseObject :: IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNet
    return dbps ? dbps->IsInJuniorDatabaseUpdateContext(_dbIndex, optRetSeniorNetworkTime64) : false;
 }
 
-status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB)
+status_t IDatabaseObject :: SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const ConstMessageRef & msg, int32 optWhichDB)
 {
    ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
    return dbps ? dbps->SendMessageToDatabaseObject(targetPeerID, msg, (optWhichDB>=0)?(uint32)optWhichDB:_dbIndex, _dbIndex) : B_BAD_OBJECT;

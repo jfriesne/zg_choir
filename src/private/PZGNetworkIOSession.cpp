@@ -537,11 +537,11 @@ void PZGNetworkIOSession :: Pulse(const PulseArgs & args)
 {
    PZGThreadedSession::Pulse(args);
 
-   MessageRef nextMsgToSelf;
-   while(_messagesSentToSelf.RemoveHead(nextMsgToSelf).IsOK()) UnicastMessageReceivedFromPeer(GetLocalPeerID(), nextMsgToSelf);
+   ConstMessageRef nextMsgToSelf;
+   while(_messagesSentToSelf.RemoveHead(nextMsgToSelf).IsOK()) UnicastMessageReceivedFromPeer(GetLocalPeerID(), CastAwayConstFromRef(nextMsgToSelf));
 }
 
-status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & msg, bool sendToSelf)
+status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const ConstMessageRef & msg, bool sendToSelf)
 {
    for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(GetMainThreadPeers()); iter.HasData(); iter++)
    {
@@ -551,7 +551,7 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const MessageRef & 
    return B_NO_ERROR;
 }
 
-status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID, const MessageRef & msg)
+status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID, const ConstMessageRef & msg)
 {
    if (_hbSettings() == NULL) return B_BAD_OBJECT;  // paranoia
 
@@ -567,7 +567,7 @@ status_t PZGNetworkIOSession :: SendUnicastMessageToPeer(const ZGPeerID & peerID
    else
    {
       PZGUnicastSessionRef usRef = GetUnicastSessionForPeerID(peerID, true);
-      return usRef() ? usRef()->AddOutgoingMessage(msg) : B_DATA_NOT_FOUND;
+      return usRef() ? usRef()->AddOutgoingMessage(CastAwayConstFromRef(msg)) : B_DATA_NOT_FOUND;
    }
 }
 

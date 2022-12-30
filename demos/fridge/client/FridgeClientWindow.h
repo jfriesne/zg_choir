@@ -46,7 +46,7 @@ public:
 
 protected:
    // ITreeGatewaySubscriber API
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag);
    virtual void SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData);
 
 private slots:
@@ -68,7 +68,7 @@ private:
    void UpdateGUI();
    void DeleteConnectionPage();
    void ConnectTo(const String & systemName);
-   void UpdateUndoRedoButton(QPushButton * button, const MessageRef & msgRef, const QString & verb);
+   void UpdateUndoRedoButton(QPushButton * button, const ConstMessageRef & msgRef, const QString & verb);
    void SetTimeSyncAnimationActive(bool active);
 
    enum {
@@ -98,11 +98,11 @@ private:
    TimeSyncWidget * _timeSyncWidget;
    QPushButton * _redoButton;
 
-   String _undoStackTopPath;  // e.g. "project/undo/<KEY>", only when we're connected
-   MessageRef _undoStackTop;  // current Message held by the server at (_undoStackTopPath)
+   String _undoStackTopPath;      // e.g. "project/undo/<KEY>", only when we're connected
+   ConstMessageRef _undoStackTop; // current Message held by the server at (_undoStackTopPath)
 
-   String _redoStackTopPath;  // e.g. "project/redo/<KEY>", only when we're connected
-   MessageRef _redoStackTop;  // current Message held by the server at (_redoStackTopPath)
+   String _redoStackTopPath;      // e.g. "project/redo/<KEY>", only when we're connected
+   ConstMessageRef _redoStackTop; // current Message held by the server at (_redoStackTopPath)
 
    bool _updateStatusPending;
 };

@@ -113,7 +113,7 @@ void PZGDatabaseState :: ResetLocalDatabaseToDefaultState()
 // this method gets called only in the correct context (e.g. it will make sure not to call
 // PZG_PEER_COMMAND_RESET_SENIOR_DATABASE when we're running on a junior peer, etc)
 // So we don't do that checking here.
-status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp, const INetworkTimeProvider & networkTimeProvider)
+status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const ConstMessageRef & msg, const ConstPZGDatabaseUpdateRef & optDBUp, const INetworkTimeProvider & networkTimeProvider)
 {
    switch(msg()->what)
    {

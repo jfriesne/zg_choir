@@ -27,7 +27,7 @@ public:
    virtual status_t IncomingTreeMessageReceivedFromClient(const MessageRef & msg);
 
    // ITreeGatewaySubscriber callback API -- implemented to create Message objects and send them back to our client over TCP
-   virtual void TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag);
+   virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag);
    virtual void TreeNodeIndexCleared(const String & path, const String & optOpTag);
    virtual void TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag);
    virtual void TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag);
@@ -39,7 +39,7 @@ public:
 
 private:
    void HandleIndexEntryUpdate(uint32 whatCode, const String & path, uint32 idx, const String & nodeName, const String & optOpTag);
-   status_t SendOutgoingMessageToNetwork(const MessageRef & msg);
+   status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg);
    QueryFilterRef InstantiateQueryFilterAux(const Message & qfMsg, uint32 idx);
 
    INetworkMessageSender * _messageSender;

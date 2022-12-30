@@ -52,7 +52,7 @@ protected:
    virtual status_t SeniorMessageTreeUpdate(const ConstMessageRef & msg);
    virtual status_t JuniorUpdate(const ConstMessageRef & juniorDoMsg);
 
-   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
+   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const ConstMessageRef & oldPayload, const ConstMessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
    virtual status_t SeniorRecordNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
 
    // Overridden to add undo-tags as necessary

@@ -229,11 +229,11 @@ bool MessageTreeDatabaseObject :: IsInSetupOrTeardown() const
    return ((zsh)&&(zsh->IsInSetupOrTeardown()));
 }
 
-void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldPayload, bool isBeingRemoved)
+void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const ConstMessageRef & oldPayload, bool isBeingRemoved)
 {
    if (IsInSeniorDatabaseUpdateContext())
    {
-      const status_t ret = SeniorRecordNodeUpdateMessage(relativePath, oldPayload, isBeingRemoved?MessageRef():node.GetData(), _assembledJuniorMessage, false, GetCurrentOpTag());
+      const status_t ret = SeniorRecordNodeUpdateMessage(relativePath, oldPayload, isBeingRemoved?GetDefaultObjectForType<ConstMessageRef>():node.GetData(), _assembledJuniorMessage, false, GetCurrentOpTag());
       if (ret.IsError()) LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  Error assembling junior message for %s node [%s]!  [%s]\n", this, isBeingRemoved?"removed":"updated", relativePath(), ret());
    }
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
@@ -252,7 +252,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
    else _checksum += node.CalculateChecksum();
 }
 
-status_t MessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & /*oldPayload*/, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
+status_t MessageTreeDatabaseObject :: SeniorRecordNodeUpdateMessage(const String & relativePath, const ConstMessageRef & /*oldPayload*/, const ConstMessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag)
 {
    MessageRef msg = CreateNodeUpdateMessage(relativePath, newPayload, _interimUpdateNestCount.IsInBatch()?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags(), GetEmptyString(), optOpTag);
    MRETURN_OOM_ON_NULL(msg());
@@ -310,13 +310,13 @@ void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node,
    for (DataNodeRefIterator dnIter(node.GetChildIterator()); dnIter.HasData(); dnIter++) DumpDescriptionToString(*dnIter.GetValue()(), s, indentLevel+2);
 }
 
-status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t MessageTreeDatabaseObject :: UploadNodeValue(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    MessageRef cmdMsg = CreateNodeUpdateMessage(path, optPayload, flags, optBefore, optOpTag);
    return cmdMsg() ? RequestUpdateDatabaseState(cmdMsg) : B_OUT_OF_MEMORY;
 }
 
-status_t MessageTreeDatabaseObject :: UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
+status_t MessageTreeDatabaseObject :: UploadNodeSubtree(const String & path, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    MessageRef cmdMsg = CreateSubtreeUpdateMessage(path, valuesMsg, flags, optOpTag);
    return cmdMsg() ? RequestUpdateDatabaseState(cmdMsg) : B_OUT_OF_MEMORY;
@@ -386,13 +386,13 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
 }
 
 // Creates MTDO_COMMAND_UPDATENODEVALUE Messages
-MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const
+MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_COMMAND_UPDATENODEVALUE);
    if (cmdMsg())
    {
       const status_t ret = cmdMsg()->CAddString( MTDO_NAME_PATH,     path)
-                         | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD,  optPayload)
+                         | cmdMsg()->CAddMessage(MTDO_NAME_PAYLOAD,  CastAwayConstFromRef(optPayload))
                          | cmdMsg()->AddFlat(    MTDO_NAME_FLAGS,    flags)
                          | cmdMsg()->CAddString( MTDO_NAME_BEFORE,   optBefore)
                          | cmdMsg()->CAddString( MTDO_NAME_TAG,      optOpTag);
@@ -404,13 +404,13 @@ MessageRef MessageTreeDatabaseObject :: CreateNodeUpdateMessage(const String & p
 }
 
 // Creates MTDO_COMMAND_UPDATESUBTREE Messages
-MessageRef MessageTreeDatabaseObject :: CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags, const String & optOpTag) const
+MessageRef MessageTreeDatabaseObject :: CreateSubtreeUpdateMessage(const String & path, const ConstMessageRef & payload, TreeGatewayFlags flags, const String & optOpTag) const
 {
    MessageRef cmdMsg = GetMessageFromPool(MTDO_COMMAND_UPDATESUBTREE);
    if (cmdMsg())
    {
       const status_t ret = cmdMsg()->CAddString(MTDO_NAME_PATH,    path)
-                         | cmdMsg()->AddMessage(MTDO_NAME_PAYLOAD, payload)
+                         | cmdMsg()->AddMessage(MTDO_NAME_PAYLOAD, CastAwayConstFromRef(payload))
                          | cmdMsg()->AddFlat(   MTDO_NAME_FLAGS,   flags)
                          | cmdMsg()->CAddString(MTDO_NAME_TAG,     optOpTag);
       if (ret.IsOK()) return cmdMsg;
@@ -598,7 +598,7 @@ DataNode * MessageTreeDatabaseObject :: GetDataNode(const String & nodePath) con
    return zsh ? zsh->GetDataNode(nodePath.StartsWith("/") ? nodePath : DatabaseSubpathToSessionRelativePath(nodePath, TreeGatewayFlags())) : NULL;
 }
 
-status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags, const String & optInsertBefore, const String & optOpTag)
+status_t MessageTreeDatabaseObject :: SetDataNode(const String & nodePath, const ConstMessageRef & dataMsgRef, SetDataNodeFlags flags, const String & optInsertBefore, const String & optOpTag)
 {
    DECLARE_OP_TAG_GUARD;
 
@@ -645,7 +645,7 @@ void MessageTreeDatabaseObject :: MessageReceivedFromTreeGatewaySubscriber(const
    LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject #" UINT32_FORMAT_SPEC ":  MessageReceivedFromTreeGatewaySubscriber():  Unhandled Message (what=" UINT32_FORMAT_SPEC ", fromPeerID=[%s], tag=[%s])\n", GetDatabaseIndex(), payload()->what, fromPeerID.ToString()(), tag());
 }
 
-status_t MessageTreeDatabaseObject :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload)
+status_t MessageTreeDatabaseObject :: SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const ConstMessageRef & payload)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    return zsh ? zsh->SendMessageToTreeGatewaySubscriber(toPeerID, tag, payload, GetDatabaseIndex()) : B_BAD_OBJECT;

@@ -196,7 +196,7 @@ protected:
      *                   will be sent to the database-object with the same index as our own database-index.
      * @returns B_NO_ERROR on success, or another error-code on failure.
      */
-   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const MessageRef & msg, int32 optWhichDB = -1);
+   status_t SendMessageToDatabaseObject(const ZGPeerID & targetPeerID, const ConstMessageRef & msg, int32 optWhichDB = -1);
 
    /** Called when a Message is received from another MessageTreeDatabaseObject.  Default implementation is a no-op.
      * @param msg the Message that was received.

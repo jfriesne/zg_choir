@@ -28,12 +28,12 @@ status_t ITreeGatewaySubscriber :: RequestTreeNodeSubtrees(const Queue<String> &
    return GetGateway()->TreeGateway_RequestNodeSubtrees(this, queryStrings, queryFilters, tag, maxDepth, flags);
 }
 
-status_t ITreeGatewaySubscriber :: UploadTreeNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t ITreeGatewaySubscriber :: UploadTreeNodeValue(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    return GetGateway()->TreeGateway_UploadNodeValue(this, path, optPayload, flags, optBefore, optOpTag);
 }
 
-status_t ITreeGatewaySubscriber :: UploadTreeNodeSubtree(const String & basePath, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
+status_t ITreeGatewaySubscriber :: UploadTreeNodeSubtree(const String & basePath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
    return GetGateway()->TreeGateway_UploadNodeSubtree(this, basePath, valuesMsg, flags, optOpTag);
 }
@@ -58,12 +58,12 @@ status_t ITreeGatewaySubscriber :: PingTreeSeniorPeer(const String & tag, uint32
    return GetGateway()->TreeGateway_PingSeniorPeer(this, tag, whichDB, flags);
 }
 
-status_t ITreeGatewaySubscriber :: SendMessageToTreeSeniorPeer(const MessageRef & msg, uint32 whichDB, const String & optTag)
+status_t ITreeGatewaySubscriber :: SendMessageToTreeSeniorPeer(const ConstMessageRef & msg, uint32 whichDB, const String & optTag)
 {
    return GetGateway()->TreeGateway_SendMessageToSeniorPeer(this, msg, whichDB, optTag);
 }
 
-status_t ITreeGatewaySubscriber :: SendMessageToSubscriber(const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
+status_t ITreeGatewaySubscriber :: SendMessageToSubscriber(const String & subscriberPath, const ConstMessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    return GetGateway()->TreeGateway_SendMessageToSubscriber(this, subscriberPath, msg, optFilterRef, tag);
 }

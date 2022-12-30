@@ -199,7 +199,7 @@ void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
    emit UpdateWindowStatus();
 }
 
-void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const MessageRef & optPayloadMsg, const String & /*optOpTag*/)
+void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & /*optOpTag*/)
 {
    if (nodePath.StartsWith("project/magnets/"))
    {

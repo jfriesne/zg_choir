@@ -295,21 +295,21 @@ protected:
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
      * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of an error code otherwise.
      */
-   status_t SendMulticastUserMessageToAllPeers(const MessageRef & msg);
+   status_t SendMulticastUserMessageToAllPeers(const ConstMessageRef & msg);
 
    /** Tries to send the given Message to all peers via multiple instances of TCP unicast.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on each peer when the Message arrives there.
      * @param sendToSelf Whether the message should be send to the sending peer (this) (defaults to true).
      * @returns B_NO_ERROR if the Message was successfully enqueued to be multicasted out, of an error code otherwise.
      */
-   status_t SendUnicastUserMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
+   status_t SendUnicastUserMessageToAllPeers(const ConstMessageRef & msg, bool sendToSelf = true);
 
    /** Tries to send the given Message to a specific peers via TCP unicast.
      * @param destinationPeerID The ZGPeerID of the peer we want this Message to be sent to.
      * @param msg The Message object to send.  MessageReceivedFromPeer() will be called on the peer when the Message arrives there.
      * @returns B_NO_ERROR if the Message was successfully enqueued to be unicasted out, of an error code otherwise.
      */
-   status_t SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
+   status_t SendUnicastUserMessageToPeer(const ZGPeerID & destinationPeerID, const ConstMessageRef & msg);
 
    /** Prints various database-state information to stdout.  Useful for debugging purposes.
      * @param whichDatabase Index of the database to print out state for, or leave set to -1 to print out info about all databases.
@@ -359,14 +359,14 @@ protected:
 private:
    void ScheduleSetBeaconData();
    void ShutdownChildSessions();
-   status_t SendRequestToSeniorPeer(uint32 whichDatabase, uint32 whatCode, const MessageRef & userMsg);
-   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const MessageRef & msg, bool isMessageMeantForSeniorPeer);
+   status_t SendRequestToSeniorPeer(uint32 whichDatabase, uint32 whatCode, const ConstMessageRef & userMsg);
+   status_t HandleDatabaseUpdateRequest(const ZGPeerID & fromPeerID, const ConstMessageRef & msg, bool isMessageMeantForSeniorPeer);
    status_t SendDatabaseUpdateViaMulticast(const zg_private::ConstPZGDatabaseUpdateRef  & dbUp);
    status_t RequestBackOrderFromSeniorPeer(const zg_private::PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
    zg_private::ConstPZGBeaconDataRef GetNewSeniorBeaconData() const;
-   status_t SendUnicastInternalMessageToAllPeers(const MessageRef & msg, bool sendToSelf = true);
-   status_t SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const MessageRef & msg);
-   status_t SendMulticastInternalMessageToAllPeers(const MessageRef & internalMsg);
+   status_t SendUnicastInternalMessageToAllPeers(const ConstMessageRef & msg, bool sendToSelf = true);
+   status_t SendUnicastInternalMessageToPeer(const ZGPeerID & destinationPeerID, const ConstMessageRef & msg);
+   status_t SendMulticastInternalMessageToAllPeers(const ConstMessageRef & internalMsg);
    void VerifyOrFixLocalDatabaseChecksum(uint32 whichDB);
 
    // These methods are called from the PZGNetworkIOSession code

@@ -70,7 +70,7 @@ public:
      *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t UploadNodeValue(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
+   virtual status_t UploadNodeValue(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag);
 
    /** Sends a request to the senior peer that the specified node sub-tree be uploaded.
      * @param path session-relative path indicating where in the message-tree to place the root of the uploaded sub-tree.
@@ -80,7 +80,7 @@ public:
      *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
      * @returns B_NO_ERROR on success, or another error code on failure.
      */
-   virtual status_t UploadNodeSubtree(const String & path, const MessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag);
+   virtual status_t UploadNodeSubtree(const String & path, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag);
 
    /** Sends a request to remove matching nodes from the database.
      * @param path session-relative path indicating which node(s) to delete.  May be wildcarded.
@@ -111,7 +111,7 @@ public:
      * @param isBeingRemoved true iff this node is being deleted by this change
      * @note be sure to call up to the parent implementation of this method if you override it!
      */
-   virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const MessageRef & oldDataRef, bool isBeingRemoved);
+   virtual void MessageTreeNodeUpdated(const String & relativePath, DataNode & node, const ConstMessageRef & oldDataRef, bool isBeingRemoved);
 
    /** This callback method is called when the index of node in this database-object's subtree is being modified.
      * @param relativePath the path to this node (relative to this database-object's root-node)
@@ -139,7 +139,7 @@ public:
      * @param payload the Message to send to the subscriber
      * @returns B_NO_ERROR on success, or an error code on failure.
      */
-   virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const MessageRef & payload);
+   virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const ConstMessageRef & payload);
 
    /** Returns a reference to our currently-active operation-tag, or a reference to an empty string if there isn't one. */
    const String & GetCurrentOpTag() const {return *_opTagStack.TailWithDefault(&GetEmptyString());}
@@ -160,7 +160,7 @@ protected:
      * @param optOpTag Client-provided descriptive tag for this operation.
      * @returns a valid MessageRef on success, or a NULL MessageRef on failure.
      */
-   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const MessageRef & oldPayload, const MessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
+   virtual status_t SeniorRecordNodeUpdateMessage(const String & relativePath, const ConstMessageRef & oldPayload, const ConstMessageRef & newPayload, MessageRef & assemblingMessage, bool prepend, const String & optOpTag);
 
    /** Called by SeniorUpdate() when it wants to add an update-node-index action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
      * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
@@ -219,7 +219,7 @@ protected:
      * @param optOpTag an optional arbitrary tag-string to present to subscribers to describe this operation.
      * @return B_NO_ERROR on success, or an error code on failure.
      */
-   status_t SetDataNode(const String & nodePath, const MessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String &optInsertBefore=GetEmptyString(), const String & optOpTag=GetEmptyString());
+   status_t SetDataNode(const String & nodePath, const ConstMessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String &optInsertBefore=GetEmptyString(), const String & optOpTag=GetEmptyString());
 
    /** Convenience method:  Adds nodes that match the specified path to the passed-in Queue.
     *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
@@ -350,9 +350,9 @@ private:
    String DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const;
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
 
-   MessageRef CreateNodeUpdateMessage(const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const;
+   MessageRef CreateNodeUpdateMessage(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const;
    MessageRef CreateNodeIndexUpdateMessage(const String & relativePath, char op, uint32 index, const String & key, const String & optOpTag);
-   MessageRef CreateSubtreeUpdateMessage(const String & path, const MessageRef & payload, TreeGatewayFlags flags, const String & optOpTag) const;
+   MessageRef CreateSubtreeUpdateMessage(const String & path, const ConstMessageRef & payload, TreeGatewayFlags flags, const String & optOpTag) const;
 
    status_t HandleNodeUpdateMessage(const Message & msg);
    status_t HandleNodeUpdateMessageAux(const Message & msg, TreeGatewayFlags flags);

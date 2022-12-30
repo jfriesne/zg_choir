@@ -220,7 +220,7 @@ void TestTreeGatewaySubscriber :: CallbackBatchEnds()
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchEnds()\n");
 }
 
-void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const MessageRef & payloadMsg, const String & optOpTag)
+void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s]\n", nodePath(), payloadMsg(), optOpTag());
    if (payloadMsg()) payloadMsg()->PrintToStream();

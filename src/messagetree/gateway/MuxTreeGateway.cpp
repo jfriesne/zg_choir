@@ -206,7 +206,7 @@ String MuxTreeGateway :: TagToExcludeClientFromReplies(ITreeGatewaySubscriber * 
    return excludeMe ? PrependRegistrationIDPrefix(excludeMe, optOpTag, '!').Prepend(_muxTreeGatewayIDPrefix) : optOpTag;
 }
 
-status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const MessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
+status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
 {
    return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags.WithoutBit(TREE_GATEWAY_FLAG_NOREPLY), optBefore, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)?TagToExcludeClientFromReplies(calledBy,optOpTag):optOpTag);
 }
@@ -221,19 +221,19 @@ status_t MuxTreeGateway :: TreeGateway_PingSeniorPeer(ITreeGatewaySubscriber * c
    return _isConnected ? ITreeGatewaySubscriber::PingTreeSeniorPeer(PrependRegistrationIDPrefix(calledBy, tag), whichDB, flags) : B_BAD_OBJECT;
 }
 
-status_t MuxTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const MessageRef & msg, uint32 whichDB, const String & tag)
+status_t MuxTreeGateway :: TreeGateway_SendMessageToSeniorPeer(ITreeGatewaySubscriber * calledBy, const ConstMessageRef & msg, uint32 whichDB, const String & tag)
 {
    return _isConnected ? ITreeGatewaySubscriber::SendMessageToTreeSeniorPeer(msg, whichDB, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
 }
 
-status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const MessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
+status_t MuxTreeGateway :: TreeGateway_SendMessageToSubscriber(ITreeGatewaySubscriber * calledBy, const String & subscriberPath, const ConstMessageRef & msg, const ConstQueryFilterRef & optFilterRef, const String & tag)
 {
    return _isConnected ? ITreeGatewaySubscriber::SendMessageToSubscriber(subscriberPath, msg, optFilterRef, PrependRegistrationIDPrefix(calledBy, tag)) : B_BAD_OBJECT;
 }
 
 // Begin ITreeGatewaySubscriber callback API
 
-void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & nodeMsg, const String & optOpTag)
+void MuxTreeGateway :: TreeNodeUpdated(const String & path, const ConstMessageRef & nodeMsg, const String & optOpTag)
 {
    if (optOpTag.StartsWith(_muxTreeGatewayIDPrefix))
    {
@@ -250,7 +250,7 @@ void MuxTreeGateway :: TreeNodeUpdated(const String & path, const MessageRef & n
    else TreeNodeUpdatedAux(path, nodeMsg, optOpTag, NULL);
 }
 
-void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify)
+void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const ConstMessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify)
 {
    if (_allowedCallbacks.HasItems())
    {
@@ -273,7 +273,7 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const MessageRef 
    }
 }
 
-void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const MessageRef & msgRef, const String & optOpTag)
+void MuxTreeGateway :: UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const ConstMessageRef & msgRef, const String & optOpTag)
 {
    if (msgRef())
    {

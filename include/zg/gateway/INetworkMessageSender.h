@@ -17,7 +17,7 @@ public:
      * @param msg The Message to send.  This Message shouldn't be modified after this call returns.
      * @returns B_NO_ERROR if the Message was successfully enqueued for sending, or some other value if an error occurred.
      */
-   virtual status_t SendOutgoingMessageToNetwork(const MessageRef & msg) = 0;
+   virtual status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg) = 0;
 };
 
 };  // end namespace zg
