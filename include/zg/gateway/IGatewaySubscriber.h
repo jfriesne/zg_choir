@@ -7,7 +7,9 @@
 
 namespace zg {
 
-/** Abstract base class for objects that want to interact with a gateway's public API. */
+/** Abstract base class for objects that want to interact with a gateway's public API.
+  * @tparam GatewayType the subclass of IGateway that this subscriber type will register with.
+  */
 template<class GatewayType> class IGatewaySubscriber : public NotCopyable
 {
 public:
@@ -76,7 +78,9 @@ private:
    NestCount _callbackBatchCounter;
 };
 
-/** RIAA stack-guard object to begin and end an IGateway's Command Batch at the appropriate times */
+/** RIAA stack-guard object to begin and end an IGateway's Command Batch at the appropriate times
+  * @tparam SubscriberType the type of IGatewaySubscriber that this guard will be used in conjunction with.
+  */
 template<class SubscriberType> class GatewaySubscriberCommandBatchGuard : public NotCopyable
 {
 public:

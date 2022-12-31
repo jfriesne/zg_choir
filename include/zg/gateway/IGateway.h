@@ -14,8 +14,8 @@ class ITreeGateway;
 extern ITreeGateway * GetDummyTreeGateway();
 
 /** Abstract base class for objects that want to server as a gateway to a number of IGatewaySubscriber objects
- *  The GatewaySubscriberType template-argument should be either IGatewaySubscriber or a subclass thereof.
- *  The GatewaySubclass template-argument should be type of the gateway subclass itself (just so we can declare IGatewaySubscriber<GatewaySubclass> as a friend, argh)
+ *  @tparam GatewaySubscriberType The subscriber-type.  This should be either IGatewaySubscriber or a subclass of IGatewaySubscriber.
+ *  @tparam GatewaySubclass The type of the gateway subclass itself (just so we can declare IGatewaySubscriber<GatewaySubclass> as a friend)
  */
 template<class GatewaySubscriberType, class GatewaySubclass> class IGateway : public NotCopyable
 {
