@@ -34,9 +34,9 @@ public:
    /** Starts the network I/O thread, and tells it what sort of server it should be trying to connect to.
      * @param signaturePattern signature string of the type(s) of ZG program you want to connect to.
      *                         May be wildcarded if you aren't particular about the type of server you want to connect to.
-     *                         (e.g. passing "*" will allow you to connect to any kind of ZG server)
+     *                         (eg passing "*" will allow you to connect to any kind of ZG server)
      * @param systemNamePattern Name of the ZG system we want to connect to.  May be wildcarded if you aren't particular about
-     *                          the name of the system you connect to.  (e.g. passing "*" will get you connected to an available
+     *                          the name of the system you connect to.  (eg passing "*" will get you connected to an available
      *                          system regardless of what its system-name is)
      * @param optAdditionalDiscoveryCriteria optional reference to a QueryFilter that describes any additional criteria regarding
      *                          what sorts of server, in particular, you are interested in.  Servers whose

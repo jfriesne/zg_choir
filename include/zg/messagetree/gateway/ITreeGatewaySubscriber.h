@@ -131,11 +131,11 @@ protected:
 
    /** Call this to subscribe to a database node (or a wildcarded-set of database nodes) on the server, so that you will
      * be notified of their current state and whenever they change in the future.
-     * @param subscriptionPath the session-relative path of the node(s) you wish to subscribe to (e.g. "foo/bar/ba*")
+     * @param subscriptionPath the session-relative path of the node(s) you wish to subscribe to (eg "foo/bar/ba*")
      * @param optFilterRef if non-NULL, a reference to a QueryFilter object that the server should use to limit which nodes match the subscription.
      * @param flags If specified, these flags can influence the behavior of the subscribe operation.  Currently only the TREE_GATEWAY_FLAG_NOREPLY
      *              flag has an effect here; if specified, the initial/current state of the matching data nodes will not be send back to the
-     *              subscriber (i.e. only future updates to the nodes will cause TreeNodeUpdated() to be called)
+     *              subscriber (ie only future updates to the nodes will cause TreeNodeUpdated() to be called)
      * @returns B_NO_ERROR on success, or some other error value on failure.
      */
    virtual status_t AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags());
@@ -157,8 +157,8 @@ protected:
      */
    virtual status_t RemoveAllTreeSubscriptions(TreeGatewayFlags flags = TreeGatewayFlags());
 
-   /** Call this to request a one-shot (i.e. non-persistent) notification of the current state of database nodes matching the specified path.
-     * @param queryString the session-relative path of the node(s) you wish to query (e.g. "foo/bar/ba*")
+   /** Call this to request a one-shot (ie non-persistent) notification of the current state of database nodes matching the specified path.
+     * @param queryString the session-relative path of the node(s) you wish to query (eg "foo/bar/ba*")
      * @param optFilterRef if non-NULL, a reference to a QueryFilter object that the server should use to limit which nodes match the query.
      * @param flags If specified, these flags can influence the behavior of the subscribe operation.  Currently this argument is ignored.
      * @param tag an arbitrary string that can be used to identify this download.  It will be passed back to you, verbatim, in the corresponding TreeNodeUpdated() call.
@@ -167,7 +167,7 @@ protected:
      */
    virtual status_t RequestTreeNodeValues(const String & queryString, const ConstQueryFilterRef & optFilterRef = ConstQueryFilterRef(), TreeGatewayFlags flags = TreeGatewayFlags(), const String & tag = GetEmptyString());
 
-   /** Call this to request a one-shot (i.e. non-persistent) download of the contents of one or more subtrees of the database.
+   /** Call this to request a one-shot (ie non-persistent) download of the contents of one or more subtrees of the database.
      * @param queryStrings a set of one or more session-relative paths of the node(s) you wish to download (along with the subtrees of nodes beneath them)
      * @param queryFilters if non-NULL, QueryFilters in this list will be used to limit the nodes selected for download.  The nth (queryFilter) will be applied to the (nth) queryString.
      * @param tag an arbitrary string that can be used to identify this download.  It will be passed back to you, verbatim, in the corresponding SubtreesRequestResultReturned() call.
@@ -179,7 +179,7 @@ protected:
    virtual status_t RequestTreeNodeSubtrees(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth = MUSCLE_NO_LIMIT, TreeGatewayFlags flags = TreeGatewayFlags());
 
    /** Request that the given specified payload be uploaded to the database.
-     * @param nodePath the session-relative path of the node you wish to upload (e.g. "foo/bar/baz").  May be wildcarded only if (optPayload) is NULL.
+     * @param nodePath the session-relative path of the node you wish to upload (eg "foo/bar/baz").  May be wildcarded only if (optPayload) is NULL.
      *                 If this path ends with a slash, then the server will choose a unique name for the uploaded node.
      * @param optPayload the payload Message to upload, or a NULL reference if you wish to delete one or more nodes instead.
      * @param flags If specified, these flags can influence the behavior of the upload operation.  Currently TREE_GATEWAY_FLAG_INDEXED will cause the
@@ -259,7 +259,7 @@ protected:
 
    /** Sends a user-specified Message to one or more other ITreeGatewaySubscriber objects in the system.
      * @param subscriberPath a string specifying which subscriber(s) to send (msg) to.  This String can either be a node-path
-     *                      (e.g. "clients/some_peer_id/foo/bar"), or a subscriber-return-address (as was passed to you by a previous
+     *                      (eg "clients/some_peer_id/foo/bar"), or a subscriber-return-address (as was passed to you by a previous
      *                      call to MessageReceivedFromSubscriber().  In the former case, your (msg) will be sent to all
      *                      ITreeGatewaySubscribers that are currently subscribed to at least one of the nodes matched by the path
      *                      (wildcards in the path are okay).  In the latter case, your (msg) will be sent to the ITreeGatewaySubscriber

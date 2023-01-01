@@ -31,7 +31,7 @@ enum {
    PER_PROCESS_PORT_BASE = PER_SYSTEM_PORT_BASE+100  /**< guard value */
 };
 
-/** Convenience method:  Given a peer-info Message, returns a single-line string description of that Message (e.g. for debugging)
+/** Convenience method:  Given a peer-info Message, returns a single-line string description of that Message (eg for debugging)
   * @param peerInfo Reference to a Message containing user-defined attributes describing a particular Peer
   * @returns a human-readable single-line text description of that Message's contents.
   */
@@ -39,7 +39,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo);
 
 /** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
   * @param versionCode a 32-bit compatibility-version code, as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
-  * @returns an equivalent human-reable string, e.g. "cv0.3"
+  * @returns an equivalent human-reable string, eg "cv0.3"
   */
 String CompatibilityVersionCodeToString(uint32 versionCode);
 
@@ -51,12 +51,12 @@ String CompatibilityVersionCodeToString(uint32 versionCode);
 static inline uint32 CalculateCompatibilityVersionCode(uint16 zgCompatibilityVersion, uint16 appCompatibilityVersion) {return (((uint32)zgCompatibilityVersion)<<16) | ((uint32)appCompatibilityVersion);}
 
 /** Given a 32-bit compatibility-version code, returns the contained ZG compatibility-version number
-  * @param code a 32-bit code e.g. as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
+  * @param code a 32-bit code eg as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
   */
 static inline uint16 GetZGVersionFromCompatibilityVersionCode(uint32 code) {return (code>>16)&0xFFFF;}
 
 /** Given a 32-bit compatibility-version code, returns the contained application-compatibility-version number
-  * @param code a 32-bit code e.g. as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
+  * @param code a 32-bit code eg as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
   */
 static inline uint16 GetAppVersionFromCompatibilityVersionCode(uint32 code) {return code&0xFFFF;}
 

@@ -15,7 +15,7 @@ enum {
    PZG_PEER_COMMAND_UPDATE_SENIOR_DATABASE,
    PZG_PEER_COMMAND_UPDATE_JUNIOR_DATABASE,   // contains a PZGDatabaseUpdate object which will handle all cases
    PZG_PEER_COMMAND_USER_MESSAGE,             // contains an arbitrary user-specified Message
-   PZG_PEER_COMMAND_USER_TEXT_MESSAGE,        // e.g. for "all peers echo hi"
+   PZG_PEER_COMMAND_USER_TEXT_MESSAGE,        // eg for "all peers echo hi"
 };
 
 extern const String PZG_PEER_NAME_USER_MESSAGE;
@@ -34,7 +34,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo);
 
 /** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
   * @param versionCode a 32-bit compatibility-version code, as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
-  * @returns an equivalent human-reable string, e.g. "cv0.3"
+  * @returns an equivalent human-reable string, eg "cv0.3"
   */
 String CompatibilityVersionCodeToString(uint32 versionCode);
 

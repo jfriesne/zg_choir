@@ -120,7 +120,7 @@ public:
    /** Set the number of times we should send a "heartbeat" multicast packet per second.
      * This value will also be used as the number of heartbeats we expect other peers in our group to send,
      * so it is important that this value be the same on all peers in the sysetm
-     * Default value is 4 (i.e. one heartbeat every 250 milliseconds)
+     * Default value is 4 (ie one heartbeat every 250 milliseconds)
      * @param hps The number of heartbeats per second to send, and to expect to receive.  If set to 0, we'll act as if it was set to 1.
      */
    void SetHeartbeatsPerSecond(uint32 hps) {_heartbeatsPerSecond = hps;}
@@ -129,21 +129,21 @@ public:
      * fully part of the peers group.  During this initial period we simply listen to find out who else is
      * currently out there and passively gather data about them, without trying to interfere with the operation
      * of the existing system.
-     * Default value is 4 (i.e. we will wait for four heartbeat-intervals before trying to act as a full member of the system)
+     * Default value is 4 (ie we will wait for four heartbeat-intervals before trying to act as a full member of the system)
      * @param hb The number of heartbeat intervals to wait for during our startup phase.
      */
    void SetHeartbeatsBeforeFullyAttached(uint32 hb) {_heartbeatsBeforeFullyAttached = hb;}
 
    /** Sets the number of heartbeat-periods that must go by without hearing any heartbeats from a source,
      * before we will decide that that source has gone offline.
-     * Default value is 4 (i.e. we will wait for four heartbeat-intervals to go by without any heartbeats from a source, before declaring a source to be offline)
+     * Default value is 4 (ie we will wait for four heartbeat-intervals to go by without any heartbeats from a source, before declaring a source to be offline)
      * @param hb The number of heartbeat intervals that will trigger an offline-state.
      */
    void SetMaxNumMissingHeartbeats(uint32 hb) {_maxMissingHeartbeats = hb;}
 
    /** Set the number of times we should send a "beacon" multicast packet per second, if we are the senior peer.
      * Beacon packets are used by the junior peers to verify that they haven't missed an update.  They are sent only by the senior peer.
-     * Default value is 4 (i.e. one beacon packet every 250 milliseconds)
+     * Default value is 4 (ie one beacon packet every 250 milliseconds)
      * @param bps The number of beacons per second to send (only if we are the senior peer).
      */
    void SetBeaconsPerSecond(uint32 bps) {_beaconsPerSecond = bps;}

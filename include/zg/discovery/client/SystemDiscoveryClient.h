@@ -23,7 +23,7 @@ public:
      * @param mechanism the CallbackMechanism we should use to call callback-methods in the main thread
      * @param signaturePattern signature string of the type(s) of ZG program you want to get information about.
      *                         May be wildcarded if you want to get information about multiple types of program.
-     *                         (e.g. passing "*" will get you info about all kinds of ZG programs on the LAN)
+     *                         (eg passing "*" will get you info about all kinds of ZG programs on the LAN)
      * @param optAdditionalCriteria optional reference to a QueryFilter that describes any additional criteria regarding
      *                          what sorts of server, in particular, you are interested in.  Servers whose
      *                          reply-Messages don't match this QueryFilter's criteria will not be included

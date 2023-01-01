@@ -27,7 +27,7 @@ public:
      */
    const String & GetUndoKey() const {return _undoKey;}
 
-   /** Call this if you want to specify the undo-key to use.  You might want to call this e.g. if
+   /** Call this if you want to specify the undo-key to use.  You might want to call this eg if
      * you are making multiple TCP connections to the server and you want them all to share the
      * same undo-stack.  Note that you should call this method before calling Start(), since the
      * undo-key will be sent to the server when the TCP connection is made.

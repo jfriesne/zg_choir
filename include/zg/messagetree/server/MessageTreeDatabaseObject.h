@@ -44,10 +44,10 @@ public:
    MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const;
 
    /** Checks if the given path belongs to this database.
-     * @param path a session-relative node-path (e.g. "dbs/db_0/foo/bar"), or an absolute node-path (e.g. "/zg/0/dbs/db_0/foo/bar").
+     * @param path a session-relative node-path (eg "dbs/db_0/foo/bar"), or an absolute node-path (eg "/zg/0/dbs/db_0/foo/bar").
      * @param optRetRelativePath if non-NULL, and this method returns true, then the String this points to will
-     *                           be written to with the path to the node that is relative to our root-node (e.g. "foo/bar").
-     * @returns The distance between path and our root-node, in "hops", on success (e.g. 0 means the path matches our database's
+     *                           be written to with the path to the node that is relative to our root-node (eg "foo/bar").
+     * @returns The distance between path and our root-node, in "hops", on success (eg 0 means the path matches our database's
      *          root-node exactly; 1 means it matches at the level of our database's children, and so on).
      *          Returns -1 if the path doesn't match anything in our database.
      */
@@ -133,7 +133,7 @@ public:
      */
    virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, const String & tag);
 
-   /** Call this to send a Message back to an ITreeGatewaySubscriber (e.g. in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
+   /** Call this to send a Message back to an ITreeGatewaySubscriber (eg in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
      * @param toPeerID the ID of the ZGPeer that the subscriber is directly connected to
      * @param tag the tag-String to use to direct the Message to the correct subscriber (as was previously passed in to MessageReceivedFromTreeGatewaySubscriber())
      * @param payload the Message to send to the subscriber
@@ -151,7 +151,7 @@ protected:
 
    /** Called by SeniorUpdate() when it wants to add a set/remove-node action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
      * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
-     * override this to do more (e.g. to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
+     * override this to do more (eg to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
      * @param relativePath path to the node in question, relative to our subtree's root.
      * @param oldPayload the payload that our node had before we made this change (NULL if the node is being created)
      * @param newPayload the payload that our node has after we make this change (NULL if the node is being destroyed)
@@ -164,7 +164,7 @@ protected:
 
    /** Called by SeniorUpdate() when it wants to add an update-node-index action to the Junior-Message it is assembling for junior peers to act on when they update their databases.
      * Default implementation just adds the appropriate update-Message to (assemblingMessage), but subclasses can
-     * override this to do more (e.g. to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
+     * override this to do more (eg to also record undo-stack information, in the UndoStackMessageTreeDatabaseObject subclass).
      * @param relativePath path to the node in question, relative to our subtree's root.
      * @param op the index-update opcode of the change
      * @param index the position within the index of the change
@@ -222,7 +222,7 @@ protected:
    status_t SetDataNode(const String & nodePath, const ConstMessageRef & dataMsgRef, SetDataNodeFlags flags=SetDataNodeFlags(), const String &optInsertBefore=GetEmptyString(), const String & optOpTag=GetEmptyString());
 
    /** Convenience method:  Adds nodes that match the specified path to the passed-in Queue.
-    *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
+    *  @param nodePath the node path to match against.  May be absolute (eg "/0/1234/frc*") or relative (eg "blah").
     *                  If it's a relative path, only nodes in the current session's subtree will be searched.
     *  @param filter If non-NULL, only nodes whose data Messages match this filter will be added to the (retMatchingNodes) table.
     *  @param retMatchingNodes A Queue that will on return contain the list of matching nodes.
@@ -232,7 +232,7 @@ protected:
    status_t FindMatchingNodes(const String & nodePath, const ConstQueryFilterRef & filter, Queue<DataNodeRef> & retMatchingNodes, uint32 maxResults = MUSCLE_NO_LIMIT) const;
 
    /** Convenience method:  Same as FindMatchingNodes(), but finds only the first matching node.
-     *  @param nodePath the node path to match against.  May be absolute (e.g. "/0/1234/frc*") or relative (e.g. "blah").
+     *  @param nodePath the node path to match against.  May be absolute (eg "/0/1234/frc*") or relative (eg "blah").
      *                  If it's a relative path, only nodes in the current session's subtree will be searched.
      *  @param filter If non-NULL, only nodes whose data Messages match this filter will be added to the (retMatchingNodes) table.
      *  @returns a reference to the first matching node on success, or a NULL reference on failure.
@@ -276,7 +276,7 @@ protected:
     * Recursively saves a given subtree of the node database into the given Message object, for safe-keeping.
     * (It's a bit more efficient than it looks, since all data Messages are reference counted rather than copied)
     * @param msg the Message to save the subtree into.  This object can later be provided to RestoreNodeTreeFromMessage() to restore the subtree.
-    * @param node The node to begin recursion from (i.e. the root of the subtree)
+    * @param node The node to begin recursion from (ie the root of the subtree)
     * @param path The path to prepend to the paths of children of the node.  Used in the recursion; you typically want to pass in "" here.
     * @param saveData Whether or not the payload Message of (node) should be saved.  The payload Messages of (node)'s children will always be saved no matter what, as long as (maxDepth) is greater than zero.
     * @param maxDepth How many levels of children should be saved to the Message.  If left as MUSCLE_NO_LIMIT (the default),
@@ -292,7 +292,7 @@ protected:
     * Recursively creates or updates a subtree of the node database from the given Message object.
     * (It's a bit more efficient than it looks, since all data Messages are reference counted rather than copied)
     * @param msg the Message to restore the subtree from.  This Message is typically one that was created earlier by SaveNodeTreeToMessage().
-    * @param path The relative path of the root node to add restored nodes into, e.g. "" is your MessageTreeDatabaseObject's rootNodePath-node.
+    * @param path The relative path of the root node to add restored nodes into, eg "" is your MessageTreeDatabaseObject's rootNodePath-node.
     * @param loadData Whether or not the payload Message of (node) should be restored.  The payload Messages of (node)'s children will always be restored no matter what.
     * @param flags Optional bit-chord of SETDATANODE_FLAG_* bits to affect our behavior.  Defaults to no-flags-set.
     * @param maxDepth How many levels of children should be restored from the Message.  If left as MUSCLE_NO_LIMIT (the default),

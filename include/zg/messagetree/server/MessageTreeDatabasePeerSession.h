@@ -83,7 +83,7 @@ protected:
      */
    virtual void MessageReceivedFromTreeGatewaySubscriber(const ZGPeerID & fromPeerID, const MessageRef & payload, uint32 whichDB, const String & tag);
 
-   /** Call this to send a Message back to an ITreeGatewaySubscriber (e.g. in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
+   /** Call this to send a Message back to an ITreeGatewaySubscriber (eg in response to a MessageReceivedFromTreeGatewaySubscriber() callback)
      * @param toPeerID the ID of the ZGPeer that the subscriber is directly connected to
      * @param tag the tag-String to use to direct the Message to the correct subscriber (as was previously passed in to MessageReceivedFromTreeGatewaySubscriber())
      * @param payload the Message to send to the subscriber

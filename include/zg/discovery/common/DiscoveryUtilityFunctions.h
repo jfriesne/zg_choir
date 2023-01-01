@@ -32,12 +32,12 @@ status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retI
   * the UDPMulticastTransceiver class.
   * @param retIAPs on successful return, this will return one IPAddressAndPort per local network device to use.  (values are true iff the interface is a WiFi interface)
   * @param transmissionKey the transmission-key string (as was passed to the Start() method of the UDPMulticastTransceiver object previously)
-  * @param optNicNameFilter if non-NULL, we'll only include addresses associated with network-interface names (e.g. "en0") that match this wildcard pattern.
+  * @param optNicNameFilter if non-NULL, we'll only include addresses associated with network-interface names (eg "en0") that match this wildcard pattern.
   * @returns B_NO_ERROR on success, or some other error code on failure.
   */
 status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey, const StringMatcher * optNicNameFilter = NULL);
 
-/** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's e.g. known to be a special-purpose thing) */
+/** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's eg known to be a special-purpose thing) */
 bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);
 
 };  // end namespace zg

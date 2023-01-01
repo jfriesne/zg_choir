@@ -85,18 +85,18 @@ public:
 
    /** Called when the set of available network interfaces on this computer has changed.
      * Default implementation is a no-op.
-     * @param optInterfaceNames An optional list of network-interface names (e.g. "eth0", "eth1") that are known to have
+     * @param optInterfaceNames An optional list of network-interface names (eg "eth0", "eth1") that are known to have
      *                          changed.  If empty, then you should assume that any or all network interfaces have changed.
      */
    virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames) {(void) optInterfaceNames;}
 
-   /** Called just before this computer goes to sleep (e.g. due to closing a laptop lid) */
+   /** Called just before this computer goes to sleep (eg due to closing a laptop lid) */
    virtual void ComputerIsAboutToSleep() {_iAmFullyAttached = false;}  // we'll re-fully-attach after we wake up again
 
-   /** Called just after this computer woke up from sleep (e.g. due to opening a laptop lid) */
+   /** Called just after this computer woke up from sleep (eg due to opening a laptop lid) */
    virtual void ComputerJustWokeUp() {/* empty */}
 
-   /** Returns true iff this peer is fully attached to the system (i.e. has completed enumeration of which other peers are online, etc) */
+   /** Returns true iff this peer is fully attached to the system (ie has completed enumeration of which other peers are online, etc) */
    bool IAmFullyAttached() const {return _iAmFullyAttached;}
 
    /** Called whenever this peer has gained or lost senior-peer status (current status is indicated by the return value of IAmTheSeniorPeer()) */
@@ -115,8 +115,8 @@ public:
      */
    virtual uint64 GetNetworkTime64() const {return _iAmFullyAttached ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
 
-   /** Given a network-time-clock-value (i.e. one using the same time-base as returned by GetNetworkTime64()),
-     * returns the approximately-equivalent local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64())
+   /** Given a network-time-clock-value (ie one using the same time-base as returned by GetNetworkTime64()),
+     * returns the approximately-equivalent local-time-clock-value (ie one using the same time-base as returned by GetRunTime64())
      */
    virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
    {
@@ -124,8 +124,8 @@ public:
       return ((ntto==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
    }
 
-   /** Given a local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64()), returns
-     * the approximately equivalent network-time-value (i.e. one using the same time-base as returned by GetNetworkTime64())
+   /** Given a local-time-clock-value (ie one using the same time-base as returned by GetRunTime64()), returns
+     * the approximately equivalent network-time-value (ie one using the same time-base as returned by GetNetworkTime64())
      */
    virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
    {
@@ -150,14 +150,14 @@ public:
    bool IsPeerOnline(const ZGPeerID & peerID) const;
 
    /** Returns true iff we are currently executing in a context where it okay to
-     * update the specified local database as a senior-peer (e.g. we are running in a function that was
+     * update the specified local database as a senior-peer (eg we are running in a function that was
      * called by the SeniorUpdateLocalDatabase() method, or similar)
      * @param whichDB index of the database we are inquiring about
      */
    bool IsInSeniorDatabaseUpdateContext(uint32 whichDB) const;
 
    /** Returns true iff we are currently executing in a context where it okay to
-     * update the local database as a junior-peer (e.g. we are running in a function that was
+     * update the local database as a junior-peer (eg we are running in a function that was
      * called by the JuniorUpdateLocalDatabase() method, or similar)
      * @param whichDB index of the database we are inquiring about
      * @param optRetSeniorNetworkTime64 if set non-NULL, this value will be set to the network-64 time
@@ -210,14 +210,14 @@ protected:
    virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);
 
    /** Must be implemented to reset local state of the specified database to its well-known default state.
-     * @param whichDatabase The index of the database to reset (e.g. 0 for the first database, 1 for the second, and so on)
+     * @param whichDatabase The index of the database to reset (eg 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new checksum value.
      */
    virtual void ResetLocalDatabaseToDefault(uint32 whichDatabase, uint32 & dbChecksum) = 0;
 
    /** This method will only be called on the senior peer.  It must be implemented to update the senior peer's local database
      * and return a MessageRef that the system can later use to update same database on the various junior peers in the same way later on.
-     * @param whichDatabase The index of the database to update (e.g. 0 for the first database, 1 for the second, and so on)
+     * @param whichDatabase The index of the database to update (eg 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new (post-update) checksum value.
      * @param seniorDoMsg Reference to a Message instructing the senior peer how his local database should be updated.  (The contents and semantics of this Message
      *                    will be determined by logic in the subclass of this class; they are not specified by the ZGPeerSession class itself)
@@ -230,7 +230,7 @@ protected:
 
    /** This method will only be called on junior peers.  It must be implemented to update the junior peer's local database
      * according to the instructions contained in (juniorDoMsg).
-     * @param whichDatabase The index of the database to update (e.g. 0 for the first database, 1 for the second, and so on)
+     * @param whichDatabase The index of the database to update (eg 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new (post-update) checksum value.
      * @param juniorDoMsg Reference to a Message instructing the junior peer how his lcoal database should be updated. (The contents and semantics of this Message
      *                    will be determined by logic in the subclass of this class; they are not specified by the ZGPeerSession class itself)
@@ -239,14 +239,14 @@ protected:
    virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg) = 0;
 
    /** This method should be implemented to save the state of the specified local database into a Message.
-     * @param whichDatabase The index of the database to save (e.g. 0 for the first database, 1 for the second, and so on)
+     * @param whichDatabase The index of the database to save (eg 0 for the first database, 1 for the second, and so on)
      * @returns a MessageRef containing the full current state of the local database, or a NULL MessageRef on failure.
      */
    virtual MessageRef SaveLocalDatabaseToMessage(uint32 whichDatabase) const = 0;
 
    /** This method should be implemented to replace the current state of the specified local database with the
      * new state represented by the passed-in Message.
-     * @param whichDatabase The index of the database to replace (e.g. 0 for the first database, 1 for the second, and so on)
+     * @param whichDatabase The index of the database to replace (eg 0 for the first database, 1 for the second, and so on)
      * @param dbChecksum Passed in as the database's current checksum value.  On return, this should be set to the database's new (post-update) checksum value.
      * @param newDBStateMsg A Message holding the contents of the new database we want to replace the current database with.
      * @returns B_NO_ERROR on success, or an error code on failure.
@@ -262,7 +262,7 @@ protected:
 
    /** This method may be implemented to return a human-readable representation of the specified database's current contents
      * as a String.  This string will be printed to stdout after a checksum error has occurred, to make it easier to debug
-     * the update logic (i.e. by comparing the database state before and after the checksum-mismatched database was replaced,
+     * the update logic (ie by comparing the database state before and after the checksum-mismatched database was replaced,
      * to see what is different).
      * The default implementation of this method just returns "(GetLocalDatabaseContentsAsString unimplemented)".
      * @param whichDatabase The index of the database to return a string for.

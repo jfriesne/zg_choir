@@ -47,7 +47,7 @@ public:
    // Overridden to do nothing -- we don't care about Messages from our neighbors!
    virtual void MessageReceivedFromSession(AbstractReflectSession &, const MessageRef &, void *);
 
-   /** Call this to have us forget our master point (useful e.g. if the master is about to be deleted) */
+   /** Call this to have us forget our master point (useful eg if the master is about to be deleted) */
    void ForgetBroadcastMaster() {_master = NULL;}
 
    /** Implemented as a no-op (we intercept DoInput() directly instead of relying on an AbstractMessageIOGateway() anyway) */

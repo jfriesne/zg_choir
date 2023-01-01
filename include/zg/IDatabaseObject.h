@@ -45,7 +45,7 @@ public:
    /** Should return the current checksum of this object.  This checksum should always correspond exactly
      * to this object's current state, and unless this object is quite small, it should be implemented as
      * a running checksum so that this call can just return a known value rather than recalculating the
-     * checksum from the data during this call.  That is because this method will be called rather often (e.g.
+     * checksum from the data during this call.  That is because this method will be called rather often (eg
      * once after any other call that changes this object's state) and therefore it is better if this call
      * can be made as inexpensive as possible.
      */
@@ -54,13 +54,13 @@ public:
    /** This method should be implemented to recalculate the database's current checksum from scratch.
      * Note that unlike GetCurrentChecksum(), this method should *not* just returned a precomputed/running
      * checksum, but rather it should grovel over all the data in the database manually.  This method
-     * will only be called during debugging sessions (e.g. to verify that the running checksum is correct)
+     * will only be called during debugging sessions (eg to verify that the running checksum is correct)
      * so it is okay if its implementation is relatively expensive.
      */
    virtual uint32 CalculateChecksum() const = 0;
 
    /** Should return this object's state as a human-readable string.
-     * This method is only used for debugging purposes (e.g. printing out the state of the database
+     * This method is only used for debugging purposes (eg printing out the state of the database
      * before and after the database is repaired, so the two printouts can be diff'd to see where
      * the error was)
      */
@@ -114,13 +114,13 @@ protected:
    virtual int64 GetToNetworkTimeOffset() const;
 
    /** Returns true iff we are currently executing in a context where it okay to
-     * update the local database as a senior-peer (e.g. we are running in a function that was
+     * update the local database as a senior-peer (eg we are running in a function that was
      * called by the ZGPeerSession's SeniorUpdateLocalDatabase() method, or similar)
      */
    bool IsInSeniorDatabaseUpdateContext() const;
 
    /** Returns true iff we are currently executing in a context where it okay to
-     * update the local database as a junior-peer (e.g. we are running in a function that was
+     * update the local database as a junior-peer (eg we are running in a function that was
      * called by the ZGPeerSession's JuniorUpdateLocalDatabase() method, or similar)
      * @param optRetSeniorNetworkTime64 if set non-NULL, this value will be set to the network-64 time
      *                                  at which this update was originally handled on the senior peer.

@@ -20,14 +20,14 @@ public:
      */
    virtual uint64 GetNetworkTime64() const = 0;
 
-   /** Given a network-time-clock-value (i.e. one using the same time-base as returned by GetNetworkTime64()),
-     * returns the approximately-equivalent local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64())
+   /** Given a network-time-clock-value (ie one using the same time-base as returned by GetNetworkTime64()),
+     * returns the approximately-equivalent local-time-clock-value (ie one using the same time-base as returned by GetRunTime64())
      * @param networkTime64TimeStamp a network-clock time, in microseconds
      */
    virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const = 0;
 
-   /** Given a local-time-clock-value (i.e. one using the same time-base as returned by GetRunTime64()), returns
-     * the approximately equivalent network-time-value (i.e. one using the same time-base as returned by GetNetworkTime64())
+   /** Given a local-time-clock-value (ie one using the same time-base as returned by GetRunTime64()), returns
+     * the approximately equivalent network-time-value (ie one using the same time-base as returned by GetNetworkTime64())
      * @param runTime64TimeStamp a local-clock time, in microseconds
      */
    virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const = 0;

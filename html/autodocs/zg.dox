@@ -1866,7 +1866,7 @@ COMPACT_LATEX          = NO
 # The default value is: a4.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-PAPER_TYPE             = a4wide
+PAPER_TYPE             = a4
 
 # The EXTRA_PACKAGES tag can be used to specify one or more LaTeX package names
 # that should be included in the LaTeX output. The package can be specified just
@@ -2227,7 +2227,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           =
+INCLUDE_PATH           = ../../include ../../submodules/muscle
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
@@ -2246,11 +2246,9 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = DOXYGEN_AVOID_MUSCLE_MAINPAGE_TAG \
-                         MuscleMessage_impl_h \
                          MUSCLE_ENABLE_ZLIB_ENCODING \
                          MUSCLE_ENABLE_MEMORY_TRACKING \
                          MUSCLE_FINAL_CLASS \
-                         DECLARE_REFTYPES \
                          DOXYGEN_SHOULD_IGNORE_THIS \
                          HT_UniversalSinkKeyRef= \
                          HT_UniversalSinkValueRef= \
@@ -2279,7 +2277,12 @@ PREDEFINED             = DOXYGEN_AVOID_MUSCLE_MAINPAGE_TAG \
 # definition found in the source code.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = DECLARE_REFTYPES \
+                         DECLARE_IMMUTABLE_HASHTABLE_POOL_TYPES \
+                         DECLARE_MUSCLE_UNSIGNED_INTEGER_FIND_METHODS \
+                         DECLARE_MUSCLE_POINTER_FIND_METHODS \
+                         DECLARE_MUSCLE_CONVENIENCE_METHODS \
+                         DECLARE_STANDARD_CLONE_METHOD
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have

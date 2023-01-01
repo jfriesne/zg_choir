@@ -74,7 +74,7 @@ protected:
    bool IsAnyoneSubscribedToPath(const String & receivedPath) const;
 
    /** Returns the set of ITreeGatewaySubscribers that we are currently receiving initial-subscription-results for
-     * (i.e. results for nodes that were already on the server when these subscribers called AddTreeSubscription()
+     * (ie results for nodes that were already on the server when these subscribers called AddTreeSubscription()
      */
    const Hashtable<ITreeGatewaySubscriber *, Void> & GetSubscribersInInitialResultsMode() const {return _allowedCallbacks;}
 

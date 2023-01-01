@@ -71,7 +71,7 @@ public:
    bool IsValid() const {return ((_highBits != 0)||(_lowBits != 0));}
 
    /** Sets this peer ID from the specified String representation (in the format used by ToString()), or to zero if the string isn't parsed
-     * @param s A human-readable string (e.g. "123A:432B") that we will set this ZGPeerID's state from
+     * @param s A human-readable string (eg "123A:432B") that we will set this ZGPeerID's state from
      */
    void FromString(const String & s)
    {
@@ -85,7 +85,7 @@ public:
       }
    }
 
-   /** Returns a String representation of this peer ID (e.g. "123A:432B") */
+   /** Returns a String representation of this peer ID (eg "123A:432B") */
    String ToString() const
    {
       char buf[256];
