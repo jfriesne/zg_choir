@@ -2,6 +2,7 @@
 #define MuxTreeGateway_h
 
 #include "zg/messagetree/gateway/ProxyTreeGateway.h"
+#include "reflector/DataNode.h"
 #include "regex/PathMatcher.h"
 #include "util/Hashtable.h"
 #include "util/TimeUtilityFunctions.h"
@@ -134,6 +135,8 @@ private:
 
    bool _isConnected;
    Hashtable<ITreeGatewaySubscriber *, Void> _allowedCallbacks;  // table of subscribers that are in their receiving-initial-results period
+
+   mutable DataNode _dummyNode;  // just to support NodeNameQueryFilter
 
    ITreeGatewaySubscriber _dummySubscriber;  // here solely so that we can place it into (_allowedCallbacks) if necessary
 };

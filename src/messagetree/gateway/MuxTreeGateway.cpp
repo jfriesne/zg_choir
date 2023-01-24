@@ -549,7 +549,12 @@ void MuxTreeGateway :: ShutdownGateway()
 
 bool MuxTreeGateway :: DoesPathMatch(ITreeGatewaySubscriber * sub, const PathMatcher * pm, const String & path, const Message * optMessage) const
 {
-   return ((pm)&&((_allowedCallbacks.IsEmpty())||(_allowedCallbacks.ContainsKey(sub)))&&(pm->MatchesPath(path(), optMessage, NULL)));
+   if ((pm)&&((_allowedCallbacks.IsEmpty())||(_allowedCallbacks.ContainsKey(sub))))
+   {
+      _dummyNode.SetNodeName(path.Substring("/"));  // in case (pm) is using a NodeNameQueryFilter
+      return pm->MatchesPath(path(), optMessage, &_dummyNode);
+   }
+   else return false;
 }
 
 void MuxTreeGateway :: EnsureSubscriberInBatchGroup(ITreeGatewaySubscriber * sub)
