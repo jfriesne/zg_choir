@@ -85,7 +85,7 @@ public:
    virtual DataIORef CreateDataIO(const ConstSocketRef & socket)
    {
       UDPSocketDataIORef dio(newnothrow UDPSocketDataIO(socket, false));
-      if (dio() == NULL) {MWARN_OUT_OF_MEMORY; return DataIORef();}
+      MRETURN_OOM_ON_NULL(dio());
 
       (void) dio()->SetPacketSendDestination(_timeSyncDest);
       return dio;
@@ -221,8 +221,8 @@ public:
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
       MessageIOGatewayRef ret(newnothrow MessageIOGateway());
-      if (ret()) ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
-            else MWARN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(ret());
+      ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
       return ret;
    }
 

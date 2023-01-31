@@ -15,7 +15,7 @@ ZGStdinSession :: ZGStdinSession(ITextCommandReceiver & target, bool endServerOn
 DataIORef ZGStdinSession :: CreateDataIO(const ConstSocketRef &)
 {
    DataIO * dio = newnothrow StdinDataIO(false);
-   if (dio == NULL) MWARN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(dio);
    return DataIORef(dio);
 }
 
@@ -47,7 +47,7 @@ bool ZGStdinSession :: IsReadyForInput() const
 AbstractMessageIOGatewayRef ZGStdinSession :: CreateGateway()
 {
    AbstractMessageIOGateway * gw = newnothrow PlainTextMessageIOGateway;
-   if (gw == NULL) MWARN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(gw);
    return AbstractMessageIOGatewayRef(gw);
 }
 

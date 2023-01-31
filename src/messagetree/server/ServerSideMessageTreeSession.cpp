@@ -126,12 +126,8 @@ ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITree
 AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
 {
    ServerSideMessageTreeSessionRef ret(newnothrow ServerSideMessageTreeSession(GetGateway()));
-   if (ret())
-   {
-      ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
-   }
-   else MWARN_OUT_OF_MEMORY;
-
+   MRETURN_OOM_ON_NULL(ret());
+   ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
    return ret;
 }
 

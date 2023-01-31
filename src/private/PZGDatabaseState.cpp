@@ -578,19 +578,19 @@ ConstPZGDatabaseUpdateRef PZGDatabaseState :: GetDatabaseUpdateByID(uint64 updat
       if (savedDBMsg())
       {
          PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID, _master->GetLocalPeerID(), _dbChecksum);
-         if (dbUp())
-         {
-            dbUp()->SetSeniorStartTimeMicros(networkTimeProvider.GetNetworkTime64ForRunTime64(startTime));
-            dbUp()->SetSeniorElapsedTimeMicros(GetRunTime64()-startTime);
-            dbUp()->SetPostUpdateDBChecksum(_dbChecksum);
-            dbUp()->SetPayloadMessage(savedDBMsg);
-            return AddConstToRef(dbUp);
-         }
-         else MWARN_OUT_OF_MEMORY;
-      }
-      else LogTime(MUSCLE_LOG_ERROR, "Unable to save state #" UINT64_FORMAT_SPEC " of local database #" UINT32_FORMAT_SPEC " to a Message to satisfy external request!\n", _localDatabaseStateID, _whichDatabase);
+         MRETURN_ON_ERROR(dbUp);
 
-      return ConstPZGDatabaseUpdateRef();
+         dbUp()->SetSeniorStartTimeMicros(networkTimeProvider.GetNetworkTime64ForRunTime64(startTime));
+         dbUp()->SetSeniorElapsedTimeMicros(GetRunTime64()-startTime);
+         dbUp()->SetPostUpdateDBChecksum(_dbChecksum);
+         dbUp()->SetPayloadMessage(savedDBMsg);
+         return AddConstToRef(dbUp);
+      }
+      else
+      {
+         LogTime(MUSCLE_LOG_ERROR, "Unable to save state #" UINT64_FORMAT_SPEC " of local database #" UINT32_FORMAT_SPEC " to a Message to satisfy external request! [%s]\n", _localDatabaseStateID, _whichDatabase, savedDBMsg.GetStatus()());
+         return savedDBMsg.GetStatus();
+      }
    }
    else return _updateLog[updateID];
 }

@@ -100,7 +100,7 @@ public:
    virtual AbstractReflectSessionRef CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
    {
       PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(_master, ZGPeerID()));
-      if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return AbstractReflectSessionRef();}
+      MRETURN_OOM_ON_NULL(ret());
       return ret;
    }
 
@@ -581,27 +581,28 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
 {
    const Queue<PZGUnicastSessionRef> * q = _namedUnicastSessions.Get(peerID);
    if ((q)&&(q->HasItems())) return q->Head();  // the easy case; just use a session we already have on hand
-   if (allocIfNecessary == false) return PZGUnicastSessionRef();
+   if (allocIfNecessary == false) return B_DATA_NOT_FOUND;
 
    // If we got here, we're going to have to create one
    IPAddressAndPort iap = GetUnicastIPAddressAndPortForPeerID(peerID);
    if (iap.IsValid() == false)
    {
       LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't find IP address for peer [%s]!\n", peerID.ToString()());
-      return PZGUnicastSessionRef();
+      return B_DATA_NOT_FOUND;
    }
 
-   PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(this, peerID));
-   if (ret() == NULL) {MWARN_OUT_OF_MEMORY; return PZGUnicastSessionRef();}
+   PZGUnicastSessionRef usRef(newnothrow PZGUnicastSession(this, peerID));
+   MRETURN_OOM_ON_NULL(usRef());
 
-   if (AddNewConnectSession(ret, iap, MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError())
+   status_t ret;
+   if (AddNewConnectSession(usRef, iap, MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError(ret))
    {
-      LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't connect to peer [%s] at [%s]!\n", peerID.ToString()(), iap.ToString()());
-      return PZGUnicastSessionRef();
+      LogTime(MUSCLE_LOG_ERROR, "GetUnicastSessionForPeerID():  Couldn't connect to peer [%s] at [%s]! [%s]\n", peerID.ToString()(), iap.ToString()(), ret());
+      return ret;
    }
 
    // the session will register itself with us, so we don't need to explicitly register it here
-   return ret;
+   return usRef;
 }
 
 IPAddressAndPort PZGNetworkIOSession :: GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 index) const

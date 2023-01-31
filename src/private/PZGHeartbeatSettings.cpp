@@ -71,28 +71,27 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
    if (udpSock())
    {
       // This must be done before adding the socket to any multicast groups, otherwise Windows gets uncooperative
+      status_t ret;
       if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())
       {
          const uint8 dummyBuf = 0;  // doesn't matter what this is, I just want to make sure I can actually send on this socket
          const io_status_t sr = SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort());
          if (sr.IsOK())
          {
-            if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK())
+            if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK(ret))
             {
                UDPSocketDataIORef ret(newnothrow UDPSocketDataIO(udpSock, false));
-               if (ret()) (void) ret()->SetPacketSendDestination(multicastIAP);
-                     else MWARN_OUT_OF_MEMORY;
+               MRETURN_OOM_ON_NULL(ret());
+               (void) ret()->SetPacketSendDestination(multicastIAP);
                return ret;
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s]\n", multicastIAP.GetIPAddress().ToString()());
+            else {LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s] [%s]\n", multicastIAP.GetIPAddress().ToString()(), ret()); return ret;}
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s] [%s]\n", multicastIAP.ToString()(), sr());
+         else {LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s] [%s]\n", multicastIAP.ToString()(), sr()); return sr.GetStatus();}
       }
-      else LogTime(MUSCLE_LOG_ERROR, "Unable to bind multicast socket to UDP port %u!\n", multicastIAP.GetPort());
+      else {LogTime(MUSCLE_LOG_ERROR, "Unable to bind multicast socket to UDP port %u! [%s]\n", multicastIAP.GetPort(), ret()); return ret;}
    }
-   else LogTime(MUSCLE_LOG_ERROR, "CreateMulticastDataIO:  CreateUDPSocket() failed!\n");
-
-   return UDPSocketDataIORef();
+   else {LogTime(MUSCLE_LOG_ERROR, "CreateMulticastDataIO:  CreateUDPSocket() failed! [%s]\n", udpSock.GetStatus()()); return udpSock.GetStatus();}
 }
 
 Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isForHeartbeats, const INetworkInterfaceFilter * optNetworkInterfaceFilter) const

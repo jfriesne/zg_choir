@@ -18,7 +18,7 @@ ConstSocketRef PZGThreadedSession :: CreateDefaultSocket()
 AbstractMessageIOGatewayRef PZGThreadedSession :: CreateGateway()
 {
    SignalMessageIOGatewayRef gwRef(newnothrow SignalMessageIOGateway);
-   if (gwRef() == NULL) MWARN_OUT_OF_MEMORY;
+   MRETURN_OOM_ON_NULL(gwRef());
    return gwRef;
 }
 

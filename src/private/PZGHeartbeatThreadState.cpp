@@ -435,7 +435,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    if (numBytes < HB_HEADER_SIZE)
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  buffer is too short!  (" UINT32_FORMAT_SPEC " bytes:  %s)\n", sourceIAP.ToString()(), numBytes, HexBytesToString(defBuf)());
-      return PZGHeartbeatPacketWithMetaDataRef();
+      return B_BAD_DATA;
    }
 
    const uint8 * dsb = defBuf.GetBuffer();
@@ -443,7 +443,7 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    if (hbMagic != HB_HEADER_MAGIC)
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  bad header magic:  expected %u, got %u\n", sourceIAP.ToString()(), HB_HEADER_MAGIC, hbMagic);
-      return PZGHeartbeatPacketWithMetaDataRef();
+      return B_BAD_DATA;
    }
 
    const uint32 hisChecksum = DefaultEndianConverter::Import<uint32>(dsb+(2*sizeof(uint16))+sizeof(uint64));
@@ -451,26 +451,23 @@ PZGHeartbeatPacketWithMetaDataRef PZGHeartbeatThreadState :: ParseHeartbeatPacke
    if (hisChecksum != myChecksum)
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Bad checksum on " UINT32_FORMAT_SPEC "-byte heartbeat packet; expected " UINT32_FORMAT_SPEC", got " UINT32_FORMAT_SPEC ".\n", sourceIAP.ToString()(), numBytes, myChecksum, hisChecksum);
-      return PZGHeartbeatPacketWithMetaDataRef();
+      return B_BAD_DATA;
    }
 
    PZGHeartbeatPacketWithMetaDataRef newHB = GetHeartbeatPacketWithMetaDataFromPool();
-   if (newHB() == NULL)
-   {
-      MWARN_OUT_OF_MEMORY;
-      return PZGHeartbeatPacketWithMetaDataRef();
-   }
+   MRETURN_ON_ERROR(newHB);
 
-   if (_zlibCodec.Inflate(defBuf.GetBuffer()+HB_HEADER_SIZE, defBuf.GetNumBytes()-HB_HEADER_SIZE, _rawScratchBuf).IsError())
+   status_t ret;
+   if (_zlibCodec.Inflate(defBuf.GetBuffer()+HB_HEADER_SIZE, defBuf.GetNumBytes()-HB_HEADER_SIZE, _rawScratchBuf).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Couldn't inflate " UINT32_FORMAT_SPEC " bytes of compressed PZGHeartbeatPacket data!\n", sourceIAP.ToString()(), defBuf.GetNumBytes()-HB_HEADER_SIZE);
-      return PZGHeartbeatPacketWithMetaDataRef();
+      return ret;
    }
 
-   if (newHB()->UnflattenFromByteBuffer(_rawScratchBuf).IsError())
+   if (newHB()->UnflattenFromByteBuffer(_rawScratchBuf).IsError(ret))
    {
       LogTime(MUSCLE_LOG_ERROR, "ParseHeartbeatPacketBuffer from [%s]:  Couldn't unflatten PZGHeartbeatPacket from " UINT32_FORMAT_SPEC " bytes of uncompressed data!\n", sourceIAP.ToString()(), _rawScratchBuf.GetNumBytes());
-      return PZGHeartbeatPacketWithMetaDataRef();
+      return ret;
    }
 
    newHB()->SetNetworkSendTimeMicros(DefaultEndianConverter::Import<uint64>(dsb+sizeof(uint16)+sizeof(uint16)));  // sent outside of the zlib-compression, for better timestamp-accuracy

@@ -45,8 +45,7 @@ public:
       PacketDataIO * udpIO;
       if (_useSimulatedMulticast) udpIO = newnothrow SimulatedMulticastDataIO(_multicastIAP);
                              else udpIO = newnothrow UDPSocketDataIO(s, false);
-
-      if (udpIO == NULL) {MWARN_OUT_OF_MEMORY; return DataIORef();}
+      MRETURN_OOM_ON_NULL(udpIO);
 
       DataIORef ret(udpIO);
       (void) udpIO->SetPacketSendDestination(_multicastIAP);
@@ -143,7 +142,7 @@ public:
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
       AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      if (ret() == NULL) MWARN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(ret());
       return ret;
    }
 

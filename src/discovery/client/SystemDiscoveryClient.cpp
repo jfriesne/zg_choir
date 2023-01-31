@@ -113,7 +113,7 @@ public:
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
       AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      if (ret() == NULL) MWARN_OUT_OF_MEMORY;
+      MRETURN_OOM_ON_NULL(ret());
       return ret;
    }
 
