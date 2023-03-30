@@ -218,7 +218,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
 
 void ZGPeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
-   _onlinePeers.Put(peerID, peerInfo);
+   (void) _onlinePeers.Put(peerID, peerInfo);
 
    if (_iAmFullyAttached == false)
    {
@@ -229,7 +229,7 @@ void ZGPeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMess
 
 void ZGPeerSession :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & /*peerInfo*/)
 {
-   _onlinePeers.Remove(peerID);
+   (void) _onlinePeers.Remove(peerID);
 }
 
 void ZGPeerSession :: SeniorPeerChanged(const ZGPeerID & oldSeniorPeerID, const ZGPeerID & newSeniorPeerID)
@@ -605,7 +605,7 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
    if ((pingMsg()->HasName(ZG_DISCOVERY_NAME_TAG))&&(pingMsg()->ShareName(ZG_DISCOVERY_NAME_TAG, *pongMsg()).IsError())) return MUSCLE_TIME_NEVER;
 
    const Message * peerAttribs = s.GetPeerAttributes()();
-   if (peerAttribs) for (MessageFieldNameIterator fnIter(*peerAttribs); fnIter.HasData(); fnIter++) peerAttribs->ShareName(fnIter.GetFieldName(), *pongMsg());
+   if (peerAttribs) for (MessageFieldNameIterator fnIter(*peerAttribs); fnIter.HasData(); fnIter++) (void) peerAttribs->ShareName(fnIter.GetFieldName(), *pongMsg());
 
    // Do any client-specified filtering vs the pong-messages we're about to send back
    MessageRef qfMsg = pingMsg()->GetMessage(ZG_DISCOVERY_NAME_FILTER);

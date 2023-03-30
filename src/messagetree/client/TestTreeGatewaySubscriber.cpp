@@ -79,7 +79,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          const String path = tok();
 
          MessageRef payloadMsg = GetMessageFromPool(1234);
-         payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
+         (void) payloadMsg()->AddString("This node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
          if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(), GetEmptyString(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
             LogTime(MUSCLE_LOG_INFO, "Uploaded Message to relative path [%s] opTag=[%s]\n", path(), optOpTag());
@@ -93,7 +93,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          const String path = tok();
 
          MessageRef payloadMsg = GetMessageFromPool(1234);
-         payloadMsg()->AddString("This indexed node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
+         (void) payloadMsg()->AddString("This indexed node was posted at: ", GetHumanReadableTimeString(GetRunTime64()));
 
          const String optBefore = tok();
 

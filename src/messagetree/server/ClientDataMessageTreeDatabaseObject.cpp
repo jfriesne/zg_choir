@@ -129,18 +129,18 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
       if (nodesToDelete.HasChars())
       {
          LogTime(MUSCLE_LOG_INFO, "ClientDataMessageTreeDatabaseObject assuming senior-peer status, flushing nodes for offline peers [%s]\n", nodesToDelete());
-         MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
+         (void) MessageTreeDatabaseObject::RequestDeleteNodes(nodesToDelete, ConstQueryFilterRef(), TreeGatewayFlags(), GetEmptyString());
       }
 
       // Tell all of the junior peers to resend their local data to us, in case it got corrupted during the confusion
-      SendMessageToDatabaseObject(ZGPeerID(), DummyMessageRef(_uploadLocalDataRequestMsg));
+      (void) SendMessageToDatabaseObject(ZGPeerID(), DummyMessageRef(_uploadLocalDataRequestMsg));
    }
 }
 
 void ClientDataMessageTreeDatabaseObject :: PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
    MessageTreeDatabaseObject::PeerHasComeOnline(peerID, peerInfo);
-   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) SendMessageToDatabaseObject(peerID, DummyMessageRef(_uploadLocalDataRequestMsg));
+   if (GetDatabasePeerSession()->IAmTheSeniorPeer()) (void) SendMessageToDatabaseObject(peerID, DummyMessageRef(_uploadLocalDataRequestMsg));
 }
 
 void ClientDataMessageTreeDatabaseObject :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)

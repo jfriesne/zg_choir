@@ -279,10 +279,10 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
       _splitter->setStretchFactor(0, 2);
 
       _undoStackTopPath = String("project/undo/%1").Arg(_connection->GetUndoKey());  // so we can update the label of the Undo button appropriately
-      AddTreeSubscription(_undoStackTopPath);
+      (void) AddTreeSubscription(_undoStackTopPath);
 
       _redoStackTopPath = String("project/redo/%1").Arg(_connection->GetUndoKey());  // so we can update the label of the Redo button appropriately
-      AddTreeSubscription(_redoStackTopPath);
+      (void) AddTreeSubscription(_redoStackTopPath);
    }
    else
    {
@@ -296,7 +296,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
 
 void FridgeClientWindow :: TimeSyncWidgetClicked()
 {
-   if (_connection) _connection->RequestSessionParameters();  // just to demonstrate that how to request them
+   if (_connection) (void) _connection->RequestSessionParameters();  // just to demonstrate how to request them
 }
 
 void FridgeClientWindow :: ClearMagnets()

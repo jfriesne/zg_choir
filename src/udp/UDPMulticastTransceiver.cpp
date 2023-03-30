@@ -54,7 +54,7 @@ public:
 
    virtual void MessageReceivedFromSession(AbstractReflectSession & /*from*/, const MessageRef & msg, void * /*userData*/)
    {
-      AddOutgoingMessage(msg);
+      (void) AddOutgoingMessage(msg);
    }
 
    virtual io_status_t DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
@@ -109,7 +109,7 @@ public:
                break;
             }
          }
-         oq.RemoveHead();
+         (void) oq.RemoveHead();
       }
       return ret;
    }

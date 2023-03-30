@@ -152,7 +152,7 @@ PZGNetworkIOSession :: PZGNetworkIOSession(const ZGPeerSettings & peerSettings, 
    , _computerIsAsleep(false)
    , _hbSessionPtr(NULL)
 {
-   SetThreadPriority(PRIORITY_HIGH);
+   (void) SetThreadPriority(PRIORITY_HIGH);
 }
 
 void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef & msg, uint32 /*numLeft*/)
@@ -307,7 +307,7 @@ void PZGNetworkIOSession :: UnregisterUnicastSession(PZGUnicastSession * s)
    if (remotePeerID.IsValid())
    {
       Queue<PZGUnicastSessionRef> * q = _namedUnicastSessions.Get(remotePeerID);
-      if ((q)&&(q->RemoveAllInstancesOf(sRef) > 0)&&(q->IsEmpty())) _namedUnicastSessions.Remove(remotePeerID);
+      if ((q)&&(q->RemoveAllInstancesOf(sRef) > 0)&&(q->IsEmpty())) (void) _namedUnicastSessions.Remove(remotePeerID);
    }
 }
 
@@ -391,7 +391,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                else
                {
                   LogTime(MUSCLE_LOG_ERROR, "Couldn't create PacketTunnelIOGateway for DataIO #" UINT32_FORMAT_SPEC "\n", i);
-                  dios.RemoveItemAt(i--);  // no point in keeping it around if we can't have a gateway for it
+                  (void) dios.RemoveItemAt(i--);  // no point in keeping it around if we can't have a gateway for it
                }
             }
          }
@@ -619,7 +619,7 @@ void PZGNetworkIOSession :: NetworkInterfacesChanged(const Hashtable<String, Voi
    // TODO:  Remove unicast sessions that were using the specified interface(s)?
 
    (void) TellInternalThreadToRecreateMulticastSockets();
-   if (_hbSession()) _hbSession()->TellInternalThreadToRecreateMulticastSockets();
+   if (_hbSession()) (void) _hbSession()->TellInternalThreadToRecreateMulticastSockets();
 }
 
 void PZGNetworkIOSession :: ComputerIsAboutToSleep()

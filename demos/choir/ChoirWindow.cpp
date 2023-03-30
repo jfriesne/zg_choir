@@ -643,7 +643,7 @@ status_t ChoirWindow :: UploadMusicSheet(const MusicSheet & musicSheet)
 
 void ChoirWindow :: ClearSong()
 {
-   if (QMessageBox::question(this, tr("Confirm Clear Song"), tr("Are you sure you want to clear the current song?  This action cannot be undone."), QMessageBox::Ok|QMessageBox::Cancel) == QMessageBox::Ok) UploadMusicSheet(MusicSheet());
+   if (QMessageBox::question(this, tr("Confirm Clear Song"), tr("Are you sure you want to clear the current song?  This action cannot be undone."), QMessageBox::Ok|QMessageBox::Cancel) == QMessageBox::Ok) (void) UploadMusicSheet(MusicSheet());
 }
 
 void ChoirWindow :: OpenSong()

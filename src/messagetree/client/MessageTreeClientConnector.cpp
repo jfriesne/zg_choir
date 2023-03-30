@@ -58,7 +58,7 @@ void MessageTreeClientConnector :: MessageReceivedFromNetwork(const MessageRef &
       }
       else SessionParametersReceived(msg);
    }
-   else _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
+   else (void) _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
 }
 
 status_t MessageTreeClientConnector :: RequestSessionParameters()

@@ -239,7 +239,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeUpdated(const String & relative
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
    {
       LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeUpdated %p:  node [%s] was %s outside of either senior or junior update context of database [%s]!\n", this, relativePath(), isBeingRemoved?"removed":"updated", _rootNodePathWithoutSlash());
-      PrintStackTrace();
+      (void) PrintStackTrace();
    }
 
    // Update our running database-checksum to account for the changes being made to our subtree
@@ -270,7 +270,7 @@ void MessageTreeDatabaseObject :: MessageTreeNodeIndexChanged(const String & rel
    else if ((IsInJuniorDatabaseUpdateContext() == false)&&(IsInSetupOrTeardown() == false))
    {
       LogTime(MUSCLE_LOG_CRITICALERROR, "MessageTreeNodeIndexChanged %p:  index for node [%s] was updated outside of either senior or junior update context of database [%s]\n", this, relativePath(), _rootNodePathWithoutSlash());
-      PrintStackTrace();
+      (void) PrintStackTrace();
    }
 
    // Update our running database-checksum to account for the changes being made to our subtree
@@ -514,8 +514,8 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
 
       DECLARE_OP_TAG_GUARD;
 
-      if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) node->InsertIndexEntryAt(index, zsh, key);
-                                                else node->RemoveIndexEntryAt(index, zsh);
+      if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) (void) node->InsertIndexEntryAt(index, zsh, key);
+                                                else (void) node->RemoveIndexEntryAt(index, zsh);
 //printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node?node->GetIndex()->GetNumItems():666);
       return B_NO_ERROR;
    }

@@ -25,7 +25,7 @@ RosterWidget :: RosterWidget(const ZGPeerID & localPeerID, QWidget * parent)
    , _animatedBells(0)
 {
    for (uint32 i=0; i<ARRAYITEMS(_noteNames); i++) _noteNames[i] = GetNoteName(i);
-   _onlinePeers.PutWithDefault(ZGPeerID());  // the invalid ZGPeerID will represent our shelf of unassigned bells
+   (void) _onlinePeers.PutWithDefault(ZGPeerID());  // the invalid ZGPeerID will represent our shelf of unassigned bells
 }
 
 RosterWidget :: ~RosterWidget()

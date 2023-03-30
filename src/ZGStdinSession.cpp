@@ -122,8 +122,8 @@ static bool HandleSetLogLevelCommand(const char * p, bool isDisplay)
    }
    else
    {
-      if (isDisplay) SetConsoleLogLevel(logLevel);
-                else SetFileLogLevel(logLevel);
+      if (isDisplay) (void) SetConsoleLogLevel(logLevel);
+                else (void) SetFileLogLevel(logLevel);
       return true;
    }
 }
@@ -142,7 +142,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
       uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trim());
       const char * preposition = (micros==MUSCLE_TIME_NEVER)?"":"for ";
       LogTime(MUSCLE_LOG_INFO, "Sleeping %s%s...\n", preposition, GetHumanReadableTimeIntervalString(micros)());
-      Snooze64(micros);
+      (void) Snooze64(micros);
       LogTime(MUSCLE_LOG_INFO, "Awoke after sleeping %s%s\n", preposition, GetHumanReadableTimeIntervalString(micros)());
    }
    else if (s.StartsWith("spin"))
@@ -182,7 +182,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
       printf("This executable was compiled using MUSCLE version %s.\n", MUSCLE_VERSION_STRING);
       PrintBuildFlags();
    }
-   else if (s == "print stack trace") PrintStackTrace();
+   else if (s == "print stack trace") (void) PrintStackTrace();
    else return false;
 
    return true;

@@ -314,7 +314,7 @@ protected:
          _pushed = ((_optOpTag.HasChars())&&(_dbObj->_opTagStack.AddTail(&_optOpTag).IsOK()));
       }
 
-      ~OpTagGuard() {if (_pushed) _dbObj->_opTagStack.RemoveTail();}
+      ~OpTagGuard() {if (_pushed) (void) _dbObj->_opTagStack.RemoveTail();}
 
    private:
       MessageTreeDatabaseObject * _dbObj;

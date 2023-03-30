@@ -79,10 +79,10 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
    else ret = B_OUT_OF_MEMORY;
 
    // roll back (due to error)
-   if ((hisSubs())&&(hisSubs()->GetEntries().IsEmpty())) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
+   if ((hisSubs())&&(hisSubs()->GetEntries().IsEmpty())) (void) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
 
    (void) filterQueue->RemoveTail();
-   if (filterQueue->IsEmpty()) _subscribedStrings.Remove(subscriptionPath);
+   if (filterQueue->IsEmpty()) (void) _subscribedStrings.Remove(subscriptionPath);
    return ret;
 }
 
@@ -193,7 +193,7 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtreesAux(ITreeGatewaySubscr
       if (q->AddTail(tag).IsOK(ret))
       {
          if (ITreeGatewaySubscriber::RequestTreeNodeSubtrees(queryStrings, queryFilters, PrependRegistrationIDPrefix(calledBy, tag, markerChar), maxDepth, flags).IsOK(ret)) return ret;
-         q->RemoveTail();  // oops, roll back!
+         (void) q->RemoveTail();  // oops, roll back!
       }
       if (q->IsEmpty()) (void) _requestedSubtrees.Remove(calledBy);
       return ret;
@@ -444,7 +444,7 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
          }
          else subPtr->SubtreesRequestResultReturned(suffix, subtreeData);
 
-         if (q->IsEmpty()) _requestedSubtrees.Remove(subPtr);
+         if (q->IsEmpty()) (void) _requestedSubtrees.Remove(subPtr);
       }
    }
 }
@@ -530,7 +530,7 @@ void MuxTreeGateway :: TreeGatewayConnectionStateChanged()
       }
       else
       {
-         ITreeGatewaySubscriber::RemoveAllTreeSubscriptions();
+         (void) ITreeGatewaySubscriber::RemoveAllTreeSubscriptions();
          _requestedSubtrees.Clear();
       }
 

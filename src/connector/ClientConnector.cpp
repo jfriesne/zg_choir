@@ -262,7 +262,7 @@ private:
          {
             (void) batchMsg.RemoveData(PR_NAME_KEYS, i);
             i--;
-            retPongMessages.AddTail(pongMsg);
+            (void) retPongMessages.AddTail(pongMsg);
          }
          else if (subMsg()->what == PR_COMMAND_BATCH) StripBatchSyncPings(*subMsg(), retPongMessages);
       }

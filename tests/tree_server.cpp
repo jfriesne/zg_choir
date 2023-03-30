@@ -43,7 +43,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
 {
    // Just so we can see that this is working
    MessageRef peerAttributes = GetMessageFromPool();
-   peerAttributes()->AddString("type", "tree_server");
+   (void) peerAttributes()->AddString("type", "tree_server");
 
    ZGPeerSettings s("tree_server", "test_tree_system", NUM_TREE_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
@@ -129,7 +129,7 @@ int main(int argc, char ** argv)
 
    // Handling of various optional command-line arguments
    Message args; (void) ParseArgs(argc, argv, args);
-   args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
+   (void) args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
    HandleStandardDaemonArgs(args);
 
    // Our test_tree_peer business logic is all implemented inside this object

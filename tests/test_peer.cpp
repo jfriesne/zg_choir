@@ -22,9 +22,9 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
 {
    // Just so we can see that this is working
    MessageRef peerAttributes = GetMessageFromPool();
-   peerAttributes()->AddString("testing", "attributes");
-   peerAttributes()->AddInt32("some_value", (GetRunTime64()%10000));
-   peerAttributes()->AddFloat("pi", 3.14159f);
+   (void) peerAttributes()->AddString("testing", "attributes");
+   (void) peerAttributes()->AddInt32("some_value", (GetRunTime64()%10000));
+   (void) peerAttributes()->AddFloat("pi", 3.14159f);
 
    ZGPeerSettings s("test_peer", "test_system", NUM_TOY_DATABASES, false);
    s.SetPeerAttributes(peerAttributes);
@@ -119,7 +119,7 @@ public:
                if (strcmp(target, "*") == 0)
                {
                   LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via unicast.\n", chatText);
-                  SendUnicastUserMessageToAllPeers(msg);
+                  (void) SendUnicastUserMessageToAllPeers(msg);
                }
                else
                {
@@ -128,7 +128,7 @@ public:
                   if (targetPeerID.IsValid())
                   {
                      LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to peer [%s] via unicast.\n", chatText, targetPeerID.ToString()());
-                     SendUnicastUserMessageToPeer(targetPeerID, msg);
+                     (void) SendUnicastUserMessageToPeer(targetPeerID, msg);
                   }
                   else LogTime(MUSCLE_LOG_INFO, "Unable to parse target peer ID [%s]\n", target);
                }
@@ -144,7 +144,7 @@ public:
          if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trim()).IsOK()))
          {
             LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via multicast.\n", chatText());
-            SendMulticastUserMessageToAllPeers(msg);
+            (void) SendMulticastUserMessageToAllPeers(msg);
          }
       }
       else if (text == "print peer locations")
@@ -402,7 +402,7 @@ int main(int argc, char ** argv)
 
    // Handling of various optional command-line arguments
    Message args; (void) ParseArgs(argc, argv, args);
-   args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
+   (void) args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
    HandleStandardDaemonArgs(args);
 
    // Our test_peer business logic is all implemented inside this object

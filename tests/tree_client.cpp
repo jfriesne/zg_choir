@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
 
    // Handling of various optional command-line arguments
    Message args; (void) ParseArgs(argc, argv, args);
-   args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
+   (void) args.AddString("debugcrashes", "");  // let's make sure to print a stack trace if we crash
    HandleStandardDaemonArgs(args);
 
    String host;

@@ -337,14 +337,14 @@ public:
     */
    GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* optSub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _optSub(optSub), _label(label), _whichDB(whichDB)
    {
-      if (_optSub) _optSub->BeginUndoSequence(label, whichDB);
+      if (_optSub) (void) _optSub->BeginUndoSequence(label, whichDB);
    }
 
    /**
     * Destructor
     * Calls EndUndoSequence on the subscriber object
     */
-   ~GatewaySubscriberUndoBatchGuard() {if (_optSub) _optSub->EndUndoSequence(_label, _whichDB);}
+   ~GatewaySubscriberUndoBatchGuard() {if (_optSub) (void) _optSub->EndUndoSequence(_label, _whichDB);}
 
 private:
    ITreeGatewaySubscriber * _optSub;

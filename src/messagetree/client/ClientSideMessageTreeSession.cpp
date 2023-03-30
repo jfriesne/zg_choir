@@ -35,7 +35,7 @@ bool ClientSideMessageTreeSession :: ClientConnectionClosed()
 
 void ClientSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef & msg, void * /*userData*/)
 {
-   _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
+   (void) _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
 }
 
 };

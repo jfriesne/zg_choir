@@ -55,7 +55,7 @@ public:
 
    virtual void MessageReceivedFromSession(AbstractReflectSession & /*from*/, const MessageRef & msg, void * /*userData*/)
    {
-      AddOutgoingMessage(msg);
+      (void) AddOutgoingMessage(msg);
    }
 
    virtual io_status_t DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes);
@@ -81,7 +81,7 @@ public:
                LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p send " INT32_FORMAT_SPEC " bytes of discovery-ping to %s\n", this, bytesSent, _multicastIAP.ToString()());
             }
          }
-         oq.RemoveHead();
+         (void) oq.RemoveHead();
       }
       return ret;
    }
@@ -159,7 +159,7 @@ public:
          // process at the time(s) we asked it to be awoken.
          const uint64 expTime = GetExpirationTime(now);
          for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
-            iter.GetValue().Update(iter.GetValue().GetData(), expTime);
+            (void) iter.GetValue().Update(iter.GetValue().GetData(), expTime);
       }
 
       if (now >= _nextPingTime)

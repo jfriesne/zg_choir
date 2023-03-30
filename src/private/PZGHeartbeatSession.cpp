@@ -21,7 +21,7 @@ static const String PZG_HEARTBEAT_NAME_PEER_ID  = "pid";
 
 PZGHeartbeatSession :: PZGHeartbeatSession(const ConstPZGHeartbeatSettingsRef & hbSettings, PZGNetworkIOSession * master) : _hbSettings(hbSettings), _master(master), _timeSyncUDPPort(0)
 {
-   SetThreadPriority(PRIORITY_HIGHER);
+   (void) SetThreadPriority(PRIORITY_HIGHER);
 }
 
 void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef & msgFromHeartbeatThread, uint32 /*numLeft*/)

@@ -209,11 +209,11 @@ void FridgeServerWindow :: SetServerRunning(bool running)
          cpdioRef()->SetChildProcessShutdownBehavior(true, -1, SecondsToMicros(5));  // wait 5 seconds for the child process to exit voluntarily, then kill him
 
          Queue<String> argv;
-         argv.AddTail(_argv0);
-         argv.AddTail(String("systemname=%1").Arg(_systemName->text().trimmed().toUtf8().constData()));
 
          status_t ret;
-         if (cpdioRef()->LaunchChildProcess(argv).IsOK(ret))
+         if ((argv.AddTail(_argv0).IsOK(ret))
+          && (argv.AddTail(String("systemname=%1").Arg(_systemName->text().trimmed().toUtf8().constData())).IsOK(ret))
+          && (cpdioRef()->LaunchChildProcess(argv).IsOK(ret)))
          {
             _childProcessIODevice = new QDataIODevice(cpdioRef, this);
             if (_childProcessIODevice->open(QIODevice::ReadWrite)) 

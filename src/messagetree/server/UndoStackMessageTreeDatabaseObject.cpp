@@ -259,7 +259,7 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   {
                      fromClientNode->SetData(indexQ->Tail()()->GetData(), mtdps);  // notify programs that are tracking the top of the source-stack
                   }
-                  else fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
+                  else (void) fromClientNode->GetParent()->RemoveChild(fromClientNode->GetNodeName(), mtdps, true, NULL);
 
                   // Demand-allocate a dest-client-node
                   DataNode * destClientNode = mtdps->GetDataNode(destNodePath);

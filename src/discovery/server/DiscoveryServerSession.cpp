@@ -189,7 +189,7 @@ io_status_t DiscoveryServerSession :: DoOutput(uint32 maxBytes)
             LogTime(MUSCLE_LOG_TRACE, "Sent " INT32_FORMAT_SPEC "/" INT32_FORMAT_SPEC " bytes of Discovery pong to %s\n", bytesSent, bufRef()->GetNumBytes(), replyTarget.ToString()());
          }
       }
-      _outputData.RemoveFirst();
+      (void) _outputData.RemoveFirst();
    }
    return ret;
 }

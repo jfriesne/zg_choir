@@ -176,13 +176,13 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
       for (uint32 i=0; i<pids.GetNumItems(); i++)
       {
          ConstPZGHeartbeatPeerInfoRef hpiRef = GetPZGHeartbeatPeerInfoRefFor(_now, pids[i]);
-         if (hpiRef()) hpis.AddTail(hpiRef);
+         if (hpiRef()) (void) hpis.AddTail(hpiRef);
                   else LogTime(MUSCLE_LOG_ERROR, "GetPZGHeartbeatPeerInfoRefFor() returned a NULL reference for peer [%s]\n", pids[i].ToString()());
       }
    }
 
    MRETURN_ON_ERROR(_rawScratchBuf.SetNumBytes(hb.FlattenedSize(), false));
-   hb.FlattenToByteBuffer(_rawScratchBuf);
+   (void) hb.FlattenToByteBuffer(_rawScratchBuf);
 
    // Zlib-compress the heartbeat packet data into _deflatedScratchBuf, to keep our heartbeat-packet sizes down
    status_t ret;
@@ -405,7 +405,7 @@ ConstPZGHeartbeatPeerInfoRef PZGHeartbeatThreadState :: GetPZGHeartbeatPeerInfoR
             if (phb.HaveSentTimingReply() == false)
             {
                phb.SetHaveSentTimingReply(true);
-               ret()->PutTimingInfo(phb.GetSourceTag(), phb.GetHeartbeatPacketID(), (uint32) muscleMin(now-phb.GetLocalReceiveTimeMicros(), (uint64)((uint32)-1)));
+               (void) ret()->PutTimingInfo(phb.GetSourceTag(), phb.GetHeartbeatPacketID(), (uint32) muscleMin(now-phb.GetLocalReceiveTimeMicros(), (uint64)((uint32)-1)));
             }
          }
       }
@@ -617,7 +617,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
          (void) _peerIDToIPAddresses.Remove(pid);
 
          DECLARE_MUTEXGUARD(_mainThreadLatenciesLock);
-         _mainThreadLatencies.Remove(pid);
+         (void) _mainThreadLatencies.Remove(pid);
       }
 
       (void) _onlineSources.Remove(source);

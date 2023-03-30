@@ -47,7 +47,7 @@ int main(int argc, char ** argv)
    SocketCallbackMechanism scm; // orchestrates safe calling of callback-methods in the main/user/GUI thread
 
    AndQueryFilterRef discoFilter(new AndQueryFilter);  // to limit results to only the servers we care about
-   discoFilter()->GetChildren().AddTail(ConstQueryFilterRef(new StringQueryFilter("type", StringQueryFilter::OP_EQUAL_TO, "tree_server")));
+   (void) discoFilter()->GetChildren().AddTail(ConstQueryFilterRef(new StringQueryFilter("type", StringQueryFilter::OP_EQUAL_TO, "tree_server")));
 
    status_t ret;
    SystemDiscoveryClient discoveryClient(&scm, "*", discoFilter);

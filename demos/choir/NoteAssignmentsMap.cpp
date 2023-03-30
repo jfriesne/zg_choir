@@ -334,7 +334,7 @@ ConstMessageRef NoteAssignmentsMap :: SeniorUpdate(const ConstMessageRef & senio
             const ZGPeerID & peerID = iter.GetKey();
             if (IsPeerOnline(peerID) == false)
             {
-               SetNoteAssignmentsForPeerID(peerID, 0);  // no more notes for you!
+               (void) SetNoteAssignmentsForPeerID(peerID, 0);  // no more notes for you!
                unassignedAny = true;
             }
          }
