@@ -72,12 +72,12 @@ protected:
    /** Returns true if at least one of our current subscribers has a subscription that matches the specified path.
      * @param receivedPath a node path that we want to know if anyone is subscribed to
      */
-   bool IsAnyoneSubscribedToPath(const String & receivedPath) const;
+   MUSCLE_NODISCARD bool IsAnyoneSubscribedToPath(const String & receivedPath) const;
 
    /** Returns the set of ITreeGatewaySubscribers that we are currently receiving initial-subscription-results for
      * (ie results for nodes that were already on the server when these subscribers called AddTreeSubscription()
      */
-   const Hashtable<ITreeGatewaySubscriber *, Void> & GetSubscribersInInitialResultsMode() const {return _allowedCallbacks;}
+   MUSCLE_NODISCARD const Hashtable<ITreeGatewaySubscriber *, Void> & GetSubscribersInInitialResultsMode() const {return _allowedCallbacks;}
 
 private:
    friend class MessageTreeDatabasePeerSession;
@@ -95,14 +95,14 @@ private:
    status_t UpdateSubscription(const String & subscriptionPath, ITreeGatewaySubscriber * optSubscriber, TreeGatewayFlags flags);
    void UpdateSubscriber(ITreeGatewaySubscriber * sub, TreeSubscriberInfo & subInfo, const String & path, const ConstMessageRef & msgRef, const String & optOpTag);
    void TreeNodeUpdatedAux(const String & path, const ConstMessageRef & msgRef, const String & optOpTag, ITreeGatewaySubscriber * optDontNotify);
-   bool DoesPathMatch(ITreeGatewaySubscriber * sub, const PathMatcher * pm, const String & path, const Message * optMessage) const;
+   MUSCLE_NODISCARD bool DoesPathMatch(ITreeGatewaySubscriber * sub, const PathMatcher * pm, const String & path, const Message * optMessage) const;
    void EnsureSubscriberInBatchGroup(ITreeGatewaySubscriber * sub);
    void DoIndexNotifications(const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
    void DoIndexNotificationAux(ITreeGatewaySubscriber * sub, const String & path, char opCode, uint32 index, const String & nodeName, const String & optOpTag);
 
-   String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, char markerChar='_') const;
-   String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar='_') const;
-   String TagToExcludeClientFromReplies(ITreeGatewaySubscriber * excludeMe, const String & tag) const;
+   MUSCLE_NODISCARD String GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, char markerChar='_') const;
+   MUSCLE_NODISCARD String PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar='_') const;
+   MUSCLE_NODISCARD String TagToExcludeClientFromReplies(ITreeGatewaySubscriber * excludeMe, const String & tag) const;
 
    ITreeGatewaySubscriber * ParseRegistrationID(const String & ascii, char markerChar='_') const;
    ITreeGatewaySubscriber * ParseRegistrationIDPrefix(const String & s, String & retSuffix, char markerChar='_') const;

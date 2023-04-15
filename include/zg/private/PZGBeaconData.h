@@ -21,24 +21,25 @@ class PZGBeaconData : public FlatCountable
 public:
    PZGBeaconData() {/* empty */}
 
-   virtual bool IsFixedSize()     const   {return false;}
-   virtual uint32 TypeCode()      const   {return PZG_BEACON_DATA;}
-   virtual uint32 FlattenedSize() const   {return sizeof(uint32) + (_dbis.GetNumItems()*PZGDatabaseStateInfo::FlattenedSize());}
+   MUSCLE_NODISCARD virtual bool IsFixedSize()     const   {return false;}
+   MUSCLE_NODISCARD virtual uint32 TypeCode()      const   {return PZG_BEACON_DATA;}
+   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const   {return sizeof(uint32) + (_dbis.GetNumItems()*PZGDatabaseStateInfo::FlattenedSize());}
 
    virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
 
-   uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
    bool operator == (const PZGBeaconData & rhs) const;
    bool operator != (const PZGBeaconData & rhs) const {return !(*this == rhs);}
 
-   const Queue<PZGDatabaseStateInfo> & GetDatabaseStateInfos() const {return _dbis;}
-   Queue<PZGDatabaseStateInfo> & GetDatabaseStateInfos() {return _dbis;}
+   MUSCLE_NODISCARD const Queue<PZGDatabaseStateInfo> & GetDatabaseStateInfos() const {return _dbis;}
+   MUSCLE_NODISCARD Queue<PZGDatabaseStateInfo> & GetDatabaseStateInfos() {return _dbis;}
+
    void SetDatabaseStateInfos(const Queue<PZGDatabaseStateInfo> & dbis) {_dbis = dbis;}
 
    void PrintToStream() const;
-   String ToString() const;
+   MUSCLE_NODISCARD String ToString() const;
 
 private:
    Queue<PZGDatabaseStateInfo> _dbis;

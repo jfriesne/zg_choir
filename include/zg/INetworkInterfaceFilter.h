@@ -20,7 +20,7 @@ public:
      * by the argument should be used by ZGChoir.
      * @param nii a NetworkInterfaceInfo object (as previously returned by GetNetworkInterfaceInfos())
      */
-   virtual bool IsOkayToUseNetworkInterface(const NetworkInterfaceInfo & nii) const = 0;
+   MUSCLE_NODISCARD virtual bool IsOkayToUseNetworkInterface(const NetworkInterfaceInfo & nii) const = 0;
 };
 
 };  // end namespace zg

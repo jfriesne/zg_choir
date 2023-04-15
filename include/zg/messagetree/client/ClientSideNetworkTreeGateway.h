@@ -26,7 +26,7 @@ public:
    void SetNetworkConnected(bool isConnected);
 
    /** Returns true iff we are currently in TCP-connected mode (as specified by the most recent call to SetNetworkConnected()) */
-   bool IsNetworkConnected() const {return _isConnected;}
+   MUSCLE_NODISCARD bool IsNetworkConnected() const {return _isConnected;}
 
    /**
      * Called (typically by the MessageTreeClientConnector that is managing us) when a reply-Message is received from our server via the TCP connection
@@ -57,7 +57,7 @@ protected:
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
-   virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
+   MUSCLE_NODISCARD virtual bool TreeGateway_IsGatewayConnected() const {return _isConnected;}
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const {return _parameters;}
 
 protected:

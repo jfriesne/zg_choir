@@ -23,22 +23,22 @@ public:
 
    PZGDatabaseStateInfo & operator=(const PZGDatabaseStateInfo & rhs);
 
-   static MUSCLE_CONSTEXPR bool IsFixedSize()     {return true;}
-   static MUSCLE_CONSTEXPR uint32 TypeCode()      {return PZG_DATABASE_STATE_INFO;}
-   static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR bool IsFixedSize()     {return true;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 TypeCode()      {return PZG_DATABASE_STATE_INFO;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(_currentDatabaseStateID)+sizeof(_oldestDatabaseIDInLog)+sizeof(_dbChecksum);}
 
    void Flatten(DataFlattener flat) const;
    status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;
-   String ToString() const;
+   MUSCLE_NODISCARD String ToString() const;
 
-   uint64 GetCurrentDatabaseStateID() const {return _currentDatabaseStateID;}
-   uint64 GetOldestDatabaseIDInLog()  const {return _oldestDatabaseIDInLog;}
-   uint32 GetDBChecksum()             const {return _dbChecksum;}
+   MUSCLE_NODISCARD uint64 GetCurrentDatabaseStateID() const {return _currentDatabaseStateID;}
+   MUSCLE_NODISCARD uint64 GetOldestDatabaseIDInLog()  const {return _oldestDatabaseIDInLog;}
+   MUSCLE_NODISCARD uint32 GetDBChecksum()             const {return _dbChecksum;}
 
    /** Calculates and returns a 32-bit checksum based on all the current contents of this object; not to be confused with the DBChecksum field! */
-   uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
    bool operator == (const PZGDatabaseStateInfo & rhs) const;
    bool operator != (const PZGDatabaseStateInfo & rhs) const {return !(*this == rhs);}

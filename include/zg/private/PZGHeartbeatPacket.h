@@ -21,28 +21,28 @@ public:
 
    void Initialize(const PZGHeartbeatSettings & hbSettings, uint32 uptimeSeconds, bool isFullyAttached, uint32 packetID);
 
-   virtual bool IsFixedSize() const {return false;}
-   virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PACKET_TYPE_CODE;}
-   virtual uint32 FlattenedSize() const;
+   MUSCLE_NODISCARD virtual bool IsFixedSize() const {return false;}
+   MUSCLE_NODISCARD virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PACKET_TYPE_CODE;}
+   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const;
    virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;
-   String ToString() const;
+   MUSCLE_NODISCARD String ToString() const;
 
-   uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
-   bool IsFullyAttached()        const {return _isFullyAttached;}
-   uint32 GetHeartbeatPacketID() const {return _heartbeatPacketID;}
-   uint32 GetVersionCode()       const {return _versionCode;}
-   uint64 GetSystemKey()         const {return _systemKey;}
-   uint16 GetTCPAcceptPort()     const {return _tcpAcceptPort;}
-   uint16 GetPeerType()          const {return _peerType;}
-   uint32 GetPeerUptimeSeconds() const {return _peerUptimeSeconds;}
-   const ZGPeerID & GetSourcePeerID() const {return _sourcePeerID;}
+   MUSCLE_NODISCARD bool IsFullyAttached()        const {return _isFullyAttached;}
+   MUSCLE_NODISCARD uint32 GetHeartbeatPacketID() const {return _heartbeatPacketID;}
+   MUSCLE_NODISCARD uint32 GetVersionCode()       const {return _versionCode;}
+   MUSCLE_NODISCARD uint64 GetSystemKey()         const {return _systemKey;}
+   MUSCLE_NODISCARD uint16 GetTCPAcceptPort()     const {return _tcpAcceptPort;}
+   MUSCLE_NODISCARD uint16 GetPeerType()          const {return _peerType;}
+   MUSCLE_NODISCARD uint32 GetPeerUptimeSeconds() const {return _peerUptimeSeconds;}
+   MUSCLE_NODISCARD const ZGPeerID & GetSourcePeerID() const {return _sourcePeerID;}
 
-   const Queue<ConstPZGHeartbeatPeerInfoRef> & GetOrderedPeersList() const {return _orderedPeersList;}
-         Queue<ConstPZGHeartbeatPeerInfoRef> & GetOrderedPeersList()       {return _orderedPeersList;}
+   MUSCLE_NODISCARD const Queue<ConstPZGHeartbeatPeerInfoRef> & GetOrderedPeersList() const {return _orderedPeersList;}
+   MUSCLE_NODISCARD       Queue<ConstPZGHeartbeatPeerInfoRef> & GetOrderedPeersList()       {return _orderedPeersList;}
 
    ConstMessageRef GetPeerAttributesAsMessage() const;
 
@@ -52,15 +52,15 @@ public:
    // a value into this object before we zlib-compressed the heartbeat data, and the zlib-compression
    // time would get added in to the network-delay measurement)
    void SetNetworkSendTimeMicros(uint64 networkSendTimeMicros) {_networkSendTimeMicros = networkSendTimeMicros;}
-   uint64 GetNetworkSendTimeMicros() const {return _networkSendTimeMicros;}
+   MUSCLE_NODISCARD uint64 GetNetworkSendTimeMicros() const {return _networkSendTimeMicros;}
 
-   bool IsEqualIgnoreTransients(const PZGHeartbeatPacket & rhs) const;
+   MUSCLE_NODISCARD bool IsEqualIgnoreTransients(const PZGHeartbeatPacket & rhs) const;
 
 protected:
    virtual status_t CopyFromImplementation(const Flattenable & copyFrom);
 
 private:
-   uint32 FlattenedSizeNotIncludingVariableLengthData() const;
+   MUSCLE_NODISCARD uint32 FlattenedSizeNotIncludingVariableLengthData() const;
 
    uint32 _heartbeatPacketID;
    uint32 _versionCode;
@@ -89,15 +89,15 @@ public:
    PZGHeartbeatPacketWithMetaData(const PZGHeartbeatSettings & hbSettings, uint32 uptimeSeconds, bool isFullyAttached, uint32 packetID);
 
    // Time at which we received this packet (as reported by GetRunTime64())
-   uint64 GetLocalReceiveTimeMicros() const {return _localReceiveTimeMicros;}
+   MUSCLE_NODISCARD uint64 GetLocalReceiveTimeMicros() const {return _localReceiveTimeMicros;}
    void SetLocalReceiveTimeMicros(uint64 rTime) {_localReceiveTimeMicros = rTime;};
 
-   const IPAddressAndPort & GetPacketSource() const {return _packetSource;}
-   uint16 GetSourceTag() const {return _sourceTag;}
+   MUSCLE_NODISCARD const IPAddressAndPort & GetPacketSource() const {return _packetSource;}
+   MUSCLE_NODISCARD uint16 GetSourceTag() const {return _sourceTag;}
    void SetPacketSource(const IPAddressAndPort & source, uint16 sourceTag) {_packetSource = source; _sourceTag = sourceTag;}
 
    void SetHaveSentTimingReply(bool haveSent) {_haveSentTimingReply = haveSent;}
-   bool HaveSentTimingReply() const {return _haveSentTimingReply;}
+   MUSCLE_NODISCARD bool HaveSentTimingReply() const {return _haveSentTimingReply;}
 
 private:
    uint64 _localReceiveTimeMicros;  // time at which this packet was received, according to the receiver's local monotonic clock

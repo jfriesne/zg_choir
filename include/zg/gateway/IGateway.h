@@ -58,10 +58,10 @@ protected:
    virtual void CallbackBatchEnds() {/* empty */}
 
    /** Returns a read-only reference to our table of currently-registered IGatewaySubscriber objects, mapped to their registration IDs */
-   const Hashtable<GatewaySubscriberType *, uint32> & GetRegisteredSubscribers() const {return _registeredSubscribers;}
+   MUSCLE_NODISCARD const Hashtable<GatewaySubscriberType *, uint32> & GetRegisteredSubscribers() const {return _registeredSubscribers;}
 
    /** Returns a read-only reference to our table of current registration IDs, mapped to their subscribers */
-   const Hashtable<uint32, GatewaySubscriberType *> & GetRegistrationIDs() const {return _registrationIDs;}
+   MUSCLE_NODISCARD const Hashtable<uint32, GatewaySubscriberType *> & GetRegistrationIDs() const {return _registrationIDs;}
 
 protected:
    virtual void RegisterSubscriber(void * s)
@@ -134,7 +134,7 @@ template<class GatewayType> bool IGatewaySubscriber<GatewayType>::EndCallbackBat
 template<class GatewayType> class GatewayCallbackBatchGuard : public NotCopyable
 {
 public:
-   GatewayCallbackBatchGuard(GatewayType * ig) : _gateway(ig) {_gateway->BeginCallbackBatch();}
+   MUSCLE_NODISCARD GatewayCallbackBatchGuard(GatewayType * ig) : _gateway(ig) {_gateway->BeginCallbackBatch();}
    ~GatewayCallbackBatchGuard() {_gateway->EndCallbackBatch();}
 
 private:

@@ -28,7 +28,7 @@ public:
      *          it sent back after a 100mS delay, and so on.  Return MUSCLE_TIME_NEVER if you don't
      *          want the "pong" Message to ever be sent back.
      */
-   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource) = 0;
+   MUSCLE_NODISCARD virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource) = 0;
 };
 
 };  // end namespace zg

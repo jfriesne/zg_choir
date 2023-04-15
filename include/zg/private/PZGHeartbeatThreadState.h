@@ -24,38 +24,38 @@ public:
    virtual ~PZGHeartbeatThreadState();
 
    void Initialize(const ConstPZGHeartbeatSettingsRef & hbSettings, uint64 startTime);
-   uint64 GetPulseTime() const;
+   MUSCLE_NODISCARD uint64 GetPulseTime() const;
    void Pulse(Queue<MessageRef> & messagesForOwnerThread);
    void MessageReceivedFromOwner(const MessageRef & msgFromOwner);
    void ReceiveMulticastTraffic(PacketDataIO & dio);
 
-   int64 MainThreadGetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;} // this will be called from the main thread
+   MUSCLE_NODISCARD int64 MainThreadGetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;} // this will be called from the main thread
 
-   uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
 
    // INetworkTimeProvider interface
-   virtual uint64 GetNetworkTime64() const {return IsFullyAttached() ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-_toNetworkTimeOffset);}
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+_toNetworkTimeOffset);}
-   virtual int64 GetToNetworkTimeOffset() const {return _toNetworkTimeOffset;}
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64() const {return IsFullyAttached() ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
+   MUSCLE_NODISCARD virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-_toNetworkTimeOffset);}
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const {return ((_toNetworkTimeOffset==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+_toNetworkTimeOffset);}
+   MUSCLE_NODISCARD virtual int64 GetToNetworkTimeOffset() const {return _toNetworkTimeOffset;}
 
 private:
    friend class PZGHeartbeatSession;
 
-   bool PeersListMatchesIgnoreOrdering(const Queue<ConstPZGHeartbeatPeerInfoRef> & infoQ) const;
-   ZGPeerID GetKingmakerPeerID() const;
-   PZGHeartbeatSourceKey GetKingmakerPeerSource() const;
-   Queue<ZGPeerID> CalculateOrderedPeersList();
+   MUSCLE_NODISCARD bool PeersListMatchesIgnoreOrdering(const Queue<ConstPZGHeartbeatPeerInfoRef> & infoQ) const;
+   MUSCLE_NODISCARD ZGPeerID GetKingmakerPeerID() const;
+   MUSCLE_NODISCARD PZGHeartbeatSourceKey GetKingmakerPeerSource() const;
+   MUSCLE_NODISCARD Queue<ZGPeerID> CalculateOrderedPeersList();
    ConstPZGHeartbeatPeerInfoRef GetPZGHeartbeatPeerInfoRefFor(uint64 now, const ZGPeerID & peerID) const;
    void ScheduleUpdateOfficialPeersList(bool forceUpdate) {_updateOfficialPeersListPending = true; if (forceUpdate) _forceOfficialPeersUpdate = true;}
    void ScheduleUpdateToNetworkTimeOffset() {_updateToNetworkTimeOffsetPending = true;}
    void UpdateToNetworkTimeOffset();
    status_t SendHeartbeatPackets();
-   const ZGPeerID & GetSeniorPeerID() const {return _lastSourcesSentToMaster.GetFirstKeyWithDefault().GetPeerID();}
-   bool IAmTheSeniorPeer() const {return GetSeniorPeerID() == _hbSettings()->GetLocalPeerID();}
+   MUSCLE_NODISCARD const ZGPeerID & GetSeniorPeerID() const {return _lastSourcesSentToMaster.GetFirstKeyWithDefault().GetPeerID();}
+   MUSCLE_NODISCARD bool IAmTheSeniorPeer() const {return GetSeniorPeerID() == _hbSettings()->GetLocalPeerID();}
    MessageRef UpdateOfficialPeersList(bool forceUpdate);
-   bool IsAtLeastHalfAttached() const {return (_now >= _halfAttachedTime);}
-   bool IsFullyAttached()       const {return (_now >= _fullyAttachedTime);}
+   MUSCLE_NODISCARD bool IsAtLeastHalfAttached() const {return (_now >= _halfAttachedTime);}
+   MUSCLE_NODISCARD bool IsFullyAttached()       const {return (_now >= _fullyAttachedTime);}
 
    PZGHeartbeatPacketWithMetaDataRef ParseHeartbeatPacketBuffer(const ByteBuffer & defBuf, const IPAddressAndPort & sourceIAP, uint64 localReceiveTimeMicros);
    void IntroduceSource(const PZGHeartbeatSourceKey & source, const PZGHeartbeatPacketWithMetaDataRef & newHB, uint64 localExpirationTimeMicros);
@@ -65,9 +65,9 @@ private:
    void EnsureHeartbeatSourceTagsTableUpdated();
 
    friend class ComparePeerIDsBySeniorityFunctor;
-   uint16 GetPeerTypeFromQueue(const ZGPeerID & pid, const Queue<IPAddressAndPort> & q) const;
-   uint32 GetPeerUptimeSecondsFromQueue(const ZGPeerID & pid, const Queue<IPAddressAndPort> & q) const;
-   int ComparePeerIDsBySeniority(const ZGPeerID & pid1, const ZGPeerID & pid2) const;
+   MUSCLE_NODISCARD uint16 GetPeerTypeFromQueue(const ZGPeerID & pid, const Queue<IPAddressAndPort> & q) const;
+   MUSCLE_NODISCARD uint32 GetPeerUptimeSecondsFromQueue(const ZGPeerID & pid, const Queue<IPAddressAndPort> & q) const;
+   MUSCLE_NODISCARD int ComparePeerIDsBySeniority(const ZGPeerID & pid1, const ZGPeerID & pid2) const;
 
    ConstPZGHeartbeatSettingsRef _hbSettings;
 

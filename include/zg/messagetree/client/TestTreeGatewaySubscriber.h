@@ -37,8 +37,8 @@ public:
    virtual void TreeGatewayShuttingDown();
 
    // ITextCommandReceiver API
-   virtual bool IsReadyForTextCommands() const;
-   virtual bool TextCommandReceived(const String & textStr);
+   MUSCLE_NODISCARD virtual bool IsReadyForTextCommands() const;
+   MUSCLE_NODISCARD virtual bool TextCommandReceived(const String & textStr);
 
 private:
    String GenerateOpTag(String & retTag);

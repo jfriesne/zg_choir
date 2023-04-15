@@ -53,7 +53,7 @@ public:
      * @param args Context information for this call (including the current time and the time at which Pulse() was supposed to be called at)
      * @returns a new time in microseconds, or MUSCLE_TIME_NEVER if we don't need Pulse() to be called.
      */
-   virtual uint64 GetPulseTime(const PulseArgs & args);
+   MUSCLE_NODISCARD virtual uint64 GetPulseTime(const PulseArgs & args);
 
    /** Called at (approximately) the time specified by GetPulseTime().
      * @param args Context information for this call (including the current time and the time at which this method was supposed to be called at)
@@ -61,7 +61,7 @@ public:
    virtual void Pulse(const PulseArgs & args);
 
    /** Default implementation returns true iff we are currently fully attached to the ZG system. */
-   virtual bool IsReadyForTextCommands() const {return _iAmFullyAttached;}
+   MUSCLE_NODISCARD virtual bool IsReadyForTextCommands() const {return _iAmFullyAttached;}
 
    /** Default implementation handles some standard ZG commands such as "print peers" or "print sessions".
      * @param text A text string was received via our stdin stream.
@@ -70,10 +70,10 @@ public:
    virtual bool TextCommandReceived(const String & text);
 
    /** Returns true iff this peer is currently considered to be the senior peer of the system. */
-   bool IAmTheSeniorPeer() const;
+   MUSCLE_NODISCARD bool IAmTheSeniorPeer() const;
 
    /** Returns the ZGPeerSettings object, as passed to our constructor. */
-   const ZGPeerSettings & GetPeerSettings() const {return _peerSettings;}
+   MUSCLE_NODISCARD const ZGPeerSettings & GetPeerSettings() const {return _peerSettings;}
 
    /** This is called by the ZG networking code to determine if it is allowed to use the specified
      * Network Interface.  Default implementation always returns true, but you can override this in
@@ -81,7 +81,7 @@ public:
      * @param nii a description of the Network Interface that ZG is considering whether to use or not.
      * @note this method is part of the INetworkInterfaceFilter interface-class
      */
-   virtual bool IsOkayToUseNetworkInterface(const NetworkInterfaceInfo & nii) const;
+   MUSCLE_NODISCARD virtual bool IsOkayToUseNetworkInterface(const NetworkInterfaceInfo & nii) const;
 
    /** Called when the set of available network interfaces on this computer has changed.
      * Default implementation is a no-op.
@@ -97,28 +97,28 @@ public:
    virtual void ComputerJustWokeUp() {/* empty */}
 
    /** Returns true iff this peer is fully attached to the system (ie has completed enumeration of which other peers are online, etc) */
-   bool IAmFullyAttached() const {return _iAmFullyAttached;}
+   MUSCLE_NODISCARD bool IAmFullyAttached() const {return _iAmFullyAttached;}
 
    /** Called whenever this peer has gained or lost senior-peer status (current status is indicated by the return value of IAmTheSeniorPeer()) */
    virtual void LocalSeniorPeerStatusChanged();
 
    /** Returns the ZGPeerID being used by this local peer.  Returned value is not valid until after ZGPeerSession::AttachedToServer() returns B_NO_ERROR. */
-   const ZGPeerID & GetLocalPeerID() const {return _localPeerID;}
+   MUSCLE_NODISCARD const ZGPeerID & GetLocalPeerID() const {return _localPeerID;}
 
    /** Returns the ZGPeerID of the senior peer of this system, or an invalid ZGPeerID if there currently is no senior peer (that we know of). */
-   const ZGPeerID & GetSeniorPeerID() const {return _seniorPeerID;}
+   MUSCLE_NODISCARD const ZGPeerID & GetSeniorPeerID() const {return _seniorPeerID;}
 
    /** Returns the current time according to the network-time-clock, in microseconds.
      * The intent of this clock is to be the same on all peers in the system.  However, this means that it may occasionally
      * change (break monotonicity) in order to synchronize with the other peers in the system.
      * Note that this function will return 0 if we aren't currently fully attached to the system, since before then we don't know the network time.
      */
-   virtual uint64 GetNetworkTime64() const {return _iAmFullyAttached ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64() const {return _iAmFullyAttached ? GetNetworkTime64ForRunTime64(GetRunTime64()) : 0;}
 
    /** Given a network-time-clock-value (ie one using the same time-base as returned by GetNetworkTime64()),
      * returns the approximately-equivalent local-time-clock-value (ie one using the same time-base as returned by GetRunTime64())
      */
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
+   MUSCLE_NODISCARD virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
    {
       const int64 ntto = GetToNetworkTimeOffset();
       return ((ntto==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
@@ -127,7 +127,7 @@ public:
    /** Given a local-time-clock-value (ie one using the same time-base as returned by GetRunTime64()), returns
      * the approximately equivalent network-time-value (ie one using the same time-base as returned by GetNetworkTime64())
      */
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
    {
       const int64 ntto = GetToNetworkTimeOffset();
       return ((ntto==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
@@ -136,25 +136,25 @@ public:
    /** Returns the number of microseconds that should be added to a GetRunTime64() value to turn it into a GetNetworkTime64() value,
      * or subtracted to do the inverse operation.  Note that this value will vary from one moment to the next!
      */
-   virtual int64 GetToNetworkTimeOffset() const;
+   MUSCLE_NODISCARD virtual int64 GetToNetworkTimeOffset() const;
 
    /** Returns a reference to a read-only table of the peers that are currently online in the system.
      * The keys in the table are the peer's IDs, and the values are the peers' attributes (may be NULL if they didn't advertise any)
      * The ordering of the entries in the table is not significant (in particular, it doesn't reflect the ordering of the peers' seniority, at least not for now).
      */
-   const Hashtable<ZGPeerID, ConstMessageRef> & GetOnlinePeers() const {return _onlinePeers;}
+   MUSCLE_NODISCARD const Hashtable<ZGPeerID, ConstMessageRef> & GetOnlinePeers() const {return _onlinePeers;}
 
    /** Returns true iff if the specified peer is currently online.
      * @param peerID The peer ID to check on.
      */
-   bool IsPeerOnline(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD bool IsPeerOnline(const ZGPeerID & peerID) const;
 
    /** Returns true iff we are currently executing in a context where it okay to
      * update the specified local database as a senior-peer (eg we are running in a function that was
      * called by the SeniorUpdateLocalDatabase() method, or similar)
      * @param whichDB index of the database we are inquiring about
      */
-   bool IsInSeniorDatabaseUpdateContext(uint32 whichDB) const;
+   MUSCLE_NODISCARD bool IsInSeniorDatabaseUpdateContext(uint32 whichDB) const;
 
    /** Returns true iff we are currently executing in a context where it okay to
      * update the local database as a junior-peer (eg we are running in a function that was
@@ -164,13 +164,13 @@ public:
      *                                  at which this update was originally handled on the senior peer.
      *                                  If this method returns false, this value will be set to 0.
      */
-   bool IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64 = NULL) const;
+   MUSCLE_NODISCARD bool IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64 = NULL) const;
 
    /** Gets our current estimate of the one-way network latency between us and the specified peer.
      * @param peerID The peer ID to get the latency of
      * @returns The estimated latency, in microseconds, or MUSCLE_TIME_NEVER if the latency is unknown.
      */
-   uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
 
 protected:
    /** Call this if you want to request that the specified database be reset back to its well-known default state.
@@ -258,7 +258,7 @@ protected:
      * checksums returned/updated by the SeniorUpdateLocalDatabase() and JuniorUpdateLocalDatabase() functions for
      * the same database state.
      */
-   virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const = 0;
+   MUSCLE_NODISCARD virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const = 0;
 
    /** This method may be implemented to return a human-readable representation of the specified database's current contents
      * as a String.  This string will be printed to stdout after a checksum error has occurred, to make it easier to debug
@@ -328,19 +328,19 @@ protected:
      * @returns How many microseconds to delay before sinding the pong back out, or MUSCLE_TIME_NEVER to not send any pong back out.
      * @note on return, (pingMsg) will be updated to point to the appropriate pong-Message instead.
      */
-   virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource);
+   MUSCLE_NODISCARD virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource);
 
    /** Returns the current state-ID of the locally held database.
      * @param whichDB index of the database to return the state-ID of
      * @note returns 0 if (whichDB) isn't a valid database index.
      */
-   uint64 GetCurrentDatabaseStateID(uint32 whichDB) const;
+   MUSCLE_NODISCARD uint64 GetCurrentDatabaseStateID(uint32 whichDB) const;
 
    /** Returns true iff the given database's local transaction-log currently contains the given transaction ID.
      * @param whichDB index of the database to return the oldest accessible state-ID of.
      * @param transactionID to look for in the transaction log.
      */
-   bool UpdateLogContainsUpdate(uint32 whichDB, uint64 transactionID) const;
+   MUSCLE_NODISCARD bool UpdateLogContainsUpdate(uint32 whichDB, uint64 transactionID) const;
 
    /** Returns a read-only reference to the transaction-payload for the given transaction ID in the given database.
      * Note that this Message contains the instructions to junior peers for how they should update their local database;
@@ -354,7 +354,7 @@ protected:
    /** Returns a list of unicast IPAddressAndPort locations we have on file for the specified ZGPeer.
      * @param peerID The unique ID of peer in question.
      */
-   Queue<IPAddressAndPort> GetUnicastIPAddressAndPortsForPeerID(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD Queue<IPAddressAndPort> GetUnicastIPAddressAndPortsForPeerID(const ZGPeerID & peerID) const;
 
 private:
    void ScheduleSetBeaconData();

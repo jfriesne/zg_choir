@@ -30,7 +30,7 @@ public:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * userData);
 
    /** Returns true iff we are currently executing inside our MessageReceivedFromGateway callback */
-   bool IsInMessageReceivedFromGateway() const {return _isInMessageReceivedFromGateway.IsInBatch();}
+   MUSCLE_NODISCARD bool IsInMessageReceivedFromGateway() const {return _isInMessageReceivedFromGateway.IsInBatch();}
 
    /** If set true, then we will write an informative message to the log from within our AttachedToServer() and AboutToDetachFromServer() methods
      * @param doLogging true iff logging is desired.
@@ -39,7 +39,7 @@ public:
    void SetLogOnAttachAndDetach(bool doLogging) {_logOnAttachAndDetach = doLogging;}
 
    /** Returns the key-string for the undo-stack this session's commands should be applied to (when using an UndoStackMessageTreeDatabaseObject) */
-   const String & GetUndoKey() const {return _undoKey;}
+   MUSCLE_NODISCARD const String & GetUndoKey() const {return _undoKey;}
 
 protected:
    // StorageReflectSession overrides
@@ -83,7 +83,7 @@ public:
 
    virtual AbstractReflectSessionRef CreateSession(const String & clientAddress, const IPAddressAndPort & factoryInfo);
 
-   virtual bool IsReadyToAcceptSessions() const {return IsTreeGatewayConnected();}
+   MUSCLE_NODISCARD virtual bool IsReadyToAcceptSessions() const {return IsTreeGatewayConnected();}
 
 private:
    bool _announceClientConnectsAndDisconnects;

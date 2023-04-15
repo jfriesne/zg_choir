@@ -34,14 +34,14 @@ public:
    virtual void SetToDefaultState();
    virtual status_t SetFromArchive(const ConstMessageRef & archive);
    virtual status_t SaveToArchive(const MessageRef & archive) const;
-   virtual uint32 GetCurrentChecksum() const {return _checksum;}
-   virtual uint32 CalculateChecksum() const;
-   virtual String ToString() const;
+   MUSCLE_NODISCARD virtual uint32 GetCurrentChecksum() const {return _checksum;}
+   MUSCLE_NODISCARD virtual uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD virtual String ToString() const;
 
    /** Returns a pointer to the MessageTreeDatabasePeerSession object that created us, or NULL
      * if this object was not created by a MessageTreeDatabasePeerSession.
      */
-   MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const;
+   MUSCLE_NODISCARD MessageTreeDatabasePeerSession * GetMessageTreeDatabasePeerSession() const;
 
    /** Checks if the given path belongs to this database.
      * @param path a session-relative node-path (eg "dbs/db_0/foo/bar"), or an absolute node-path (eg "/zg/0/dbs/db_0/foo/bar").
@@ -51,13 +51,13 @@ public:
      *          root-node exactly; 1 means it matches at the level of our database's children, and so on).
      *          Returns -1 if the path doesn't match anything in our database.
      */
-   int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
+   MUSCLE_NODISCARD int32 GetDatabaseSubpath(const String & path, String * optRetRelativePath = NULL) const;
 
    /** Returns the session-relative path of the root of this database's subtree (without any trailing slash) */
-   const String & GetRootPathWithoutSlash() const {return _rootNodePathWithoutSlash;}
+   MUSCLE_NODISCARD const String & GetRootPathWithoutSlash() const {return _rootNodePathWithoutSlash;}
 
    /** Returns the session-relative path of the root of this database's subtree (with a trailing slash) */
-   const String & GetRootPathWithSlash() const {return _rootNodePathWithSlash;}
+   MUSCLE_NODISCARD const String & GetRootPathWithSlash() const {return _rootNodePathWithSlash;}
 
    /** Sends a request to the senior peer that the specified node-value be uploaded to the message-tree database.
      * @param path session-relative path of the database node to upload (may be wildcarded, but only if (optPayload) is a NULL reference)
@@ -142,7 +142,7 @@ public:
    virtual status_t SendMessageToTreeGatewaySubscriber(const ZGPeerID & toPeerID, const String & tag, const ConstMessageRef & payload);
 
    /** Returns a reference to our currently-active operation-tag, or a reference to an empty string if there isn't one. */
-   const String & GetCurrentOpTag() const {return *_opTagStack.TailWithDefault(&GetEmptyString());}
+   MUSCLE_NODISCARD const String & GetCurrentOpTag() const {return *_opTagStack.TailWithDefault(&GetEmptyString());}
 
 protected:
    // IDatabaseObject API
@@ -196,19 +196,19 @@ protected:
      * @param path the node-path specified by the update-message
      * @param flags the TreeGatewayFlags specified by the update-message
      */
-   virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const {(void) path; (void) flags; return true;}
+   MUSCLE_NODISCARD virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const {(void) path; (void) flags; return true;}
 
    /** When called from within a SeniorUpdate() or JuniorUpdate() context, returns true iff the update we're currently
      * handling was tagged with the TREE_GATEWAY_FLAG_INTERIM (and can therefore be skipped when performing an undo or redo)
      */
-   bool IsHandlingInterimUpdate() const {return _interimUpdateNestCount.IsInBatch();}
+   MUSCLE_NODISCARD bool IsHandlingInterimUpdate() const {return _interimUpdateNestCount.IsInBatch();}
 
    /**
     * Returns a pointer to the first DataNode object that mactches the given node-path.
     * @param nodePath The node's path, relative to this database object's root-path.  Wildcarding is okay.
     * @return A pointer to the specified DataNode, or NULL if no node matching that path was found.
     */
-   DataNode * GetDataNode(const String & nodePath) const;
+   MUSCLE_NODISCARD DataNode * GetDataNode(const String & nodePath) const;
 
    /** Pass-through to StorageReflectSession::SetDataNode() on our MessageTreeDatabasePeerSession object
      * @param nodePath The node's path, relative to this database object's root-path.
@@ -309,7 +309,7 @@ protected:
    class OpTagGuard
    {
    public:
-      OpTagGuard(const String & optOpTag, MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj), _optOpTag(optOpTag)
+      MUSCLE_NODISCARD OpTagGuard(const String & optOpTag, MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj), _optOpTag(optOpTag)
       {
          _pushed = ((_optOpTag.HasChars())&&(_dbObj->_opTagStack.AddTail(&_optOpTag).IsOK()));
       }
@@ -328,7 +328,7 @@ protected:
      * @param tgf a set of TREE_GATEWAY_FLAG_* bits
      * @returns the corresponding set of SETDATANODE_FLAG_* bits.
      */
-   SetDataNodeFlags ConvertTreeGatewayFlagsToSetDataNodeFlags(TreeGatewayFlags tgf) const;
+   MUSCLE_NODISCARD SetDataNodeFlags ConvertTreeGatewayFlagsToSetDataNodeFlags(TreeGatewayFlags tgf) const;
 
 private:
    class SafeQueryFilter : public QueryFilter
@@ -336,8 +336,8 @@ private:
    public:
       SafeQueryFilter(const MessageTreeDatabaseObject * dbObj) : _dbObj(dbObj) {/* empty */}
 
-      virtual bool Matches(ConstMessageRef & /*msg*/, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
-      virtual uint32 TypeCode() const {return 0;}  // okay because we never save/restore this type anyway
+      MUSCLE_NODISCARD virtual bool Matches(ConstMessageRef & /*msg*/, const DataNode * optNode) const {return optNode ? _dbObj->IsNodeInThisDatabase(*optNode) : false;}
+      MUSCLE_NODISCARD virtual uint32 TypeCode() const {return 0;}  // okay because we never save/restore this type anyway
       virtual status_t SaveToArchive(Message &) const  {MCRASH("SafeQueryFilter shouldn't be saved to an archive"); return B_UNIMPLEMENTED;}
       virtual status_t SetFromArchive(const Message &) {MCRASH("SafeQueryFilter shouldn't be set from an archive"); return B_UNIMPLEMENTED;}
 
@@ -345,9 +345,9 @@ private:
       const MessageTreeDatabaseObject * _dbObj;
    };
 
-   bool IsInSetupOrTeardown() const;
-   bool IsNodeInThisDatabase(const DataNode & node) const;
-   String DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const;
+   MUSCLE_NODISCARD bool IsInSetupOrTeardown() const;
+   MUSCLE_NODISCARD bool IsNodeInThisDatabase(const DataNode & node) const;
+   MUSCLE_NODISCARD String DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const;
    void DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const;
 
    MessageRef CreateNodeUpdateMessage(const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag) const;

@@ -30,13 +30,13 @@ extern const String PZG_PEER_NAME_BACK_ORDER;
 #define DATABASE_UPDATE_ID_FULL_UPDATE ((uint64)-1)
 
 /** Given a PeerInfo Message, tries to return a single-line text description of what's in it (for debugging purposes) */
-String PeerInfoToString(const ConstMessageRef & peerInfo);
+MUSCLE_NODISCARD String PeerInfoToString(const ConstMessageRef & peerInfo);
 
 /** Convenience method:  Given a compatibility-version code, returns the equivalent human-readable string.
   * @param versionCode a 32-bit compatibility-version code, as returned by CalculateCompatibilityVersionCode() or ZGPeerSettings::GetCompatibilityVersionCode()
   * @returns an equivalent human-reable string, eg "cv0.3"
   */
-String CompatibilityVersionCodeToString(uint32 versionCode);
+MUSCLE_NODISCARD String CompatibilityVersionCodeToString(uint32 versionCode);
 
 };  // end namespace zg_private
 

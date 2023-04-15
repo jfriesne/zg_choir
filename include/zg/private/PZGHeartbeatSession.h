@@ -26,24 +26,24 @@ public:
    virtual void AboutToDetachFromServer();
    virtual void EndSession();
 
-   virtual const char * GetTypeName() const {return "Heartbeat";}
+   MUSCLE_NODISCARD virtual const char * GetTypeName() const {return "Heartbeat";}
 
-   const Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > & GetMainThreadPeers() const {return _mainThreadPeers;}
+   MUSCLE_NODISCARD const Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > & GetMainThreadPeers() const {return _mainThreadPeers;}
 
    status_t SendMessageToHeartbeatThread(const MessageRef & msg) {return SendMessageToInternalThread(msg);}
 
-   int64 MainThreadGetToNetworkTimeOffset() const {return _hbtState.MainThreadGetToNetworkTimeOffset();}
-   uint16 MainThreadGetTimeSyncUDPPort()    const {return _timeSyncUDPPort;}
+   MUSCLE_NODISCARD int64 MainThreadGetToNetworkTimeOffset() const {return _hbtState.MainThreadGetToNetworkTimeOffset();}
+   MUSCLE_NODISCARD uint16 MainThreadGetTimeSyncUDPPort()    const {return _timeSyncUDPPort;}
 
    /** Returns the current estimated one-way network latency to the specified peer, in microseconds */
-   uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
 
 protected:
    virtual void InternalThreadEntry();
    virtual void MessageReceivedFromInternalThread(const MessageRef & msg, uint32 numLeft);
 
 private:
-   const ZGPeerID & GetSeniorPeerID() const;
+   MUSCLE_NODISCARD const ZGPeerID & GetSeniorPeerID() const;
 
    ConstPZGHeartbeatSettingsRef _hbSettings;
    PZGNetworkIOSession * _master;

@@ -58,7 +58,8 @@ int main(int argc, char ** argv)
                      while(stdinQ.RemoveHead(nextMsg).IsOK())
                      {
                         const String * nextLine;
-                        for (int32 i=0; nextMsg()->FindString(PR_NAME_TEXT_LINE, i, &nextLine).IsOK(); i++) testTreeGatewaySubscriber.TextCommandReceived(*nextLine);
+                        for (int32 i=0; nextMsg()->FindString(PR_NAME_TEXT_LINE, i, &nextLine).IsOK(); i++)
+                           if (testTreeGatewaySubscriber.TextCommandReceived(*nextLine) == false) LogTime(MUSCLE_LOG_ERROR, "Couldn't parse text command [%s]\n", nextLine->Cstr());
                      }
 
                      if (numStdinBytesRead.GetByteCount() == 0) break;

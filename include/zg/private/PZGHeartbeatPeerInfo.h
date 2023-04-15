@@ -19,20 +19,20 @@ public:
    PZGHeartbeatPeerInfo() {/* empty */}
    virtual ~PZGHeartbeatPeerInfo() {/* empty */}
 
-   virtual bool IsFixedSize() const {return false;}
-   virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PEER_INFO_TYPE_CODE;}
-   virtual uint32 FlattenedSize() const;
+   MUSCLE_NODISCARD virtual bool IsFixedSize() const {return false;}
+   MUSCLE_NODISCARD virtual uint32 TypeCode() const {return PZG_HEARTBEAT_PEER_INFO_TYPE_CODE;}
+   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const;
 
    virtual void Flatten(DataFlattener flat) const;
    status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;
-   String ToString() const;
+   MUSCLE_NODISCARD String ToString() const;
 
-   uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
    void SetPeerID(const ZGPeerID & id) {_peerID = id;}
-   const ZGPeerID & GetPeerID() const {return _peerID;}
+   MUSCLE_NODISCARD const ZGPeerID & GetPeerID() const {return _peerID;}
 
    status_t PutTimingInfo(uint16 srcTag, uint32 sourceHeartbeatPacketID, uint32 dwellTimeMicros);
 
@@ -50,19 +50,19 @@ public:
         */
       PZGTimingInfo(uint16 sourceTag, uint32 sourceHeartbeatPacketID, uint32 dwellTimeMicros) : _sourceTag(sourceTag), _heartbeatPacketID(sourceHeartbeatPacketID), _dwellTimeMicros(dwellTimeMicros) {/* empty */}
 
-      static MUSCLE_CONSTEXPR bool IsFixedSize() {return true;}
-      static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(uint16)+sizeof(uint16)+sizeof(uint32)+sizeof(uint32);}  // the second uint16 is just reserved/padding for now
+      MUSCLE_NODISCARD static MUSCLE_CONSTEXPR bool IsFixedSize() {return true;}
+      MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return sizeof(uint16)+sizeof(uint16)+sizeof(uint32)+sizeof(uint32);}  // the second uint16 is just reserved/padding for now
 
       void Flatten(DataFlattener flat) const;
       status_t Unflatten(DataUnflattener & unflat);
 
-      uint32 CalculateChecksum() const;
+      MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
-      String ToString() const;
+      MUSCLE_NODISCARD String ToString() const;
 
-      uint16 GetSourceTag() const {return _sourceTag;}
-      uint32 GetSourceHeartbeatPacketID() const {return _heartbeatPacketID;}
-      uint32 GetDwellTimeMicros() const {return _dwellTimeMicros;}
+      MUSCLE_NODISCARD uint16 GetSourceTag() const {return _sourceTag;}
+      MUSCLE_NODISCARD uint32 GetSourceHeartbeatPacketID() const {return _heartbeatPacketID;}
+      MUSCLE_NODISCARD uint32 GetDwellTimeMicros() const {return _dwellTimeMicros;}
 
    private:
       uint16 _sourceTag;

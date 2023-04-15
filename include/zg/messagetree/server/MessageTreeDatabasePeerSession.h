@@ -26,7 +26,7 @@ public:
    MessageTreeDatabasePeerSession(const ZGPeerSettings & peerSettings);
 
    /** Returns a pointer to the ITreeGateway object that our clients should use to access the ZG-synchronized database data */
-   ITreeGateway * GetClientTreeGateway() {return &_muxGateway;}
+   MUSCLE_NODISCARD ITreeGateway * GetClientTreeGateway() {return &_muxGateway;}
 
    virtual status_t AttachedToServer();
    virtual void AboutToDetachFromServer();
@@ -34,7 +34,7 @@ public:
    /** Returns a pointer to the ServerSideMessageTreeSession object whose MessageReceivedFromGateway() callback we
      * are currently processing, or NULL if we aren't in that context.
      */
-   ServerSideMessageTreeSession * GetActiveServerSideMessageTreeSession() const;
+   MUSCLE_NODISCARD ServerSideMessageTreeSession * GetActiveServerSideMessageTreeSession() const;
 
    /** Called by the ServerSideMessageTreeSession when it is about to detach from the server.
      * This call allows us to notify any ClientDataMessageTreeDatabaseObjects so they can
@@ -45,7 +45,7 @@ public:
    /** Given a node-path, returns the currently-executing OpTag for that database, or an empty String if no OpTag is available.
      * @param nodePath path to a node within the muscle database
      */
-   const String & GetCurrentOpTagForNodePath(const String & nodePath) const;
+   MUSCLE_NODISCARD const String & GetCurrentOpTagForNodePath(const String & nodePath) const;
 
    virtual void MessageReceivedFromSession(AbstractReflectSession & from, const MessageRef & msg, void * userData);
 
@@ -65,13 +65,13 @@ protected:
      * @param optRetRelativePath if non-NULL, then on success, a database-object-relative sub-path will be written here.
      * @returns a pointer to the appropriate MessageTreeDatabaseObject on success, or NULL on failure (no matching DB found)
      */
-   MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath) const;
+   MUSCLE_NODISCARD MessageTreeDatabaseObject * GetDatabaseForNodePath(const String & nodePath, String * optRetRelativePath) const;
 
    /** Given a nodePath, returns a table of all associated MessageTreeDatabaseObjects and their respective sub-paths.
      * @param nodePath a node-path to check (either absolute or session-relative; wildcards okay)
      * @returns a table of matching MessageTreeDatabaseObjects, each paired with the sub-path it should use.
      */
-   Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath) const;
+   MUSCLE_NODISCARD Hashtable<MessageTreeDatabaseObject *, String> GetDatabasesForNodePath(const String & nodePath) const;
 
    /** Called after an ITreeGatewaySubscriber somewhere has called SendMessageToTreeSeniorPeer().
      * @param fromPeerID the ID of the ZGPeer that the subscriber is directly connected to
@@ -114,11 +114,11 @@ protected:
    virtual status_t TreeGateway_EndUndoSequence(  ITreeGatewaySubscriber * calledBy, const String & optSequenceLabel, uint32 whichDB);
    virtual status_t TreeGateway_RequestUndo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
    virtual status_t TreeGateway_RequestRedo(ITreeGatewaySubscriber * calledBy, uint32 whichDB, const String & optOpTag);
-   virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
+   MUSCLE_NODISCARD virtual bool TreeGateway_IsGatewayConnected() const {return IAmFullyAttached();}
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const;
 
    // StorageReflectSession API implementation
-   virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
+   MUSCLE_NODISCARD virtual String GenerateHostName(const IPAddress &, const String &) const {return "zg";}
    virtual void NotifySubscribersThatNodeChanged(DataNode & node, const ConstMessageRef & oldData, NodeChangeFlags nodeChangeFlags);
    virtual void NotifySubscribersThatNodeIndexChanged(DataNode & node, char op, uint32 index, const String & key);
    virtual void NodeChanged(DataNode & node, const ConstMessageRef & oldData, NodeChangeFlags nodeChangeFlags);
@@ -137,14 +137,14 @@ private:
    DECLARE_MUSCLE_TRAVERSAL_CALLBACK(MessageTreeDatabasePeerSession, GetPerClientPeerIDsCallback);   /** Peer IDs of matching nodes are added to the passed-in Hashtable */
    DECLARE_MUSCLE_TRAVERSAL_CALLBACK(MessageTreeDatabasePeerSession, GetSubscribedSessionsCallback); /** ServerSideMessageTreeSessions that are subscribed to matching nodes are added to the passed-in Hashtable */
 
-   ZGPeerID GetPerClientPeerIDForNode(const DataNode & node) const;
+   MUSCLE_NODISCARD ZGPeerID GetPerClientPeerIDForNode(const DataNode & node) const;
    status_t GetPerClientPeerIDsForPath(const String & path, const ConstQueryFilterRef & ref, Hashtable<ZGPeerID, Void> & retPeerIDs);
 
    status_t UploadUndoRedoRequestToSeniorPeer(uint32 whatCode, const String & optSequenceLabelOrOpTag, uint32 whichDB);
    status_t GetUnusedNodeID(const String & path, uint32 & retID);
    status_t AddRemoveSubscriptionAux(uint32 whatCode, const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags);
    void HandleSeniorPeerPingMessage(uint32 whichDatabase, const ConstMessageRef & msg);
-   bool IsInSetupOrTeardown() const {return _inPeerSessionSetupOrTeardown.IsInBatch();}
+   MUSCLE_NODISCARD bool IsInSetupOrTeardown() const {return _inPeerSessionSetupOrTeardown.IsInBatch();}
    status_t ConvertPathToSessionRelative(String & path) const;
 
    Queue<IDatabaseObjectRef> _databaseObjects;

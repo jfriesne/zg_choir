@@ -36,7 +36,7 @@ public:
    /** Returns true iff we have data pending, or any of our subscribers have notified us
     *  that they have data they want to send.
     */
-   virtual bool HasBytesToOutput() const {return (_outputData.HasItems());}
+   MUSCLE_NODISCARD virtual bool HasBytesToOutput() const {return (_outputData.HasItems());}
 
    // Overridden to read UDP data from our UDP socket directly
    virtual io_status_t DoInput(AbstractGatewayMessageReceiver & receiver, uint32 maxBytes);
@@ -56,7 +56,7 @@ public:
    /** Will be called when the current set of active network interfaces has changed. */
    virtual void NetworkInterfacesChanged(const Hashtable<String, Void> & optInterfaceNames);
 
-   virtual uint64 GetPulseTime(const PulseArgs & args);
+   MUSCLE_NODISCARD virtual uint64 GetPulseTime(const PulseArgs & args);
    virtual void Pulse(const PulseArgs & args);
 
 private:
@@ -70,7 +70,7 @@ private:
       UDPReply() {/* empty */}
       UDPReply(uint64 sendTime, const MessageRef & data) : _sendTime(sendTime), _data(data) {/* empty */}
 
-      uint64 GetSendTime() const {return _sendTime;}
+      MUSCLE_NODISCARD uint64 GetSendTime() const {return _sendTime;}
       MessageRef GetData() const {return _data;}
 
       bool operator < (const UDPReply & rhs) const {return _sendTime < rhs._sendTime;}

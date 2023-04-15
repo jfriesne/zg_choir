@@ -52,15 +52,15 @@ ifeq ($(OSTYPE),darwin)
 
    LIBS += -framework IOKit -framework Carbon -framework SystemConfiguration -framework Foundation
 
-   # Enable C++11 support
-   CXXFLAGS += -std=c++11 -stdlib=libc++ -DMUSCLE_USE_CPLUSPLUS11
+   # Enable C++17 support
+   CXXFLAGS += -std=c++17 -stdlib=libc++
 endif 
 
 ifeq ($(OSTYPE),linux)
    LIBS += -lutil
 
-   # Enable C++11 support
-   CXXFLAGS += -std=c++11 -DMUSCLE_USE_CPLUSPLUS11
+   # Enable C++17 support
+   CXXFLAGS += -std=c++17
 endif 
 
 # Makes all the programs that can be made using just cross-platform code

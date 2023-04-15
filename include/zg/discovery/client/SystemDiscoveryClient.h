@@ -49,10 +49,10 @@ public:
    /** Returns our ping-interval, as was specified in the most recent call to Start().
      * If called while this module isn't running, returns 0.
      */
-   uint64 GetPingIntervalMicroseconds() const {return _pingInterval;}
+   MUSCLE_NODISCARD uint64 GetPingIntervalMicroseconds() const {return _pingInterval;}
 
    /** Returns true if this module is currently active/pinging, or false if it is not. */
-   bool IsActive() const {return (_pingInterval > 0);}
+   MUSCLE_NODISCARD bool IsActive() const {return (_pingInterval > 0);}
 
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);

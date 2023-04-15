@@ -30,10 +30,10 @@ public:
    virtual DataIORef CreateDataIO(const ConstSocketRef &);
 
    /** Overridden to quit the ReflectServer event-loop when stdin is closed (if that behavior was specified in our constructor) */
-   virtual bool ClientConnectionClosed();
+   MUSCLE_NODISCARD virtual bool ClientConnectionClosed();
 
    /** Returns true iff our (target)'s IsReadyForInput() method returns true. */
-   virtual bool IsReadyForInput() const;
+   MUSCLE_NODISCARD virtual bool IsReadyForInput() const;
 
    /** Overridden to create and return a PlainTextMessageIOGateway, since stdin input will be in the form of human-readable ASCII text */
    virtual AbstractMessageIOGatewayRef CreateGateway();
@@ -45,22 +45,22 @@ public:
    virtual void MessageReceivedFromGateway(const MessageRef & msg, void * ptr);
 
    /** Implemented to return "ZGStdin" */
-   virtual const char * GetTypeName() const {return "ZGStdin";}
+   MUSCLE_NODISCARD virtual const char * GetTypeName() const {return "ZGStdin";}
 
    /** Returns true iff we will call EndServer() if stdin is closed */
-   bool IsEndServerOnClose() const {return _endServerOnClose;}
+   MUSCLE_NODISCARD bool IsEndServerOnClose() const {return _endServerOnClose;}
 
    /** Sets whether or not we should call EndServer when stdin is closed. */
    void SetEndServerOnClose(bool esoc) {_endServerOnClose = esoc;}
 
    /** Returns the ITextCommandReceiver object that was passed into our ctor. */
-   const ITextCommandReceiver & GetTextCommandReceiver() const {return _target;}
+   MUSCLE_NODISCARD const ITextCommandReceiver & GetTextCommandReceiver() const {return _target;}
 
    /** Returns the ITextCommandReceiver object that was passed into our ctor. */
-   ITextCommandReceiver & GetTextCommandReceiver() {return _target;}
+   MUSCLE_NODISCARD ITextCommandReceiver & GetTextCommandReceiver() {return _target;}
 
    /** Returns true iff this object called EndServer() already */
-   bool EndServerRequested() const {return _calledEndServer;}
+   MUSCLE_NODISCARD bool EndServerRequested() const {return _calledEndServer;}
 
 private:
    bool IsReallyStdin() const;

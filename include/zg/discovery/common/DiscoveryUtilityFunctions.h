@@ -38,7 +38,7 @@ status_t GetDiscoveryMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retI
 status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAPs, const String & transmissionKey, const StringMatcher * optNicNameFilter = NULL);
 
 /** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's eg known to be a special-purpose thing) */
-bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);
+MUSCLE_NODISCARD bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);
 
 };  // end namespace zg
 

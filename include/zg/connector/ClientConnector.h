@@ -56,50 +56,50 @@ public:
    void Stop();
 
    /** Returns true if this connector's I/O thread is currently started, or false if it is not. */
-   bool IsActive() const;
+   MUSCLE_NODISCARD bool IsActive() const;
 
    /** Convenience method:  Returns true iff our TCP connection to the server is currently established */
-   bool IsConnected() const {return (_connectedPeerInfo() != NULL);}
+   MUSCLE_NODISCARD bool IsConnected() const {return (_connectedPeerInfo() != NULL);}
 
    /** Returns a Message containing information about the peer we are currently connected to, or a NULL Message if we aren't currently connected. */
    MessageRef GetConnectedPeerInfo() const {return _connectedPeerInfo;}
 
    /** Returns the signature--pattern string that was passed in to our Start() method, or an empty String if we aren't currently started. */
-   const String & GetSignaturePattern() const;
+   MUSCLE_NODISCARD const String & GetSignaturePattern() const;
 
    /** Returns the system-name-pattern string that was passed in to our Start() method, or an empty String if we aren't currently started. */
-   const String & GetSystemNamePattern() const;
+   MUSCLE_NODISCARD const String & GetSystemNamePattern() const;
 
    /** Returns a reference to the QueryFilter object that was previously passed in to our Start() method, or a NULL reference if we aren't currently started. */
-   const ConstQueryFilterRef & GetAdditionalDiscoveryCriteria() const;
+   MUSCLE_NODISCARD const ConstQueryFilterRef & GetAdditionalDiscoveryCriteria() const;
 
    /** Returns automatic-reconnect-delay that previously passed in to our Start() method, or 0 if we aren't currently started. */
-   uint64 GetAutoReconnectTimeMicroseconds() const;
+   MUSCLE_NODISCARD uint64 GetAutoReconnectTimeMicroseconds() const;
 
    /** Returns inactivity-ping-time previously passed in to our Start() method, or 0 if we aren't currently started. */
-   uint64 GetInactivityPingTimeMicroseconds() const;
+   MUSCLE_NODISCARD uint64 GetInactivityPingTimeMicroseconds() const;
 
    /** Returns the local clock-time (as per GetRunTime64()) when we last received a time-sync-pong from our connected server.
      * Returns MUSCLE_TIME_NEVER if we have never received time-sync-pong so far during this connection.
      */
-   uint64 GetTimeOfLastTimeSyncPong() const {return _mainThreadLastTimeSyncPongTime;}
+   MUSCLE_NODISCARD uint64 GetTimeOfLastTimeSyncPong() const {return _mainThreadLastTimeSyncPongTime;}
 
    // INetworkTimeProvider API
-   virtual uint64 GetNetworkTime64() const {return GetNetworkTime64ForRunTime64(GetRunTime64());}
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64() const {return GetNetworkTime64ForRunTime64(GetRunTime64());}
 
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
+   MUSCLE_NODISCARD virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const
    {
       const int64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
       return ((ntto==INVALID_TIME_OFFSET)||(networkTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(networkTime64TimeStamp-ntto);
    }
 
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const
    {
       const int64 ntto = _mainThreadToNetworkTimeOffset;  // capture local copy of atomic, to avoid race conditions
       return ((ntto==INVALID_TIME_OFFSET)||(runTime64TimeStamp==MUSCLE_TIME_NEVER))?MUSCLE_TIME_NEVER:(runTime64TimeStamp+ntto);
    }
 
-   virtual int64 GetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;}
+   MUSCLE_NODISCARD virtual int64 GetToNetworkTimeOffset() const {return _mainThreadToNetworkTimeOffset;}
 
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);

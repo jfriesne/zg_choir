@@ -46,7 +46,7 @@ public:
    void Stop();
 
    /** Returns true if this module's transceiver thread is currently started/active, or false if it is not. */
-   bool IsActive() const {return _isActive;}
+   MUSCLE_NODISCARD bool IsActive() const {return _isActive;}
 
    /** Call this to send out a multicast UDP packet that will be received by all other UDPMulticastTransceiver
      * objects on the LAN that are using the same transmission key as we are.
@@ -65,12 +65,12 @@ public:
    /** Returns the current transmission-key string we are using (as specified previously in your call to Start()).
      *  Only valid if we are currently active.
      */
-   const String & GetTransmissionKey() const {return _transmissionKey;}
+   MUSCLE_NODISCARD const String & GetTransmissionKey() const {return _transmissionKey;}
 
    /** Returns our current per-sender maximum backlog depth (as specified previously in your call to Start()).
      * Only valid if we are currently active.
      */
-   uint32 GetPerSenderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
+   MUSCLE_NODISCARD uint32 GetPerSenderMaxBacklogDepth() const {return _perSenderMaxBacklogDepth;}
 
    /** Specify what kind of multicast behavior this UDPMulticastTransceiver should use.
      * @param whichBehavior a ZG_MULTICAST_BEHAVIOR_* value.  (Default state is ZG_MULTICAST_BEHAVIOR_AUTO)
@@ -82,7 +82,7 @@ public:
      * to what is actually being used, during the period between when you called SetMulticastBehavior()
      * and when you next called Start().
      */
-   uint32 GetMulticastBehavior() const {return _multicastBehavior;}
+   MUSCLE_NODISCARD uint32 GetMulticastBehavior() const {return _multicastBehavior;}
 
    /** If you want to restrict which network interfaces are to be used for sending and receiving
      * multicast packets, you can call this method before calling Start().
@@ -98,7 +98,7 @@ public:
    /** Returns the current network-interface-names filter, as previously passed to SetNetworkInterfaceNameFilter().
      * Default value is "" (aka no filtering enabled)
      */
-   const String & GetNetworkInterfaceNameFilter() const {return _nicNameFilter;}
+   MUSCLE_NODISCARD const String & GetNetworkInterfaceNameFilter() const {return _nicNameFilter;}
 
 protected:
    virtual void DispatchCallbacks(uint32 eventTypeBits);

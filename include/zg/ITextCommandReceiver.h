@@ -21,13 +21,13 @@ public:
      * TextCommandReceived() method called at this time; or false if
      * the caller should wait until later.
      */
-   virtual bool IsReadyForTextCommands() const = 0;
+   MUSCLE_NODISCARD virtual bool IsReadyForTextCommands() const = 0;
 
    /** Called whenever the user types in a text command.
      * @param text The text the user typed in to stdin.
      * @return true if the command was recognized and handled, or false if the command wasn't recognized.
      */
-   virtual bool TextCommandReceived(const String & text) = 0;
+   MUSCLE_NODISCARD virtual bool TextCommandReceived(const String & text) = 0;
 
 protected:
    /** Tries to handle any text commands that can be handled generically;
@@ -38,7 +38,7 @@ protected:
      * @param cmd the command text to parse
      * @returns true if the command was handled, false if it wasn't.
      */
-   bool ParseGenericTextCommand(const String & cmd);
+   MUSCLE_NODISCARD bool ParseGenericTextCommand(const String & cmd);
 };
 
 };  // end namespace zg

@@ -26,7 +26,7 @@ public:
      * @param whichDatabase The index of the database that we need an object to represent.
      * @returns a pointer to the nth database object, or a NULL pointer if (whichDatabase) isn't a valid database index.
      */
-   IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return (whichDatabase < _databaseObjects.GetNumItems()) ? _databaseObjects[whichDatabase]() : NULL;}
+   MUSCLE_NODISCARD IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const {return (whichDatabase < _databaseObjects.GetNumItems()) ? _databaseObjects[whichDatabase]() : NULL;}
 
    /** Overridden to notify our IDatabaseObjects about the change */
    virtual void LocalSeniorPeerStatusChanged();
@@ -45,8 +45,8 @@ protected:
    virtual status_t JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg);
    virtual MessageRef SaveLocalDatabaseToMessage(uint32 whichDatabase) const;
    virtual status_t SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg);
-   virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const;
-   virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
+   MUSCLE_NODISCARD virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const;
+   MUSCLE_NODISCARD virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const;
    virtual void PeerHasComeOnline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
    virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo);
    virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg);

@@ -18,19 +18,19 @@ public:
    PZGUpdateBackOrderKey() : _whichDatabase(0), _updateID(0) {/* empty */}
    PZGUpdateBackOrderKey(const ZGPeerID & targetPeerID, uint32 whichDatabase, uint64 updateID) : _targetPeerID(targetPeerID), _whichDatabase(whichDatabase), _updateID(updateID) {/* empty */}
 
-   const ZGPeerID & GetTargetPeerID() const {return _targetPeerID;}
-   uint32 GetDatabaseIndex() const {return _whichDatabase;}
-   uint64 GetDatabaseUpdateID() const {return _updateID;}
+   MUSCLE_NODISCARD const ZGPeerID & GetTargetPeerID() const {return _targetPeerID;}
+   MUSCLE_NODISCARD uint32 GetDatabaseIndex() const {return _whichDatabase;}
+   MUSCLE_NODISCARD uint64 GetDatabaseUpdateID() const {return _updateID;}
 
    bool operator == (const PZGUpdateBackOrderKey & rhs) const {return ((_targetPeerID == rhs._targetPeerID)&&(_whichDatabase == rhs._whichDatabase)&&(_updateID == rhs._updateID));}
    bool operator != (const PZGUpdateBackOrderKey & rhs) const {return !(*this==rhs);}
 
-   uint32 HashCode() const {return _targetPeerID.HashCode()+(_whichDatabase*333)+CalculateHashCode(_updateID);}
-   String ToString() const {return String("UBOK:  [%1] db=%2 updateID=%3").Arg(_targetPeerID).Arg(_whichDatabase).Arg(_updateID);}
+   MUSCLE_NODISCARD uint32 HashCode() const {return _targetPeerID.HashCode()+(_whichDatabase*333)+CalculateHashCode(_updateID);}
+   MUSCLE_NODISCARD String ToString() const {return String("UBOK:  [%1] db=%2 updateID=%3").Arg(_targetPeerID).Arg(_whichDatabase).Arg(_updateID);}
 
-   static MUSCLE_CONSTEXPR bool IsFixedSize()     {return true;}
-   static MUSCLE_CONSTEXPR uint32 TypeCode()      {return PZG_UPDATE_BACKORDER_KEY_TYPE;}
-   static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(_whichDatabase) + sizeof(_updateID);}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR bool IsFixedSize()     {return true;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 TypeCode()      {return PZG_UPDATE_BACKORDER_KEY_TYPE;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return ZGPeerID::FlattenedSize() + sizeof(_whichDatabase) + sizeof(_updateID);}
 
    void Flatten(DataFlattener flat) const
    {

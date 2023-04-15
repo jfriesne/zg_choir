@@ -25,7 +25,7 @@ public:
      * can undo his own transactions but nobody else's.
      * If you don't call SetUndoKey(), a randomly generated string will be used (and this method will return that string).
      */
-   const String & GetUndoKey() const {return _undoKey;}
+   MUSCLE_NODISCARD const String & GetUndoKey() const {return _undoKey;}
 
    /** Call this if you want to specify the undo-key to use.  You might want to call this eg if
      * you are making multiple TCP connections to the server and you want them all to share the

@@ -32,7 +32,7 @@ public:
    /** Returns a pointer to the UDPMulticastTransceiver we're currently registered with, or NULL
      * if we aren't currently registered with any UDPMulticastTransceiver.
      */
-   UDPMulticastTransceiver * GetUDPMulticastTransceiver() const {return _multicastTransceiver;}
+   MUSCLE_NODISCARD UDPMulticastTransceiver * GetUDPMulticastTransceiver() const {return _multicastTransceiver;}
 
    /** Called when a UDP multicast packet has been received from somewhere on the LAN.
      * @param sourceLocation IP address and port where the packet originated from

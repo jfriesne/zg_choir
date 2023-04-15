@@ -57,20 +57,20 @@ public:
    status_t RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError);
 
    /** Returns true iff the specified peer is currently online */
-   bool IsPeerOnline(const ZGPeerID & id) const {return GetMainThreadPeers().ContainsKey(id);}
+   MUSCLE_NODISCARD bool IsPeerOnline(const ZGPeerID & id) const {return GetMainThreadPeers().ContainsKey(id);}
 
    /** Returns the current estimated one-way network latency to the specified peer, in microseconds */
-   uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
+   MUSCLE_NODISCARD uint64 GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const;
 
-   const ConstPZGHeartbeatSettingsRef & GetHeartbeatSettings() const {return _hbSettings;}
+   MUSCLE_NODISCARD const ConstPZGHeartbeatSettingsRef & GetHeartbeatSettings() const {return _hbSettings;}
 
    /** Returns the UDP port number where our heartbeat thread is accepting incoming time-sync UDP packets from clients, or 0 if it isn't currently accepting them. */
-   uint16 GetTimeSyncUDPPort() const;
+   MUSCLE_NODISCARD uint16 GetTimeSyncUDPPort() const;
 
-   virtual const char * GetTypeName() const {return "Network I/O Master";}
+   MUSCLE_NODISCARD virtual const char * GetTypeName() const {return "Network I/O Master";}
 
    // PulseNode interface
-   virtual uint64 GetPulseTime(const PulseArgs &);
+   MUSCLE_NODISCARD virtual uint64 GetPulseTime(const PulseArgs &);
    virtual void Pulse(const PulseArgs & args);
 
    // INetworkConfigChangesTarget interface
@@ -78,23 +78,23 @@ public:
    virtual void ComputerIsAboutToSleep();
    virtual void ComputerJustWokeUp();
 
-   const ConstPZGHeartbeatSettingsRef & GetPZGHeartbeatSettings() const {return _hbSettings;}
+   MUSCLE_NODISCARD const ConstPZGHeartbeatSettingsRef & GetPZGHeartbeatSettings() const {return _hbSettings;}
 
-   const Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > & GetMainThreadPeers() const
+   MUSCLE_NODISCARD const Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > & GetMainThreadPeers() const
    {
       return _hbSession() ? _hbSession()->GetMainThreadPeers() : GetDefaultObjectForType< Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > >();
    }
 
-   const ZGPeerID & GetLocalPeerID() const {return _localPeerID;}
+   MUSCLE_NODISCARD const ZGPeerID & GetLocalPeerID() const {return _localPeerID;}
 
    ConstPZGDatabaseUpdateRef GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const;
    void VerifyOrFixLocalDatabaseChecksum(uint32 whichDB);
 
-   int64 GetToNetworkTimeOffset() const;
+   MUSCLE_NODISCARD int64 GetToNetworkTimeOffset() const;
 
-   IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;
+   MUSCLE_NODISCARD IPAddressAndPort GetUnicastIPAddressAndPortForPeerID(const ZGPeerID & peerID, uint32 sourceIndex=0) const;
 
-   const INetworkInterfaceFilter * GetNetworkInterfaceFilter() const;
+   MUSCLE_NODISCARD const INetworkInterfaceFilter * GetNetworkInterfaceFilter() const;
 
 protected:
    virtual void InternalThreadEntry();
@@ -117,7 +117,7 @@ private:
    void ClearHeartbeatSession();
    void UnicastMessageReceivedFromPeer(const ZGPeerID & remotePeerID, const MessageRef & msg);
    void ShutdownChildSessions();
-   bool IAmTheSeniorPeer() const {return _seniorPeerID == _localPeerID;}
+   MUSCLE_NODISCARD bool IAmTheSeniorPeer() const {return _seniorPeerID == _localPeerID;}
    void BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData);
    status_t SetupHeartbeatSession();
 

@@ -60,41 +60,41 @@ public:
    }
 
    /** Returns the ZG program signature (as specified in our constructor) */
-   const String & GetSignature()               const {return _signature;}
+   MUSCLE_NODISCARD const String & GetSignature()               const {return _signature;}
 
    /** Returns the ZG system's system name (as specified in our constructor) */
-   const String & GetSystemName()              const {return _systemName;}
+   MUSCLE_NODISCARD const String & GetSystemName()              const {return _systemName;}
 
    /** Returns the number of databases that will be present in this ZG system (as specified by our constructor) */
-   uint8 GetNumDatabases()                     const {return _numDatabases;}
+   MUSCLE_NODISCARD uint8 GetNumDatabases()                     const {return _numDatabases;}
 
    /** Returns true iff this ZG system is meant to be contained entirely within a single host computer (as specified in our constructor) */
-   bool IsSystemOnLocalhostOnly()              const {return _systemIsOnLocalhostOnly;}
+   MUSCLE_NODISCARD bool IsSystemOnLocalhostOnly()              const {return _systemIsOnLocalhostOnly;}
 
    /** Returns a reference to this peer's peer-attributes Message (as specified earlier via SetPeerAttributes()).
      * May return a NULL reference if no peer-attributes were ever specified.
      */
-   const ConstMessageRef & GetPeerAttributes() const {return _optPeerAttributes;}
+   MUSCLE_NODISCARD const ConstMessageRef & GetPeerAttributes() const {return _optPeerAttributes;}
 
    /** Returns the PEER_TYPE_* value of this peer (currently only PEER_TYPE_FULL_PEER is supported) */
-   uint16 GetPeerType()                        const {return _peerType;}
+   MUSCLE_NODISCARD uint16 GetPeerType()                        const {return _peerType;}
 
    /** Returns the heartbeats-per-second value for htis peer (currently defaults to 6) */
-   uint32 GetHeartbeatsPerSecond()             const {return _heartbeatsPerSecond;}
+   MUSCLE_NODISCARD uint32 GetHeartbeatsPerSecond()             const {return _heartbeatsPerSecond;}
 
    /** Returns the max-missing-heartbeats-before-a-peer-is-declared-offline value for this peer (currently defaults to 4) */
-   uint32 GetMaxNumMissingHeartbeats()         const {return _maxMissingHeartbeats;}
+   MUSCLE_NODISCARD uint32 GetMaxNumMissingHeartbeats()         const {return _maxMissingHeartbeats;}
 
    /** Returns the num-heartbeats-before-peer-considers-itself-fully-attached value this peer (currently defaults to 4) */
-   uint32 GetHeartbeatsBeforeFullyAttached()   const {return _heartbeatsBeforeFullyAttached;}
+   MUSCLE_NODISCARD uint32 GetHeartbeatsBeforeFullyAttached()   const {return _heartbeatsBeforeFullyAttached;}
 
    /** Returns the number-of-beacon-packets-to-send-per-second value for this peer (currently defaults to 4) */
-   uint32 GetBeaconsPerSecond()                const {return _beaconsPerSecond;}
+   MUSCLE_NODISCARD uint32 GetBeaconsPerSecond()                const {return _beaconsPerSecond;}
 
    /** Return the Application Peer Compatibility code specified for this peer.  Default value is 0.
      * @param see SetApplicationPeerCompatibilityVersion() for details.
      */
-   uint16 GetApplicationPeerCompatibilityVersion() const {return GetAppVersionFromCompatibilityVersionCode(_versionCode);}
+   MUSCLE_NODISCARD uint16 GetApplicationPeerCompatibilityVersion() const {return GetAppVersionFromCompatibilityVersionCode(_versionCode);}
 
    /** You can call this if you have changed your ZGChoir-based application in some way that renders its peers
      * inoperable with peers built using older versions of your application's source code, and you need to make
@@ -109,7 +109,7 @@ public:
      * as hard-coded into the ZG_COMPATIBILITY_VERSION number in ZGConstants.h) and and the Application Peer Compatibility
      * version (as optionally specified by the app via SetApplicationPeerCompatibilityVersion())
      */
-   uint32 GetCompatibilityVersionCode() const {return _versionCode;}
+   MUSCLE_NODISCARD uint32 GetCompatibilityVersionCode() const {return _versionCode;}
 
    /** Set the peer attributes that should be associated with this peer.  Default is to have no attributes.
      * @param peerAttributes Reference to a Message containing our attributes.  Try to keep this small, as a
@@ -154,7 +154,7 @@ public:
    void SetMulticastBehavior(uint32 whichBehavior) {_multicastBehavior = whichBehavior;}
 
    /** Returns the current ZG_MULTICAST_BEHAVIOR_* value */
-   uint32 GetMulticastBehavior() const {return _multicastBehavior;}
+   MUSCLE_NODISCARD uint32 GetMulticastBehavior() const {return _multicastBehavior;}
 
    /** Call this to set the maximum number of bytes of RAM the specified database should be allowed
      * to use for its database-update-log records.  If not specified for a given database, a default
@@ -167,7 +167,7 @@ public:
    /** Returns the maximum number of bytes of RAM we should be allowed to use for the update-log of the specified database.
      * @param whichDB The database you want to retreive the RAM-usage limit for
      */
-   uint64 GetMaximumUpdateLogSizeForDatabase(uint32 whichDB) const {return _maxUpdateLogSizeBytes.GetWithDefault(whichDB, 2*1024*1024);}
+   MUSCLE_NODISCARD uint64 GetMaximumUpdateLogSizeForDatabase(uint32 whichDB) const {return _maxUpdateLogSizeBytes.GetWithDefault(whichDB, 2*1024*1024);}
 
 private:
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS

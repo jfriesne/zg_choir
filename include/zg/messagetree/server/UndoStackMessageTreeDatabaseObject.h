@@ -60,10 +60,10 @@ protected:
    virtual status_t RequestUpdateDatabaseState(const MessageRef & databaseUpdateMsg);
 
    // Overridden to skip updating nodes in the "undo" and "redo" folders doing an undo or redo operation (we'll handle that manually, instead)
-   virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const;
+   MUSCLE_NODISCARD virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const;
 
    /** Convenience method:  Returns the undo-identifier-key of the currently active client, or an empty String if unknown */
-   const String & GetActiveClientUndoKey() const;
+   MUSCLE_NODISCARD const String & GetActiveClientUndoKey() const;
 
 private:
    friend class ObsoleteSequencesQueryFilter;

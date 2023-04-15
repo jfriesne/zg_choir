@@ -24,14 +24,14 @@ class PZGHeartbeatSettings : public zg::ZGPeerSettings, public RefCountable
 public:
    PZGHeartbeatSettings(const ZGPeerSettings & peerSettings, const ZGPeerID & localPeerID, uint16 dataTCPPort);
 
-   uint64 GetSystemKey()             const {return _systemKey;}   // (_systemName.HashCode64()+_signature.HashCode64()), precomputed for convenience
-   const ZGPeerID & GetLocalPeerID() const {return _localPeerID;} // unique 128-bit ID of our local peer
-   uint16 GetDataTCPPort()           const {return _dataTCPPort;} // port that our peer will listen for incoming TCP data connections on
-   uint64 GetBirthdateMicros()       const {return _birthdate;}   // the moment at which this state was created (using the local GetRunTime64() clock)
-   uint32 GetVersionCode()           const {return _versionCode;} // the zz.uu compatibility-version-code we should include in Heartbeat packets we send
+   MUSCLE_NODISCARD uint64 GetSystemKey()             const {return _systemKey;}   // (_systemName.HashCode64()+_signature.HashCode64()), precomputed for convenience
+   MUSCLE_NODISCARD const ZGPeerID & GetLocalPeerID() const {return _localPeerID;} // unique 128-bit ID of our local peer
+   MUSCLE_NODISCARD uint16 GetDataTCPPort()           const {return _dataTCPPort;} // port that our peer will listen for incoming TCP data connections on
+   MUSCLE_NODISCARD uint64 GetBirthdateMicros()       const {return _birthdate;}   // the moment at which this state was created (using the local GetRunTime64() clock)
+   MUSCLE_NODISCARD uint32 GetVersionCode()           const {return _versionCode;} // the zz.uu compatibility-version-code we should include in Heartbeat packets we send
 
    /** Pre-flattened byte-buffer from our GetPeerAttributesMessage(), for convenience */
-   const ConstByteBufferRef & GetPeerAttributesByteBuffer() const {return _peerAttributesByteBuffer;}
+   MUSCLE_NODISCARD const ConstByteBufferRef & GetPeerAttributesByteBuffer() const {return _peerAttributesByteBuffer;}
 
    /** Convenience method:  Creates and returns a set of Multicast UDP sockets suitable for use with either heartbeat or data traffic.
      * @param isForHeartbeats If true, this socket is for use carrying heartbeats traffic; if false, it's intended to be used for data-payload traffic
@@ -39,10 +39,10 @@ public:
      *                                  use a particular network interface.
      * @returns A list of DataIORefs.  On failure, the list will be empty.
      */
-   Queue<PacketDataIORef> CreateMulticastDataIOs(bool isForHeartbeats, const INetworkInterfaceFilter * optNetworkInterfaceFilter) const;
+   MUSCLE_NODISCARD Queue<PacketDataIORef> CreateMulticastDataIOs(bool isForHeartbeats, const INetworkInterfaceFilter * optNetworkInterfaceFilter) const;
 
    /** Returns a list of network interfaces that are okay for us to use if we want to */
-   Queue<NetworkInterfaceInfo> GetNetworkInterfaceInfos() const;
+   MUSCLE_NODISCARD Queue<NetworkInterfaceInfo> GetNetworkInterfaceInfos() const;
 
 private:
    const uint64 _systemKey;

@@ -68,7 +68,7 @@ public:
    ZGPeerID & operator = (const ZGPeerID & rhs) {_highBits = rhs._highBits; _lowBits = rhs._lowBits; return *this;}
 
    /** Returns true iff the ZGPeerID has any non-zero bits in it.  (An all-zero ZGPeerID is considered an invalid/null ID) */
-   bool IsValid() const {return ((_highBits != 0)||(_lowBits != 0));}
+   MUSCLE_NODISCARD bool IsValid() const {return ((_highBits != 0)||(_lowBits != 0));}
 
    /** Sets this peer ID from the specified String representation (in the format used by ToString()), or to zero if the string isn't parsed
      * @param s A human-readable string (eg "123A:432B") that we will set this ZGPeerID's state from
@@ -86,7 +86,7 @@ public:
    }
 
    /** Returns a String representation of this peer ID (eg "123A:432B") */
-   String ToString() const
+   MUSCLE_NODISCARD String ToString() const
    {
       char buf[256];
       muscleSprintf(buf, XINT64_FORMAT_SPEC ":" XINT64_FORMAT_SPEC, _highBits, _lowBits);
@@ -94,16 +94,16 @@ public:
    }
 
    /** Part of the Flattenable pseudo-interface:  Returns true */
-   static MUSCLE_CONSTEXPR bool IsFixedSize() {return true;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR bool IsFixedSize() {return true;}
 
    /** Part of the Flattenable pseudo-interface:  Returns ZG_PEER_ID_TYPE */
-   static MUSCLE_CONSTEXPR uint32 TypeCode() {return ZG_PEER_ID_TYPE;}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 TypeCode() {return ZG_PEER_ID_TYPE;}
 
    /** Part of the Flattenable pseudo-interface:  Returns 2*sizeof(uint64) */
-   static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return 2*sizeof(uint64);}
+   MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return 2*sizeof(uint64);}
 
    /** Returns a 32-bit checksum for this object. */
-   uint32 CalculateChecksum() const {return CalculateChecksumForUint64(_highBits) + (3*CalculateChecksumForUint64(_lowBits));}
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const {return CalculateChecksumForUint64(_highBits) + (3*CalculateChecksumForUint64(_lowBits));}
 
    /** Copies this object into an endian-neutral flattened buffer.
     *  @param flat the DataFlattener to use to write out bytes
@@ -128,7 +128,7 @@ public:
    /** This is implemented so that if ZGPeerID is used as the key in a Hashtable, the HashCode() method will be
      * selected by the AutoChooseHashFunctor template logic, instead of the PODHashFunctor.
      */
-   uint32 HashCode() const {return CalculateChecksum();}
+   MUSCLE_NODISCARD uint32 HashCode() const {return CalculateChecksum();}
 
 private:
    uint64 _highBits;

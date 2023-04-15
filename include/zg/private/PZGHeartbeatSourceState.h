@@ -32,7 +32,7 @@ public:
    status_t AddMeasurement(const IPAddressAndPort & multicastAddress, uint64 newMeasurementMicros, uint64 localNowMicros);
 
    /** Returns the current running average over the last N measurements for the given interface, or 0 if we have no measurements right now. */
-   uint64 GetAverageValueIgnoringOutliers(const IPAddressAndPort & multicastAddr) const
+   MUSCLE_NODISCARD uint64 GetAverageValueIgnoringOutliers(const IPAddressAndPort & multicastAddr) const
    {
       const PZGRoundTripTimeAveragerRef * rtt = _rttAveragers.Get(multicastAddr);
       return rtt ? rtt->GetItemPointer()->GetAverageValueIgnoringOutliers() : 0;
@@ -43,7 +43,7 @@ public:
      * @param mustHaveMeasurementsAfterThisTime Any PZGRoundTripTimeAveragers that haven't received measurements
      *                                          since this time (local clock, in microseconds) will not be used.
      */
-   uint64 GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime);
+   MUSCLE_NODISCARD uint64 GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime);
 
    /** Set the current heartbeat packet that we have from this source, and when it should expire */
    void SetHeartbeatPacket(const PZGHeartbeatPacketWithMetaDataRef & hbPacket, uint64 localExpirationTimeMicros)
@@ -51,13 +51,13 @@ public:
       _hbPacket = hbPacket;
       _localExpirationTimeMicros = localExpirationTimeMicros;
    }
-   const PZGHeartbeatPacketWithMetaDataRef & GetHeartbeatPacket() const {return _hbPacket;}
+   MUSCLE_NODISCARD const PZGHeartbeatPacketWithMetaDataRef & GetHeartbeatPacket() const {return _hbPacket;}
 
    // Time at which this source will be marked as offline if we don't get any further heartbeats from it
-   uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
+   MUSCLE_NODISCARD uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
 
    // Returns our current state as a human-readable string, for debugging
-   String ToString(const INetworkTimeProvider & ntp) const;
+   MUSCLE_NODISCARD String ToString(const INetworkTimeProvider & ntp) const;
 
    /** Discards the PZGRoundTripTimeAverager (if any) associated with the specified multicast address.
      * @param multicastAddress the multicast address (ff12::blah) that the averager is associated with

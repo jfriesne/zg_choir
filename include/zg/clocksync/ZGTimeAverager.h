@@ -30,7 +30,7 @@ public:
    status_t AddMeasurement(uint64 newMeasurementMicros, uint64 now);
 
    /** Returns the current running average over the last N measurements, or 0 if we have no measurements right now. */
-   uint64 GetRawAverageValue() const
+   MUSCLE_NODISCARD uint64 GetRawAverageValue() const
    {
       return _measurements.HasItems() ? (_totalMicros/_measurements.GetNumItems()) : 0;
    }
@@ -39,23 +39,23 @@ public:
      * value more than a standard deviation away from the value returned by GetRawAverageValue()).
      * Note that this method is more expensive than GetRawAverageValue(), but hopefully not unduly so.
      */
-   uint64 GetAverageValueIgnoringOutliers() const
+   MUSCLE_NODISCARD uint64 GetAverageValueIgnoringOutliers() const
    {
       if (_cachedAverageWithoutOutliers < 0) _cachedAverageWithoutOutliers = GetAverageValueIgnoringOutliersAux();
       return _cachedAverageWithoutOutliers;
    }
 
    /** Returns the wall-clock time at which we last added a measurement, or 0 if we never added one. */
-   uint64 GetLastMeasurementTime() const {return _lastMeasurementTime;}
+   MUSCLE_NODISCARD uint64 GetLastMeasurementTime() const {return _lastMeasurementTime;}
 
    /** Clears our set of recorded measurements. */
    void Clear() {_measurements.Clear(); _totalMicros = 0; _cachedAverageWithoutOutliers = -1;}
 
    /** Returns the current number of measurements we have stored */
-   uint32 GetNumMeasurements() const {return _measurements.GetNumItems();}
+   MUSCLE_NODISCARD uint32 GetNumMeasurements() const {return _measurements.GetNumItems();}
 
 private:
-   uint64 GetAverageValueIgnoringOutliersAux() const;
+   MUSCLE_NODISCARD uint64 GetAverageValueIgnoringOutliersAux() const;
    void RemoveOldMeasurement();
 
    const uint32 _maxMeasurements;

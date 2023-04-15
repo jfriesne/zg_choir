@@ -10,12 +10,11 @@ MOC_DIR         = moc
 MUSCLE_DIR      = ../../submodules/muscle
 ZG_DIR          = ../..
 INCLUDEPATH    += $$MUSCLE_DIR $$ZG_DIR/include
-CONFIG         += qt warn_on rtti link_prl c++11 release
-QMAKE_MACOSX_DEPLOYMENT_TARGET=10.10  # needed for c++11 support
+CONFIG         += qt warn_on rtti link_prl c++17 release
 
 TARGET = ZGChoir
 
-DEFINES += MUSCLE_USE_CPLUSPLUS11 MUSCLE_ENABLE_ZLIB_ENCODING MUSCLE_CATCH_SIGNALS_BY_DEFAULT
+DEFINES += MUSCLE_ENABLE_ZLIB_ENCODING MUSCLE_CATCH_SIGNALS_BY_DEFAULT
 
 exists(muscle_use_qt_threads) {
    warning("muscle_use_qt_threads detected:  MUSCLE Thread class will be a wrapper around QThread")
@@ -30,8 +29,6 @@ else {
 win32:RC_FILE = ./images/bell.png.rc
 mac:ICON      = ./images/bell.png.icns
 
-# Enable C++11 support
-QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++
 #QMAKE_CXXFLAGS += -fsanitize=thread -g
 #QMAKE_LFLAGS   += -fsanitize=thread
 

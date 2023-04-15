@@ -312,7 +312,7 @@ protected:
    virtual status_t RequestRedo(uint32 whichDB = 0, const String & optOpTag = GetEmptyString());
 
    /** Returns true iff our gateway is currently connected to the upstream database. */
-   virtual bool IsTreeGatewayConnected() const;
+   MUSCLE_NODISCARD virtual bool IsTreeGatewayConnected() const;
 
    /** Returns a Message containing various information about the server we are currently connected to.
      * (in particular this Message will contain the ZG_PARAMETER_NAME_* fields listed in TreeConstants.h)
@@ -335,7 +335,7 @@ public:
     * @param label a human-readable label used to describe the undo-action to the user.  Defaults to an empty string.
     * @param whichDB index of the database that the action is going to operate on.  Defaults to 0.
     */
-   GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* optSub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _optSub(optSub), _label(label), _whichDB(whichDB)
+   MUSCLE_NODISCARD GatewaySubscriberUndoBatchGuard(ITreeGatewaySubscriber* optSub, const String& label = GetEmptyString(), uint32 whichDB = 0) : _optSub(optSub), _label(label), _whichDB(whichDB)
    {
       if (_optSub) (void) _optSub->BeginUndoSequence(label, whichDB);
    }

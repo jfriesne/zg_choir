@@ -29,10 +29,10 @@ public:
    }
 
    /** Returns a reference to our current heartbeat-packet */
-   const PZGHeartbeatPacketWithMetaDataRef & GetHeartbeatPacket() const {return _hbPacket;}
+   MUSCLE_NODISCARD const PZGHeartbeatPacketWithMetaDataRef & GetHeartbeatPacket() const {return _hbPacket;}
 
    /** Returns the time at which this source will be marked as offline if we don't receive any further heartbeats from it */
-   uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
+   MUSCLE_NODISCARD uint64 GetLocalExpirationTimeMicros() const {return _localExpirationTimeMicros;}
 
 private:
    PZGHeartbeatPacketWithMetaDataRef _hbPacket;

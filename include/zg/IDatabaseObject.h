@@ -49,7 +49,7 @@ public:
      * once after any other call that changes this object's state) and therefore it is better if this call
      * can be made as inexpensive as possible.
      */
-   virtual uint32 GetCurrentChecksum() const = 0;
+   MUSCLE_NODISCARD virtual uint32 GetCurrentChecksum() const = 0;
 
    /** This method should be implemented to recalculate the database's current checksum from scratch.
      * Note that unlike GetCurrentChecksum(), this method should *not* just returned a precomputed/running
@@ -57,24 +57,24 @@ public:
      * will only be called during debugging sessions (eg to verify that the running checksum is correct)
      * so it is okay if its implementation is relatively expensive.
      */
-   virtual uint32 CalculateChecksum() const = 0;
+   MUSCLE_NODISCARD virtual uint32 CalculateChecksum() const = 0;
 
    /** Should return this object's state as a human-readable string.
      * This method is only used for debugging purposes (eg printing out the state of the database
      * before and after the database is repaired, so the two printouts can be diff'd to see where
      * the error was)
      */
-   virtual String ToString() const = 0;
+   MUSCLE_NODISCARD virtual String ToString() const = 0;
 
    /** Returns a pointer to the ZGDatabasePeerSession object that created us, or NULL
      * if this object was not created by a ZGDatabasePeerSession.
      */
-   ZGDatabasePeerSession * GetDatabasePeerSession() const {return _session;}
+   MUSCLE_NODISCARD ZGDatabasePeerSession * GetDatabasePeerSession() const {return _session;}
 
    /** Returns our index within the ZGDatabasePeerSession object's databses-list, or -1
      * if this object was not created by a ZGDatabasePeerSession.
      */
-   int32 GetDatabaseIndex() const {return _dbIndex;}
+   MUSCLE_NODISCARD int32 GetDatabaseIndex() const {return _dbIndex;}
 
 protected:
    /** Returns a read-only pointer to the specified IDatabaseObject held by our
@@ -82,42 +82,42 @@ protected:
      * or if the specified database doesn't exist.
      * @param whichDatabase index of the database object we want to access
      */
-   const IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const;
+   MUSCLE_NODISCARD const IDatabaseObject * GetDatabaseObject(uint32 whichDatabase) const;
 
    /** Returns true iff the peer with the specified ID is currently on line.
      * @param pid The ID of the peer we are interested in.
      * If we have no ZGDatabasePeerSession then this will always return false.
      */
-   bool IsPeerOnline(const ZGPeerID & pid) const;
+   MUSCLE_NODISCARD bool IsPeerOnline(const ZGPeerID & pid) const;
 
    /** Returns a table of the currently online peers (and their attributes),
      * or an empty table if we have no ZGDatabasePeerSession.
      */
-   const Hashtable<ZGPeerID, ConstMessageRef> & GetOnlinePeers() const;
+   MUSCLE_NODISCARD const Hashtable<ZGPeerID, ConstMessageRef> & GetOnlinePeers() const;
 
    /** Returns the current network time, or 0 if we have no ZGDatabasePeerSession.  */
-   virtual uint64 GetNetworkTime64() const;
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64() const;
 
    /** Returns the local time corresponding to a given network time, or 0 if we have no ZGDatabasePeerSession.
      * @param networkTime64TimeStamp a network-clock time, in microseconds
      */
-   virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const;
+   MUSCLE_NODISCARD virtual uint64 GetRunTime64ForNetworkTime64(uint64 networkTime64TimeStamp) const;
 
    /** Returns the network time corresponding to a given local time, or 0 if we have no ZGDatabasePeerSession.
      * @param runTime64TimeStamp a local-clock time, in microseconds
      */
-   virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const;
+   MUSCLE_NODISCARD virtual uint64 GetNetworkTime64ForRunTime64(uint64 runTime64TimeStamp) const;
 
    /** Returns the number of microseconds that should be added to a GetRunTime64() value to turn it into a GetNetworkTime64() value,
      * or subtracted to do the inverse operation.  Note that this value will vary from one moment to the next!
      */
-   virtual int64 GetToNetworkTimeOffset() const;
+   MUSCLE_NODISCARD virtual int64 GetToNetworkTimeOffset() const;
 
    /** Returns true iff we are currently executing in a context where it okay to
      * update the local database as a senior-peer (eg we are running in a function that was
      * called by the ZGPeerSession's SeniorUpdateLocalDatabase() method, or similar)
      */
-   bool IsInSeniorDatabaseUpdateContext() const;
+   MUSCLE_NODISCARD bool IsInSeniorDatabaseUpdateContext() const;
 
    /** Returns true iff we are currently executing in a context where it okay to
      * update the local database as a junior-peer (eg we are running in a function that was
@@ -126,7 +126,7 @@ protected:
      *                                  at which this update was originally handled on the senior peer.
      *                                  If this method returns false, this value will be set to 0.
      */
-   bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64 = NULL) const;
+   MUSCLE_NODISCARD bool IsInJuniorDatabaseUpdateContext(uint64 * optRetSeniorNetworkTime64 = NULL) const;
 
    /** Should update this object's state using the passed-in senior-do-Message (whose semantics
      * are left up to the subclass to define), and then return a reference to a Message that can
@@ -167,12 +167,12 @@ protected:
    virtual void PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & optPeerInfo) {(void) peerID; (void) optPeerInfo;}
 
    /** Returns the current state-ID of our local database */
-   uint64 GetCurrentDatabaseStateID() const;
+   MUSCLE_NODISCARD uint64 GetCurrentDatabaseStateID() const;
 
    /** Returns true iff the local transaction-log currently contains the given transaction ID.
      * @param transactionID to look for in the transaction log.
      */
-   bool UpdateLogContainsUpdate(uint64 transactionID) const;
+   MUSCLE_NODISCARD bool UpdateLogContainsUpdate(uint64 transactionID) const;
 
    /** Given a database transactio-ID, returns the Message-payload of the database-update-transaction with that ID.
      * Note that the returned Message represents the instructions to the junior peers regarding how they should update their local databases.

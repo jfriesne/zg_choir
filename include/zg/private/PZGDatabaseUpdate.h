@@ -26,26 +26,26 @@ public:
 
    PZGDatabaseUpdate & operator=(const PZGDatabaseUpdate & rhs);
 
-   virtual bool IsFixedSize() const {return false;}
-   virtual uint32 TypeCode() const {return PZG_DATABASE_UPDATE_TYPE_CODE;}
-   virtual uint32 FlattenedSize() const;
+   MUSCLE_NODISCARD virtual bool IsFixedSize() const {return false;}
+   MUSCLE_NODISCARD virtual uint32 TypeCode() const {return PZG_DATABASE_UPDATE_TYPE_CODE;}
+   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const;
    virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
 
    void PrintToStream() const;
-   String ToString() const;
+   MUSCLE_NODISCARD String ToString() const;
 
-   uint8 GetUpdateType()               const {return _updateType;}
-   uint16 GetDatabaseIndex()           const {return _databaseIndex;}
-   uint16 GetSeniorElapsedTimeMillis() const {return _seniorElapsedTimeMillis;}
-   uint64 GetSeniorStartTimeMicros()   const {return _seniorStartTimeMicros;}
-   const ZGPeerID & GetSourcePeerID()  const {return _sourcePeerID;}
-   uint64 GetUpdateID()                const {return _updateID;}
-   uint32 GetPreUpdateDBChecksum()     const {return _preUpdateDBChecksum;}
-   uint32 GetPostUpdateDBChecksum()    const {return _postUpdateDBChecksum;}
+   MUSCLE_NODISCARD uint8 GetUpdateType()               const {return _updateType;}
+   MUSCLE_NODISCARD uint16 GetDatabaseIndex()           const {return _databaseIndex;}
+   MUSCLE_NODISCARD uint16 GetSeniorElapsedTimeMillis() const {return _seniorElapsedTimeMillis;}
+   MUSCLE_NODISCARD uint64 GetSeniorStartTimeMicros()   const {return _seniorStartTimeMicros;}
+   MUSCLE_NODISCARD const ZGPeerID & GetSourcePeerID()  const {return _sourcePeerID;}
+   MUSCLE_NODISCARD uint64 GetUpdateID()                const {return _updateID;}
+   MUSCLE_NODISCARD uint32 GetPreUpdateDBChecksum()     const {return _preUpdateDBChecksum;}
+   MUSCLE_NODISCARD uint32 GetPostUpdateDBChecksum()    const {return _postUpdateDBChecksum;}
 
-   const ConstMessageRef & GetPayloadBufferAsMessage() const;
-   const ConstByteBufferRef & GetPayloadBuffer() const;
+   MUSCLE_NODISCARD const ConstMessageRef & GetPayloadBufferAsMessage() const;
+   MUSCLE_NODISCARD const ConstByteBufferRef & GetPayloadBuffer() const;
 
    void SetUpdateType(uint8 updateType)                {_updateType              = updateType;}
    void SetDatabaseIndex(uint16 databaseIndex)         {_databaseIndex           = databaseIndex;}
@@ -59,13 +59,13 @@ public:
    void SetPayloadMessage(const ConstMessageRef & payloadMsg);
    void UncachePayloadBufferAsMessage() const;
 
-   uint32 CalculateChecksum() const;
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const;
 
 protected:
    virtual status_t CopyFromImplementation(const Flattenable & copyFrom);
 
 private:
-   uint32 FlattenedSizeNotIncludingPayload() const;
+   MUSCLE_NODISCARD uint32 FlattenedSizeNotIncludingPayload() const;
 
    uint8 _updateType;                 // PZG_DATABASE_UPDATE_TYPE_*
    uint16 _databaseIndex;             // Index of the database (within this replicated-database-arena) that this update is intended for

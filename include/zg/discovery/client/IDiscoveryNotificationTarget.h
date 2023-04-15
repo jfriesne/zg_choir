@@ -31,7 +31,7 @@ public:
    /** Returns a pointer to the SystemDiscoveryClient we're currently registered with, or NULL
      * if we aren't currently registered with any SystemDiscoveryClient.
      */
-   SystemDiscoveryClient * GetDiscoveryClient() const {return _discoveryClient;}
+   MUSCLE_NODISCARD SystemDiscoveryClient * GetDiscoveryClient() const {return _discoveryClient;}
 
    /** Called when updated system-information has become available regarding a particular ZG system.
      * @param systemName the name of the ZG system that this update is describing.

@@ -30,7 +30,7 @@ public:
    void SetGateway(GatewayType * optGateway);
 
    /** Returns a pointer to the gateway this subscriber is currently registered with. */
-   GatewayType * GetGateway() const {return _gateway;}
+   MUSCLE_NODISCARD GatewayType * GetGateway() const {return _gateway;}
 
    /** User code can call this method to indicate that it is planning to make one or more command-calls on the gateway in
      * the near future.  Making command-calls within a batch allows the gateway to make some efficiency-optimizations
@@ -62,10 +62,10 @@ protected:
    virtual void CallbackBatchEnds() {/* empty */}
 
    /** Returns true iff we are currently executing inside a callback-batch context */
-   bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}
+   MUSCLE_NODISCARD bool IsInCallbackBatch() const {return _callbackBatchCounter.IsInBatch();}
 
    /** Returns true iff our gateway is currently executing inside a command-batch context */
-   bool IsGatewayInCommandBatch() const;
+   MUSCLE_NODISCARD bool IsGatewayInCommandBatch() const;
 
 private:
    friend GatewayType;
@@ -87,7 +87,7 @@ public:
    /** Constructor
      * @param sub pointer to the subscriber object to call BeginCommandBatch() on
      */
-   GatewaySubscriberCommandBatchGuard(SubscriberType * sub) : _sub(sub) {_sub->BeginCommandBatch();}
+   MUSCLE_NODISCARD GatewaySubscriberCommandBatchGuard(SubscriberType * sub) : _sub(sub) {_sub->BeginCommandBatch();}
 
    /** Destructor
      * Calls EndCommandBatch() on the subscriber object

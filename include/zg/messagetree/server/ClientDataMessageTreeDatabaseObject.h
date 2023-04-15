@@ -51,8 +51,8 @@ protected:
    virtual void MessageReceivedFromMessageTreeDatabaseObject(const MessageRef & msg, const ZGPeerID & sourcePeer, uint32 sourceDBIdx);
 
 private:
-   String GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const; // given eg "foo/bar", returns "<peerid>/<ipaddress>/<sessionid>/foo/bar", suitable for sharing
-   String GetSharedPathFromLocalPathAux(const String & localPath, ServerSideMessageTreeSession * ssmts) const;
+   MUSCLE_NODISCARD String GetSharedPathFromLocalPath(const String & localPath, ServerSideMessageTreeSession * & retSessionNode) const; // given eg "foo/bar", returns "<peerid>/<ipaddress>/<sessionid>/foo/bar", suitable for sharing
+   MUSCLE_NODISCARD String GetSharedPathFromLocalPathAux(const String & localPath, ServerSideMessageTreeSession * ssmts) const;
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 
