@@ -60,7 +60,7 @@ uint32 PZGHeartbeatPeerInfo :: PZGTimingInfo :: CalculateChecksum() const
 String PZGHeartbeatPeerInfo :: ToString() const
 {
    String ret = _peerID.ToString();
-   for (uint32 i=0; i<_timings.GetNumItems(); i++) ret += _timings[i].ToString().Prepend(" ");
+   for (uint32 i=0; i<_timings.GetNumItems(); i++) ret += _timings[i].ToString().WithPrepend(' ');
    return ret;
 }
 

@@ -75,7 +75,7 @@ String ClientDataMessageTreeDatabaseObject :: GetSharedPathFromLocalPath(const S
 
 String ClientDataMessageTreeDatabaseObject :: GetSharedPathFromLocalPathAux(const String & localPath, ServerSideMessageTreeSession * ssmts) const
 {
-   return ssmts ? (GetMessageTreeDatabasePeerSession()->GetLocalPeerID().ToString() + ssmts->GetSessionRootPath()).AppendWord(localPath, "/") : GetEmptyString();
+   return ssmts ? (GetMessageTreeDatabasePeerSession()->GetLocalPeerID().ToString() + ssmts->GetSessionRootPath()).WithAppendedWord(localPath, "/") : GetEmptyString();
 }
 
 void ClientDataMessageTreeDatabaseObject :: ServerSideMessageTreeSessionIsDetaching(ServerSideMessageTreeSession * ssmts)
@@ -121,7 +121,7 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
             for (DataNodeRefIterator iter = dn->GetChildIterator(); iter.HasData(); iter++)
             {
                ZGPeerID pid; pid.FromString(*iter.GetKey());
-               if (GetMessageTreeDatabasePeerSession()->IsPeerOnline(pid) == false) nodesToDelete = nodesToDelete.AppendWord(*iter.GetKey(),",");
+               if (GetMessageTreeDatabasePeerSession()->IsPeerOnline(pid) == false) nodesToDelete = nodesToDelete.WithAppendedWord(*iter.GetKey(),",");
             }
          }
       }

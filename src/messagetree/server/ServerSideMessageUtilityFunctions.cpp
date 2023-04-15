@@ -10,7 +10,7 @@ status_t CreateMuscleSubscribeMessage(const String & subscriptionPath, const Con
    retMsg = GetMessageFromPool(PR_COMMAND_SETPARAMETERS);
    MRETURN_OOM_ON_NULL(retMsg());
 
-   const String pathArg = subscriptionPath.Prepend("SUBSCRIBE:");
+   const String pathArg = subscriptionPath.WithPrepend("SUBSCRIBE:");
    return (optFilterRef() ? retMsg()->CAddArchiveMessage(pathArg, optFilterRef) : retMsg()->AddBool(pathArg, true))
         | (retMsg()->CAddBool(PR_NAME_SUBSCRIBE_QUIETLY, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)));
 }
@@ -20,7 +20,7 @@ status_t CreateMuscleUnsubscribeMessage(const String & subscriptionPath, Message
    retMsg = GetMessageFromPool(PR_COMMAND_REMOVEPARAMETERS);
    MRETURN_OOM_ON_NULL(retMsg());
 
-   return retMsg()->AddString(PR_NAME_KEYS, EscapeRegexTokens(subscriptionPath).Prepend("SUBSCRIBE:"));  // EscapeRegexTokens() is here to avoid accidentally removing other subscription-paths that the wildcards happen to match to
+   return retMsg()->AddString(PR_NAME_KEYS, EscapeRegexTokens(subscriptionPath).WithPrepend("SUBSCRIBE:"));  // EscapeRegexTokens() is here to avoid accidentally removing other subscription-paths that the wildcards happen to match to
 }
 
 status_t CreateMuscleUnsubscribeAllMessage(MessageRef & retMsg)

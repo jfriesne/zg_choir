@@ -58,12 +58,12 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
       String nextCmd;
       for (int32 i=0; msg()->FindString(PR_NAME_TEXT_LINE, i, nextCmd).IsOK(); i++)
       {
-         nextCmd = nextCmd.Trim();
+         nextCmd = nextCmd.Trimmed();
          StringTokenizer tok(nextCmd(), ";;");
          const char * t;
          while((t = tok()) != NULL)
          {
-            String nc = t; nc = nc.Trim();  // yes, the Trim() is necessary!
+            String nc = t; nc = nc.Trimmed();  // yes, the Trimmed() is necessary!
             if ((nc == "quit")||(nc == "exit"))
             {
                if (IsReallyStdin()) printf("To close a stdin session, press Control-D.\n");
@@ -102,7 +102,7 @@ static bool HandleSetLogLevelCommand(const char * p, bool isDisplay)
    while((*p)&&(muscleInRange(*p, 'A', 'Z') == false)&&(muscleInRange(*p, 'a', 'z') == false)) p++;
 
    uint32 logLevel = NUM_MUSCLE_LOGLEVELS;
-   String lvl = p;  lvl = lvl.Trim();
+   String lvl = p;  lvl = lvl.Trimmed();
    if (lvl.HasChars())
    {
       for (uint32 i=0; i<NUM_MUSCLE_LOGLEVELS; i++)
@@ -130,7 +130,7 @@ static bool HandleSetLogLevelCommand(const char * p, bool isDisplay)
 
 bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
 {
-        if (s.StartsWith("echo ")) printf("echoing: [%s]\n", s.Substring(5).Trim()());
+        if (s.StartsWith("echo ")) printf("echoing: [%s]\n", s.Substring(5).Trimmed()());
    else if (s.StartsWith("crit"))  LogAux(s, MUSCLE_LOG_CRITICALERROR);
    else if (s.StartsWith("err"))   LogAux(s, MUSCLE_LOG_ERROR);
    else if (s.StartsWith("warn"))  LogAux(s, MUSCLE_LOG_WARNING);
@@ -139,7 +139,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    else if (s.StartsWith("trace")) LogAux(s, MUSCLE_LOG_TRACE);
    else if (s.StartsWith("sleep"))
    {
-      uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trim());
+      const uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trimmed());
       const char * preposition = (micros==MUSCLE_TIME_NEVER)?"":"for ";
       LogTime(MUSCLE_LOG_INFO, "Sleeping %s%s...\n", preposition, GetHumanReadableTimeIntervalString(micros)());
       (void) Snooze64(micros);
@@ -147,9 +147,9 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    }
    else if (s.StartsWith("spin"))
    {
-      uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trim());
+      const uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trimmed());
       LogTime(MUSCLE_LOG_INFO, "Spinning for %s...\n", GetHumanReadableTimeIntervalString(micros)());
-      uint64 endTime = (micros == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+micros);
+      const uint64 endTime = (micros == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+micros);
       while(GetRunTime64()<endTime) {/* spin, my little process, spin! */}
       LogTime(MUSCLE_LOG_INFO, "Finished spinning for %s\n", GetHumanReadableTimeIntervalString(micros)());
    }

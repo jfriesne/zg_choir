@@ -145,7 +145,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
    if (s.StartsWith("all peers "))
    {
       // Take the remainder of the Message and send it to everybody, to save on typing
-      String cmd = s.Substring(10).Trim();
+      const String cmd = s.Substring(10).Trimmed();
       MessageRef msg = GetForwardedTextMessage(cmd);
       if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg).IsOK()))
       {
@@ -161,7 +161,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
    else if (s.StartsWith("senior peer"))
    {
       // Take the remainder of the Message and send it to the senior peer
-      String cmd = s.Substring(11).Trim();
+      const String cmd = s.Substring(11).Trimmed();
       MessageRef msg = GetForwardedTextMessage(cmd);
       if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg).IsOK()))
       {

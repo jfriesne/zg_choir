@@ -14,7 +14,7 @@ String MuxTreeGateway :: GetRegistrationIDPrefix(ITreeGatewaySubscriber * sub, c
 
 String MuxTreeGateway :: PrependRegistrationIDPrefix(ITreeGatewaySubscriber * sub, const String & s, char markerChar) const
 {
-   return s.Prepend(GetRegistrationIDPrefix(sub, markerChar)+':');
+   return s.WithPrepend(GetRegistrationIDPrefix(sub, markerChar)+':');
 }
 
 ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationID(const String & ascii, char markerChar) const
@@ -203,7 +203,7 @@ status_t MuxTreeGateway :: TreeGateway_RequestNodeSubtreesAux(ITreeGatewaySubscr
 
 String MuxTreeGateway :: TagToExcludeClientFromReplies(ITreeGatewaySubscriber * excludeMe, const String & optOpTag) const
 {
-   return excludeMe ? PrependRegistrationIDPrefix(excludeMe, optOpTag, '!').Prepend(_muxTreeGatewayIDPrefix) : optOpTag;
+   return excludeMe ? PrependRegistrationIDPrefix(excludeMe, optOpTag, '!').WithPrepend(_muxTreeGatewayIDPrefix) : optOpTag;
 }
 
 status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * calledBy, const String & path, const ConstMessageRef & optPayload, TreeGatewayFlags flags, const String & optBefore, const String & optOpTag)
@@ -501,7 +501,7 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
          }
       }
 
-      if (obss.HasChars()) MRETURN_ON_ERROR(ITreeGatewaySubscriber::PingTreeLocalPeer(obss.Prepend("obss:"))); // mark the beginning of our returned results
+      if (obss.HasChars()) MRETURN_ON_ERROR(ITreeGatewaySubscriber::PingTreeLocalPeer(obss.WithPrepend("obss:"))); // mark the beginning of our returned results
       MRETURN_ON_ERROR(ITreeGatewaySubscriber::AddTreeSubscription(subscriptionPath, sendFilter, flags));
       if (obss.HasChars()) MRETURN_ON_ERROR(ITreeGatewaySubscriber::PingTreeLocalPeer("obss:"));               // mark the end of our returned results
       return B_NO_ERROR;

@@ -39,7 +39,7 @@ String PeerInfoToString(const ConstMessageRef & peerInfo)
          }
       }
    }
-   return ret.Trim();
+   return ret.Trimmed();
 }
 
 String CompatibilityVersionCodeToString(uint32 versionCode)

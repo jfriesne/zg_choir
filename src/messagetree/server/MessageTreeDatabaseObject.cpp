@@ -98,7 +98,7 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
 
 String MessageTreeDatabaseObject :: DatabaseSubpathToSessionRelativePath(const String & subPath, TreeGatewayFlags flags) const
 {
-   const String ret = subPath.HasChars() ? _rootNodePathWithoutSlash.AppendWord(subPath, "/") : _rootNodePathWithoutSlash;
+   const String ret = subPath.HasChars() ? _rootNodePathWithoutSlash.WithAppendedWord(subPath, "/") : _rootNodePathWithoutSlash;
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_TRAVERSE_SYMLINK))
    {
       const DataNode * dn = GetDataNode(subPath);
@@ -303,7 +303,7 @@ String MessageTreeDatabaseObject :: ToString() const
 
 void MessageTreeDatabaseObject :: DumpDescriptionToString(const DataNode & node, String & s, uint32 indentLevel) const
 {
-   s += node.GetNodePath().Pad(indentLevel);
+   s += node.GetNodePath().PaddedBy(indentLevel);
 
    const Message * msg = node.GetData()();
    s += String(" (msg->what=%1, #Fields=%2, FlattenedSize=%3, Checksum=%4 #children=%5, indexSize=%6)\n").Arg(msg?msg->what:666).Arg(msg?msg->GetNumNames():666).Arg(msg?msg->FlattenedSize():666).Arg(msg?msg->CalculateChecksum():666).Arg(node.GetNumChildren()).Arg(node.GetIndex()?node.GetIndex()->GetNumItems():0);

@@ -107,7 +107,7 @@ public:
       }
       else if (text.StartsWith("sendunicast"))
       {
-         StringTokenizer tok(text.Substring(12).Trim()(), STRING_TOKENIZER_DEFAULT_SOFT_SEPARATOR_CHARS);  // whitespace chars only
+         StringTokenizer tok(text.Substring(12).Trimmed()(), STRING_TOKENIZER_DEFAULT_SOFT_SEPARATOR_CHARS);  // whitespace chars only
          const char * target = tok();
          if (target)
          {
@@ -138,10 +138,10 @@ public:
       }
       else if (text.StartsWith("sendmulticast"))
       {
-         const String chatText = text.Substring(14).Trim();
+         const String chatText = text.Substring(14).Trimmed();
 
          MessageRef msg = GetMessageFromPool(TOY_DB_COMMAND_USER_TEXT);
-         if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trim()).IsOK()))
+         if ((msg())&&(msg()->CAddString("chat_text", text.Substring(14).Trimmed()).IsOK()))
          {
             LogTime(MUSCLE_LOG_INFO, "Sending chat text [%s] to all peers via multicast.\n", chatText());
             (void) SendMulticastUserMessageToAllPeers(msg);
