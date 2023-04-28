@@ -71,7 +71,7 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
 
       // Experimental:  Set a symlink node to point to the node we are currently dragging
       MessageRef symlinkMsg = GetMessageFromPool();
-      if ((symlinkMsg())&&(symlinkMsg()->AddString(SYMLINK_FIELD_NAME, _draggingID.Prepend("project/magnets/")).IsOK())) (void) UploadTreeNodeValue("project/last_dragged", symlinkMsg);
+      if ((symlinkMsg())&&(symlinkMsg()->AddString(SYMLINK_FIELD_NAME, _draggingID.WithPrepend("project/magnets/")).IsOK())) (void) UploadTreeNodeValue("project/last_dragged", symlinkMsg);
    }
    else 
    {
@@ -184,7 +184,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
       MRETURN_ON_ERROR(optMagnetState->SaveToArchive(*msgRef()));
    }
       
-   return UploadTreeNodeValue(optNodeID.Prepend("project/magnets/"), msgRef, isInterimUpdate?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags());
+   return UploadTreeNodeValue(optNodeID.WithPrepend("project/magnets/"), msgRef, isInterimUpdate?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags());
 }
 
 void FridgeClientCanvas :: TreeGatewayConnectionStateChanged()
