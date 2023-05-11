@@ -99,9 +99,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          if (UploadTreeNodeValue(path, payloadMsg, TreeGatewayFlags(TREE_GATEWAY_FLAG_INDEXED), optBefore, GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s]) opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Uploaded indexed Message to relative path [%s] (before [%s]) opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():"(null)", optOpTag());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Error uploading indexed Message to relative path [%s] (before [%s]) (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
+         else LogTime(MUSCLE_LOG_ERROR, "Error uploading indexed Message to relative path [%s] (before [%s]) (%s)\n", path(), optBefore.HasChars()?optBefore():"(null)", ret());
       }
       break;
 
@@ -112,9 +112,9 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
 
          if (RequestMoveTreeIndexEntry(path, optBefore, ConstQueryFilterRef(), TreeGatewayFlags(), GenerateOpTag(optOpTag)).IsOK(ret))
          {
-            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s] opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():NULL, optOpTag());
+            LogTime(MUSCLE_LOG_INFO, "Moved indexed-node [%s] to before [%s] opTag=[%s]\n", path(), optBefore.HasChars()?optBefore():"(null)", optOpTag());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Error moving indexed-node [%s] to before [%s] (%s)\n", path(), optBefore.HasChars()?optBefore():NULL, ret());
+         else LogTime(MUSCLE_LOG_ERROR, "Error moving indexed-node [%s] to before [%s] (%s)\n", path(), optBefore.HasChars()?optBefore():"(null)", ret());
       }
       break;
 

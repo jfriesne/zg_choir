@@ -516,7 +516,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeIndexUpdateMessage(const Message
 
       if (msg.what == MTDO_COMMAND_INSERTINDEXENTRY) (void) node->InsertIndexEntryAt(index, zsh, key);
                                                 else (void) node->RemoveIndexEntryAt(index, zsh);
-//printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():NULL, node?node->GetIndex()->GetNumItems():666);
+//printf("   %s (path=[%s]) index=%u key=[%s] indexLength=%u\n", (msg.what == MTDO_COMMAND_INSERTINDEXENTRY)?"INSERT":"REMOVE", sessionRelativePath(), index, key?key->Cstr():"(null)", node?node->GetIndex()->GetNumItems():666);
       return B_NO_ERROR;
    }
    else
