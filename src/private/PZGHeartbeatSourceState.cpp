@@ -3,7 +3,9 @@
 namespace zg_private
 {
 
-PZGHeartbeatSourceState :: PZGHeartbeatSourceState(uint32 maxMeasurements) : _maxMeasurements(maxMeasurements)
+PZGHeartbeatSourceState :: PZGHeartbeatSourceState(uint32 maxMeasurements)
+   : _maxMeasurements(maxMeasurements)
+   , _localExpirationTimeMicros(0)
 {
    // empty
 }
@@ -19,7 +21,7 @@ status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & mult
       rtt = _rttAveragers.PutAndGet(multicastAddr, r);
       MRETURN_OOM_ON_NULL(rtt);
    }
-   return rtt ? rtt->GetItemPointer()->AddMeasurement(newMeasurementMicros, now) : B_DATA_NOT_FOUND;
+   return rtt->GetItemPointer()->AddMeasurement(newMeasurementMicros, now);
 }
 
 uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime)

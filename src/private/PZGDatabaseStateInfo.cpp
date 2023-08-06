@@ -68,7 +68,7 @@ uint32 PZGDatabaseStateInfo :: CalculateChecksum() const
 
 bool PZGDatabaseStateInfo :: operator == (const PZGDatabaseStateInfo & rhs) const
 {
-   return ((_currentDatabaseStateID == rhs._currentDatabaseStateID)&&(_oldestDatabaseIDInLog == rhs._oldestDatabaseIDInLog)+(_dbChecksum == rhs._dbChecksum));
+   return ((_currentDatabaseStateID == rhs._currentDatabaseStateID)&&(_oldestDatabaseIDInLog == rhs._oldestDatabaseIDInLog)&&(_dbChecksum == rhs._dbChecksum));
 }
 
 };  // end namespace zg_private

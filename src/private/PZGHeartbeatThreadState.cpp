@@ -142,8 +142,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
          const ZGPeerID & peerID = iter.GetKey();
          const Queue<IPAddressAndPort> & sourceQ = iter.GetValue();
          PZGHeartbeatSourceState * hss = sourceQ.HasItems() ? _onlineSources[PZGHeartbeatSourceKey(sourceQ.Head(), peerID)]() : NULL;
-         const PZGHeartbeatPacketWithMetaData * peerHB = hss ? hss->GetHeartbeatPacket()() : NULL;
-         (void) _mainThreadLatencies.Put(peerID, peerHB ? hss->GetPreferredAverageValue(0) : MUSCLE_TIME_NEVER);
+         (void) _mainThreadLatencies.Put(peerID, ((hss)&&(hss->GetHeartbeatPacket()() != NULL)) ? hss->GetPreferredAverageValue(0) : MUSCLE_TIME_NEVER);
       }
    }
 

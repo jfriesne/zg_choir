@@ -129,8 +129,7 @@ void PZGHeartbeatSession :: InternalThreadEntry()
 
    MessageIOGateway timeSyncGateway;  // we instantiate this solely so we can call its CallUnflattenHeaderAndMessage() and CallFlattenHeaderAndMessage() methods
 
-   bool keepGoing = true;
-   while(keepGoing)
+   while(1)
    {
       // Demand-allocate our multicast DataIO
       if (_hbtState._recreateMulticastDataIOsRequested)

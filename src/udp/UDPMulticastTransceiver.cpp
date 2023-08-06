@@ -265,7 +265,10 @@ private:
 
 io_status_t MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
 {
-   PacketDataIO & udpIO = *(dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()()));
+   PacketDataIO * pUdpIO = dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()());
+   if (pUdpIO == NULL) return B_BAD_OBJECT;  // paranoia
+
+   PacketDataIO & udpIO = *pUdpIO;
 
    uint32 ret = 0;
    while(ret < maxBytes)

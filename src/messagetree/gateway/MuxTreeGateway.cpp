@@ -423,29 +423,26 @@ void MuxTreeGateway :: SubtreesRequestResultReturned(const String & tag, const M
       isResponseToRequestNodeValues = true;
    }
 
-   if (q)
+   if ((q)&&(q->RemoveFirstInstanceOf(suffix).IsOK()))
    {
-      if ((q)&&(q->RemoveFirstInstanceOf(suffix).IsOK()))
+      if (isResponseToRequestNodeValues)
       {
-         if (isResponseToRequestNodeValues)
+         if (subtreeData())
          {
-            if (subtreeData())
+            EnsureSubscriberInBatchGroup(subPtr);
+            for (MessageFieldNameIterator fnIter(*subtreeData(), B_MESSAGE_TYPE); fnIter.HasData(); fnIter++)
             {
-               EnsureSubscriberInBatchGroup(subPtr);
-               for (MessageFieldNameIterator fnIter(*subtreeData(), B_MESSAGE_TYPE); fnIter.HasData(); fnIter++)
-               {
-                  const String & path = fnIter.GetFieldName();
+               const String & path = fnIter.GetFieldName();
 
-                  ConstMessageRef nodeMsg;
-                  MessageRef payloadMsg;
-                  if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) subPtr->TreeNodeUpdated(path, payloadMsg, suffix);
-               }
+               ConstMessageRef nodeMsg;
+               MessageRef payloadMsg;
+               if ((subtreeData()->FindMessage(path, nodeMsg).IsOK())&&(nodeMsg()->FindMessage(PR_NAME_NODEDATA, payloadMsg).IsOK())) subPtr->TreeNodeUpdated(path, payloadMsg, suffix);
             }
          }
-         else subPtr->SubtreesRequestResultReturned(suffix, subtreeData);
-
-         if (q->IsEmpty()) (void) _requestedSubtrees.Remove(subPtr);
       }
+      else subPtr->SubtreesRequestResultReturned(suffix, subtreeData);
+
+      if (q->IsEmpty()) (void) _requestedSubtrees.Remove(subPtr);
    }
 }
 

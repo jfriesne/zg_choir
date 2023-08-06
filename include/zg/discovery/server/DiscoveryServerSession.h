@@ -67,7 +67,7 @@ private:
    class UDPReply
    {
    public:
-      UDPReply() {/* empty */}
+      UDPReply() : _sendTime(MUSCLE_TIME_NEVER) {/* empty */}
       UDPReply(uint64 sendTime, const MessageRef & data) : _sendTime(sendTime), _data(data) {/* empty */}
 
       MUSCLE_NODISCARD uint64 GetSendTime() const {return _sendTime;}
