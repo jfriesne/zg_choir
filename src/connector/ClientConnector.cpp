@@ -429,29 +429,30 @@ private:
    {
       _keepGoing = true;
 
-      while(_keepGoing)
+      while(1)
       {
          // First, find a server to connect to
-         if (_keepGoing)
          {
             const status_t ret = DoDiscoveryStage();
             if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Discovery stage encountered an error!  [%s]\n", ret());
          }
+         if (_keepGoing == false) break;
 
          // Now that discovery stage has finished, we can move to our TCP-connection stage
-         if ((_keepGoing)&&(_discoveries()))
+         if (_discoveries())
          {
             const status_t ret = DoConnectionStage();
             if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Connection stage encountered an error!  [%s]\n", ret());
             SetConnectionPeerInfo(ConstMessageRef());  // tell owner thread we're disconnected
          }
+         if (_keepGoing == false) break;
 
          // If we got here, then our TCP connection failed.  Wait the specified delay time before going back to discovery-mode
-         if (_keepGoing)
          {
             const status_t ret = DoDelayStage();
             if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Delay stage encountered an error!  [%s]\n", ret());
          }
+         if (_keepGoing == false) break;
       }
    }
 
@@ -468,7 +469,7 @@ private:
 
       // Wait until we either discovered something or the calling thread wants us to go away
       SocketMultiplexer sm;
-      while(_discoveries() == NULL)
+      while((_keepGoing)&&(_discoveries() == NULL))
       {
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(threadMechanism.GetDispatchThreadNotifierSocket().GetFileDescriptor()));
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
@@ -536,7 +537,7 @@ private:
 
       SocketMultiplexer sm;
       const uint64 waitUntil = (_reconnectTimeMicroseconds == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+_reconnectTimeMicroseconds);
-      while(GetRunTime64() < waitUntil)
+      while((_keepGoing)&&(GetRunTime64() < waitUntil))
       {
          MRETURN_ON_ERROR(sm.RegisterSocketForReadReady(GetInternalThreadWakeupSocket().GetFileDescriptor()));
          MRETURN_ON_ERROR(sm.WaitForEvents(waitUntil));

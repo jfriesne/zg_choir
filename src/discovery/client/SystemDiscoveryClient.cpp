@@ -47,10 +47,9 @@ public:
 
    virtual DataIORef CreateDataIO(const ConstSocketRef & s)
    {
-      UDPSocketDataIO * udpIO = new UDPSocketDataIO(s, false);
-      DataIORef ret(udpIO);
-      (void) udpIO->SetPacketSendDestination(_multicastIAP);
-      return ret;
+      UDPSocketDataIORef udpIO(new UDPSocketDataIO(s, false));
+      (void) udpIO()->SetPacketSendDestination(_multicastIAP);
+      return udpIO;
    }
 
    virtual void MessageReceivedFromSession(AbstractReflectSession & /*from*/, const MessageRef & msg, void * /*userData*/)
@@ -341,13 +340,14 @@ private:
 
 io_status_t DiscoverySession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
 {
-   PacketDataIO & udpIO = *(dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()()));
+   PacketDataIO * udpIO = dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()());
+   if (udpIO == NULL) return B_BAD_OBJECT;  // paranoia
 
    uint32 ret = 0;
    while(ret < maxBytes)
    {
       IPAddressAndPort sourceLoc;
-      const int32 bytesRead = udpIO.ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc).GetByteCount();
+      const int32 bytesRead = udpIO->ReadFrom(_receiveBuffer()->GetBuffer(), _receiveBuffer()->GetNumBytes(), sourceLoc).GetByteCount();
       if (bytesRead > 0)
       {
          LogTime(MUSCLE_LOG_TRACE, "DiscoverySession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
