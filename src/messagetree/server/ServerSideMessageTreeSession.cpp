@@ -12,8 +12,8 @@ extern const String _opTagRemoveMap;
 
 ServerSideMessageTreeSession :: ServerSideMessageTreeSession(ITreeGateway * upstreamGateway)
    : ServerSideNetworkTreeGatewaySubscriber(upstreamGateway, this)
-   , _undoKey("anon")
    , _logOnAttachAndDetach(false)
+   , _undoKey("anon")
    , _dbSession(NULL)
 {
    // empty
