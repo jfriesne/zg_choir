@@ -13,7 +13,6 @@
 namespace zg_private
 {
 
-
 enum {
    PZG_HEARTBEAT_COMMAND_PEERS_UPDATE = 1751281781 // 'hbpu'
 };
@@ -132,7 +131,8 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
    if (_now >= _nextSendHeartbeatTime)
    {
       _nextSendHeartbeatTime = _now+_heartbeatPingInterval;
-      if (SendHeartbeatPackets().IsError()) LogTime(MUSCLE_LOG_ERROR, "SendHeartbeatPackets() failed!\n");
+      status_t ret;
+      if (SendHeartbeatPackets().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "SendHeartbeatPackets() failed! [%s]\n", ret());
       if (_printTimeSynchronizationDeltas) PrintTimeSynchronizationDeltas();
 
       // Update the main-thread-accessible latencies table, just so we don't have to lock our own data structures all the time
@@ -159,7 +159,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
 
 status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
 {
-   if (_multicastDataIOs.IsEmpty()) return B_ERROR;  // nothing to send to?
+   if (_multicastDataIOs.IsEmpty()) return B_NO_ERROR;  // nothing to send to?
 
    PZGHeartbeatPacketWithMetaDataRef hbRef = GetHeartbeatPacketWithMetaDataFromPool();
    MRETURN_OOM_ON_NULL(hbRef());
@@ -211,8 +211,9 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
          DefaultEndianConverter::Export(*tag, dsb+(1*sizeof(uint16))); // so when we get heartbeats back from a peer later we know which of our interfaces the included timing info corresponds to
          DefaultEndianConverter::Export(GetNetworkTime64ForRunTime64(GetRunTime64()), dsb+(2*sizeof(uint16))); // network-clock-at-send-time
 
+         // Error message is emitted as MUSCLE_LOG_DEBUG level to avoid spamming the log when MacOS' spurious-ENOBUFS surfaces
          const io_status_t numBytesSent = dio->Write(dsb, defBufSize);
-         if (numBytesSent.GetByteCount() != (int32)defBufSize) LogTime(MUSCLE_LOG_ERROR, "Error [%s] sending heartbeat to [%s], sent " INT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC " bytes!\n", numBytesSent.GetStatus()(), dest.ToString()(), numBytesSent.GetByteCount(), defBufSize);
+         if (numBytesSent.GetByteCount() != (int32)defBufSize) LogTime(MUSCLE_LOG_DEBUG, "Error [%s] sending heartbeat to [%s], sent " INT32_FORMAT_SPEC "/" UINT32_FORMAT_SPEC " bytes!\n", numBytesSent.GetStatus()(), dest.ToString()(), numBytesSent.GetByteCount(), defBufSize);
       }
    }
 
