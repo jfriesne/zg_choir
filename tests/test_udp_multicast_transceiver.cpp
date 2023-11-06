@@ -48,7 +48,7 @@ static IPAddressAndPort ParseUnicastAddressFromBeginningOfString(const String & 
    {
       const IPAddressAndPort ret(inStr, 0, true);
       while((rBracket < inStr.Length())&&(inStr[rBracket] != ' ')) rBracket++;
-      outStr = inStr.Substring(rBracket).Trim();
+      outStr = inStr.Substring(rBracket).Trimmed();
       return ret; 
    }
 
@@ -116,7 +116,7 @@ int main(int argc, char ** argv)
                      {
                         String sendStr = *nextLine;
 
-                        const IPAddressAndPort unicastDestinationAddress = ParseUnicastAddressFromBeginningOfString(nextLine->Trim(), sendStr);
+                        const IPAddressAndPort unicastDestinationAddress = ParseUnicastAddressFromBeginningOfString(nextLine->Trimmed(), sendStr);
 
                         ByteBufferRef payloadBytes = GetByteBufferFromPool(sendStr.FlattenedSize(), (const uint8 *) sendStr());
                         if (payloadBytes())

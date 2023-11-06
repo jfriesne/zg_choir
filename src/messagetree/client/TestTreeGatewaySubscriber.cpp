@@ -211,72 +211,72 @@ String TestTreeGatewaySubscriber :: GenerateOpTag(String & retTag)
 void TestTreeGatewaySubscriber :: CallbackBatchBegins()
 {
    IGatewaySubscriber::CallbackBatchBegins();
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchBegins()\n");
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchBegins() (this=%p)\n", this);
 }
 
 void TestTreeGatewaySubscriber :: CallbackBatchEnds()
 {
    IGatewaySubscriber::CallbackBatchEnds();
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchEnds()\n");
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::CallbackBatchEnds() (this=%p)\n", this);
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s]\n", nodePath(), payloadMsg(), optOpTag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s] (this=%p)\n", nodePath(), payloadMsg(), optOpTag(), this);
    if (payloadMsg()) payloadMsg()->PrintToStream();
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexCleared(%s) optOpTag=[%s]\n", path(), optOpTag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexCleared(%s) optOpTag=[%s] (this=%p)\n", path(), optOpTag(), this);
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexEntryInserted(const String & path, uint32 insertedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s]\n", path(), insertedAtIndex, nodeName(), optOpTag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryInserted(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s] (this=%p)\n", path(), insertedAtIndex, nodeName(), optOpTag(), this);
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexEntryRemoved(const String & path, uint32 removedAtIndex, const String & nodeName, const String & optOpTag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s]\n", path(), removedAtIndex, nodeName(), optOpTag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeIndexEntryRemoved(%s," UINT32_FORMAT_SPEC ",%s) optOpTag=[%s] (this=%p)\n", path(), removedAtIndex, nodeName(), optOpTag(), this);
 }
 
 void TestTreeGatewaySubscriber :: TreeLocalPeerPonged(const String & tag)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeLocalPeerPonged(%s)\n", tag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeLocalPeerPonged(%s) (this=%p)\n", tag(), this);
 }
 
 void TestTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint32 whichDB)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeSeniorPeerPonged(" UINT32_FORMAT_SPEC ", %s)\n", whichDB, tag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeSeniorPeerPonged(" UINT32_FORMAT_SPEC ", %s) (this=%p)\n", whichDB, tag(), this);
 }
 
 void TestTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromTreeSeniorPeer(" UINT32_FORMAT_SPEC ", %s)\n", whichDB, tag());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromTreeSeniorPeer(" UINT32_FORMAT_SPEC ", %s) (this=%p)\n", whichDB, tag(), this);
    payload()->PrintToStream();
 }
 
 void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(nodePath=[%s] returnAddress=[%s])\n", nodePath(), returnAddress());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(nodePath=[%s] returnAddress=[%s]) (this=%p)\n", nodePath(), returnAddress(), this);
    payload()->PrintToStream();
 }
 
 void TestTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p)\n", tag(), subtreeData());
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p) (this=%p)\n", tag(), subtreeData(), this);
    if (subtreeData()) subtreeData()->PrintToStream();
 }
 
 void TestTreeGatewaySubscriber :: TreeGatewayConnectionStateChanged()
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayConnectionStateChanged(%s)\n", IsTreeGatewayConnected()?"to CONNECTED":"to DISCONNECTED");
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayConnectionStateChanged(%s) (this=%p)\n", IsTreeGatewayConnected()?"to CONNECTED":"to DISCONNECTED", this);
 }
 
 void TestTreeGatewaySubscriber :: TreeGatewayShuttingDown()
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayShuttingDown()\n");
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayShuttingDown() (this=%p)\n", this);
 }
 
 };

@@ -16,6 +16,7 @@ ProxyTreeGateway :: ~ProxyTreeGateway()
 
 void ProxyTreeGateway :: ShutdownGateway()
 {
+   TreeGatewayShuttingDown();
    if (GetGateway()) GetGateway()->ShutdownGateway();  // tell our upstream gateway to shut down also
    ITreeGateway::ShutdownGateway();
 }
@@ -189,7 +190,12 @@ void ProxyTreeGateway :: TreeGatewayConnectionStateChanged()
 
 void ProxyTreeGateway :: TreeGatewayShuttingDown()
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++) iter.GetKey()->TreeGatewayShuttingDown();
+   for (HashtableIterator<ITreeGatewaySubscriber *, uint32> iter(GetRegisteredSubscribers()); iter.HasData(); iter++)
+   {
+      ITreeGatewaySubscriber * sub = iter.GetKey();
+      sub->TreeGatewayShuttingDown();
+      sub->SetGateway(NULL);  // unregister him now that we're going away, so we won't make any more calls on him in the future no matter what
+   }
 }
 
 };
