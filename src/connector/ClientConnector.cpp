@@ -434,7 +434,7 @@ private:
          // First, find a server to connect to
          {
             const status_t ret = DoDiscoveryStage();
-            if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Discovery stage encountered an error!  [%s]\n", ret());
+            if ((ret.IsError())&&(ret != B_IO_ERROR)&&(ret != B_SHUTTING_DOWN)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Discovery stage encountered an error!  [%s]\n", ret());
          }
          if (_keepGoing == false) break;
 
@@ -442,7 +442,7 @@ private:
          if (_discoveries())
          {
             const status_t ret = DoConnectionStage();
-            if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Connection stage encountered an error!  [%s]\n", ret());
+            if ((ret.IsError())&&(ret != B_IO_ERROR)&&(ret != B_SHUTTING_DOWN)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Connection stage encountered an error!  [%s]\n", ret());
             SetConnectionPeerInfo(ConstMessageRef());  // tell owner thread we're disconnected
          }
          if (_keepGoing == false) break;
@@ -450,7 +450,7 @@ private:
          // If we got here, then our TCP connection failed.  Wait the specified delay time before going back to discovery-mode
          {
             const status_t ret = DoDelayStage();
-            if ((ret.IsError())&&(ret != B_IO_ERROR)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Delay stage encountered an error!  [%s]\n", ret());
+            if ((ret.IsError())&&(ret != B_IO_ERROR)&&(ret != B_SHUTTING_DOWN)) LogTime(MUSCLE_LOG_ERROR, "ClientConnectorImplementation:  Delay stage encountered an error!  [%s]\n", ret());
          }
          if (_keepGoing == false) break;
       }
@@ -572,7 +572,7 @@ private:
       if (msgRef() == NULL)
       {
          _keepGoing = false;
-         return B_ERROR("Owner thread requested exit.");
+         return B_SHUTTING_DOWN;
       }
       return _tcpSession ? _tcpSession->AddOutgoingMessage(msgRef) : B_NO_ERROR;
    }
