@@ -13,7 +13,7 @@ CONFIG         += qt warn_on rtti link_prl c++17 release
 
 TARGET = FridgeServer
 
-DEFINES += MUSCLE_USE_CPLUSPLUS11 MUSCLE_ENABLE_ZLIB_ENCODING MUSCLE_CATCH_SIGNALS_BY_DEFAULT
+DEFINES += MUSCLE_ENABLE_ZLIB_ENCODING MUSCLE_CATCH_SIGNALS_BY_DEFAULT
 
 exists(muscle_use_qt_threads) {
    warning("muscle_use_qt_threads detected:  MUSCLE Thread class will be a wrapper around QThread")
