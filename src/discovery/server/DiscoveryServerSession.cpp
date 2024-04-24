@@ -58,8 +58,7 @@ void DiscoveryServerSession :: NetworkInterfacesChanged(const Hashtable<String, 
 
 status_t DiscoveryServerSession :: AttachedToServer()
 {
-   _watchInterfacesSession.SetRef(newnothrow DiscoveryDetectNetworkConfigChangesSession(this));
-   MRETURN_OOM_ON_NULL(_watchInterfacesSession());
+   _watchInterfacesSession.SetRef(new DiscoveryDetectNetworkConfigChangesSession(this));
 
    status_t ret;
    if (AddNewSession(_watchInterfacesSession).IsError(ret))

@@ -99,9 +99,7 @@ public:
 
    virtual AbstractReflectSessionRef CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
    {
-      PZGUnicastSessionRef ret(newnothrow PZGUnicastSession(_master, ZGPeerID()));
-      MRETURN_OOM_ON_NULL(ret());
-      return ret;
+      return AbstractReflectSessionRef(new PZGUnicastSession(_master, ZGPeerID()));
    }
 
 private:
@@ -182,18 +180,15 @@ void PZGNetworkIOSession :: MessageReceivedFromInternalThread(const MessageRef &
 
 status_t PZGNetworkIOSession :: AttachedToServer()
 {
-   PZGUnicastSessionFactoryRef unicastTCPFactoryRef(newnothrow PZGUnicastSessionFactory(this));
-   MRETURN_OOM_ON_NULL(unicastTCPFactoryRef());
+   PZGUnicastSessionFactoryRef unicastTCPFactoryRef(new PZGUnicastSessionFactory(this));
 
    uint16 tcpAcceptPort;
    MRETURN_ON_ERROR(PutAcceptFactory(0, unicastTCPFactoryRef, invalidIP, &tcpAcceptPort));
 
-   _hbSettings.SetRef(newnothrow PZGHeartbeatSettings(_peerSettings, _localPeerID, tcpAcceptPort));
-   if (_hbSettings() == NULL) {(void) RemoveAcceptFactory(tcpAcceptPort); MRETURN_OUT_OF_MEMORY;}
+   _hbSettings.SetRef(new PZGHeartbeatSettings(_peerSettings, _localPeerID, tcpAcceptPort));
    LogTime(MUSCLE_LOG_DEBUG, "This peer's ZGPeerID is:  [%s]\n", GetLocalPeerID().ToString()());
 
-   DetectNetworkConfigChangesSessionRef dnccSessionRef(newnothrow DetectNetworkConfigChangesSession);
-   MRETURN_OOM_ON_NULL(dnccSessionRef());
+   DetectNetworkConfigChangesSessionRef dnccSessionRef(new DetectNetworkConfigChangesSession);
 
    status_t ret;
    if (AddNewSession(dnccSessionRef).IsError(ret))
@@ -211,8 +206,7 @@ status_t PZGNetworkIOSession :: AttachedToServer()
 
 status_t PZGNetworkIOSession :: SetupHeartbeatSession()
 {
-   PZGHeartbeatSessionRef hbSessionRef(newnothrow PZGHeartbeatSession(_hbSettings, this));
-   MRETURN_OOM_ON_NULL(hbSessionRef());
+   PZGHeartbeatSessionRef hbSessionRef(new PZGHeartbeatSession(_hbSettings, this));
 
    status_t ret;
    if (AddNewSession(hbSessionRef).IsError(ret))
@@ -386,13 +380,8 @@ void PZGNetworkIOSession :: InternalThreadEntry()
                PacketDataIORef & dio = dios[i];
                if (RegisterInternalThreadSocket(dio()->GetReadSelectSocket(), SOCKET_SET_READ).IsError()) LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession:  Couldn't register DataIO # " UINT32_FORMAT_SPEC " for input!\n", i);
 
-               PacketTunnelIOGatewayRef ptRef(newnothrow PacketTunnelIOGateway);
-               if ((ptRef())&&(ptGateways.AddTail(ptRef).IsOK())) ptRef()->SetDataIO(dio);
-               else
-               {
-                  LogTime(MUSCLE_LOG_ERROR, "Couldn't create PacketTunnelIOGateway for DataIO #" UINT32_FORMAT_SPEC "\n", i);
-                  (void) dios.RemoveItemAt(i--);  // no point in keeping it around if we can't have a gateway for it
-               }
+               PacketTunnelIOGatewayRef ptRef(new PacketTunnelIOGateway);
+               if (ptGateways.AddTail(ptRef).IsOK()) ptRef()->SetDataIO(dio);
             }
          }
          else LogTime(MUSCLE_LOG_ERROR, "PZGNetworkIOSession:  Couldn't create Multicast DataIOs!\n");
@@ -591,8 +580,7 @@ PZGUnicastSessionRef PZGNetworkIOSession :: GetUnicastSessionForPeerID(const ZGP
       return B_DATA_NOT_FOUND;
    }
 
-   PZGUnicastSessionRef usRef(newnothrow PZGUnicastSession(this, peerID));
-   MRETURN_OOM_ON_NULL(usRef());
+   PZGUnicastSessionRef usRef(new PZGUnicastSession(this, peerID));
 
    status_t ret;
    if (AddNewConnectSession(usRef, iap, MUSCLE_TIME_NEVER, SecondsToMicros(5)).IsError(ret))

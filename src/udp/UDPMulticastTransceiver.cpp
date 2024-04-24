@@ -43,9 +43,8 @@ public:
    virtual DataIORef CreateDataIO(const ConstSocketRef & s)
    {
       PacketDataIO * udpIO;
-      if (_useSimulatedMulticast) udpIO = newnothrow SimulatedMulticastDataIO(_multicastIAP);
-                             else udpIO = newnothrow UDPSocketDataIO(s, false);
-      MRETURN_OOM_ON_NULL(udpIO);
+      if (_useSimulatedMulticast) udpIO = new SimulatedMulticastDataIO(_multicastIAP);
+                             else udpIO = new UDPSocketDataIO(s, false);
 
       DataIORef ret(udpIO);
       (void) udpIO->SetPacketSendDestination(_multicastIAP);
@@ -141,9 +140,7 @@ public:
 
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
-      AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      MRETURN_OOM_ON_NULL(ret());
-      return ret;
+      return AbstractMessageIOGatewayRef(new SignalMessageIOGateway());
    }
 
    virtual status_t AttachedToServer()
@@ -239,11 +236,10 @@ private:
             if (useSimulatedMulticast) iap.SetPort(iap.GetPort()+100);  // just to keep SimulatedMulticastDataIO control-packets from leaking into the user's standard-multicast receivers
 
             // Use a different socket for each IP address, to avoid Mac routing problems
-            status_t ret;
-            MulticastUDPSessionRef msRef(newnothrow MulticastUDPSession(useSimulatedMulticast, iap, this));
+            MulticastUDPSessionRef msRef(new MulticastUDPSession(useSimulatedMulticast, iap, this));
 
-                 if (msRef() == NULL) MWARN_OUT_OF_MEMORY;
-            else if (AddNewSession(msRef).IsOK(ret))
+            status_t ret;
+            if (AddNewSession(msRef).IsOK(ret))
             {
                const int iidx = iap.GetIPAddress().GetInterfaceIndex();
                if (_udpSessions.ContainsKey(iidx)) LogTime(MUSCLE_LOG_CRITICALERROR, "MulticastUDPClientManagerSession:  Multiple UDP sessions have the same interface index %i!\n", iidx);

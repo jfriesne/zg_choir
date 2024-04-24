@@ -98,8 +98,7 @@ status_t ZGPeerSession :: AttachedToServer()
 {
    MRETURN_ON_ERROR(StorageReflectSession::AttachedToServer());
 
-   PZGNetworkIOSessionRef ioSessionRef(newnothrow PZGNetworkIOSession(_peerSettings, _localPeerID, this));
-   MRETURN_OOM_ON_NULL(ioSessionRef());
+   PZGNetworkIOSessionRef ioSessionRef(new PZGNetworkIOSession(_peerSettings, _localPeerID, this));
    MRETURN_ON_ERROR(AddNewSession(ioSessionRef));
    _networkIOSession = ioSessionRef;
 

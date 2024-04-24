@@ -80,8 +80,7 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
          {
             if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK(ret))
             {
-               UDPSocketDataIORef ret(newnothrow UDPSocketDataIO(udpSock, false));
-               MRETURN_OOM_ON_NULL(ret());
+               UDPSocketDataIORef ret(new UDPSocketDataIO(udpSock, false));
                (void) ret()->SetPacketSendDestination(multicastIAP);
                return ret;
             }
@@ -149,13 +148,12 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
          {
             case MULTICAST_MODE_SIMULATED:
             {
-               SimulatedMulticastDataIORef wifiIO(newnothrow SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
-               if ((wifiIO())&&(ret.AddTail(wifiIO).IsOK()))
+               SimulatedMulticastDataIORef wifiIO(new SimulatedMulticastDataIO(IPAddressAndPort(MungeMulticastAddress(nextMulticastAddress), udpPort)));
+               if (ret.AddTail(wifiIO).IsOK())
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Using SimulatedMulticastDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());
                   (void) iidxQ.AddTail(iidx);
                }
-               else MWARN_OUT_OF_MEMORY;
             }
             break;
 

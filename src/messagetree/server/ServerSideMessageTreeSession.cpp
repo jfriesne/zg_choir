@@ -126,8 +126,7 @@ ServerSideMessageTreeSessionFactory :: ServerSideMessageTreeSessionFactory(ITree
 
 AbstractReflectSessionRef ServerSideMessageTreeSessionFactory :: CreateSession(const String & /*clientAddress*/, const IPAddressAndPort & /*factoryInfo*/)
 {
-   ServerSideMessageTreeSessionRef ret(newnothrow ServerSideMessageTreeSession(GetGateway()));
-   MRETURN_OOM_ON_NULL(ret());
+   ServerSideMessageTreeSessionRef ret(new ServerSideMessageTreeSession(GetGateway()));
    ret()->SetLogOnAttachAndDetach(_announceClientConnectsAndDisconnects);
    return ret;
 }

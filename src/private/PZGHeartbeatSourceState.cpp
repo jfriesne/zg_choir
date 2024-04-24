@@ -15,8 +15,7 @@ status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & mult
    PZGRoundTripTimeAveragerRef * rtt = _rttAveragers.Get(multicastAddr);
    if (rtt == NULL)
    {
-      PZGRoundTripTimeAveragerRef r(newnothrow PZGRoundTripTimeAverager(_maxMeasurements));
-      MRETURN_OOM_ON_NULL(r());
+      PZGRoundTripTimeAveragerRef r(new PZGRoundTripTimeAverager(_maxMeasurements));
 
       rtt = _rttAveragers.PutAndGet(multicastAddr, r);
       MRETURN_OOM_ON_NULL(rtt);

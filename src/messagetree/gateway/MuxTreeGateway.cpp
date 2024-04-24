@@ -66,8 +66,8 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
    if (hisSubs() == NULL)
    {
       // demand-allocate an entry for him
-      hisSubs.SetRef(newnothrow TreeSubscriberInfo);
-      if ((hisSubs())&&(_subscriberInfos.Put(calledBy, hisSubs).IsError())) hisSubs.Reset();
+      hisSubs.SetRef(new TreeSubscriberInfo);
+      if (_subscriberInfos.Put(calledBy, hisSubs).IsError()) hisSubs.Reset();
       if ((hisSubs())&&(_isConnected)) calledBy->TreeGatewayConnectionStateChanged();  // let him know we are connected to the server already
    }
 
@@ -477,14 +477,13 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
                   if (unionFilter()) oqf = const_cast<OrQueryFilter *>(static_cast<const OrQueryFilter *>(unionFilter()));
                   else
                   {
-                     oqf = newnothrow OrQueryFilter;
+                     oqf = new OrQueryFilter;
                      if (oqf)
                      {
                         unionFilter.SetRef(oqf);
                         (void) oqf->GetChildren().AddTail(sendFilter);
                         sendFilter = unionFilter;
                      }
-                     else MWARN_OUT_OF_MEMORY;
                   }
                   if (oqf) (void) oqf->GetChildren().AddTail(nextFilter);
                }

@@ -123,26 +123,9 @@ protected:
    {
       switch(whichDatabase)
       {
-         case FRIDGE_DB_PROJECT:
-         {
-            IDatabaseObjectRef ret(newnothrow MagnetsMessageTreeDatabaseObject(this, whichDatabase, "project"));
-            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
-            return ret;
-         }
-
-         case FRIDGE_DB_CHAT:
-         {
-            IDatabaseObjectRef ret(newnothrow MessageTreeDatabaseObject(this, whichDatabase, "chat"));
-            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
-            return ret;
-         }
-
-         case FRIDGE_DB_CLIENTS:
-         {
-            IDatabaseObjectRef ret(newnothrow ClientDataMessageTreeDatabaseObject(this, whichDatabase, "clients"));
-            if (ret() == NULL) MWARN_OUT_OF_MEMORY;
-            return ret;
-         }
+         case FRIDGE_DB_PROJECT: return IDatabaseObjectRef(new MagnetsMessageTreeDatabaseObject(   this, whichDatabase, "project"));
+         case FRIDGE_DB_CHAT:    return IDatabaseObjectRef(new MessageTreeDatabaseObject(          this, whichDatabase, "chat"));
+         case FRIDGE_DB_CLIENTS: return IDatabaseObjectRef(new ClientDataMessageTreeDatabaseObject(this, whichDatabase, "clients"));
 
          default:
             LogTime(MUSCLE_LOG_CRITICALERROR, "FridgePeerSession::CreateDatabaseObject(" UINT32_FORMAT_SPEC "):  Unknown database ID!\n", whichDatabase);

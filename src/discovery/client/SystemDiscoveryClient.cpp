@@ -111,9 +111,7 @@ public:
 
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
-      AbstractMessageIOGatewayRef ret(newnothrow SignalMessageIOGateway());
-      MRETURN_OOM_ON_NULL(ret());
-      return ret;
+      return AbstractMessageIOGatewayRef(new SignalMessageIOGateway());
    }
 
    virtual status_t AttachedToServer()
@@ -228,10 +226,9 @@ private:
          {
             // Use a different socket for each IP address, to avoid Mac routing problems
             const IPAddressAndPort & iap = iter.GetKey();
+            DiscoverySessionRef ldsRef(new DiscoverySession(iap, this));
             status_t ret;
-            DiscoverySessionRef ldsRef(newnothrow DiscoverySession(iap, this));
-                 if (ldsRef() == NULL) MWARN_OUT_OF_MEMORY;
-            else if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
+            if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
          }
       }
    }

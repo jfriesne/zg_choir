@@ -17,9 +17,7 @@ ConstSocketRef PZGThreadedSession :: CreateDefaultSocket()
 
 AbstractMessageIOGatewayRef PZGThreadedSession :: CreateGateway()
 {
-   SignalMessageIOGatewayRef gwRef(newnothrow SignalMessageIOGateway);
-   MRETURN_OOM_ON_NULL(gwRef());
-   return gwRef;
+   return AbstractMessageIOGatewayRef(new SignalMessageIOGateway);
 }
 
 status_t PZGThreadedSession :: AttachedToServer()

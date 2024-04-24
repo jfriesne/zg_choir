@@ -627,8 +627,7 @@ void PZGHeartbeatThreadState :: ExpireSource(const PZGHeartbeatSourceKey & sourc
 
 void PZGHeartbeatThreadState :: IntroduceSource(const PZGHeartbeatSourceKey & source, const PZGHeartbeatPacketWithMetaDataRef & newHB, uint64 localExpirationTimeMicros)
 {
-   PZGHeartbeatSourceStateRef newSource(newnothrow PZGHeartbeatSourceState(20));
-   if (newSource() == NULL) {MWARN_OUT_OF_MEMORY; return;}
+   PZGHeartbeatSourceStateRef newSource(new PZGHeartbeatSourceState(20));
 
    newSource()->SetHeartbeatPacket(newHB, localExpirationTimeMicros);
    if (_onlineSources.Put(source, newSource).IsOK())

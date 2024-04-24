@@ -84,9 +84,7 @@ public:
 
    virtual DataIORef CreateDataIO(const ConstSocketRef & socket)
    {
-      UDPSocketDataIORef dio(newnothrow UDPSocketDataIO(socket, false));
-      MRETURN_OOM_ON_NULL(dio());
-
+      UDPSocketDataIORef dio(new UDPSocketDataIO(socket, false));
       (void) dio()->SetPacketSendDestination(_timeSyncDest);
       return dio;
    }
@@ -161,8 +159,7 @@ public:
 
       if (_timeSyncDest.IsValid())
       {
-         _timeSyncSession.SetRef(newnothrow UDPTimeSyncSession(this, _timeSyncDest));
-         MRETURN_OOM_ON_NULL(_timeSyncSession());
+         _timeSyncSession.SetRef(new UDPTimeSyncSession(this, _timeSyncDest));
          MRETURN_ON_ERROR(AddNewSession(_timeSyncSession));
       }
 
@@ -220,8 +217,7 @@ public:
 
    virtual AbstractMessageIOGatewayRef CreateGateway()
    {
-      MessageIOGatewayRef ret(newnothrow MessageIOGateway());
-      MRETURN_OOM_ON_NULL(ret());
+      MessageIOGatewayRef ret(new MessageIOGateway());
       ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
       return ret;
    }
@@ -384,10 +380,10 @@ public:
          _isActive                       = true;
 
          // This is the filter the DiscoveryModule will actually use (it's a superset of the _optAdditionalDiscoveryCriteria because it also specifies what system name(s) we will accept)
-         _discoFilterRef.SetRef(newnothrow StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, _systemNamePattern));
-         if ((_discoFilterRef())&&(_optAdditionalDiscoveryCriteria())) _discoFilterRef.SetRef(newnothrow AndQueryFilter(_discoFilterRef, _optAdditionalDiscoveryCriteria));
+         _discoFilterRef.SetRef(new StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, _systemNamePattern));
+         if (_optAdditionalDiscoveryCriteria()) _discoFilterRef.SetRef(new AndQueryFilter(_discoFilterRef, _optAdditionalDiscoveryCriteria));
 
-         const status_t ret = _discoFilterRef() ? StartInternalThread() : B_OUT_OF_MEMORY;
+         const status_t ret = StartInternalThread();
          if (ret.IsError()) Stop();  // roll back the state we set above
          return ret;
       }

@@ -14,9 +14,7 @@ ZGStdinSession :: ZGStdinSession(ITextCommandReceiver & target, bool endServerOn
 
 DataIORef ZGStdinSession :: CreateDataIO(const ConstSocketRef &)
 {
-   DataIO * dio = newnothrow StdinDataIO(false);
-   MRETURN_OOM_ON_NULL(dio);
-   return DataIORef(dio);
+   return DataIORef(new StdinDataIO(false));
 }
 
 bool ZGStdinSession :: IsReallyStdin() const
@@ -46,9 +44,7 @@ bool ZGStdinSession :: IsReadyForInput() const
 
 AbstractMessageIOGatewayRef ZGStdinSession :: CreateGateway()
 {
-   AbstractMessageIOGateway * gw = newnothrow PlainTextMessageIOGateway;
-   MRETURN_OOM_ON_NULL(gw);
-   return AbstractMessageIOGatewayRef(gw);
+   return AbstractMessageIOGatewayRef(new PlainTextMessageIOGateway);
 }
 
 void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void * /*ptr*/)

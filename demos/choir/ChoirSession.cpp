@@ -234,12 +234,11 @@ IDatabaseObjectRef ChoirSession :: CreateDatabaseObject(uint32 whichDatabase)
    IDatabaseObjectRef ret;
    switch(whichDatabase)
    {
-      case CHOIR_DATABASE_SCORE:         ret.SetRef(newnothrow MusicSheet(        this, whichDatabase)); break;
-      case CHOIR_DATABASE_PLAYBACKSTATE: ret.SetRef(newnothrow PlaybackState(     this, whichDatabase)); break;
-      case CHOIR_DATABASE_ROSTER:        ret.SetRef(newnothrow NoteAssignmentsMap(this, whichDatabase)); break;
-      default:                           /* empty */                                                     break;
+      case CHOIR_DATABASE_SCORE:         ret.SetRef(new MusicSheet(        this, whichDatabase)); break;
+      case CHOIR_DATABASE_PLAYBACKSTATE: ret.SetRef(new PlaybackState(     this, whichDatabase)); break;
+      case CHOIR_DATABASE_ROSTER:        ret.SetRef(new NoteAssignmentsMap(this, whichDatabase)); break;
+      default:                           /* empty */                                              break;
    }
-   if (ret() == NULL) MWARN_OUT_OF_MEMORY;
    return ret;
 }
 
