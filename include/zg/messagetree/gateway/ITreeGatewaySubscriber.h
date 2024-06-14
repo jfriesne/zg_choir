@@ -22,7 +22,8 @@ enum {
    TREE_GATEWAY_FLAG_TRAVERSE_SYMLINK,  /**< Specify this bit to have a node upload's path-lookup traverse a symlink-node rather than write to the symlink-node */
    NUM_TREE_GATEWAY_FLAGS               /**< Guard value */
 };
-DECLARE_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS);
+extern const char * _treeGatewayFlagLabels[];
+DECLARE_LABELLED_BITCHORD_FLAGS_TYPE(TreeGatewayFlags, NUM_TREE_GATEWAY_FLAGS, _treeGatewayFlagLabels);
 
 class ITreeGateway;
 class GatewaySubscriberUndoBatchGuard;

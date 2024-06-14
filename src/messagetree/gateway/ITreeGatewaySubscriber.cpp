@@ -3,6 +3,18 @@
 
 namespace zg {
 
+const char * _treeGatewayFlagLabels[] = {
+   "Indexed",
+   "NoReply",
+   "Interim",
+   "Sync",
+   "DontCreateNode",
+   "DontOverwriteData",
+   "EnableSupercede",
+   "TraverseSymlink",
+};
+MUSCLE_STATIC_ASSERT_ARRAY_LENGTH(_treeGatewayFlagLabels, NUM_TREE_GATEWAY_FLAGS);
+
 status_t ITreeGatewaySubscriber :: AddTreeSubscription(const String & subscriptionPath, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags)
 {
    return GetGateway()->TreeGateway_AddSubscription(this, subscriptionPath, optFilterRef, flags);
