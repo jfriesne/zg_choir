@@ -152,8 +152,9 @@ status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscr
    if ((_subscriberInfos.Get(calledBy, subs).IsOK(ret))&&(subs()))
    {
       const TreeSubscriberInfo temp = *subs(); // make local copy to avoid potential re-entrancy issues
-      for (HashtableIterator<String, PathMatcherEntry> iter(temp.GetEntries()); iter.HasData(); iter++)
-         (void) TreeGateway_RemoveSubscription(calledBy, iter.GetKey(), iter.GetValue().GetFilter(), TreeGatewayFlags()).IsError(ret);  // IsError() will set (ret) on error
+      for (HashtableIterator<uint32, Hashtable<String, PathMatcherEntry > > iter(temp.GetEntries()); iter.HasData(); iter++)
+         for (HashtableIterator<String, PathMatcherEntry> subIter(iter.GetValue()); subIter.HasData(); subIter++)
+            (void) TreeGateway_RemoveSubscription(calledBy, subIter.GetKey(), subIter.GetValue().GetFilter(), TreeGatewayFlags()).IsError(ret);  // IsError() will set (ret) on error
       return ret;
    }
    else return ret;
