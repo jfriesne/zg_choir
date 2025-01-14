@@ -45,7 +45,7 @@ static ZGPeerSettings GetChoirPeerSettings()
    return settings;
 }
 
-ChoirWindow :: ChoirWindow() 
+ChoirWindow :: ChoirWindow()
    : _serverThread(GetChoirPeerSettings())
    , _userIsDraggingTempoSlider(false)
    , _musicPlayer(_serverThread.GetNetworkTimeProvider())
@@ -90,7 +90,7 @@ ChoirWindow :: ChoirWindow()
       _horizontalScrollBar = new QScrollBar(Qt::Horizontal);
       connect(_horizontalScrollBar, SIGNAL(valueChanged(int)), _musicSheetWidget, SLOT(SetHorizontalScrollOffset(int)));
       connect(_musicSheetWidget, SIGNAL(SongWidthChanged()), this, SLOT(UpdateHorizontalScrollBarSettings()));
-     
+
       sbl->addWidget(_horizontalScrollBar);
    }
    vbl->addWidget(musicAndScroll);
@@ -127,7 +127,7 @@ ChoirWindow :: ChoirWindow()
 
       QLabel * assLabel = new QLabel("Bell Assignment: ");
       hbl->addWidget(assLabel);
-      
+
       _strategyComboBox = new QComboBox;
       for (uint32 i=0; i<NUM_ASSIGNMENT_STRATEGIES; i++) _strategyComboBox->addItem(GetStrategyName(i));
       connect(_strategyComboBox, SIGNAL(activated(int)), this, SLOT(UserRequestedStrategyChange(int)));
@@ -162,7 +162,7 @@ ChoirWindow :: ChoirWindow()
       UpdateTempoValueLabel();
 
       hbl->addStretch();
-   
+
       _cloneWindowButton = CreateButton(":/clone_choir_window.png", SLOT(CloneWindow()), true, hbl);
    }
    vbl->addWidget(buttonsRow);
@@ -384,7 +384,7 @@ void ChoirWindow :: SeekRequested(uint32 chordIdx)
 void ChoirWindow :: SendTransportCommand(uint32 what, const uint32 * optSeekToChordIdx)
 {
    UpdateButtons();  // since we only want their state to change when we get an update to our _playbackState, not from a local input
- 
+
    MessageRef cmdMsg = GetMessageFromPool(what);
    if ((cmdMsg())&&((optSeekToChordIdx == NULL)||(cmdMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, *optSeekToChordIdx).IsOK()))) (void) _serverThread.SendMessageToSessions(cmdMsg);
 }
@@ -446,7 +446,7 @@ void ChoirWindow :: UpdateButtons()
    _pauseButton->setChecked(isPaused);
    _stopButton->setChecked(!isAtTop);
    _loopButton->setChecked(_playbackState.IsLoop());
-   
+
    _playButton->setEnabled(isPaused);
    _pauseButton->setEnabled(!isPaused);
    _stopButton->setEnabled(!isAtTop);
@@ -543,7 +543,7 @@ void ChoirWindow :: MessageReceivedFromServer(const MessageRef & msg, const Stri
          if (_musicSheet.PutChord(msg()->GetInt32(CHOIR_NAME_CHORD_INDEX), msg()->GetInt64(CHOIR_NAME_CHORD_VALUE)).IsOK()) MusicSheetUpdated();
       break;
 
-      case CHOIR_COMMAND_INSERT_CHORD: 
+      case CHOIR_COMMAND_INSERT_CHORD:
          _musicSheet.InsertChordAt(msg()->GetInt32(CHOIR_NAME_CHORD_INDEX));
          MusicSheetUpdated();
       break;
@@ -664,7 +664,7 @@ void ChoirWindow :: OpenSong()
          QByteArray ba = f.readAll();
          Message songMsg;
          if (songMsg.UnflattenFromBytes((const uint8 *) ba.data(), ba.size()).IsOK())
-         { 
+         {
             MusicSheet temp;
             if (temp.SetFromArchive(DummyConstMessageRef(songMsg)).IsOK())
             {
@@ -698,8 +698,8 @@ void ChoirWindow :: SaveSong()
          if (msgBytes())
          {
             QFile f(savePath);
-            if ((f.open(QIODevice::WriteOnly))&&(f.write((const char *)msgBytes()->GetBuffer(), msgBytes()->GetNumBytes()) == msgBytes()->GetNumBytes())) 
-            { 
+            if ((f.open(QIODevice::WriteOnly))&&(f.write((const char *)msgBytes()->GetBuffer(), msgBytes()->GetNumBytes()) == msgBytes()->GetNumBytes()))
+            {
                LogTime(MUSCLE_LOG_INFO, "Saved song file to [%s]\n", savePath.toUtf8().constData());
 
                // success!  Now the one other thing we want to do is tell everyone about the new song path

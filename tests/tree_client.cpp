@@ -36,7 +36,7 @@ int main(int argc, char ** argv)
 
    int exitCode = 10;
 
-   // This object is required by the MUSCLE library; 
+   // This object is required by the MUSCLE library;
    // it does various system-specific startup and shutdown tasks
    CompleteSetupSystem css;
 
@@ -50,7 +50,7 @@ int main(int argc, char ** argv)
    if (ParseConnectArg(args, "host", host, port).IsError())
    {
       LogTime(MUSCLE_LOG_WARNING, "No host=hostname:port argument specified; defaulting to 127.0.0.1:%u\n", TREE_PEER_SERVER_PORT);
-      host = "127.0.0.1"; 
+      host = "127.0.0.1";
       port = TREE_PEER_SERVER_PORT;
    }
    if (port == 0) port = TREE_PEER_SERVER_PORT;
@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
 
       LogTime(MUSCLE_LOG_INFO, "tree_client is accepting commands on stdin.  Enter '?' for a list of available commands.\n");
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret.IsOK()) 
+      if (ret.IsOK())
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

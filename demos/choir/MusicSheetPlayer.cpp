@@ -4,7 +4,7 @@
 
 namespace choir {
 
-MusicSheetPlayer :: MusicSheetPlayer(const INetworkTimeProvider * networkTimeProvider, QObject * parent) 
+MusicSheetPlayer :: MusicSheetPlayer(const INetworkTimeProvider * networkTimeProvider, QObject * parent)
    : QObject(parent)
    , _networkTimeProvider(networkTimeProvider)
    , _nextChordIndex(0)
@@ -18,7 +18,7 @@ MusicSheetPlayer :: ~MusicSheetPlayer()
 {
    // empty
 }
-   
+
 void MusicSheetPlayer :: SetupTimer()
 {
    _wakeupTimer = new QTimer(this);
@@ -101,7 +101,7 @@ void MusicSheetPlayer :: Wakeup()
             if (networkNow >= chordNetworkTime)
             {
                const uint64 chord = _musicSheet()->GetChordAtIndex(_nextChordIndex, _playbackState.IsLoop());
-               if (chord != 0) 
+               if (chord != 0)
                {
                   chordToPlay   = chord;
                   chordPlayTime = chordNetworkTime;
@@ -111,7 +111,7 @@ void MusicSheetPlayer :: Wakeup()
             else break;
          }
 
-         if (chordToPlay) 
+         if (chordToPlay)
          {
             const uint64 lateBy = (networkNow-chordPlayTime);
             if (lateBy < (uint64)MillisToMicros(50))  // if we're more than 50mS late, then we won't bother

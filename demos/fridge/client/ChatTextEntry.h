@@ -7,7 +7,7 @@
 namespace fridge {
 
 enum {
-   CHATTEXTENTRY_TYPE_CODE = 1667785076 // 'chat' 
+   CHATTEXTENTRY_TYPE_CODE = 1667785076 // 'chat'
 };
 
 /** An object of this class holds the state of one line of chat text */
@@ -31,7 +31,7 @@ public:
    status_t SaveToArchive(Message & archive) const
    {
       archive.what = CHATTEXTENTRY_TYPE_CODE;
-      return archive.CAddString("text", _chatText) 
+      return archive.CAddString("text", _chatText)
            | archive.CAddString("user", _userName)
            | archive.CAddInt64( "time", _timeStamp);
    }
@@ -49,7 +49,7 @@ public:
       return B_NO_ERROR;
    }
 
-   /** Returns -1, 0, or 1, depending on how this ChatTextEntry should be 
+   /** Returns -1, 0, or 1, depending on how this ChatTextEntry should be
      * ordered with respect to (rhs).
      * @param rhs the other ChatTextEntry to compare to
      */
@@ -72,7 +72,7 @@ public:
 
 private:
    String _chatText;
-   String _userName; 
+   String _userName;
    uint64 _timeStamp;
 };
 

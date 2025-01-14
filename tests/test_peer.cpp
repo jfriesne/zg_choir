@@ -35,12 +35,12 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
       if (multicastMode.ContainsIgnoreCase("sim"))
       {
          LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use SimulatedMulticastDataIO!\n");
-         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY);      
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY);
       }
       else if (multicastMode.ContainsIgnoreCase("standard"))
       {
          LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use real multicast DataIO!\n");
-         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY);      
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY);
       }
    }
 
@@ -63,7 +63,7 @@ static ZGPeerSettings GetTestZGPeerSettings(const Message & args)
 class TestZGPeerSession : public ZGPeerSession
 {
 public:
-   TestZGPeerSession(const Message & args) 
+   TestZGPeerSession(const Message & args)
       : ZGPeerSession(GetTestZGPeerSettings(args))
       , _seed((unsigned int) time(NULL))
       , _autoUpdateDelay(0)
@@ -176,7 +176,7 @@ public:
       }
       else if (text == "start network times") {_nextPrintNetworkTimeTime = GetRunTime64();    InvalidatePulseTime();}
       else if (text == "stop network times")  {_nextPrintNetworkTimeTime = MUSCLE_TIME_NEVER; InvalidatePulseTime(); _prevNetworkTime = _prevLocalTime = 0;}
-      else return ZGPeerSession::TextCommandReceived(text); 
+      else return ZGPeerSession::TextCommandReceived(text);
 
       return true;  // if we got here, one of our if-cases must have been executed
    }
@@ -208,7 +208,7 @@ protected:
 
       for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++)
          if (ret()->AddString(iter.GetKey(), iter.GetValue()).IsError()) return MessageRef();
-     
+
       return ret;
    }
 
@@ -328,7 +328,7 @@ private:
                   *oldValue = valStr;
                   dbChecksum += CalculateKeyValueChecksum(keyStr, valStr);     // in with the new
                }
-               else 
+               else
                {
                   // create-new key-value pair
                   MRETURN_ON_ERROR(toyDB.Put(keyStr, valStr));
@@ -344,7 +344,7 @@ private:
             {
                const String & keyStr = fnIter.GetFieldName();
                const String * oldValue = toyDB.Get(keyStr);  // may be NULL if entry requested to delete doesn't exist
-               if (oldValue) 
+               if (oldValue)
                {
                   dbChecksum -= CalculateKeyValueChecksum(keyStr, *oldValue);  // out with the old (there is no new)
                   (void) toyDB.Remove(keyStr);
@@ -396,7 +396,7 @@ int main(int argc, char ** argv)
    SetPerProcessRunTime64Offset(getpid()*5000000);
 #endif
 
-   // This object is required by the MUSCLE library; 
+   // This object is required by the MUSCLE library;
    // it does various system-specific startup and shutdown tasks
    CompleteSetupSystem css;
 
@@ -419,8 +419,8 @@ int main(int argc, char ** argv)
        (server.AddNewSession(DummyZGPeerSessionRef(zgPeerSession)).IsOK()))
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
-      status_t ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret.IsOK()) 
+      const status_t ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
+      if (ret.IsOK())
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

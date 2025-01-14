@@ -27,7 +27,7 @@ public:
 
    virtual void paintEvent(QPaintEvent * e);
    virtual void mousePressEvent(QMouseEvent * e);
-   
+
    void SetAnimationActive(bool a);
    bool IsAnimationActive() const {return _animationActive;}
 

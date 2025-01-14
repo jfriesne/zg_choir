@@ -26,7 +26,7 @@ public:
    virtual void mousePressEvent(QMouseEvent * e);
    virtual void mouseMoveEvent(QMouseEvent * e);
    virtual void mouseReleaseEvent(QMouseEvent * e);
-   
+
    // ITreeGatewaySubscriber API
    virtual void TreeGatewayConnectionStateChanged();
    virtual void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag);

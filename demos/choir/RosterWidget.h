@@ -22,7 +22,7 @@ public:
 
    /** Destructor */
    ~RosterWidget();
-   
+
    /** Called when the RosterWidget first appears on screen. */
    virtual void showEvent(QShowEvent *);
 
@@ -53,7 +53,7 @@ public:
    /** Called when a peer comes online or goes offline.
      * The RosterWidget will use this information to lay out the rows it displays.
      * @param peerID the ZGPeerID of the peer we are being notified about
-     * @param isOnline True iff this peer just came online; false iff this peer just went offline. 
+     * @param isOnline True iff this peer just came online; false iff this peer just went offline.
      * @param optPeerInfo Reference to some information about the peer (e.g. its on-screen name)
      */
    void SetPeerIsOnline(const ZGPeerID & peerID, bool isOnline, const ConstMessageRef & optPeerInfo);

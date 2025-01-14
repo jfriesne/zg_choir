@@ -54,12 +54,12 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
       if (multicastMode.ContainsIgnoreCase("sim"))
       {
          LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use SimulatedMulticastDataIO!\n");
-         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY);      
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_SIMULATED_ONLY);
       }
       else if (multicastMode.ContainsIgnoreCase("standard"))
       {
          LogTime(MUSCLE_LOG_INFO, "Forcing all network interfaces to use real multicast DataIO!\n");
-         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY);      
+         s.SetMulticastBehavior(ZG_MULTICAST_BEHAVIOR_STANDARD_ONLY);
       }
    }
 
@@ -100,7 +100,7 @@ public:
    {
       const uint64 ret = MessageTreeDatabasePeerSession::HandleDiscoveryPing(pingMsg, pingSource);
       if (ret != MUSCLE_TIME_NEVER) (void) pingMsg()->CAddInt16("port", _acceptPort);  // clients will want to know this!
-      return ret; 
+      return ret;
    }
 
    void SetAcceptPort(uint16 port) {_acceptPort = port;}  // just so we can tell discovery-clients what port we are listening on
@@ -121,7 +121,7 @@ int main(int argc, char ** argv)
 
    int exitCode = 10;
 
-   // This object is required by the MUSCLE library; 
+   // This object is required by the MUSCLE library;
    // it does various system-specific startup and shutdown tasks
    CompleteSetupSystem css;
 
@@ -172,7 +172,7 @@ int main(int argc, char ** argv)
    {
       // Virtually all of the program's execution time happens inside the ServerProcessLoop() method
       ret = server.ServerProcessLoop();  // doesn't return until it's time to exit
-      if (ret.IsOK()) 
+      if (ret.IsOK())
       {
          LogTime(MUSCLE_LOG_INFO, "Event loop exited normally.\n");
          exitCode = 0;

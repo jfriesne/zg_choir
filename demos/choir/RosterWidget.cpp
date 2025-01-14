@@ -13,7 +13,7 @@ static const int _rowHeight       = 30;
 static const int _columnWidth     = 30;
 static const int _bellIconMargin  = 4;
 
-RosterWidget :: RosterWidget(const ZGPeerID & localPeerID, QWidget * parent) 
+RosterWidget :: RosterWidget(const ZGPeerID & localPeerID, QWidget * parent)
    : QWidget(parent)
    , _localPeerID(localPeerID)
    , _bellPixmap(QPixmap(":/choir_bell.png").scaled(QSize(_columnWidth-(_bellIconMargin*2), _rowHeight-(_bellIconMargin*2)), Qt::IgnoreAspectRatio, Qt::SmoothTransformation))
@@ -141,7 +141,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
       for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(_onlinePeers); iter.HasData(); iter++)
       {
          const ZGPeerID & peerID = iter.GetKey();
-         const int y = GetYForRow(rowIdx); 
+         const int y = GetYForRow(rowIdx);
 
          // Draw client names
          const uint64 latencyMicros = _peerIDToLatency.GetWithDefault(peerID, MUSCLE_TIME_NEVER);
@@ -150,7 +150,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
          p.drawText(QRect(0, y, _leftHeaderWidth, _rowHeight), Qt::AlignCenter, GetPeerNickname(peerID));
          p.setFont(_drawFont);
          p.drawText(QRect(0, y, width()-5, _rowHeight), Qt::AlignRight|Qt::AlignVCenter, peerID.IsValid()?((latencyMicros==MUSCLE_TIME_NEVER)?tr("???"):tr("%1 mS").arg(MicrosToMillis(latencyMicros))):tr("Latency"));
-  
+
          if (_columnIndexToNoteIndex.HasItems())
          {
             p.setPen(Qt::white);
@@ -182,7 +182,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
    }
 
    // Draw out the column lines
-   if (_columnIndexToNoteIndex.HasItems()) 
+   if (_columnIndexToNoteIndex.HasItems())
    {
       for (uint32 colIdx=0; colIdx<_columnIndexToNoteIndex.GetNumItems(); colIdx++)
       {
@@ -205,7 +205,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
       p.setOpacity(1.0);
    }
 
-   if (_readOnly) 
+   if (_readOnly)
    {
       p.translate(0, _scrollOffsetY);  // undo the original translation
       p.fillRect(QRect(0,0,width(),height()), QColor(100,100,100,100));
@@ -238,7 +238,7 @@ void RosterWidget :: mouseMoveEvent(QMouseEvent * e)
    if (_readOnly) {e->ignore(); return;}
 
    QWidget::mouseMoveEvent(e);
-   if (_draggingNoteIdx >= 0)  
+   if (_draggingNoteIdx >= 0)
    {
       _draggingNoteY = e->pos().y();
       update();
@@ -268,7 +268,7 @@ void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
    if (rowIdx < _onlinePeers.GetNumItems())
    {
       const uint32 noteIdx = (_draggingNoteIdx >= 0) ? _draggingNoteIdx : GetNoteIndexForX(p.x());
-      if (noteIdx != MUSCLE_NO_LIMIT) 
+      if (noteIdx != MUSCLE_NO_LIMIT)
       {
          const uint64 chord     = _assigns()  ? _assigns()->GetNoteAssignmentsForPeerID(GetPeerIDForRow(rowIdx)) : 0;
          const bool cellHasBell = (rowIdx==0) ? (chord == 0) : (chord & (1LL<<noteIdx));
@@ -276,7 +276,7 @@ void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
 
          if (isPress)
          {
-            if (cellHasBell) 
+            if (cellHasBell)
             {
                _draggingNoteIdx     = noteIdx;
                _draggingNoteY       = p.y();
@@ -286,7 +286,7 @@ void RosterWidget :: HandleMouseEvent(QMouseEvent * e, bool isPress)
             emitSignal = true;
          }
          else emitSignal = ((!cellHasBell)&&(muscleAbs(p.y()-_draggingNoteYStart)>5));
-   
+
          if (emitSignal) emit BellPositionClicked(GetPeerIDForRow(rowIdx), (_draggingNoteIdx>=0)?_draggingNoteIdx:noteIdx);  // remove the existing bell or add one
       }
    }

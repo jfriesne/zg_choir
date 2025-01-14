@@ -22,11 +22,11 @@ public:
 
    /** Destructor */
    ~MusicSheetWidget();
-   
+
    /** Sets the MusicSheet object that we should consult to find out where to draw notes at */
    void SetMusicSheet(const ConstMusicSheetRef & musicSheetRef);
 
-   /** Called whenever it's time to redraw this MusicSheetWidget */ 
+   /** Called whenever it's time to redraw this MusicSheetWidget */
    virtual void paintEvent(QPaintEvent *);
 
    /** Called whenever the user presses a mouse button down while the mouse is over this MusicSheetWidget */
@@ -57,12 +57,12 @@ public:
 
    /** Sets the bit-chord of notes that we are meant to play, and the bit-chord of all notes in the song
      * @param localNotes a bit-chord of notes that we are meant to play on this peer (i.e. to be rendered in green)
-     * @param allAssignedNotes a bit-chord of all the notes that are present in the current song 
+     * @param allAssignedNotes a bit-chord of all the notes that are present in the current song
      */
    void SetNoteAssignments(uint64 localNotes, uint64 allAssignedNotes);
 
    /** Called when we want to move the play-position-indicator (vertical red bar) left or right
-     * @param delta The number of note-spaces to move.  Positive numbers move it right, negative numbers move it left. 
+     * @param delta The number of note-spaces to move.  Positive numbers move it right, negative numbers move it left.
      */
    void MoveSeekPosition(int delta);
 

@@ -65,12 +65,12 @@ int main(int argc, char ** argv)
                      if (numStdinBytesRead.GetByteCount() == 0) break;
                   }
                }
-            } 
+            }
          }
          else
          {
             LogTime(MUSCLE_LOG_CRITICALERROR, "WaitForEvents() failed, exiting! [%s]\n", ret());
-            break; 
+            break;
          }
       }
    }

@@ -29,7 +29,7 @@ static QPixmap HighlightNotePixmap(const QPixmap & source, const QColor & c)
 
 static QPixmap RotatePixmap180(const QPixmap & pm)
 {
-   QImage img = pm.toImage(); 
+   QImage img = pm.toImage();
    QPoint center = img.rect().center();
    QTransform transform;
    transform.translate(center.x(), center.y());
@@ -96,7 +96,7 @@ const QPixmap & MusicSheetWidget :: GetPixmapForNote(uint32 noteIdx, int stemDir
       else
       {
          const uint64 orphanNotes = _musicSheet() ? (_musicSheet()->GetAllUsedNotesChord() & ~_allAssignedNotes) : 0;
-         if (orphanNotes & (1LL<<noteIdx)) 
+         if (orphanNotes & (1LL<<noteIdx))
          {
             retOpacity = 0.5;
             type = NOTE_TYPE_ORPHAN;
@@ -121,7 +121,7 @@ void MusicSheetWidget :: paintEvent(QPaintEvent * /*event*/)
 
    p.fillRect(QRect(0,0,width(),_titleHeightPixels), Qt::lightGray);
 
-   QString titleStr; 
+   QString titleStr;
    if (_musicSheet()) titleStr = _musicSheet()->GetSongFilePath().Substring("/").WithoutSuffix(".choirMusic")();
    if (titleStr.length() == 0) titleStr = "Untitled";
    p.drawText(QRect(0,0,width(),_titleHeightPixels), Qt::AlignCenter, titleStr);
@@ -159,7 +159,7 @@ void MusicSheetWidget :: paintEvent(QPaintEvent * /*event*/)
    }
 
    const uint32 vpci = _playbackState.IsPaused() ? _ghostChordIndex : GetSeekPointChordIndex();
-   if ((_musicSheet())&&(vpci != MUSCLE_NO_LIMIT)&&(_ghostNoteIndex != MUSCLE_NO_LIMIT)) 
+   if ((_musicSheet())&&(vpci != MUSCLE_NO_LIMIT)&&(_ghostNoteIndex != MUSCLE_NO_LIMIT))
    {
       const uint64 noteBit    = (1LL<<_ghostNoteIndex);
       const uint64 totalChord = noteBit | _musicSheet()->GetChordsTable()[vpci];
@@ -185,7 +185,7 @@ void MusicSheetWidget :: paintEvent(QPaintEvent * /*event*/)
 
 int MusicSheetWidget :: GetSeekPointX() const
 {
-   if (_playbackState.IsPaused()) 
+   if (_playbackState.IsPaused())
    {
       uint32 pausedIndex = _playbackState.GetPausedIndex();
       if ((_playbackState.IsLoop())&&(_musicSheet())) pausedIndex %= _musicSheet()->GetSongLengthInChords(true);
@@ -219,7 +219,7 @@ void MusicSheetWidget :: mousePressEvent(QMouseEvent * e)
          const uint32 noteIdx = GetNoteForY(p.y());
          if ((chordIdx != MUSCLE_NO_LIMIT)&&(noteIdx != MUSCLE_NO_LIMIT)) emit NotePositionClicked(chordIdx, noteIdx);
       }
-      else 
+      else
       {
          _seekDraggingIndex = chordIdx;
          emit SeekRequested(_seekDraggingIndex);
@@ -247,7 +247,7 @@ void MusicSheetWidget :: mouseMoveEvent(QMouseEvent * e)
       const uint32 newChordIndex = GetChordIndexForX(p.x());
       const uint32 newNoteIndex  = GetNoteForY(p.y());
 
-      if ((newChordIndex != _ghostChordIndex)||(newNoteIndex != _ghostNoteIndex)) 
+      if ((newChordIndex != _ghostChordIndex)||(newNoteIndex != _ghostNoteIndex))
       {
          _ghostChordIndex = newChordIndex;
          _ghostNoteIndex  = newNoteIndex;
@@ -401,11 +401,11 @@ void MusicSheetWidget :: SetPlaybackState(const PlaybackState & newState)
    }
 }
 
-void MusicSheetWidget :: SetHorizontalScrollOffset(int offsetPixels) 
+void MusicSheetWidget :: SetHorizontalScrollOffset(int offsetPixels)
 {
-   if (_scrollOffsetX != offsetPixels) 
+   if (_scrollOffsetX != offsetPixels)
    {
-      _scrollOffsetX = offsetPixels; 
+      _scrollOffsetX = offsetPixels;
       update();
    }
 }
@@ -441,7 +441,7 @@ void MusicSheetWidget :: MoveSeekPosition(int delta)
    }
    else newPos = muscleClamp((int32)(curPos+delta), (int32)0, (int32)songLen);
 
-   if ((uint32)newPos != curPos) 
+   if ((uint32)newPos != curPos)
    {
       emit SeekRequested(newPos);
       EnsureXIsVisible(GetXForChordIndex(newPos+((delta>0)?1:0), false));

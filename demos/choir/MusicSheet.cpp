@@ -113,13 +113,13 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
       uint64 * val = _chords.GetOrPut(whichChord);
       MRETURN_OOM_ON_NULL(val); // out of memory?
 
-      if (*val) 
+      if (*val)
       {
          UpdateNoteHistogram(*val, false, _noteHistogram, _usedNotes);
          _checksum -= CalculateChecksumForChord(whichChord, *val);
       }
       *val = chordValue;
-      if (*val) 
+      if (*val)
       {
          UpdateNoteHistogram(*val, true, _noteHistogram, _usedNotes);
          _checksum += CalculateChecksumForChord(whichChord, *val);
@@ -130,7 +130,7 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
    else
    {
       uint64 oldVal = 0;
-      if (_chords.Remove(whichChord, oldVal).IsOK()) 
+      if (_chords.Remove(whichChord, oldVal).IsOK())
       {
          UpdateNoteHistogram(oldVal, false, _noteHistogram, _usedNotes);
          _checksum -= CalculateChecksumForChord(whichChord, oldVal);
@@ -195,7 +195,7 @@ String MusicSheet :: ToString() const
    ret = buf;
    ret += String("_songFilePath is [%1]\n").Arg(_songFilePath);
 
-   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++) 
+   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
    {
       muscleSprintf(buf, "   [" UINT32_FORMAT_SPEC "] -> " XINT64_FORMAT_SPEC "\n", iter.GetKey(), iter.GetValue());
       ret += buf;
@@ -217,7 +217,7 @@ ConstMessageRef MusicSheet :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
          if (PutChord(chordIdx, newChord).IsOK())
          {
             MessageRef juniorMsg = GetMessageFromPool(CHOIR_COMMAND_SET_CHORD);
-            if ((juniorMsg())&&(juniorMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx).IsOK())&&(juniorMsg()->AddInt64(CHOIR_NAME_CHORD_VALUE, newChord).IsOK())) 
+            if ((juniorMsg())&&(juniorMsg()->AddInt32(CHOIR_NAME_CHORD_INDEX, chordIdx).IsOK())&&(juniorMsg()->AddInt64(CHOIR_NAME_CHORD_VALUE, newChord).IsOK()))
             {
                SendMessageToGUI(juniorMsg, true);
                return AddConstToRef(juniorMsg);
@@ -227,7 +227,7 @@ ConstMessageRef MusicSheet :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
       }
       break;
 
-      case CHOIR_COMMAND_INSERT_CHORD: 
+      case CHOIR_COMMAND_INSERT_CHORD:
       {
          InsertChordAt(seniorDoMsg()->GetInt32(CHOIR_NAME_CHORD_INDEX));
          SendMessageToGUI(seniorDoMsg, false);
@@ -287,7 +287,7 @@ status_t MusicSheet :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
          return B_NO_ERROR;
       }
 
-      case CHOIR_COMMAND_INSERT_CHORD: 
+      case CHOIR_COMMAND_INSERT_CHORD:
       {
          InsertChordAt(juniorDoMsg()->GetInt32(CHOIR_NAME_CHORD_INDEX));
          SendMessageToGUI(juniorDoMsg, false);
@@ -310,7 +310,7 @@ status_t MusicSheet :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
 
       case MUSIC_TYPE_MUSIC_SHEET:
          return SetFromArchive(juniorDoMsg);
-      
+
       default:
          LogTime(MUSCLE_LOG_ERROR, "MusicSheet::JuniorUpdate():  Unknown message code " UINT32_FORMAT_SPEC "\n", juniorDoMsg()->what);
       break;

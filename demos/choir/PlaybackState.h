@@ -13,8 +13,8 @@ public:
    /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
    PlaybackState();
 
-   /** Constructor 
-     * @param session pointer to the ZGDatabasePeerSession object that created us  
+   /** Constructor
+     * @param session pointer to the ZGDatabasePeerSession object that created us
      * @param dbIndex the database index of this database in the ZGDatabasePeerSess
      */
    PlaybackState(ZGDatabasePeerSession * session, int32 dbIndex);
@@ -37,7 +37,7 @@ public:
    /** Calculates and returns a checksum for this object */
    virtual uint32 CalculateChecksum() const;
 
-   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer. 
+   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer.
      * @param seniorDoMsg A Message containing instructions for how to update our state on the senior peer.
      * @returns a Message to send to the JuniorUpdate() method on the junior peers on success, or a NULL reference on failure.
      */
@@ -63,7 +63,7 @@ public:
 
    /** Sets the number of microseconds to be allotted to each chord in the MusicSheet
      * @param microsPerChord the new microseconds-per-chord value to use (smaller == faster playback)
-     * @param optNetworkNow If specified, and the state is currently set to "playing", we'll use this information to try to keep  
+     * @param optNetworkNow If specified, and the state is currently set to "playing", we'll use this information to try to keep
      *                      the current-playback-point roughly constant despite the change in tempo.
      */
    void SetMicrosPerChord(uint64 microsPerChord, uint64 optNetworkNow = MUSCLE_TIME_NEVER);
@@ -81,18 +81,18 @@ public:
    bool IsLoop() const {return _loop;}
 
    /** Convenience method -- starts playback at the current seek position, if we're not already playing
-     * @param networkNow The current network time (used to calculate the network-start-time-micros value) 
+     * @param networkNow The current network time (used to calculate the network-start-time-micros value)
      */
    void StartPlayback(uint64 networkNow);
 
-   /** Convenience method -- pauses playback at the current seek position, if we're not already paused 
-     * @param networkNow The current network time (used to calculate the network-start-time-micros value) 
+   /** Convenience method -- pauses playback at the current seek position, if we're not already paused
+     * @param networkNow The current network time (used to calculate the network-start-time-micros value)
      */
    void PausePlayback(uint64 networkNow);
 
    /** Convenience method -- seeks the current playback position to the specified chord
-     * @param networkNow The current network time (used to calculate the network-start-time-micros value) 
-     * @param whichChord The chord to seek to (0 == start of song, 1 == second chord, etc) 
+     * @param networkNow The current network time (used to calculate the network-start-time-micros value)
+     * @param whichChord The chord to seek to (0 == start of song, 1 == second chord, etc)
      */
    void SeekTo(uint64 networkNow, uint32 whichChord);
 

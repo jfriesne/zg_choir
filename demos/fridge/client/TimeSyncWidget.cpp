@@ -50,7 +50,7 @@ void TimeSyncWidget :: paintEvent(QPaintEvent *)
 
 void TimeSyncWidget :: mousePressEvent(QMouseEvent * e)
 {
-   e->accept(); 
+   e->accept();
    SetAnimationActive(!IsAnimationActive());
    emit clicked();
 }
@@ -65,5 +65,5 @@ void TimeSyncWidget :: SetAnimationActive(bool active)
       update();
    }
 }
-      
+
 }; // end namespace fridge

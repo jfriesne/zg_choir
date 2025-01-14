@@ -58,7 +58,7 @@ signals:
 
    /** This signal is emitted when the set of bells assigned to us changed, to let Quasimodo know which bells to use now.
      * @param localNotesChord a bit-chord of CHOIR_NOTE_* values indicating which bells are currently assigned to this peer.
-     */ 
+     */
    void LocalNoteAssignmentsChanged(quint64 localNotesChord);
 
    /** This signal is emitted at shutdown to tell the Quasimodo thread to free his resources in preparation for exit */
@@ -68,7 +68,7 @@ signals:
    void SetupTimer();
 
    /** This signal is emitted when our MusicSheet changes, in order to send the new MusicSheet to the music-sheet-player thread
-     * @param newMusicSheet a read-only reference to the new MusicSheet object 
+     * @param newMusicSheet a read-only reference to the new MusicSheet object
      */
    void SendMusicSheetToPlayer(const choir::ConstMusicSheetRef & newMusicSheet);
 

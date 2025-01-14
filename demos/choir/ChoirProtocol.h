@@ -19,8 +19,8 @@ enum {
 
 enum {
    // commands for updating the CHOIR_DATABASE_SCORE database
-   CHOIR_COMMAND_TOGGLE_NOTE = 1668245874, // 'coir' 
-   CHOIR_COMMAND_SET_SONG_FILE_PATH, 
+   CHOIR_COMMAND_TOGGLE_NOTE = 1668245874, // 'coir'
+   CHOIR_COMMAND_SET_SONG_FILE_PATH,
    CHOIR_COMMAND_SET_CHORD,  // sent by senior peer to junior peers
    CHOIR_COMMAND_INSERT_CHORD,  // inserts a column at the given index; all notes afterwards move to the right
    CHOIR_COMMAND_DELETE_CHORD,  // deletes a column at the given index; all notes afterwards move to the left

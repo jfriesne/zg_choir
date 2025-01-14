@@ -9,7 +9,7 @@
 
 namespace fridge {
 
-FridgeServerWindow :: FridgeServerWindow(const String & argv0) 
+FridgeServerWindow :: FridgeServerWindow(const String & argv0)
    : _argv0(argv0)
    , _childProcessIODevice(NULL)
    , _port(0)
@@ -65,19 +65,19 @@ FridgeServerWindow :: FridgeServerWindow(const String & argv0)
 
       _cloneWindowButton = new QPushButton(tr("Clone Server"));
       connect(_cloneWindowButton, SIGNAL(clicked()), this, SLOT(CloneServer()));
-      footerLayout->addWidget(_cloneWindowButton); 
+      footerLayout->addWidget(_cloneWindowButton);
 
       footerLayout->addStretch();
 
       _peerIDLabel = new QLabel;
-      _peerIDLabel->setAlignment(Qt::AlignCenter); 
-      footerLayout->addWidget(_peerIDLabel); 
- 
+      _peerIDLabel->setAlignment(Qt::AlignCenter);
+      footerLayout->addWidget(_peerIDLabel);
+
       footerLayout->addStretch();
 
       _clearButton = new QPushButton(tr("Clear Output"));
       connect(_clearButton, SIGNAL(clicked()), this, SLOT(ClearLog()));
-      footerLayout->addWidget(_clearButton); 
+      footerLayout->addWidget(_clearButton);
 
       footerLayout->addStretch();
    }
@@ -106,9 +106,9 @@ void FridgeServerWindow :: CloneServer()
 
 void FridgeServerWindow :: ScheduleUpdateStatus()
 {
-   if (_updateStatusPending == false) 
+   if (_updateStatusPending == false)
    {
-      _updateStatusPending = true; 
+      _updateStatusPending = true;
       QTimer::singleShot(0, this, SLOT(UpdateStatus()));
    }
 }
@@ -170,7 +170,7 @@ void FridgeServerWindow :: ParseTextLinesFromIncomingTextBuffer()
 
 void FridgeServerWindow :: ParseIncomingTextLine(const String & t)
 {
-   if (t.Contains("Listening for incoming client TCP connections")) 
+   if (t.Contains("Listening for incoming client TCP connections"))
    {
       const char * onPort = strstr(t(), "on port ");
       if (onPort) {_port = atoi(onPort+8); ScheduleUpdateStatus();}
@@ -216,13 +216,13 @@ void FridgeServerWindow :: SetServerRunning(bool running)
           && (cpdioRef()->LaunchChildProcess(argv).IsOK(ret)))
          {
             _childProcessIODevice = new QDataIODevice(cpdioRef, this);
-            if (_childProcessIODevice->open(QIODevice::ReadWrite)) 
+            if (_childProcessIODevice->open(QIODevice::ReadWrite))
             {
                ClearLog();
                QObject::connect(_childProcessIODevice, SIGNAL(readyRead()), this, SLOT(ReadChildProcessOutput()));
                _childProcess = cpdioRef;
             }
-            else 
+            else
             {
                LogTime(MUSCLE_LOG_CRITICALERROR, "Error, couldn't open QDataIODevice to child process!\n");
                delete _childProcessIODevice;
@@ -231,7 +231,7 @@ void FridgeServerWindow :: SetServerRunning(bool running)
          }
          else LogTime(MUSCLE_LOG_CRITICALERROR, "Error launching child process! [%s]\n", ret());
       }
-      else 
+      else
       {
          delete _childProcessIODevice;
          _childProcess.Reset();

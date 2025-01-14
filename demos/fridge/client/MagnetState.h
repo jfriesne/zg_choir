@@ -12,7 +12,7 @@
 namespace fridge {
 
 enum {
-   MAGNET_TYPE_CODE = 1835100014 // 'magn' 
+   MAGNET_TYPE_CODE = 1835100014 // 'magn'
 };
 
 /** An object of this class holds the state of one refrigerator-magnet */
@@ -86,7 +86,7 @@ public:
       return QRect(_upperLeftPos.x(), _upperLeftPos.y(), tw+(2*hMargin), th+(2*vMargin));
    }
 
-   /** Draws this magnet into the specified rectangle 
+   /** Draws this magnet into the specified rectangle
      * @param p the QPainter to draw with
      * @param r the rectangle to draw into (e.g. as previously returned by GetScreenRect())
      */
@@ -100,7 +100,7 @@ public:
 
 private:
    Point _upperLeftPos;
-   String _text; 
+   String _text;
    QString _qText;   // just because I don't want to constantly convert back and forth
 };
 

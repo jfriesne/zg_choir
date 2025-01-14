@@ -43,13 +43,13 @@ public:
 // otherwise, sets (outStr) equal to (inStr) and returns an invalid IPAddressAndPort.
 static IPAddressAndPort ParseUnicastAddressFromBeginningOfString(const String & inStr, String & outStr)
 {
-   int32 rBracket = inStr.StartsWith('[') ? inStr.IndexOf(']') : -1;
+   const int32 rBracket = inStr.StartsWith('[') ? inStr.IndexOf(']') : -1;
    if (rBracket > 0)
    {
       const IPAddressAndPort ret(inStr, 0, true);
       while((rBracket < inStr.Length())&&(inStr[rBracket] != ' ')) rBracket++;
       outStr = inStr.Substring(rBracket).Trimmed();
-      return ret; 
+      return ret;
    }
 
    // No unicast address parsed

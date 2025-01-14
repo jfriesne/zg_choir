@@ -12,8 +12,8 @@ public:
    /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
    NoteAssignmentsMap();
 
-   /** Constructor 
-     * @param session pointer to the ZGDatabasePeerSession object that created us  
+   /** Constructor
+     * @param session pointer to the ZGDatabasePeerSession object that created us
      * @param dbIndex the database index of this database in the ZGDatabasePeerSess
      */
    NoteAssignmentsMap(ZGDatabasePeerSession * session, int32 dbIndex);
@@ -59,7 +59,7 @@ public:
    /** Recalculates our checksum from scratch (expensive!) */
    virtual uint32 CalculateChecksum() const;
 
-   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer. 
+   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer.
      * @param seniorDoMsg A Message containing instructions for how to update our state on the senior peer.
      * @returns a Message to send to the JuniorUpdate() method on the junior peers on success, or a NULL reference on failure.
      */

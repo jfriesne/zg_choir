@@ -13,22 +13,22 @@ static const int AUDIO_SAMPLE_RATE       = 22050;
 static const int MIX_BUFFER_SIZE_SAMPLES = AUDIO_SAMPLE_RATE/20;  // 20Hz buffers, for now
 
 // Stolen from:  https://stackoverflow.com/questions/13660777/c-reading-the-data-part-of-a-wav-file
-struct WavHeader 
+struct WavHeader
 {
    uint8  RIFF[4];        // RIFF Header (Magic number)
-   uint32 ChunkSize;      // RIFF Chunk Size  
-   uint8  WAVE[4];        // WAVE Header      
-   uint8  fmt[4];         // FMT header       
-   uint32 Subchunk1Size;  // Size of the fmt chunk                                
-   uint16 AudioFormat;    // Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM 
-   uint16 NumOfChan;      // Number of channels 1=Mono 2=Sterio                   
-   uint32 SamplesPerSec;  // Sampling Frequency in Hz                             
-   uint32 bytesPerSec;    // bytes per second 
-   uint16 blockAlign;     // 2=16-bit mono, 4=16-bit stereo 
-   uint16 bitsPerSample;  // Number of bits per sample      
-   uint8  Subchunk2ID[4]; // "data"  string   
-   uint32 Subchunk2Size;  // Sampled data length    
-}; 
+   uint32 ChunkSize;      // RIFF Chunk Size
+   uint8  WAVE[4];        // WAVE Header
+   uint8  fmt[4];         // FMT header
+   uint32 Subchunk1Size;  // Size of the fmt chunk
+   uint16 AudioFormat;    // Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM
+   uint16 NumOfChan;      // Number of channels 1=Mono 2=Sterio
+   uint32 SamplesPerSec;  // Sampling Frequency in Hz
+   uint32 bytesPerSec;    // bytes per second
+   uint16 blockAlign;     // 2=16-bit mono, 4=16-bit stereo
+   uint16 bitsPerSample;  // Number of bits per sample
+   uint8  Subchunk2ID[4]; // "data"  string
+   uint32 Subchunk2Size;  // Sampled data length
+};
 
 QByteArray ReadWaveFileDataFromResource(const QString & waveFilePath)
 {
@@ -47,7 +47,7 @@ QByteArray ReadWaveFileDataFromResource(const QString & waveFilePath)
             const uint32 numSamplesToLoad = muscleMin(numIndicatedSamples, numActualSamples);
             const uint32 numBytesToLoad   = numSamplesToLoad*sizeof(int16);
             QByteArray ret(numBytesToLoad, 0);
-            if (file.read(ret.data(), numBytesToLoad) == numBytesToLoad) 
+            if (file.read(ret.data(), numBytesToLoad) == numBytesToLoad)
             {
                int16 * buf = (int16 *) ret.data();
                for (uint32 i=0; i<numSamplesToLoad; i++) buf[i] = LittleEndianConverter::Import<int16>(&buf[i])/2;  // yes, always little-endian, because WAV!
@@ -55,11 +55,11 @@ QByteArray ReadWaveFileDataFromResource(const QString & waveFilePath)
             }
             else LogTime(MUSCLE_LOG_ERROR, "Unable to read " UINT32_FORMAT_SPEC " bytes of audio data from [%s]\n", numBytesToLoad,  waveFilePath.toUtf8().constData());
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Bad WAV header at [%s]\n", waveFilePath.toUtf8().constData());  
+         else LogTime(MUSCLE_LOG_ERROR, "Bad WAV header at [%s]\n", waveFilePath.toUtf8().constData());
       }
-      else LogTime(MUSCLE_LOG_ERROR, "Unable to read WAV header at [%s]\n", waveFilePath.toUtf8().constData());  
+      else LogTime(MUSCLE_LOG_ERROR, "Unable to read WAV header at [%s]\n", waveFilePath.toUtf8().constData());
    }
-   else LogTime(MUSCLE_LOG_ERROR, "Unable to open WAV file at [%s]\n", waveFilePath.toUtf8().constData());  
+   else LogTime(MUSCLE_LOG_ERROR, "Unable to open WAV file at [%s]\n", waveFilePath.toUtf8().constData());
 
    return QByteArray();
 }
@@ -73,7 +73,7 @@ Quasimodo :: ~Quasimodo()
 {
    // empty
 }
-   
+
 void Quasimodo :: SetupTheBells()
 {
    QAudioFormat fmt;
@@ -88,7 +88,7 @@ void Quasimodo :: SetupTheBells()
    fmt.setSampleFormat(QAudioFormat::Int16);
 #endif
 
-   for (uint32 i=0; i<ARRAYITEMS(_noteBufs); i++) 
+   for (uint32 i=0; i<ARRAYITEMS(_noteBufs); i++)
    {
       _noteBufs[i] = ReadWaveFileDataFromResource(QString(":/bell_%1.wav").arg(i));
       _maxNoteLengthSamples = muscleMax(_maxNoteLengthSamples, (uint32) (_noteBufs[i].size()/sizeof(int16)));
@@ -143,7 +143,7 @@ qint64 Quasimodo :: readData(char * data, qint64 maxSize)
       const uint64 notesChord  = iter.GetValue();
 
       const int64 offsetAfterTopOfChord = _sampleCounter-sampleIndex;  // how far after the first sample we're at
-      if (offsetAfterTopOfChord >= _maxNoteLengthSamples) 
+      if (offsetAfterTopOfChord >= _maxNoteLengthSamples)
       {
          // No more mixing to do for this chord, ever, so we can get rid of it
          (void) _sampleIndexToNotesChord.Remove(sampleIndex);
@@ -164,7 +164,7 @@ qint64 Quasimodo :: readData(char * data, qint64 maxSize)
          MixSamples(outBuf, maxNumSamples, (uint32)offsetAfterTopOfChord, notesChord);
       }
    }
-   
+
    _sampleCounter += maxNumSamples;
    return maxNumSamples*sizeof(int16);
 }

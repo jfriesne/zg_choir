@@ -43,7 +43,7 @@ static ConstQueryFilterRef GetFridgeServerFilter()
 
 class FridgeClientCanvas;
 
-FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism) 
+FridgeClientWindow :: FridgeClientWindow(ICallbackMechanism * callbackMechanism)
    : IDiscoveryNotificationTarget(NULL)  // can't pass in &_discoClient here, it isn't constructed yet!
    , ITreeGatewaySubscriber(NULL)
    , _discoClient(callbackMechanism, FRIDGE_PROGRAM_SIGNATURE, GetFridgeServerFilter())
@@ -217,7 +217,7 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
             _canvas = new FridgeClientCanvas(GetGateway());
             connect(_canvas, SIGNAL(UpdateWindowStatus()), this, SLOT(ScheduleUpdateStatus()));
             topPartLayout->addWidget(_canvas, 1);
- 
+
             QWidget * bottomButtonsRow = new QWidget;
             {
                QBoxLayout * bbrLayout = new QBoxLayout(QBoxLayout::LeftToRight, bottomButtonsRow);
@@ -228,13 +228,13 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
 #endif
 
                bbrLayout->addStretch();
-   
+
                QPushButton * cloneButton = new QPushButton(tr("Clone Window"));
                connect(cloneButton, SIGNAL(clicked()), this, SLOT(CloneWindow()));
                bbrLayout->addWidget(cloneButton);
-   
+
                bbrLayout->addStretch();
-              
+
                _clearMagnetsButton = new QPushButton(tr("Clear Magnets"));
                connect(_clearMagnetsButton, SIGNAL(clicked()), this, SLOT(ClearMagnets()));
                bbrLayout->addWidget(_clearMagnetsButton);
@@ -253,23 +253,23 @@ void FridgeClientWindow :: ConnectTo(const String & systemName)
                bbrLayout->addWidget(openProjectButton);
 
                bbrLayout->addStretch();
-   
+
                QPushButton * saveProjectButton = new QPushButton(tr("Save Project")+ellipses);
                connect(saveProjectButton, SIGNAL(clicked()), this, SLOT(SaveProject()));
                bbrLayout->addWidget(saveProjectButton);
 
                bbrLayout->addStretch();
-   
+
                QPushButton * disconnectButton = new QPushButton(tr("Disconnect"));
                connect(disconnectButton, SIGNAL(clicked()), this, SLOT(ReturnToDiscoveryRequested()));
                bbrLayout->addWidget(disconnectButton);
-   
+
                bbrLayout->addStretch();
             }
             topPartLayout->addWidget(bottomButtonsRow);
          }
          _splitter->addWidget(topPart);
-   
+
          unsigned seed = time(NULL);
          _chatView = new FridgeChatView(GetGateway(), GetRandomBabyName(&seed));
          _chatView->setMinimumHeight(100);
@@ -312,7 +312,7 @@ void FridgeClientWindow :: ClearChat()
 void FridgeClientWindow :: CloneWindow()
 {
    FridgeClientWindow * clone = new FridgeClientWindow(_discoClient.GetCallbackMechanism());
-   if (_connection) 
+   if (_connection)
    {
       clone->ConnectTo(_connection->GetSystemNamePattern());
       clone->SetTimeSyncAnimationActive(_timeSyncWidget->IsAnimationActive());

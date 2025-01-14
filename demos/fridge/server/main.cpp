@@ -9,7 +9,7 @@ int main(int argc, char ** argv)
 {
    using namespace fridge;
 
-   if ((argc >= 2)&&(strncmp(argv[1], "systemname=", 11) == 0)) 
+   if ((argc >= 2)&&(strncmp(argv[1], "systemname=", 11) == 0))
    {
       // We're running as a server sub-process (presumably we were launched by the GUI)
       return RunFridgeServerProcess(argv[1]+11);

@@ -55,7 +55,7 @@ void UpdateNoteHistogram(uint64 chordVal, bool isAdd, Hashtable<uint8, uint32> &
          else
          {
             uint32 * v = histogram.Get(i);
-            if ((v)&&((--(*v)) == 0)) 
+            if ((v)&&((--(*v)) == 0))
             {
                (void) histogram.Remove(i);
                bitchord &= ~(1LL<<i);
@@ -65,12 +65,12 @@ void UpdateNoteHistogram(uint64 chordVal, bool isAdd, Hashtable<uint8, uint32> &
    }
 }
 
-ChoirSession * MusicDatabaseObject :: GetChoirSession() 
+ChoirSession * MusicDatabaseObject :: GetChoirSession()
 {
    return static_cast<ChoirSession *>(GetDatabasePeerSession());
 }
 
-const ChoirSession * MusicDatabaseObject :: GetChoirSession() const 
+const ChoirSession * MusicDatabaseObject :: GetChoirSession() const
 {
    return static_cast<const ChoirSession *>(GetDatabasePeerSession());
 }
@@ -83,13 +83,13 @@ ConstMessageRef MusicDatabaseObject :: SendFullStateToGUI(bool allowReviewTrigge
    return AddConstToRef(msg);
 }
 
-void MusicDatabaseObject :: SendMessageToGUI(const ConstMessageRef & msg, bool allowReviewTrigger) 
+void MusicDatabaseObject :: SendMessageToGUI(const ConstMessageRef & msg, bool allowReviewTrigger)
 {
    ChoirSession * cs = GetChoirSession();
    if (cs) cs->SendMessageToGUI(msg, allowReviewTrigger);
 }
 
-void MusicDatabaseObject :: SetReviewResults(uint64 allNotesUsedChord) 
+void MusicDatabaseObject :: SetReviewResults(uint64 allNotesUsedChord)
 {
    ChoirSession * cs = GetChoirSession();
    if (cs) cs->SetReviewResults(allNotesUsedChord);

@@ -54,10 +54,10 @@ void ClientRosterList :: TreeGatewayConnectionStateChanged()
       _localClientInfoNodePath.Clear();
    }
 
-   if (IsTreeGatewayConnected()) 
+   if (IsTreeGatewayConnected())
    {
       ConstMessageRef gestaltMsg = GetGestaltMessage();
-      if (gestaltMsg()) 
+      if (gestaltMsg())
       {
          // Subscribe to our client's own crl_target node just so that when someone calls SendMessageToSubscriber() on it, we'll get the Message
          _localClientInfoNodePath = String("clients/%1%2/clientinfo").Arg(gestaltMsg()->GetString(ZG_PARAMETER_NAME_PEERID)).Arg(gestaltMsg()->GetString(PR_NAME_SESSION_ROOT));

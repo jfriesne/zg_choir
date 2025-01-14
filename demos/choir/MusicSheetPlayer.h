@@ -30,7 +30,7 @@ public:
 
    /** Destructor */
    ~MusicSheetPlayer();
-   
+
 signals:
    /** Emitted when we want Quasimodo to ring a specified set of bells */
    void RequestBells(quint64 chord, bool localNotesOnly);

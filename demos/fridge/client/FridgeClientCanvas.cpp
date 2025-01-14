@@ -9,7 +9,7 @@
 
 namespace fridge {
 
-FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector) 
+FridgeClientCanvas :: FridgeClientCanvas(ITreeGateway * connector)
    : ITreeGatewaySubscriber(connector)
    , _firstMouseMove(false)
 {
@@ -73,10 +73,10 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
       MessageRef symlinkMsg = GetMessageFromPool();
       if ((symlinkMsg())&&(symlinkMsg()->AddString(SYMLINK_FIELD_NAME, _draggingID.WithPrepend("project/magnets/")).IsOK())) (void) UploadTreeNodeValue("project/last_dragged", symlinkMsg);
    }
-   else 
+   else
    {
-      // Just to exercise the subscriber<->seniorpeer message-passing functionality, let's 
-      // ask the senior peer to return a random word for us to use, rather than generating 
+      // Just to exercise the subscriber<->seniorpeer message-passing functionality, let's
+      // ask the senior peer to return a random word for us to use, rather than generating
       // the word  ourself.
       MessageRef requestMsg = GetMessageFromPool(FRIDGE_COMMAND_GETRANDOMWORD);
       if ((requestMsg())&&(requestMsg()->AddPoint("pos", Point(p.x(), p.y())).IsOK()))
@@ -85,9 +85,9 @@ void FridgeClientCanvas :: mousePressEvent(QMouseEvent * e)
          if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Error, SendMessageToTreeSeniorPeer() failed!  [%s]\n", ret());
       }
    }
-   e->accept(); 
+   e->accept();
 }
-      
+
 void FridgeClientCanvas :: MessageReceivedFromTreeSeniorPeer(int32 /*whichDB*/, const String & /*tag*/, const MessageRef & payload)
 {
    switch(payload()->what)
@@ -121,7 +121,7 @@ void FridgeClientCanvas :: UploadNewMagnet(int x, int y, const String & word)
 
 void FridgeClientCanvas :: mouseMoveEvent(QMouseEvent * e)
 {
-   if (_draggingID.HasChars()) 
+   if (_draggingID.HasChars())
    {
       UpdateDraggedMagnetPosition(e->pos(), !_firstMouseMove);
       _firstMouseMove = false;
@@ -183,7 +183,7 @@ status_t FridgeClientCanvas :: UploadMagnetState(const String & optNodeID, const
 
       MRETURN_ON_ERROR(optMagnetState->SaveToArchive(*msgRef()));
    }
-      
+
    return UploadTreeNodeValue(optNodeID.WithPrepend("project/magnets/"), msgRef, isInterimUpdate?TreeGatewayFlags(TREE_GATEWAY_FLAG_INTERIM):TreeGatewayFlags());
 }
 

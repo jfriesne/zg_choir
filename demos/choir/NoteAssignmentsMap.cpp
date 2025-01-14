@@ -85,10 +85,10 @@ void NoteAssignmentsMap :: VerifyRunningChecksum(const char * desc) const
    }
 }
 
-void NoteAssignmentsMap :: SetAssignmentStrategy(uint32 strategy) 
+void NoteAssignmentsMap :: SetAssignmentStrategy(uint32 strategy)
 {
-   _checksum          -= _assignmentStrategy; 
-   _assignmentStrategy = strategy; 
+   _checksum          -= _assignmentStrategy;
+   _assignmentStrategy = strategy;
    _checksum          += _assignmentStrategy;
 }
 
@@ -99,13 +99,13 @@ status_t NoteAssignmentsMap :: SetNoteAssignmentsForPeerID(const ZGPeerID & peer
       uint64 * val = _noteAssignments.GetOrPut(peerID);
       MRETURN_OOM_ON_NULL(val);  // out of memory?
 
-      if (*val) 
+      if (*val)
       {
          UpdateNoteHistogram(*val, false, _noteHistogram, _assignedNotes);
          _checksum -= CalculateChecksumForPeer(peerID, *val);
       }
       *val = assignedNotes;
-      if (*val) 
+      if (*val)
       {
          UpdateNoteHistogram(*val, true, _noteHistogram, _assignedNotes);
          _checksum += CalculateChecksumForPeer(peerID, *val);
@@ -216,7 +216,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
 
    // For either of the two other modes, the first thing to do is forget about any peers who aren't online anymore
    const Hashtable<ZGPeerID, ConstMessageRef> & onlinePeers = GetOnlinePeers();
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter--) 
+   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter--)
    {
       const ZGPeerID & pid = iter.GetKey();
       if (onlinePeers.ContainsKey(pid) == false)
@@ -259,12 +259,12 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
             if (peerNotes & noteBit)
             {
                if (foundNoteAlready == false) foundNoteAlready = true;
-               else 
+               else
                {
                   MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(pid, GetNoteAssignmentsForPeerID(pid)&~noteBit));
                   retChangedAnything = true;
                }
-            } 
+            }
          }
       }
    }
@@ -275,7 +275,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
    {
       while(true)
       {
-         uint32 lightCount, heavyCount; 
+         uint32 lightCount, heavyCount;
          const ZGPeerID & mrLight = GetLightestPeer(onlinePeers, lightCount);
          const ZGPeerID & mrHeavy = GetHeaviestPeer(onlinePeers, heavyCount);
          if (muscleAbs((int32)(heavyCount-lightCount)) > 1)
@@ -283,7 +283,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
             const uint32 noteIdx = GetLastNoteInChord(GetNoteAssignmentsForPeerID(mrHeavy));
             MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(mrHeavy, GetNoteAssignmentsForPeerID(mrHeavy)&~(1LL<<noteIdx)));
             MRETURN_ON_ERROR(SetNoteAssignmentsForPeerID(mrLight, GetNoteAssignmentsForPeerID(mrLight)| (1LL<<noteIdx)));
-            retChangedAnything = true; 
+            retChangedAnything = true;
          }
          else break;
       }
@@ -303,7 +303,7 @@ String NoteAssignmentsMap :: ToString() const
    char buf[512]; muscleSprintf(buf, "NoteAssignmentsMap %p has " UINT32_FORMAT_SPEC " entries, _assignedNotes is " UINT64_FORMAT_SPEC ", _assignmentStrategy is " UINT32_FORMAT_SPEC ", _checksum is " UINT32_FORMAT_SPEC "\n", this, _noteAssignments.GetNumItems(), _assignedNotes, _assignmentStrategy, _checksum);
    ret = buf;
 
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++) 
+   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
    {
       muscleSprintf(buf, "   [%s] -> " XINT64_FORMAT_SPEC "\n", iter.GetKey().ToString()(), iter.GetValue());
       ret += buf;
@@ -318,7 +318,7 @@ ConstMessageRef NoteAssignmentsMap :: SeniorUpdate(const ConstMessageRef & senio
       case CHOIR_COMMAND_TOGGLE_ASSIGNMENT:
       {
          // Junior peers can just handle the same command the same way and get the same result
-         if (HandleToggleAssignmentMessage(*seniorDoMsg()).IsOK()) 
+         if (HandleToggleAssignmentMessage(*seniorDoMsg()).IsOK())
          {
             SendMessageToGUI(seniorDoMsg, true);
             return seniorDoMsg;

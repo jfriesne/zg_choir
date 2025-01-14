@@ -13,7 +13,7 @@ int main(int argc, char ** argv)
    // methods safely from within the context of the main/GUI/Qt thread.
    QSocketCallbackMechanism qcbm;
 
-   // must be on the heap since we call 
+   // must be on the heap since we call
    // setAttribute(Qt::WA_DeleteOnClose) in the FridgeClientWindow constructor
    FridgeClientWindow * fsw = new FridgeClientWindow(&qcbm);
    fsw->show();

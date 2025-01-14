@@ -49,7 +49,7 @@ FridgeChatView :: FridgeChatView(ITreeGateway * connector, const QString & initi
          _userName->setText(initialUserName);
          connect(_userName, SIGNAL(editingFinished()), this, SLOT(UploadNewUserName()));
          bottomLayout->addWidget(_userName);
-        
+
          _chatLine = new QLineEdit;
          connect(_chatLine, SIGNAL(returnPressed()), this, SLOT(UploadNewChatLine()));
          bottomLayout->addWidget(_chatLine, 1);
@@ -97,7 +97,7 @@ void FridgeChatView :: TreeNodeUpdated(const String & nodePath, const ConstMessa
 void FridgeChatView :: TreeGatewayConnectionStateChanged()
 {
    ITreeGatewaySubscriber::TreeGatewayConnectionStateChanged();
-   if (IsTreeGatewayConnected()) 
+   if (IsTreeGatewayConnected())
    {
       _chatData.Clear();
       FlushUpdateDisplay();
@@ -174,7 +174,7 @@ void FridgeChatView :: UserNameDoubleClicked(QListWidgetItem * item)
    (void) UploadNewChatLine(tr("Hey ") + item->text());
 }
 
-QString FridgeChatView :: GetLocalUserName() const 
+QString FridgeChatView :: GetLocalUserName() const
 {
    return _userName->text();
 }

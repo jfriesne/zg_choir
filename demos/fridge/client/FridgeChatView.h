@@ -50,7 +50,7 @@ private slots:
    void UploadNewChatLine();
    void UserNameDoubleClicked(QListWidgetItem *);
    status_t UploadNewChatLine(const QString & chatText);
- 
+
 private:
    void UpdateDisplay();
 

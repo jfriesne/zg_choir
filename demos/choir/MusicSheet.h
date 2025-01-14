@@ -12,7 +12,7 @@ public:
    /** Default constructor for an object that isn't going to be registered with a ZGDatabasePeerSession */
    MusicSheet();
 
-   /** Constructor 
+   /** Constructor
      * @param session pointer to the ZGDatabasePeerSession object that created us
      * @param dbIndex the database index of this database in the ZGDatabasePeerSession object
      */
@@ -23,7 +23,7 @@ public:
 
    /** Destructor */
    ~MusicSheet();
-   
+
    /** Assignment operator */
    MusicSheet & operator = (const MusicSheet & rhs);
 
@@ -47,7 +47,7 @@ public:
 
    /** Read-only access to our current table of chords */
    const OrderedKeysHashtable<uint32, uint64> & GetChordsTable() const {return _chords;}
-  
+
    /** Convenience method -- returns the chord at the specified chord-index, or 0 if there are no notes at that index. */
    uint64 GetChordAtIndex(uint32 whichChord, bool useLoopingLogic) const {return _chords.GetWithDefault(useLoopingLogic?(whichChord%GetSongLengthInChords(false)):whichChord);}
 
@@ -82,7 +82,7 @@ public:
    /** Calculates our current checksum from scratch (expensive!) */
    virtual uint32 CalculateChecksum() const;
 
-   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer. 
+   /** Updates our state as specified in the (seniorDoMsg).  Will only be called on the instance running on the senior peer.
      * @param seniorDoMsg A Message containing instructions for how to update our state on the senior peer.
      * @returns a Message to send to the JuniorUpdate() method on the junior peers on success, or a NULL reference on failure.
      */

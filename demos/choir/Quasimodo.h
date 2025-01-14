@@ -27,7 +27,7 @@ public:
 
    /** Destructor */
    ~Quasimodo();
-   
+
 signals:
    /** Emitted when we've played some bell sounds.  This signal is connected to a slot in
      * the main/GUI thread that will cause the little bell icon to vibrate, so that the user
@@ -53,7 +53,7 @@ public slots:
 
 protected:
    /** Overridden to fill (data) with audio samples from our internal sound-mixing-engine
-     * @param data a buffer to fill with audio samples 
+     * @param data a buffer to fill with audio samples
      * @param maxSize the number of bytes pointed to by (data)
      * @returns the number of bytes actually written, or -1 on error.
      */

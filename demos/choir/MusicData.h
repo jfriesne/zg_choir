@@ -18,7 +18,7 @@ class ChoirSession;
   * Note that we only define 21 notes for now; the rest of the 64 bits
   * in each chord are reserved for future expansion.
   */
-enum 
+enum
 {
    CHOIR_NOTE_E6 = 0, // 1318.51 (third implied-line above the top-most line of the treble staff)
    CHOIR_NOTE_D6,  // 1174.659
@@ -51,7 +51,7 @@ const char * GetNoteName(uint32 noteIdx);
 String GetPeerNickname(const ZGPeerID & pid, const ConstMessageRef & optPeerInfo);
 
 enum {
-   MUSIC_TYPE_MUSIC_SHEET = 1836413795, // 'musc' 
+   MUSIC_TYPE_MUSIC_SHEET = 1836413795, // 'musc'
    MUSIC_TYPE_PLAYBACK_STATE,
    MUSIC_TYPE_ASSIGNMENTS_MAP
 };
@@ -68,8 +68,8 @@ enum {
    NUM_ASSIGNMENT_STRATEGIES
 };
 
-/** A slight specialization of the IDatabaseObject class, just so I can add some 
-  * application-specific helper methods for my various subclasses to all use.  
+/** A slight specialization of the IDatabaseObject class, just so I can add some
+  * application-specific helper methods for my various subclasses to all use.
   */
 class MusicDatabaseObject : public IDatabaseObject
 {
@@ -78,7 +78,7 @@ public:
    MusicDatabaseObject() {/* empty */}
 
    /** Constructor
-     * @param session pointer to the ZGDatabasePeerSession object that created us  
+     * @param session pointer to the ZGDatabasePeerSession object that created us
      * @param dbIndex our index within the databases-list.
      */
    MusicDatabaseObject(ZGDatabasePeerSession * session, int32 dbIndex) : IDatabaseObject(session, dbIndex) {/* empty */}
