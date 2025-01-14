@@ -103,7 +103,7 @@ public:
    MUSCLE_NODISCARD static MUSCLE_CONSTEXPR uint32 FlattenedSize() {return 2*sizeof(uint64);}
 
    /** Returns a 32-bit checksum for this object. */
-   MUSCLE_NODISCARD uint32 CalculateChecksum() const {return CalculateChecksumForUint64(_highBits) + (3*CalculateChecksumForUint64(_lowBits));}
+   MUSCLE_NODISCARD uint32 CalculateChecksum() const {return CalculatePODChecksum(_highBits) + (3*CalculatePODChecksum(_lowBits));}
 
    /** Copies this object into an endian-neutral flattened buffer.
     *  @param flat the DataFlattener to use to write out bytes

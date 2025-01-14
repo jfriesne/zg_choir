@@ -87,7 +87,7 @@ public:
    const Hashtable<uint8, uint32> & GetNoteHistogram() const {return _noteHistogram;}
 
 private:
-   uint32 CalculateChecksumForPeer(const ZGPeerID & peerID, uint64 chordValue) const {return peerID.CalculateChecksum()+CalculateChecksumForUint64(chordValue);}
+   uint32 CalculateChecksumForPeer(const ZGPeerID & peerID, uint64 chordValue) const {return peerID.CalculateChecksum()+CalculatePODChecksum(chordValue);}
    const ZGPeerID & GetLightestPeer(const Hashtable<ZGPeerID, ConstMessageRef> & onlinePeers, uint32 & retCount) const;
    const ZGPeerID & GetHeaviestPeer(const Hashtable<ZGPeerID, ConstMessageRef> & onlinePeers, uint32 & retCount) const;
    void SetToDefaultStateAux();

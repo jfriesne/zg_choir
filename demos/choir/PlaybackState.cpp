@@ -59,7 +59,7 @@ status_t PlaybackState :: SaveToArchive(const MessageRef & archiveRef) const
 
 void PlaybackState :: SetMicrosPerChord(uint64 microsPerChord, uint64 optNetworkNow)
 {
-   if ((optNetworkNow != MUSCLE_TIME_NEVER)&&(IsPaused() == false)) 
+   if ((optNetworkNow != MUSCLE_TIME_NEVER)&&(IsPaused() == false))
    {
       const double curSeekPosInChords = (_microsPerChord>0) ? (((double)GetPlaybackPositionForNetworkTimeMicroseconds(optNetworkNow))/_microsPerChord) : 0;
       _networkStartTimeMicros = optNetworkNow - (curSeekPosInChords*microsPerChord);
@@ -69,8 +69,8 @@ void PlaybackState :: SetMicrosPerChord(uint64 microsPerChord, uint64 optNetwork
 
 uint32 PlaybackState :: CalculateChecksum() const
 {
-   return CalculateChecksumForUint64(_networkStartTimeMicros) 
-        + CalculateChecksumForUint64(_microsPerChord)
+   return CalculatePODChecksum(_networkStartTimeMicros)
+        + CalculatePODChecksum(_microsPerChord)
         + _pausedIndex
         + (_loop?1:0);
 }
@@ -83,7 +83,7 @@ void PlaybackState :: StartPlayback(uint64 networkNow)
       _pausedIndex = MUSCLE_NO_LIMIT;
    }
 }
-   
+
 void PlaybackState :: PausePlayback(uint64 networkNow)
 {
    if (IsPaused() == false)
@@ -164,7 +164,7 @@ status_t PlaybackState :: JuniorUpdate(const ConstMessageRef & juniorDoMsg)
 
       case MUSIC_TYPE_PLAYBACK_STATE:
          return SetFromArchive(juniorDoMsg);
-      
+
       default:
          LogTime(MUSCLE_LOG_ERROR, "PlaybackState::JuniorUpdate():  Unknown message code " UINT32_FORMAT_SPEC "\n", juniorDoMsg()->what);
       break;
@@ -178,7 +178,7 @@ MessageRef PlaybackState :: SeniorAdjustPlaybackState(uint32 whatCode, const uin
 {
    const uint64 networkNow = GetNetworkTime64();
 
-   if (optSetLoop) 
+   if (optSetLoop)
    {
       const MusicSheet * musicSheet = static_cast<const MusicSheet *>(GetDatabaseObject(CHOIR_DATABASE_SCORE));
       if (musicSheet == NULL)
@@ -199,7 +199,7 @@ MessageRef PlaybackState :: SeniorAdjustPlaybackState(uint32 whatCode, const uin
 
    switch(whatCode)
    {
-      case CHOIR_COMMAND_PLAY: 
+      case CHOIR_COMMAND_PLAY:
          if (IsPaused())
          {
             if (optNewMicrosPerChord) SetMicrosPerChord(*optNewMicrosPerChord);
@@ -208,13 +208,13 @@ MessageRef PlaybackState :: SeniorAdjustPlaybackState(uint32 whatCode, const uin
          }
       break;
 
-      case CHOIR_COMMAND_PAUSE: 
+      case CHOIR_COMMAND_PAUSE:
          if (!IsPaused()) PausePlayback(networkNow);
          if (optNewMicrosPerChord) SetMicrosPerChord(*optNewMicrosPerChord);
          if (optSeekTo) SeekTo(networkNow, *optSeekTo);
       break;
 
-      case CHOIR_COMMAND_ADJUST_PLAYBACK: 
+      case CHOIR_COMMAND_ADJUST_PLAYBACK:
          // to do:  make this more clever
          if (optNewMicrosPerChord) SetMicrosPerChord(*optNewMicrosPerChord, optSeekTo?MUSCLE_TIME_NEVER:networkNow);
          if (optSeekTo) SeekTo(networkNow, *optSeekTo);

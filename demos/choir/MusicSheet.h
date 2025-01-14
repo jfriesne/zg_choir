@@ -98,7 +98,7 @@ public:
    virtual String ToString() const;
 
 private:
-   uint32 CalculateChecksumForChord(uint32 whichChord, uint64 chordValue) const {return ((whichChord+1)*CalculateChecksumForUint64(chordValue));}
+   uint32 CalculateChecksumForChord(uint32 whichChord, uint64 chordValue) const {return ((whichChord+1)*CalculatePODChecksum(chordValue));}
    void MoveChordsBackOneStartingAt(uint32 whichChord);
    void SetToDefaultStateAux();
 

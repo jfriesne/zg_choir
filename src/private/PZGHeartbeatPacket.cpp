@@ -40,7 +40,7 @@ void PZGHeartbeatPacket :: Initialize(const PZGHeartbeatSettings & hbSettings, u
 uint32 PZGHeartbeatPacket :: CalculateChecksum() const
 {
    // _networkSendTimeMicros is deliberately not part of our checksum as it will be sent separately for better accuracy
-   uint32 ret = _heartbeatPacketID + _versionCode + CalculateChecksumForUint64(_systemKey) + _tcpAcceptPort + _peerUptimeSeconds + (_isFullyAttached?666:0) + _sourcePeerID.CalculateChecksum() + _peerType;
+   uint32 ret = _heartbeatPacketID + _versionCode + CalculatePODChecksum(_systemKey) + _tcpAcceptPort + _peerUptimeSeconds + (_isFullyAttached?666:0) + _sourcePeerID.CalculateChecksum() + _peerType;
    for (uint32 i=0; i<_orderedPeersList.GetNumItems(); i++) ret += (i+1)*(_orderedPeersList[i]()->CalculateChecksum());
    if (_peerAttributesBuf()) ret += _peerAttributesBuf()->CalculateChecksum();
    /* deliberately not including _peerAttributesMsg in the checksum since it is redundant with _peerAttributesBuf */

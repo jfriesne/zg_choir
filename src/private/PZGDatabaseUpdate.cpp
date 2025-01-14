@@ -69,7 +69,7 @@ PZGDatabaseUpdate & PZGDatabaseUpdate :: operator=(const PZGDatabaseUpdate & rhs
 
 uint32 PZGDatabaseUpdate :: CalculateChecksum() const
 {
-   uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + CalculateChecksumForUint64(_seniorStartTimeMicros) + _sourcePeerID.CalculateChecksum() + CalculateChecksumForUint64(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);
+   uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + CalculatePODChecksum(_seniorStartTimeMicros) + _sourcePeerID.CalculateChecksum() + CalculatePODChecksum(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);
    const ConstByteBufferRef & updateBuf = GetPayloadBuffer();  // we're deliberately using the buffer version here, not the Message version
    if (updateBuf()) ret += updateBuf()->CalculateChecksum();
    return ret;
