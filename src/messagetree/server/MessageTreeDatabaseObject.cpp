@@ -216,7 +216,7 @@ status_t MessageTreeDatabaseObject :: JuniorMessageTreeUpdate(const ConstMessage
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::JuniorMessageTreeUpdate():  Unknown Message code " UINT32_FORMAT_SPEC "\n", msg()->what);
-         msg()->PrintToStream();
+         msg()->Print(stdout);
       return B_UNIMPLEMENTED;
    }
 

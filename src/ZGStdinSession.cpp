@@ -149,7 +149,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
       while(GetRunTime64()<endTime) {/* spin, my little process, spin! */}
       LogTime(MUSCLE_LOG_INFO, "Finished spinning for %s\n", GetHumanReadableTimeIntervalString(micros)());
    }
-   else if (s == "print object counts") PrintCountedObjectInfo();
+   else if (s == "print object counts") PrintCountedObjectInfo(stdout);
    else if (s == "print all network interfaces")
    {
       printf("List of all network interfaces known to this host:\n");
@@ -176,9 +176,9 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    else if (s == "print build flags")
    {
       printf("This executable was compiled using MUSCLE version %s.\n", MUSCLE_VERSION_STRING);
-      PrintBuildFlags();
+      PrintBuildFlags(stdout);
    }
-   else if (s == "print stack trace") (void) PrintStackTrace();
+   else if (s == "print stack trace") (void) PrintStackTrace(stdout);
    else return false;
 
    return true;

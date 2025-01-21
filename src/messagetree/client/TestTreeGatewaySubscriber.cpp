@@ -223,7 +223,7 @@ void TestTreeGatewaySubscriber :: CallbackBatchEnds()
 void TestTreeGatewaySubscriber :: TreeNodeUpdated(const String & nodePath, const ConstMessageRef & payloadMsg, const String & optOpTag)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeNodeUpdated(%s,%p) optOpTag=[%s] (this=%p)\n", nodePath(), payloadMsg(), optOpTag(), this);
-   if (payloadMsg()) payloadMsg()->PrintToStream();
+   if (payloadMsg()) payloadMsg()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: TreeNodeIndexCleared(const String & path, const String & optOpTag)
@@ -254,19 +254,19 @@ void TestTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint3
 void TestTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromTreeSeniorPeer(" UINT32_FORMAT_SPEC ", %s) (this=%p)\n", whichDB, tag(), this);
-   payload()->PrintToStream();
+   payload()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(nodePath=[%s] returnAddress=[%s]) (this=%p)\n", nodePath(), returnAddress(), this);
-   payload()->PrintToStream();
+   payload()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::SubtreesRequestResultReturned(%s,%p) (this=%p)\n", tag(), subtreeData(), this);
-   if (subtreeData()) subtreeData()->PrintToStream();
+   if (subtreeData()) subtreeData()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: TreeGatewayConnectionStateChanged()

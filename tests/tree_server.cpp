@@ -90,10 +90,13 @@ public:
    {
       printf("TestTreeZGPeerSession:  You typed:  [%s]\n", text());
 
-      if (text.StartsWith("printsessions")) {PrintFactoriesInfo(); PrintSessionsInfo();}
+      if (text.StartsWith("printsessions"))
+      {
+         PrintFactoriesInfo(stdout);
+         PrintSessionsInfo(stdout);
+         return true;  // indicate handled
+      }
       else return false;
-
-      return true;  // indicate handled
    }
 
    virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource)

@@ -92,7 +92,7 @@ public:
    MUSCLE_NODISCARD uint32 GetBeaconsPerSecond()                const {return _beaconsPerSecond;}
 
    /** Return the Application Peer Compatibility code specified for this peer.  Default value is 0.
-     * @param see SetApplicationPeerCompatibilityVersion() for details.
+     * @see SetApplicationPeerCompatibilityVersion() for details.
      */
    MUSCLE_NODISCARD uint16 GetApplicationPeerCompatibilityVersion() const {return GetAppVersionFromCompatibilityVersionCode(_versionCode);}
 

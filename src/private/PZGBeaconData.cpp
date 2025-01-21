@@ -34,9 +34,9 @@ uint32 PZGBeaconData :: CalculateChecksum() const
    return ret;
 }
 
-void PZGBeaconData :: PrintToStream() const
+void PZGBeaconData :: Print(const OutputPrinter & p) const
 {
-   puts(ToString()());
+   p.puts(ToString()());
 }
 
 String PZGBeaconData :: ToString() const

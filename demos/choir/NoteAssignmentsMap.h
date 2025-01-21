@@ -75,7 +75,7 @@ public:
    status_t HandleToggleAssignmentMessage(const Message & msg);
 
    /** For debugging purposes */
-   void PrintToStream() const;
+   void Print(const OutputPrinter & p) const;
 
    /** Returns a string representation of this object, for debugging purposes */
    virtual String ToString() const;

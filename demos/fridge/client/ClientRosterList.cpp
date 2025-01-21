@@ -158,7 +158,7 @@ void ClientRosterList :: MessageReceivedFromSubscriber(const String & nodePath, 
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "ClientRosterList::MessageReceivedFromSubscriber():  Unknown Message received!  nodePath=[%s] returnAddress=[%s]\n", nodePath(), returnAddress());
-         payload()->PrintToStream();
+         payload()->Print(stdout);
       break;
    }
 }

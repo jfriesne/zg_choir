@@ -101,7 +101,7 @@ void FridgeClientCanvas :: MessageReceivedFromTreeSeniorPeer(int32 /*whichDB*/, 
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "FridgeClientCanvas:  Unknown reply Message from server!\n");
-         payload()->PrintToStream();
+         payload()->Print(stdout);
       break;
    }
 }
@@ -217,7 +217,7 @@ void FridgeClientCanvas :: TreeNodeUpdated(const String & nodePath, const ConstM
    }
    else if (nodePath == "project/last_dragged")
    {
-//printf("LAST_DRAGGED IS: %p\n", optPayloadMsg()); if (optPayloadMsg()) optPayloadMsg()->PrintToStream();
+//printf("LAST_DRAGGED IS: %p\n", optPayloadMsg()); if (optPayloadMsg()) optPayloadMsg()->Print(stdout);
       if (optPayloadMsg()) (void) _lastDraggedMagnet.SetFromArchive(*optPayloadMsg());
                       else _lastDraggedMagnet = MagnetState();
       update();

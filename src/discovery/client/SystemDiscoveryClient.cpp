@@ -460,7 +460,7 @@ private:
          if (msg())
          {
             LogTime(MUSCLE_LOG_TRACE, "DiscoveryClientManagerSession:  Got the following Message from the main thread:\n");
-            msg()->PrintToStream();
+            msg()->Print(stdout);
          }
          else return B_ERROR;  // time for this thread to go away!
       }

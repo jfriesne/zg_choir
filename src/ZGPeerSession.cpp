@@ -175,8 +175,8 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
    }
    else if (s.StartsWith("print sessions"))
    {
-      PrintFactoriesInfo();
-      PrintSessionsInfo();
+      PrintFactoriesInfo(stdout);
+      PrintSessionsInfo(stdout);
    }
    else if (s.StartsWith("print network interfaces"))
    {
@@ -300,7 +300,7 @@ void ZGPeerSession :: PrivateMessageReceivedFromPeer(const ZGPeerID & fromPeerID
 
       default:
          LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::PrivateMessageReceivedFromPeer:  Received unknown Message from [%s]:\n", fromPeerID.ToString()());
-         msg()->PrintToStream();
+         msg()->Print(stdout);
       break;
    }
 }

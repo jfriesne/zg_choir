@@ -30,7 +30,7 @@ public:
    void Flatten(DataFlattener flat) const;
    status_t Unflatten(DataUnflattener & unflat);
 
-   void PrintToStream() const;
+   void Print(const OutputPrinter & p) const;
    MUSCLE_NODISCARD String ToString() const;
 
    MUSCLE_NODISCARD uint64 GetCurrentDatabaseStateID() const {return _currentDatabaseStateID;}

@@ -71,9 +71,9 @@ String PZGHeartbeatPeerInfo :: PZGTimingInfo :: ToString() const
    return buf;
 }
 
-void PZGHeartbeatPeerInfo :: PrintToStream() const
+void PZGHeartbeatPeerInfo :: Print(const OutputPrinter & p) const
 {
-   puts(ToString()());
+   p.puts(ToString()());
 }
 
 PZGHeartbeatPeerInfoRef GetPZGHeartbeatPeerInfoFromPool()

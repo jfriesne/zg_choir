@@ -238,7 +238,7 @@ protected:
    virtual void MessageReceivedFromPeer(const ZGPeerID & fromPeerID, const MessageRef & msg)
    {
       printf("Received incoming Message from peer [%s]:\n", fromPeerID.ToString()());
-      msg()->PrintToStream();
+      msg()->Print(stdout);
    }
 
    virtual uint64 GetPulseTime(const PulseArgs & args) {return _printDBPending ? 0 : muscleMin(ZGPeerSession::GetPulseTime(args), _nextAutoUpdateTime, _nextPrintNetworkTimeTime);}

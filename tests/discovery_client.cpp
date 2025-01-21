@@ -23,7 +23,7 @@ public:
       if (optSystemInfo())
       {
          LogTime(MUSCLE_LOG_INFO, "Discovery update for system [%s]:\n", systemName());
-         optSystemInfo()->PrintToStream(NULL, MUSCLE_NO_LIMIT, 3);
+         optSystemInfo()->Print(OutputPrinter(stdout).WithIndent());
       }
       else LogTime(MUSCLE_LOG_INFO, "System [%s] has gone offline!\n", systemName());
    }

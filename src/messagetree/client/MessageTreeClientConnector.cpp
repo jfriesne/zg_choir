@@ -69,7 +69,7 @@ status_t MessageTreeClientConnector :: RequestSessionParameters()
 void MessageTreeClientConnector :: SessionParametersReceived(const MessageRef & msg)
 {
    printf("MessageTreeClientConnector::SessionParametersReceived():\n");
-   msg()->PrintToStream();
+   msg()->Print(stdout);
 }
 
 };

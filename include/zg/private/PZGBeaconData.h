@@ -38,7 +38,7 @@ public:
 
    void SetDatabaseStateInfos(const Queue<PZGDatabaseStateInfo> & dbis) {_dbis = dbis;}
 
-   void PrintToStream() const;
+   void Print(const OutputPrinter & p) const;
    MUSCLE_NODISCARD String ToString() const;
 
 private:

@@ -181,10 +181,10 @@ String PZGHeartbeatPacket :: ToString() const
    return ret;
 }
 
-void PZGHeartbeatPacket :: PrintToStream() const
+void PZGHeartbeatPacket :: Print(const OutputPrinter & p) const
 {
-   puts(ToString()());
-   putchar('\n');
+   p.puts(ToString()());
+   p.putc('\n');
 }
 
 ConstMessageRef PZGHeartbeatPacket :: GetPeerAttributesAsMessage() const

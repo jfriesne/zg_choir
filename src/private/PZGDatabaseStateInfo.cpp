@@ -51,9 +51,9 @@ status_t PZGDatabaseStateInfo :: Unflatten(DataUnflattener & unflat)
    return unflat.GetStatus();
 }
 
-void PZGDatabaseStateInfo :: PrintToStream() const
+void PZGDatabaseStateInfo :: Print(const OutputPrinter & p) const
 {
-   printf("%s\n", ToString()());
+   p.printf("%s\n", ToString()());
 }
 
 String PZGDatabaseStateInfo :: ToString() const

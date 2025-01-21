@@ -170,9 +170,9 @@ String PZGDatabaseUpdate :: ToString() const
    return buf;
 }
 
-void PZGDatabaseUpdate :: PrintToStream() const
+void PZGDatabaseUpdate :: Print(const OutputPrinter & p) const
 {
-   puts(ToString()());
+   p.puts(ToString()());
 }
 
 status_t PZGDatabaseUpdate :: CopyFromImplementation(const Flattenable & copyFrom)

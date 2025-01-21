@@ -292,9 +292,9 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
    return B_NO_ERROR;
 }
 
-void NoteAssignmentsMap :: PrintToStream() const
+void NoteAssignmentsMap :: Print(const OutputPrinter & p) const
 {
-   printf("%s\n", ToString()());
+   p.printf("%s\n", ToString()());
 }
 
 String NoteAssignmentsMap :: ToString() const
