@@ -2,6 +2,7 @@ v1.20 -
    - Added a compatibilityVersion field to the heartbeat packets,
      so that in the future, heartbeat-packets from non-identical
      versions of ZGChoir will be ignored.
+   - Updated the included .WAV files to 44100Hz to keep macOS happy.
 
 v1.10 -
    - Updated the muscle submodule to v7.54

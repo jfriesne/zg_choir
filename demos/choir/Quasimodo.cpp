@@ -9,7 +9,7 @@
 
 namespace choir {
 
-static const int AUDIO_SAMPLE_RATE       = 22050;
+static const int AUDIO_SAMPLE_RATE       = 44100;                 // increased from 22050 because macOS is getting snooty about low sample rates
 static const int MIX_BUFFER_SIZE_SAMPLES = AUDIO_SAMPLE_RATE/20;  // 20Hz buffers, for now
 
 // Stolen from:  https://stackoverflow.com/questions/13660777/c-reading-the-data-part-of-a-wav-file
