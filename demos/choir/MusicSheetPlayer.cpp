@@ -118,7 +118,7 @@ void MusicSheetPlayer :: Wakeup()
             {
                emit RequestBells(chordToPlay, true);
             }
-            //else LogTime(MUSCLE_LOG_INFO, "Skipping chord #" UINT32_FORMAT_SPEC " because I'm late by [%s] to play it\n", _nextChordIndex, GetHumanReadableTimeIntervalString(lateBy)());
+            //else LogTime(MUSCLE_LOG_INFO, "Skipping chord #" UINT32_FORMAT_SPEC " because I'm late by [%s] to play it\n", _nextChordIndex, GetHumanReadableUnsignedTimeIntervalString(lateBy)());
          }
       }
    }

@@ -135,19 +135,19 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    else if (s.StartsWith("trace")) LogAux(s, MUSCLE_LOG_TRACE);
    else if (s.StartsWith("sleep"))
    {
-      const uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trimmed());
+      const uint64 micros = ParseHumanReadableUnsignedTimeIntervalString(s.Substring(5).Trimmed());
       const char * preposition = (micros==MUSCLE_TIME_NEVER)?"":"for ";
-      LogTime(MUSCLE_LOG_INFO, "Sleeping %s%s...\n", preposition, GetHumanReadableTimeIntervalString(micros)());
+      LogTime(MUSCLE_LOG_INFO, "Sleeping %s%s...\n", preposition, GetHumanReadableUnsignedTimeIntervalString(micros)());
       (void) Snooze64(micros);
-      LogTime(MUSCLE_LOG_INFO, "Awoke after sleeping %s%s\n", preposition, GetHumanReadableTimeIntervalString(micros)());
+      LogTime(MUSCLE_LOG_INFO, "Awoke after sleeping %s%s\n", preposition, GetHumanReadableUnsignedTimeIntervalString(micros)());
    }
    else if (s.StartsWith("spin"))
    {
-      const uint64 micros = ParseHumanReadableTimeIntervalString(s.Substring(5).Trimmed());
-      LogTime(MUSCLE_LOG_INFO, "Spinning for %s...\n", GetHumanReadableTimeIntervalString(micros)());
+      const uint64 micros = ParseHumanReadableUnsignedTimeIntervalString(s.Substring(5).Trimmed());
+      LogTime(MUSCLE_LOG_INFO, "Spinning for %s...\n", GetHumanReadableUnsignedTimeIntervalString(micros)());
       const uint64 endTime = (micros == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+micros);
       while(GetRunTime64()<endTime) {/* spin, my little process, spin! */}
-      LogTime(MUSCLE_LOG_INFO, "Finished spinning for %s\n", GetHumanReadableTimeIntervalString(micros)());
+      LogTime(MUSCLE_LOG_INFO, "Finished spinning for %s\n", GetHumanReadableUnsignedTimeIntervalString(micros)());
    }
    else if (s == "print object counts") PrintCountedObjectInfo(stdout);
    else if (s == "print all network interfaces")

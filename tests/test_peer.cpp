@@ -167,8 +167,8 @@ public:
       }
       else if (text.StartsWith("timer"))
       {
-         uint64 updateTimeMicros = (text.Length() > 6) ? MillisToMicros(atol(text()+6)) : 0;
-         if (updateTimeMicros > 0) LogTime(MUSCLE_LOG_INFO, "Setting auto-update timer to [%s]\n", GetHumanReadableTimeIntervalString(updateTimeMicros)());
+         const uint64 updateTimeMicros = (text.Length() > 6) ? MillisToMicros(atol(text()+6)) : 0;
+         if (updateTimeMicros > 0) LogTime(MUSCLE_LOG_INFO, "Setting auto-update timer to [%s]\n", GetHumanReadableUnsignedTimeIntervalString(updateTimeMicros)());
                               else LogTime(MUSCLE_LOG_INFO, "Disabling auto-update-timer\n");
          _autoUpdateDelay = updateTimeMicros;
          _nextAutoUpdateTime = (updateTimeMicros==0)?MUSCLE_TIME_NEVER:GetRunTime64();

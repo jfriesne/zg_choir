@@ -23,7 +23,7 @@ public:
    {
       printf("\n\n");
       LogTime(MUSCLE_LOG_INFO, "Received UDP packet from %s:  [%s]\n", sourceIAP.ToString()(), packetBytes()->GetBuffer());
-      PrintHexBytes(packetBytes);
+      PrintHexBytes(stdout, packetBytes);
    }
 
    virtual void ComputerIsAboutToSleep()
@@ -43,7 +43,7 @@ public:
 // otherwise, sets (outStr) equal to (inStr) and returns an invalid IPAddressAndPort.
 static IPAddressAndPort ParseUnicastAddressFromBeginningOfString(const String & inStr, String & outStr)
 {
-   const int32 rBracket = inStr.StartsWith('[') ? inStr.IndexOf(']') : -1;
+   int32 rBracket = inStr.StartsWith('[') ? inStr.IndexOf(']') : -1;
    if (rBracket > 0)
    {
       const IPAddressAndPort ret(inStr, 0, true);
