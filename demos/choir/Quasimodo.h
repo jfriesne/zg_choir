@@ -62,6 +62,8 @@ protected:
    /** This method is a no-op and should never be called.  It's only here because QIODevice requires it be implemented. */
    virtual qint64 writeData(const char * /*data*/, qint64 maxSize) {return maxSize;}
 
+   virtual qint64 bytesAvailable() const;
+
 private:
    void MixSamples(int16 * mixTo, uint32 numSamplesToMix, uint32 inputSampleOffset, uint64 notesChord) const;
 

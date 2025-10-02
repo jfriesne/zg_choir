@@ -50,7 +50,7 @@ Queue<NetworkInterfaceInfo> PZGHeartbeatSettings :: GetNetworkInterfaceInfos() c
    if (IsSystemOnLocalhostOnly() == false) flags.SetBit(GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES);
    (void) muscle::GetNetworkInterfaceInfos(niis, flags);
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--) if (IsNetworkInterfaceUsableForMulticast(niis[i]) == false) (void) niis.RemoveItemAt(i);
+   for (int32 i=niis.GetLastValidIndex(); i>=0; i--) if (IsNetworkInterfaceUsableForMulticast(niis[i]) == false) (void) niis.RemoveItemAt(i);
    niis.Sort(CompareNetworkInterfacesFunctor());
    return niis;
 }
@@ -110,7 +110,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
       NUM_MULTICAST_MODES       ///< Guard value
    };
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--)
+   for (int32 i=niis.GetLastValidIndex(); i>=0; i--)
    {
       const NetworkInterfaceInfo & nii = niis[i];
 

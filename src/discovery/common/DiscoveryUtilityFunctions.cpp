@@ -45,7 +45,7 @@ static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAP
    Queue<NetworkInterfaceInfo> niis;
    MRETURN_ON_ERROR(muscle::GetNetworkInterfaceInfos(niis, GNIIFlags(GNII_FLAG_INCLUDE_ENABLED_INTERFACES,GNII_FLAG_INCLUDE_IPV6_INTERFACES,GNII_FLAG_INCLUDE_LOOPBACK_INTERFACES,GNII_FLAG_INCLUDE_NONLOOPBACK_INTERFACES)));
 
-   for (int32 i=niis.GetNumItems()-1; i>=0; i--)
+   for (int32 i=niis.GetLastValidIndex(); i>=0; i--)
    {
       const NetworkInterfaceInfo & nii = niis[i];
       if ((nii.IsCopperDetected() == false)||(IsNetworkInterfaceUsableForMulticast(nii) == false)||((optNicNameFilter)&&(optNicNameFilter->Match(nii.GetName()()) == false))) (void) niis.RemoveItemAt(i);

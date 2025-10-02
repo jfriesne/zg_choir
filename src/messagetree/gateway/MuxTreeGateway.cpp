@@ -458,7 +458,7 @@ status_t MuxTreeGateway :: UpdateSubscription(const String & subscriptionPath, I
       ConstQueryFilterRef sendFilter;  // what we will actually send
       ConstQueryFilterRef unionFilter; // the "matches against any of the following" meta-filter, demand-allocated
       bool useFilter = true;
-      for (int32 i=q.GetNumItems()-1; i>=0; i--)
+      for (int32 i=q.GetLastValidIndex(); i>=0; i--)
       {
          const SubscriptionInfo & nextItem = q[i];
          if (optSubscriber == NULL)

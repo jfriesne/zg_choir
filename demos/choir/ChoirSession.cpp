@@ -5,6 +5,7 @@
 #include "MusicSheet.h"
 #include "PlaybackState.h"
 #include "NoteAssignmentsMap.h"
+#include "util/MiscUtilityFunctions.h"
 
 namespace choir {
 

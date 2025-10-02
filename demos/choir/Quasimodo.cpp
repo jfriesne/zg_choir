@@ -169,6 +169,11 @@ qint64 Quasimodo :: readData(char * data, qint64 maxSize)
    return maxNumSamples*sizeof(int16);
 }
 
+qint64 Quasimodo :: bytesAvailable() const
+{
+   return QIODevice::bytesAvailable() + 4096;  // BAB-1295:  without this, audio won't play
+}
+
 void Quasimodo :: DestroyTheBells()
 {
    _audioOutput->stop();
