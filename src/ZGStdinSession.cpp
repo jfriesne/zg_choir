@@ -171,7 +171,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    else if (s == "crash")
    {
       LogTime(MUSCLE_LOG_CRITICALERROR, "Forcing this process to crash, ka-BOOM!\n");
-      Crash();
+      MCRASH("deliberate");
    }
    else if (s == "print build flags")
    {
