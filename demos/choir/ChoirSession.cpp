@@ -48,7 +48,7 @@ ConstMessageRef ChoirSession :: GenerateLatenciesMessage() const
    MessageRef msg = GetMessageFromPool(CHOIR_REPLY_LATENCIES_TABLE);
    if (msg() == NULL) return ConstMessageRef();
 
-   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
    {
       const ZGPeerID & pid = iter.GetKey();
       if ((msg()->AddFlat(CHOIR_NAME_PEER_ID, pid).IsOK())&&(msg()->AddInt64(CHOIR_NAME_PEER_LATENCY, GetEstimatedLatencyToPeer(pid)).IsError()))
@@ -78,7 +78,7 @@ bool ChoirSession :: IsStrategyReviewMaybeNecessary() const
       if (GetOnlinePeers().IsEqualTo(_peersAtLastReview) == false) return true;
 
       // Finally, in automatic mode if we see any notes assigned to more than one peer we'll want to unassign them
-      for (HashtableIterator<uint8, uint32> iter(GetNoteAssignmentsMap().GetNoteHistogram()); iter.HasData(); iter++) if (iter.GetValue() > 1) return true;
+      for (ConstHashtableIterator<uint8, uint32> iter(GetNoteAssignmentsMap().GetNoteHistogram()); iter.HasData(); iter++) if (iter.GetValue() > 1) return true;
    }
    return false;
 }

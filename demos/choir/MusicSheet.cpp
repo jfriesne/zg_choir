@@ -28,7 +28,7 @@ MusicSheet & MusicSheet :: operator = (const MusicSheet & rhs)
    SetToDefaultStateAux();
    SetSongFilePath(rhs.GetSongFilePath());
    (void) _chords.EnsureSize(rhs._chords.GetNumItems());
-   for (HashtableIterator<uint32, uint64> iter(rhs._chords); iter.HasData(); iter++) (void) PutChord(iter.GetKey(), iter.GetValue());
+   for (ConstHashtableIterator<uint32, uint64> iter(rhs._chords); iter.HasData(); iter++) (void) PutChord(iter.GetKey(), iter.GetValue());
    return *this;
 }
 
@@ -45,7 +45,7 @@ void MusicSheet :: SetSongFilePath(const String & songFilePath)
 uint32 MusicSheet :: CalculateChecksum() const
 {
    uint32 ret = _songFilePath.CalculateChecksum();
-   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++) ret += CalculateChecksumForChord(iter.GetKey(), iter.GetValue());
+   for (ConstHashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++) ret += CalculateChecksumForChord(iter.GetKey(), iter.GetValue());
    return ret;
 }
 
@@ -97,7 +97,7 @@ status_t MusicSheet :: SaveToArchive(const MessageRef & archiveRef) const
 
    MRETURN_ON_ERROR(archive.AddString("path", _songFilePath));
 
-   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
    {
       MRETURN_ON_ERROR(archive.AddInt32("idx", iter.GetKey()));
       MRETURN_ON_ERROR(archive.AddInt64("chord", iter.GetValue()));
@@ -142,7 +142,7 @@ status_t MusicSheet :: PutChord(uint32 whichChord, uint64 chordValue)
 void MusicSheet :: InsertChordAt(uint32 whichChord)
 {
    // Iterate backwards until we get to the first chord index before (whichChord)
-   for (HashtableIterator<uint32, uint64> iter(_chords, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint32, uint64> iter(_chords, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
    {
       const uint32 chordIdx = iter.GetKey();
       if (chordIdx < whichChord) break;  // done!
@@ -162,7 +162,7 @@ void MusicSheet :: DeleteChordAt(uint32 whichChord)
       if (whichChord > *_chords.GetLastKey()) return;  // nothing to do here!
 
       // Iterate backwards until we get to the first chord index before (whichChord)
-      for (HashtableIterator<uint32, uint64> iter(_chords, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
+      for (ConstHashtableIterator<uint32, uint64> iter(_chords, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
       {
          if (iter.GetKey() < whichChord)
          {
@@ -179,7 +179,7 @@ void MusicSheet :: DeleteChordAt(uint32 whichChord)
 
 void MusicSheet :: MoveChordsBackOneStartingAt(uint32 whichChord)
 {
-   for (HashtableIterator<uint32, uint64> iter(_chords, whichChord, 0); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint32, uint64> iter(_chords, whichChord, 0); iter.HasData(); iter++)
    {
       const uint32 chordIdx   = iter.GetKey();   // gotta copy these out since RemoveChord()
       const uint64 chordValue = iter.GetValue(); // will invalidate both of them
@@ -195,7 +195,7 @@ String MusicSheet :: ToString() const
    ret = buf;
    ret += String("_songFilePath is [%1]\n").Arg(_songFilePath);
 
-   for (HashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint32, uint64> iter(_chords); iter.HasData(); iter++)
    {
       muscleSprintf(buf, "   [" UINT32_FORMAT_SPEC "] -> " XINT64_FORMAT_SPEC "\n", iter.GetKey(), iter.GetValue());
       ret += buf;

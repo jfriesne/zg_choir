@@ -205,7 +205,7 @@ private:
    void EndExistingMulticastUDPSessions()
    {
       // First, tell any existing MulticastUDPSessions to go away
-      for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+      for (ConstHashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
       {
          MulticastUDPSession * lds = dynamic_cast<MulticastUDPSession *>(iter.GetValue()());
          if (lds) lds->EndSession();
@@ -221,7 +221,7 @@ private:
       Hashtable<IPAddressAndPort, bool> q;
       if (GetTransceiverMulticastAddresses(q, _transmissionKey, _nicNameFilter.HasChars() ? &sm : NULL).IsOK())
       {
-         for (HashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
+         for (ConstHashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
          {
             IPAddressAndPort iap = iter.GetKey();
             const bool isWiFi = iter.GetValue();
@@ -518,7 +518,7 @@ void UDPMulticastTransceiver :: Stop()
 // Called in the main thread
 void UDPMulticastTransceiver :: MainThreadNotifyAllOfSleepChange(bool isAboutToSleep)
 {
-   for (HashtableIterator<IUDPMulticastNotificationTarget *, Void> iter(_targets); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IUDPMulticastNotificationTarget *, Void> iter(_targets); iter.HasData(); iter++)
    {
       IUDPMulticastNotificationTarget * t = iter.GetKey();
       if (isAboutToSleep) t->ComputerIsAboutToSleep();
@@ -534,14 +534,14 @@ void UDPMulticastTransceiver :: DispatchCallbacks(uint32 eventTypeBits)
       Hashtable<IPAddressAndPort, Queue<ByteBufferRef> > & mainThreadPendingUpdates = _imp->SwapUpdateBuffers();  // safely swaps the contents of _ioThreadPendingUpdates and _mainThreadPendingUpdates
 
       // Notify all the targets of incoming packet
-      for (HashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(mainThreadPendingUpdates); iter.HasData(); iter++)
+      for (ConstHashtableIterator<IPAddressAndPort, Queue<ByteBufferRef> > iter(mainThreadPendingUpdates); iter.HasData(); iter++)
       {
          const IPAddressAndPort & sourceIAP = iter.GetKey();
          const Queue<ByteBufferRef> & bbq = iter.GetValue();
          for (uint32 i=0; i<bbq.GetNumItems(); i++)
          {
             const ByteBufferRef & b = bbq[i];
-            for (HashtableIterator<IUDPMulticastNotificationTarget *, Void> subIter(_targets); subIter.HasData(); subIter++)
+            for (ConstHashtableIterator<IUDPMulticastNotificationTarget *, Void> subIter(_targets); subIter.HasData(); subIter++)
                subIter.GetKey()->UDPPacketReceived(sourceIAP, b);
          }
       }

@@ -45,7 +45,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
          const ZGPeerID oldSeniorPeerID = GetSeniorPeerID();  // deliberately making a copy of the ZGPeerID object on this line
 
          // First, notify the user-code about any existing peers that have gone away (or changed in such as way that we will treat them as if they had gone away)
-         for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(_mainThreadPeers); iter.HasData(); iter++)
+         for (ConstHashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(_mainThreadPeers); iter.HasData(); iter++)
          {
             const ZGPeerID & peerID = iter.GetKey();
             const Queue<ConstPZGHeartbeatPacketWithMetaDataRef> & oldInfoQ = iter.GetValue();
@@ -61,7 +61,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
 
          // Then, notify the user-code about any new peers that have appeared
          const ZGPeerID * optPrevID = NULL;
-         for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(newPeers); iter.HasData(); iter++)
+         for (ConstHashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(newPeers); iter.HasData(); iter++)
          {
             const ZGPeerID & peerID = iter.GetKey();
             const Queue<ConstPZGHeartbeatPacketWithMetaDataRef> & newRefQ = iter.GetValue();

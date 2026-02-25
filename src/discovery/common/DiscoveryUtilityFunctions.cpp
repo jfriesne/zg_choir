@@ -55,7 +55,7 @@ static status_t GetMulticastAddresses(Hashtable<IPAddressAndPort, bool> & retIAP
 
    Hashtable<IPAddress, bool> q;
    MRETURN_ON_ERROR(MakeIPv6MulticastAddresses(baseKey, niis, q));
-   for (HashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IPAddress, bool> iter(q); iter.HasData(); iter++)
    {
       const IPAddressAndPort iap(iter.GetKey(), port);
       const bool isWiFi = iter.GetValue();

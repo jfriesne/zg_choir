@@ -95,7 +95,7 @@ ConstSocketRef DiscoveryServerSession :: CreateDefaultSocket()
    {
       (void) SetSocketBlockingEnabled(udpSocket, false);
 
-      for (HashtableIterator<IPAddressAndPort, bool> iter(mcastIAPs); iter.HasData(); iter++)
+      for (ConstHashtableIterator<IPAddressAndPort, bool> iter(mcastIAPs); iter.HasData(); iter++)
       {
          const IPAddressAndPort & iap = iter.GetKey();
 

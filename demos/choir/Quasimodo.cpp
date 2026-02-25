@@ -137,7 +137,7 @@ qint64 Quasimodo :: readData(char * data, qint64 maxSize)
    int16 * outBuf = (int16 *) data;
    memset(outBuf, 0, maxNumSamples*sizeof(int16));
 
-   for (HashtableIterator<uint64, uint64> iter(_sampleIndexToNotesChord); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint64, uint64> iter(_sampleIndexToNotesChord); iter.HasData(); iter++)
    {
       const uint64 sampleIndex = iter.GetKey();
       const uint64 notesChord  = iter.GetValue();

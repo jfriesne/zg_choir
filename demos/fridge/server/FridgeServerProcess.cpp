@@ -68,7 +68,7 @@ public:
          if (pingMsg()->CAddInt16("port", _acceptPort).IsError()) return MUSCLE_TIME_NEVER;  // clients will want to know what port they should connect to!
 
          uint32 numConnectedFridgeClients = 0;
-         for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
             if (dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()()) != NULL) numConnectedFridgeClients++;
 
          // Have FridgeServers with lots of connected clients respond a bit slower, so that new FridgeClients will tend

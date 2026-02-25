@@ -138,7 +138,7 @@ void RosterWidget :: paintEvent(QPaintEvent * /*event*/)
       uint64 assignedChord = 0;
 
       uint32 rowIdx = 0;
-      for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(_onlinePeers); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(_onlinePeers); iter.HasData(); iter++)
       {
          const ZGPeerID & peerID = iter.GetKey();
          const int y = GetYForRow(rowIdx);

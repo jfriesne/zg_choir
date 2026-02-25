@@ -58,7 +58,7 @@ status_t NoteAssignmentsMap :: SaveToArchive(const MessageRef & archiveRef) cons
    Message & archive = *archiveRef();
    archive.what = MUSIC_TYPE_ASSIGNMENTS_MAP;
 
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
    {
       MRETURN_ON_ERROR(archive.AddFlat("pid", iter.GetKey()));
       MRETURN_ON_ERROR(archive.AddInt64("chord", iter.GetValue()));
@@ -72,7 +72,7 @@ status_t NoteAssignmentsMap :: SaveToArchive(const MessageRef & archiveRef) cons
 uint32 NoteAssignmentsMap :: CalculateChecksum() const
 {
    uint32 ret = _assignmentStrategy;
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++) ret += CalculateChecksumForPeer(iter.GetKey(), iter.GetValue());
+   for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++) ret += CalculateChecksumForPeer(iter.GetKey(), iter.GetValue());
    return ret;
 }
 
@@ -128,7 +128,7 @@ status_t NoteAssignmentsMap :: SetNoteAssignmentsForPeerID(const ZGPeerID & peer
 
 void NoteAssignmentsMap :: UnassignNote(uint32 noteIdx)
 {
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
    {
       const uint64 chord = iter.GetValue();
       if ((chord & (1LL<<noteIdx)) != 0) (void) SetNoteAssignmentsForPeerID(iter.GetKey(), chord & ~(1LL<<noteIdx));
@@ -178,7 +178,7 @@ const ZGPeerID & NoteAssignmentsMap :: GetLightestPeer(const Hashtable<ZGPeerID,
    retCount = MUSCLE_NO_LIMIT;
    const ZGPeerID * ret = onlinePeers.GetFirstKey();
 
-   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(onlinePeers); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(onlinePeers); iter.HasData(); iter++)
    {
       const ZGPeerID & pid = iter.GetKey();
       const uint32 count = CountBits(GetNoteAssignmentsForPeerID(pid));
@@ -196,7 +196,7 @@ const ZGPeerID & NoteAssignmentsMap :: GetHeaviestPeer(const Hashtable<ZGPeerID,
    retCount = 0;
    const ZGPeerID * ret = onlinePeers.GetFirstKey();
 
-   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(onlinePeers); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(onlinePeers); iter.HasData(); iter++)
    {
       const ZGPeerID & pid = iter.GetKey();
       const uint32 count = CountBits(GetNoteAssignmentsForPeerID(pid));
@@ -216,7 +216,7 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
 
    // For either of the two other modes, the first thing to do is forget about any peers who aren't online anymore
    const Hashtable<ZGPeerID, ConstMessageRef> & onlinePeers = GetOnlinePeers();
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter--)
+   for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter--)
    {
       const ZGPeerID & pid = iter.GetKey();
       if (onlinePeers.ContainsKey(pid) == false)
@@ -245,14 +245,14 @@ status_t NoteAssignmentsMap :: SeniorAutoUpdateAssignments(uint64 allNotesChord,
    if (_assignmentStrategy == ASSIGNMENT_STRATEGY_ASSISTED) return B_NO_ERROR;
 
    // Look for any notes that are assigned to more than one peer; when we find them we'll remove the redundant notes
-   for (HashtableIterator<uint8, uint32> histIter(_noteHistogram); histIter.HasData(); histIter++)
+   for (ConstHashtableIterator<uint8, uint32> histIter(_noteHistogram); histIter.HasData(); histIter++)
    {
       if (histIter.GetValue() > 1)  // ooh, a multi-assigned note!
       {
          const uint64 noteBit = (1LL << histIter.GetKey());
          bool foundNoteAlready = false;
 
-         for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
+         for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
          {
             const ZGPeerID & pid = iter.GetKey();
             const uint64 peerNotes = iter.GetValue();
@@ -303,7 +303,7 @@ String NoteAssignmentsMap :: ToString() const
    char buf[512]; muscleSprintf(buf, "NoteAssignmentsMap %p has " UINT32_FORMAT_SPEC " entries, _assignedNotes is " UINT64_FORMAT_SPEC ", _assignmentStrategy is " UINT32_FORMAT_SPEC ", _checksum is " UINT32_FORMAT_SPEC "\n", this, _noteAssignments.GetNumItems(), _assignedNotes, _assignmentStrategy, _checksum);
    ret = buf;
 
-   for (HashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, uint64> iter(_noteAssignments); iter.HasData(); iter++)
    {
       muscleSprintf(buf, "   [%s] -> " XINT64_FORMAT_SPEC "\n", iter.GetKey().ToString()(), iter.GetValue());
       ret += buf;
@@ -329,7 +329,7 @@ ConstMessageRef NoteAssignmentsMap :: SeniorUpdate(const ConstMessageRef & senio
       case CHOIR_COMMAND_UNASSIGN_ORPHANS:
       {
          bool unassignedAny = false;
-         for (HashtableIterator<ZGPeerID, uint64> iter(GetNoteAssignments()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<ZGPeerID, uint64> iter(GetNoteAssignments()); iter.HasData(); iter++)
          {
             const ZGPeerID & peerID = iter.GetKey();
             if (IsPeerOnline(peerID) == false)

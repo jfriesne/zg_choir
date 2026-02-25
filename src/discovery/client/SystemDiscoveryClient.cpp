@@ -163,7 +163,7 @@ public:
       {
          BroadcastToAllSessionsOfType<DiscoverySession>(_pingMsg);
 
-         for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+         for (ConstHashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
          {
             if (now >= iter.GetValue().GetExpirationTime())
             {
@@ -209,7 +209,7 @@ private:
    void EndExistingDiscoverySessions()
    {
       // First, tell any existing DiscoverySessions to go away
-      for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+      for (ConstHashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
       {
          DiscoverySession * lds = dynamic_cast<DiscoverySession *>(iter.GetValue()());
          if (lds) lds->EndSession();
@@ -222,7 +222,7 @@ private:
       Hashtable<IPAddressAndPort, bool> q;
       if (GetDiscoveryMulticastAddresses(q).IsOK())
       {
-         for (HashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
+         for (ConstHashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
          {
             // Use a different socket for each IP address, to avoid Mac routing problems
             const IPAddressAndPort & iap = iter.GetKey();
@@ -238,7 +238,7 @@ private:
       Hashtable<String, Hashtable<ZGPeerID, MessageRef> > systemNameToPeerIDToInfo;
 
       // Recompile our results, indexed by system name and peer ID
-      for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+      for (ConstHashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
       {
          const MessageRef & result = iter.GetValue().GetData();
 
@@ -253,12 +253,12 @@ private:
 
       // Convert results into a set of Messages, one per system
       Hashtable<String, MessageRef> ret;
-      for (HashtableIterator<String, Hashtable<ZGPeerID, MessageRef> > iter(systemNameToPeerIDToInfo); iter.HasData(); iter++)
+      for (ConstHashtableIterator<String, Hashtable<ZGPeerID, MessageRef> > iter(systemNameToPeerIDToInfo); iter.HasData(); iter++)
       {
          MessageRef systemMsg = GetMessageFromPool();
          if (systemMsg())
          {
-            for (HashtableIterator<ZGPeerID, MessageRef> subIter(iter.GetValue()); subIter.HasData(); subIter++) (void) systemMsg()->AddMessage(ZG_DISCOVERY_NAME_PEERINFO, subIter.GetValue());
+            for (ConstHashtableIterator<ZGPeerID, MessageRef> subIter(iter.GetValue()); subIter.HasData(); subIter++) (void) systemMsg()->AddMessage(ZG_DISCOVERY_NAME_PEERINFO, subIter.GetValue());
             (void) ret.Put(iter.GetKey(), systemMsg);
          }
       }
@@ -487,14 +487,14 @@ void DiscoveryClientManagerSession :: UpdateResultSet()
    Hashtable<String, MessageRef> newCookedResults = CalculateCookedResults();
 
    // First, report any systems that have gone missing
-   for (HashtableIterator<String, MessageRef> iter(_reportedCookedResults); iter.HasData(); iter++)
+   for (ConstHashtableIterator<String, MessageRef> iter(_reportedCookedResults); iter.HasData(); iter++)
    {
       const String & systemName = iter.GetKey();
       if (newCookedResults.ContainsKey(systemName) == false) _imp->ReportSystemUpdate(systemName, MessageRef());
    }
 
    // Then report any systems that are new or that have changed
-   for (HashtableIterator<String, MessageRef> iter(newCookedResults); iter.HasData(); iter++)
+   for (ConstHashtableIterator<String, MessageRef> iter(newCookedResults); iter.HasData(); iter++)
    {
       const String & systemName  = iter.GetKey();
       const MessageRef & newInfo = iter.GetValue();
@@ -547,7 +547,7 @@ void SystemDiscoveryClient :: Stop()
 // Called in the main thread
 void SystemDiscoveryClient :: MainThreadNotifyAllOfSleepChange(bool isAboutToSleep)
 {
-   for (HashtableIterator<IDiscoveryNotificationTarget *, bool> iter(_targets); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IDiscoveryNotificationTarget *, bool> iter(_targets); iter.HasData(); iter++)
    {
       IDiscoveryNotificationTarget * t = iter.GetKey();
       if (isAboutToSleep) t->ComputerIsAboutToSleep();
@@ -572,7 +572,7 @@ void SystemDiscoveryClient :: DispatchCallbacks(uint32 eventTypeBits)
          if (isNewTarget)
          {
             // fill in the new guy on all known updates (except for the ones we're going to cover below anyway)
-            for (HashtableIterator<String, MessageRef> subIter(_knownInfos); subIter.HasData(); subIter++)
+            for (ConstHashtableIterator<String, MessageRef> subIter(_knownInfos); subIter.HasData(); subIter++)
             {
                const String & systemName = subIter.GetKey();
                if (updates.ContainsKey(systemName) == false) target->DiscoveryUpdate(systemName, subIter.GetValue());
@@ -580,11 +580,11 @@ void SystemDiscoveryClient :: DispatchCallbacks(uint32 eventTypeBits)
             isNewTarget = false;
          }
 
-         for (HashtableIterator<String, MessageRef> subIter(updates); subIter.HasData(); subIter++) target->DiscoveryUpdate(subIter.GetKey(), subIter.GetValue());
+         for (ConstHashtableIterator<String, MessageRef> subIter(updates); subIter.HasData(); subIter++) target->DiscoveryUpdate(subIter.GetKey(), subIter.GetValue());
       }
 
       // And finally, update our known-updates table
-      for (HashtableIterator<String, MessageRef> iter(updates); iter.HasData(); iter++) (void) _knownInfos.PutOrRemove(iter.GetKey(), iter.GetValue());
+      for (ConstHashtableIterator<String, MessageRef> iter(updates); iter.HasData(); iter++) (void) _knownInfos.PutOrRemove(iter.GetKey(), iter.GetValue());
    }
 
    if (eventTypeBits & (1<<DISCOVERY_EVENT_TYPE_SLEEP)) MainThreadNotifyAllOfSleepChange(true);

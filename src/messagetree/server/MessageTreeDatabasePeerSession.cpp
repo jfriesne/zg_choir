@@ -158,7 +158,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RequestDeleteNodes(ITreeG
 {
    status_t ret;
    const Hashtable<MessageTreeDatabaseObject *, String> dbs = GetDatabasesForNodePath(path);
-   for (HashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags, optOpTag);
+   for (ConstHashtableIterator<MessageTreeDatabaseObject *, String> iter(dbs); iter.HasData(); iter++) ret |= iter.GetKey()->RequestDeleteNodes(iter.GetValue(), optFilterRef, flags, optOpTag);
    return ret;
 }
 
@@ -306,7 +306,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_SendMessageToSubscriber(I
    if (GetPerClientPeerIDsForPath(subscriberPath, optFilterRef, targetPeerIDs).IsOK())
    {
       status_t ret;
-      for (HashtableIterator<ZGPeerID, Void> iter(targetPeerIDs); iter.HasData(); iter++) ret |= SendUnicastUserMessageToPeer(iter.GetKey(), cmdMsg);
+      for (ConstHashtableIterator<ZGPeerID, Void> iter(targetPeerIDs); iter.HasData(); iter++) ret |= SendUnicastUserMessageToPeer(iter.GetKey(), cmdMsg);
       return ret;
    }
    else return SendUnicastUserMessageToAllPeers(cmdMsg);
@@ -505,7 +505,7 @@ status_t MessageTreeDatabasePeerSession :: GetUnusedNodeID(const String & path, 
 
 ServerSideMessageTreeSession * MessageTreeDatabasePeerSession :: GetActiveServerSideMessageTreeSession() const
 {
-   for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
+   for (ConstHashtableIterator<const String *, AbstractReflectSessionRef> iter(GetSessions()); iter.HasData(); iter++)
    {
       ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()());
       if ((ssmts)&&(ssmts->IsInMessageReceivedFromGateway())) return ssmts;
@@ -532,7 +532,7 @@ const String & MessageTreeDatabasePeerSession :: GetCurrentOpTagForNodePath(cons
 int MessageTreeDatabasePeerSession :: GetSubscribedSessionsCallback(DataNode & node, void * ud)
 {
    Hashtable<ServerSideMessageTreeSession *, Void> & results = *(static_cast<Hashtable<ServerSideMessageTreeSession *, Void> *>(ud));
-   for (HashtableIterator<uint32, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
+   for (ConstHashtableIterator<uint32, uint32> iter(node.GetSubscribers()); iter.HasData(); iter++)
    {
       ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(GetSession(iter.GetKey())());
       if (ssmts) (void) results.PutWithDefault(ssmts);
@@ -607,7 +607,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
 
                Hashtable<ServerSideMessageTreeSession *, Void> subscribedSessions;
                (void) matcher.DoTraversal((PathMatchCallback) GetSubscribedSessionsCallbackFunc, this, isGlobal?GetGlobalRoot():*GetSessionNode()(), true, &subscribedSessions);
-               for (HashtableIterator<ServerSideMessageTreeSession *, Void> iter(subscribedSessions); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(path, payload, tag);
+               for (ConstHashtableIterator<ServerSideMessageTreeSession *, Void> iter(subscribedSessions); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(path, payload, tag);
             }
          }
          else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSUBSCRIBER, but it has no payload!\n", GetLocalPeerID().ToString()());

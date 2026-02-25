@@ -93,7 +93,7 @@ void MuxTreeGateway :: ReceivedPathDropped(ITreeGatewaySubscriber * /*calledBy*/
 
 bool MuxTreeGateway :: IsAnyoneSubscribedToPath(const String & path) const
 {
-   for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
    {
       const TreeSubscriberInfo * tsi = iter.GetValue()();
       if ((tsi)&&(tsi->MatchesPath(path(), NULL, NULL))) return true;
@@ -126,7 +126,7 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
       TreeSubscriberInfoRef hisSubs;
       if ((_subscriberInfos.Get(calledBy, hisSubs).IsOK())&&(hisSubs()))
       {
-         for (HashtableIterator<String, uint32> iter(hisSubs()->_receivedPaths); iter.HasData(); iter++)
+         for (ConstHashtableIterator<String, uint32> iter(hisSubs()->_receivedPaths); iter.HasData(); iter++)
          {
             const String & receivedPath = iter.GetKey();
             if (hisSubs()->MatchesPath(receivedPath(), NULL, NULL))
@@ -152,8 +152,8 @@ status_t MuxTreeGateway :: TreeGateway_RemoveAllSubscriptions(ITreeGatewaySubscr
    if ((_subscriberInfos.Get(calledBy, subs).IsOK(ret))&&(subs()))
    {
       const TreeSubscriberInfo temp = *subs(); // make local copy to avoid potential re-entrancy issues
-      for (HashtableIterator<uint32, Hashtable<String, PathMatcherEntry > > iter(temp.GetEntries()); iter.HasData(); iter++)
-         for (HashtableIterator<String, PathMatcherEntry> subIter(iter.GetValue()); subIter.HasData(); subIter++)
+      for (ConstHashtableIterator<uint32, Hashtable<String, PathMatcherEntry > > iter(temp.GetEntries()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<String, PathMatcherEntry> subIter(iter.GetValue()); subIter.HasData(); subIter++)
             (void) TreeGateway_RemoveSubscription(calledBy, subIter.GetKey(), subIter.GetValue().GetFilter(), TreeGatewayFlags()).IsError(ret);  // IsError() will set (ret) on error
       return ret;
    }
@@ -256,7 +256,7 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const ConstMessag
    if (_allowedCallbacks.HasItems())
    {
       // In this case, it's faster to iterate over just what's allowed
-      for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfo * subInfo = _subscriberInfos.GetWithDefault(sub)();
@@ -265,7 +265,7 @@ void MuxTreeGateway :: TreeNodeUpdatedAux(const String & path, const ConstMessag
    }
    else
    {
-      for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfo * subInfo = iter.GetValue()();
@@ -309,7 +309,7 @@ void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, ui
    if (_allowedCallbacks.HasItems())
    {
       // In this case, it's faster to iterate over just what's allowed
-      for (HashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, Void> iter(_allowedCallbacks); iter.HasData(); iter++)
       {
          ITreeGatewaySubscriber * sub = iter.GetKey();
          TreeSubscriberInfoRef * pmr = _subscriberInfos.Get(sub);
@@ -318,7 +318,7 @@ void MuxTreeGateway :: DoIndexNotifications(const String & path, char opCode, ui
    }
    else
    {
-      for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
          if (DoesPathMatch(iter.GetKey(), iter.GetValue()(), path, NULL)) DoIndexNotificationAux(iter.GetKey(), path, opCode, index, nodeName, optOpTag);
    }
 }
@@ -392,12 +392,12 @@ void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, co
    {
       // This might be inefficient in some cases -- perhaps there is a better way to do this?  -jaf
       Hashtable<ITreeGatewaySubscriber *, String> matchingSubscribers;  // subscriber -> matching-node-path
-      for (HashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, TreeSubscriberInfoRef> iter(_subscriberInfos); iter.HasData(); iter++)
       {
          const TreeSubscriberInfo * subInfo = iter.GetValue()();
          if (subInfo)
          {
-            for (HashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
+            for (ConstHashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
             {
                if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey()())))
                {
@@ -407,7 +407,7 @@ void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, co
             }
          }
       }
-      for (HashtableIterator<ITreeGatewaySubscriber *, String> iter(matchingSubscribers); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(iter.GetValue(), payload, returnAddress);
+      for (ConstHashtableIterator<ITreeGatewaySubscriber *, String> iter(matchingSubscribers); iter.HasData(); iter++) iter.GetKey()->MessageReceivedFromSubscriber(iter.GetValue(), payload, returnAddress);
    }
 }
 
@@ -517,7 +517,7 @@ void MuxTreeGateway :: TreeGatewayConnectionStateChanged()
       if (_isConnected)
       {
          // Re-add all our subscriptions to our upstream gateway, so we can re-sync all of our subscribers now that we're connected
-         for (HashtableIterator<String, Queue<SubscriptionInfo> > iter(_subscribedStrings); iter.HasData(); iter++)
+         for (ConstHashtableIterator<String, Queue<SubscriptionInfo> > iter(_subscribedStrings); iter.HasData(); iter++)
          {
             bool quiet = true;
             const Queue<SubscriptionInfo> & q = iter.GetValue();

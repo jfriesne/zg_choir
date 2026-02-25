@@ -47,7 +47,7 @@ public:
       if (sstate)
       {
          sstate->_payload = optPayloadMsg;
-         for (HashtableIterator<String, Void> iter(sstate->_sourcePaths); iter.HasData(); iter++)
+         for (ConstHashtableIterator<String, Void> iter(sstate->_sourcePaths); iter.HasData(); iter++)
             _master->MuxTreeGateway::TreeNodeUpdated(iter.GetKey(), sstate->_payload, optOpTag);
       }
    }

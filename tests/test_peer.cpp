@@ -149,7 +149,7 @@ public:
       }
       else if (text == "print peer locations")
       {
-         for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(GetOnlinePeers()); iter.HasData(); iter++)
          {
             const ZGPeerID & peerID = iter.GetKey();
             const Queue<IPAddressAndPort> locs = GetUnicastIPAddressAndPortsForPeerID(peerID);
@@ -206,7 +206,7 @@ protected:
       MessageRef ret = GetMessageFromPool(TOY_DB_COMMAND_SET_DB_STATE);
       if (ret()==NULL) return MessageRef();
 
-      for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++)
+      for (ConstHashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++)
          if (ret()->AddString(iter.GetKey(), iter.GetValue()).IsError()) return MessageRef();
 
       return ret;
@@ -224,14 +224,14 @@ protected:
    virtual uint32 CalculateLocalDatabaseChecksum(uint32 whichDatabase) const
    {
       uint32 ret = 0;
-      for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++) ret += CalculateKeyValueChecksum(iter.GetKey(), iter.GetValue());
+      for (ConstHashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++) ret += CalculateKeyValueChecksum(iter.GetKey(), iter.GetValue());
       return ret;
    }
 
    virtual String GetLocalDatabaseContentsAsString(uint32 whichDatabase) const
    {
       String ret;
-      for (HashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++) ret += String("   [%1] -> [%2]\n").Arg(iter.GetKey()).Arg(iter.GetValue()());
+      for (ConstHashtableIterator<String, String> iter(_toyDatabases[whichDatabase]); iter.HasData(); iter++) ret += String("   [%1] -> [%2]\n").Arg(iter.GetKey()).Arg(iter.GetValue()());
       return ret;
    }
 
@@ -287,7 +287,7 @@ private:
    {
       printf("\n----------- DATABASE STATE ------------\n");
       PrintDatabaseStateInfo();
-      for (HashtableIterator<String, String> iter(_toyDatabases[0]); iter.HasData(); iter++) printf("   [%s] -> [%s]\n", iter.GetKey()(), iter.GetValue()());
+      for (ConstHashtableIterator<String, String> iter(_toyDatabases[0]); iter.HasData(); iter++) printf("   [%s] -> [%s]\n", iter.GetKey()(), iter.GetValue()());
    }
 
    MessageRef ParseTestInstructions(uint32 what, const String & s) const

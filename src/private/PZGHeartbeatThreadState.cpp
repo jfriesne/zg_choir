@@ -62,7 +62,7 @@ uint64 PZGHeartbeatThreadState :: GetPulseTime() const
    if ((_updateOfficialPeersListPending)||(_updateToNetworkTimeOffsetPending)) return 0;
 
    uint64 ret = _nextSendHeartbeatTime;
-   for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) ret = muscleMin(ret, iter.GetValue()()->GetLocalExpirationTimeMicros());
+   for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) ret = muscleMin(ret, iter.GetValue()()->GetLocalExpirationTimeMicros());
    return ret;
 }
 
@@ -79,13 +79,13 @@ void PZGHeartbeatThreadState :: EnsureHeartbeatSourceTagsTableUpdated()
       if (iap.IsValid()) (void) dests.AddTail(iap);  // semi-paranoia; they should always be valid
    }
 
-   for (HashtableIterator<IPAddressAndPort, uint16> iter(_heartbeatSourceDestToTag); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IPAddressAndPort, uint16> iter(_heartbeatSourceDestToTag); iter.HasData(); iter++)
    {
       const IPAddressAndPort & iap = iter.GetKey();
       if (dests.Contains(iap) == false)
       {
          // Let's get rid of any time-averagers that were keyed to this IP address, since they won't get used anymore
-         for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) (void) iter.GetValue()()->DiscardRoundTripTimeAverager(iap);
+         for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) (void) iter.GetValue()()->DiscardRoundTripTimeAverager(iap);
 
          uint16 tag = 0;
          if (_heartbeatSourceDestToTag.Remove(iap, tag).IsOK()) (void) _heartbeatSourceTagToDest.Remove(tag);
@@ -137,7 +137,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
 
       // Update the main-thread-accessible latencies table, just so we don't have to lock our own data structures all the time
       DECLARE_MUTEXGUARD(_mainThreadLatenciesLock);
-      for (HashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++)
+      for (ConstHashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++)
       {
          const ZGPeerID & peerID = iter.GetKey();
          const Queue<IPAddressAndPort> & sourceQ = iter.GetValue();
@@ -146,7 +146,7 @@ void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread
       }
    }
 
-   for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
+   for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
       if (_now >= iter.GetValue()()->GetLocalExpirationTimeMicros()) ExpireSource(iter.GetKey());
 
    if ((_fullAttachmentReported == false)&&(IsFullyAttached()))
@@ -227,7 +227,7 @@ status_t PZGHeartbeatThreadState :: SendHeartbeatPackets()
 void PZGHeartbeatThreadState :: PrintTimeSynchronizationDeltas() const
 {
    printf("\n\n======== CHECK TIMES =========\n");
-   for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
+   for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
    {
       const PZGHeartbeatSourceState & sourceData = *iter.GetValue()();
       const PZGHeartbeatPacketWithMetaData * hb = sourceData.GetHeartbeatPacket()();
@@ -271,7 +271,7 @@ bool PZGHeartbeatThreadState :: PeersListMatchesIgnoreOrdering(const Queue<Const
 ZGPeerID PZGHeartbeatThreadState :: GetKingmakerPeerID() const
 {
    ZGPeerID minPeerID;
-   for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
+   for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
    {
       const PZGHeartbeatPacketWithMetaData & hbPacket = *iter.GetValue()()->GetHeartbeatPacket()();
       const ZGPeerID & nextPID = hbPacket.GetSourcePeerID();
@@ -286,7 +286,7 @@ PZGHeartbeatSourceKey PZGHeartbeatThreadState :: GetKingmakerPeerSource() const
    PZGHeartbeatSourceKey ret;
 
    ZGPeerID minPeerID;
-   for (HashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
+   for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++)
    {
       const PZGHeartbeatPacketWithMetaData & hbPacket = *iter.GetValue()()->GetHeartbeatPacket()();
       const ZGPeerID & nextPID = hbPacket.GetSourcePeerID();
@@ -379,7 +379,7 @@ Queue<ZGPeerID> PZGHeartbeatThreadState :: CalculateOrderedPeersList()
    {
       // If we don't know who the kingmaker peer is, then we'll populate the list based solely on our own local sorting-criteria.
       _peerIDToIPAddresses.SortByKey(ComparePeerIDsBySeniorityFunctor(), this);
-      if (ret.EnsureSize(_peerIDToIPAddresses.GetNumItems()).IsOK()) for (HashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++) (void) ret.AddTail(iter.GetKey());
+      if (ret.EnsureSize(_peerIDToIPAddresses.GetNumItems()).IsOK()) for (ConstHashtableIterator<ZGPeerID, Queue<IPAddressAndPort> > iter(_peerIDToIPAddresses); iter.HasData(); iter++) (void) ret.AddTail(iter.GetKey());
    }
 
    return ret;
@@ -590,7 +590,7 @@ MessageRef PZGHeartbeatThreadState :: UpdateOfficialPeersList(bool forceUpdate)
          ret = GetMessageFromPool(PZG_HEARTBEAT_COMMAND_PEERS_UPDATE);
          if (ret())
          {
-            for (HashtableIterator<PZGHeartbeatSourceKey, Void> iter(_lastSourcesSentToMaster); iter.HasData(); iter++)
+            for (ConstHashtableIterator<PZGHeartbeatSourceKey, Void> iter(_lastSourcesSentToMaster); iter.HasData(); iter++)
             {
                const PZGHeartbeatSourceStateRef * sourceInfo = _onlineSources.Get(iter.GetKey());
                PZGHeartbeatPacketWithMetaDataRef hbRef; if (sourceInfo) hbRef = sourceInfo->GetItemPointer()->GetHeartbeatPacket();

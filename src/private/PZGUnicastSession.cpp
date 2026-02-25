@@ -136,7 +136,7 @@ void PZGUnicastSession :: UnregisterMyself(bool forGood)
    if (_master)
    {
       // If we have any back-orders outstanding, make sure the master knows they aren't going to happen
-      for (HashtableIterator<PZGUpdateBackOrderKey, Void> iter(_backorders); iter.HasData(); iter++) _master->BackOrderResultReceived(iter.GetKey(), ConstPZGDatabaseUpdateRef());
+      for (ConstHashtableIterator<PZGUpdateBackOrderKey, Void> iter(_backorders); iter.HasData(); iter++) _master->BackOrderResultReceived(iter.GetKey(), ConstPZGDatabaseUpdateRef());
    }
    _backorders.Clear();
 

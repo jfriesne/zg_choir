@@ -28,7 +28,7 @@ void FridgeClientCanvas :: paintEvent(QPaintEvent *)
    QFontMetrics fm = p.fontMetrics();
 
    p.fillRect(rect(), Qt::lightGray);
-   for (HashtableIterator<String, MagnetState> iter(_magnets); iter.HasData(); iter++)
+   for (ConstHashtableIterator<String, MagnetState> iter(_magnets); iter.HasData(); iter++)
    {
       const MagnetState & m = iter.GetValue();
       m.Draw(p, m.GetScreenRect(fm));
@@ -48,7 +48,7 @@ void FridgeClientCanvas :: paintEvent(QPaintEvent *)
 String FridgeClientCanvas :: GetMagnetAtPoint(const QPoint & pt) const
 {
    QFontMetrics fm = fontMetrics();
-   for (HashtableIterator<String, MagnetState> iter(_magnets); iter.HasData(); iter++)
+   for (ConstHashtableIterator<String, MagnetState> iter(_magnets); iter.HasData(); iter++)
       if (iter.GetValue().GetScreenRect(fm).contains(pt)) return iter.GetKey();
    return GetEmptyString();
 }

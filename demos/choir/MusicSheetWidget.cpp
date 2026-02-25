@@ -147,13 +147,13 @@ void MusicSheetWidget :: paintEvent(QPaintEvent * /*event*/)
       if (_scrollOffsetX >= (GetSongWidthPixels()/2))
       {
          // We're closer to the end of the song; draw from the end until we go off the left edge
-         for (HashtableIterator<uint32, uint64> iter(_musicSheet()->GetChordsTable(), HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
+         for (ConstHashtableIterator<uint32, uint64> iter(_musicSheet()->GetChordsTable(), HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
             if (DrawChord(p, iter.GetKey(), iter.GetValue(), true, GetStemDirectionForChord(iter.GetValue())) < 0) break;
       }
       else
       {
          // We're closer to the front of the song; draw from the beginning until we go off the right edge
-         for (HashtableIterator<uint32, uint64> iter(_musicSheet()->GetChordsTable()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<uint32, uint64> iter(_musicSheet()->GetChordsTable()); iter.HasData(); iter++)
             if (DrawChord(p, iter.GetKey(), iter.GetValue(), true, GetStemDirectionForChord(iter.GetValue())) > 0) break;
       }
    }

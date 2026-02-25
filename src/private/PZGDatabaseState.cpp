@@ -241,7 +241,7 @@ void PZGDatabaseState :: RescanUpdateLog()
       {
          // Start iterating backwards from the end of the table (i.e. the most recent updates) until we get past all the unsent ones
          const uint64 oldestUpdateID = *_updateLog.GetFirstKey();
-         for (HashtableIterator<uint64, ConstPZGDatabaseUpdateRef> iter(_updateLog, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
+         for (ConstHashtableIterator<uint64, ConstPZGDatabaseUpdateRef> iter(_updateLog, HTIT_FLAG_BACKWARDS); iter.HasData(); iter++)
          {
             const uint64 nextUpdateID = iter.GetKey();
 
@@ -497,7 +497,7 @@ void PZGDatabaseState :: PrintDatabaseStateInfo() const
 void PZGDatabaseState :: PrintDatabaseUpdateLog() const
 {
    printf("Update log for database #" UINT32_FORMAT_SPEC " has " UINT32_FORMAT_SPEC " items (" UINT64_FORMAT_SPEC "/" UINT64_FORMAT_SPEC " bytes, " UINT64_FORMAT_SPEC " milliseconds):\n", _whichDatabase, _updateLog.GetNumItems(), _totalPayloadBytesInLog, _maxPayloadBytesInLog, _totalElapsedMillisInLog);
-   for (HashtableIterator<uint64, ConstPZGDatabaseUpdateRef> iter(_updateLog); iter.HasData(); iter++) printf("  %s\n", iter.GetValue()()->ToString()());
+   for (ConstHashtableIterator<uint64, ConstPZGDatabaseUpdateRef> iter(_updateLog); iter.HasData(); iter++) printf("  %s\n", iter.GetValue()()->ToString()());
 }
 
 PZGDatabaseStateInfo PZGDatabaseState :: GetDatabaseStateInfo() const

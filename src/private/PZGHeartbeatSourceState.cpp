@@ -26,7 +26,7 @@ status_t PZGHeartbeatSourceState :: AddMeasurement(const IPAddressAndPort & mult
 uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasurementsAfterThisTime)
 {
    bool isFirstKey = true;
-   for (HashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter(_rttAveragers); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter(_rttAveragers); iter.HasData(); iter++)
    {
       const PZGRoundTripTimeAverager * rtt = iter.GetValue()();
       if (rtt->GetLastMeasurementTime() >= mustHaveMeasurementsAfterThisTime)
@@ -36,7 +36,7 @@ uint64 PZGHeartbeatSourceState :: GetPreferredAverageValue(uint64 mustHaveMeasur
          {
             // Let's move the unacceptable averagers to the back; that way we'll stay on our new preference even if they come back
             // That way we avoid "flapping" back and forth if there is a marginal averager for some reason.
-            for (HashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter2(_rttAveragers); iter2.HasData(); iter2++)
+            for (ConstHashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter2(_rttAveragers); iter2.HasData(); iter2++)
             {
                if (iter2.GetKey() == iter.GetKey()) break;
                                                else (void) _rttAveragers.MoveToBack(iter2.GetKey());
@@ -56,7 +56,7 @@ String PZGHeartbeatSourceState :: ToString(const INetworkTimeProvider & ntp) con
    const uint64 advertisedNetTime = hb ? hb->GetNetworkSendTimeMicros()  : 0;
    const uint64 computedNetTime   = ntp.GetNetworkTime64ForRunTime64(localReceivedAt);
    String ret = String("advertisedNetTime=%1").Arg(advertisedNetTime);
-   for (HashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter(_rttAveragers); iter.HasData(); iter++)
+   for (ConstHashtableIterator<IPAddressAndPort, PZGRoundTripTimeAveragerRef> iter(_rttAveragers); iter.HasData(); iter++)
    {
       const uint64 raw    = iter.GetValue()()->GetRawAverageValue();
       const uint64 cooked = iter.GetValue()()->GetAverageValueIgnoringOutliers();

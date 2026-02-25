@@ -196,7 +196,7 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       if (_networkIOSession())
       {
          int i=0;
-         for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(static_cast<PZGNetworkIOSession*>(_networkIOSession())->GetMainThreadPeers()); iter.HasData(); iter++,i++)
+         for (ConstHashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(static_cast<PZGNetworkIOSession*>(_networkIOSession())->GetMainThreadPeers()); iter.HasData(); iter++,i++)
             printf("Peer #%i: %s%s%s\n", i+1, iter.GetKey().ToString()(), (iter.GetKey()==GetLocalPeerID())?" <-- THIS PEER":"", (i==0)?" (SENIOR)":"");
       }
       else printf("Can't print peers list, network I/O session is missing!\n");

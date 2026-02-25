@@ -114,7 +114,7 @@ void FridgeChatView :: CallbackBatchEnds()
 void FridgeChatView :: UpdateDisplay()
 {
    String t;
-   for (HashtableIterator<int32, ChatTextEntry> iter(_chatData); iter.HasData(); iter++)
+   for (ConstHashtableIterator<int32, ChatTextEntry> iter(_chatData); iter.HasData(); iter++)
    {
       if (t.HasChars()) t += '\n';
       t += iter.GetValue().ToString();

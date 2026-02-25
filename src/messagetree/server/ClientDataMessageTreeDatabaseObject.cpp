@@ -158,7 +158,7 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
          LogTime(MUSCLE_LOG_INFO, "ClientDataMessageTreeDatabaseObject:  Re-uploading local client data to the ZG shared database.\n");
 
          MessageRef replyMsg;
-         for (HashtableIterator<const String *, AbstractReflectSessionRef> iter(GetMessageTreeDatabasePeerSession()->GetSessions()); iter.HasData(); iter++)
+         for (ConstHashtableIterator<const String *, AbstractReflectSessionRef> iter(GetMessageTreeDatabasePeerSession()->GetSessions()); iter.HasData(); iter++)
          {
             ServerSideMessageTreeSession * ssmts = dynamic_cast<ServerSideMessageTreeSession *>(iter.GetValue()());
             if (ssmts)

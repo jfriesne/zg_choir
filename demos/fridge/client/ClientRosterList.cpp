@@ -84,7 +84,7 @@ void ClientRosterList :: UpdateDisplay()
    const QString prevSel = currentItem() ? currentItem()->text() : QString();
 
    clear();
-   for (HashtableIterator<String, ConstMessageRef> iter(_clientRoster); iter.HasData(); iter++)
+   for (ConstHashtableIterator<String, ConstMessageRef> iter(_clientRoster); iter.HasData(); iter++)
    {
       const QString nextClientName = iter.GetValue()()->GetString("user")();
 

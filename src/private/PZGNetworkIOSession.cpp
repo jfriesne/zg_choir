@@ -274,7 +274,7 @@ int64 PZGNetworkIOSession :: GetToNetworkTimeOffset() const
 
 void PZGNetworkIOSession :: ClearAllUnicastSessions()
 {
-   for (HashtableIterator<PZGUnicastSessionRef, Void> iter(_registeredUnicastSessions); iter.HasData(); iter++) iter.GetKey()()->EndSession();
+   for (ConstHashtableIterator<PZGUnicastSessionRef, Void> iter(_registeredUnicastSessions); iter.HasData(); iter++) iter.GetKey()()->EndSession();
    _registeredUnicastSessions.Clear();   // these Clear() calls shouldn't be necessary, since EndSession() should remove everything anyway
    _namedUnicastSessions.Clear();        // but for paranoia's sake I'm leaving them in
 }
@@ -532,7 +532,7 @@ void PZGNetworkIOSession :: Pulse(const PulseArgs & args)
 
 status_t PZGNetworkIOSession :: SendUnicastMessageToAllPeers(const ConstMessageRef & msg, bool sendToSelf)
 {
-   for (HashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(GetMainThreadPeers()); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > iter(GetMainThreadPeers()); iter.HasData(); iter++)
    {
       if ((sendToSelf == false)&&(iter.GetKey() == GetLocalPeerID())) continue;
       MRETURN_ON_ERROR(SendUnicastMessageToPeer(iter.GetKey(), msg));
@@ -620,7 +620,7 @@ void PZGNetworkIOSession :: ComputerIsAboutToSleep()
    SeniorPeerChanged(_seniorPeerID, ZGPeerID());
 
    // Since when we wake up we won't know who is online anymore
-   for (HashtableIterator<ZGPeerID, ConstMessageRef> iter(_master->GetOnlinePeers()); iter.HasData(); iter++)
+   for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(_master->GetOnlinePeers()); iter.HasData(); iter++)
    {
       const ZGPeerID temp = iter.GetKey();  // copy this out first to avoid re-entrancy problems
       PeerHasGoneOffline(temp, iter.GetValue());
