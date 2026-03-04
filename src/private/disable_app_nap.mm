@@ -2,6 +2,7 @@
 # import <Foundation/Foundation.h>
 # import <Foundation/NSProcessInfo.h>
 
+void * begin_disable_app_nap(const char * reasonArg);  // just to avoid a -Wmissing-prototypes warning
 void * begin_disable_app_nap(const char * reasonArg)
 {
    if ([[NSProcessInfo processInfo] respondsToSelector:@selector(beginActivityWithOptions:reason:)])
@@ -11,6 +12,7 @@ void * begin_disable_app_nap(const char * reasonArg)
    return NULL;
 }
 
+void end_disable_app_nap(void * idPtr);  // just to avoid a -Wmissing-prototypes warning
 void end_disable_app_nap(void * idPtr)
 {
    if (idPtr)

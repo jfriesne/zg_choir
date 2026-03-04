@@ -87,8 +87,8 @@ void PZGHeartbeatPacket :: Flatten(DataFlattener flat) const
    flat.WriteInt32(_peerUptimeSeconds);
    flat.WriteFlat(_sourcePeerID);
    flat.WriteInt16(_peerType|(_isFullyAttached?0x8000:0));
-   flat.WriteInt16(opListItemCount);  // yes, 16 bits is correct!
-   flat.WriteInt16(attribBufSize);    // yes, 16 bits is correct!
+   flat.WriteInt16((uint16) opListItemCount);  // yes, 16 bits is correct!
+   flat.WriteInt16((uint16) attribBufSize);    // yes, 16 bits is correct!
    flat.WriteInt16(0); /* reserved for now */
    for (uint32 i=0; i<opListItemCount; i++) flat.WriteFlat(*_orderedPeersList[i]());  // receiver will figure out the lengths from the restored PeerInfo objects
    if (attribBufSize > 0) flat.WriteBytes(*_peerAttributesBuf());

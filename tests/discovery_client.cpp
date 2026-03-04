@@ -41,7 +41,7 @@ public:
    }
 };
 
-int main(int argc, char ** argv)
+int main(int /*argc*/, char ** /*argv*/)
 {
    CompleteSetupSystem css;     // set up MUSCLE environment
    SocketCallbackMechanism scm; // orchestrates safe calling of callback-methods in the main/user/GUI thread

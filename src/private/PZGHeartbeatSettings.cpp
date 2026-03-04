@@ -80,9 +80,9 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
          {
             if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK(ret))
             {
-               UDPSocketDataIORef ret(new UDPSocketDataIO(udpSock, false));
-               (void) ret()->SetPacketSendDestination(multicastIAP);
-               return ret;
+               UDPSocketDataIORef udpRef(new UDPSocketDataIO(udpSock, false));
+               (void) udpRef()->SetPacketSendDestination(multicastIAP);
+               return udpRef;
             }
             else {LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s] [%s]\n", multicastIAP.GetIPAddress().ToString()(), ret()); return ret;}
          }

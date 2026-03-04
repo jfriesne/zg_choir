@@ -119,7 +119,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
    {
       case PZG_PEER_COMMAND_RESET_SENIOR_DATABASE:
       {
-         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_RESET, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
+         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_RESET, (uint16) _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
          MRETURN_OOM_ON_NULL(dbUp());
          MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
@@ -142,7 +142,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
             return B_BAD_DATA;
          }
 
-         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
+         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, (uint16) _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
          MRETURN_OOM_ON_NULL(dbUp());
 
          MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
@@ -173,7 +173,7 @@ status_t PZGDatabaseState :: HandleDatabaseUpdateRequest(const ZGPeerID & fromPe
             return B_BAD_DATA;
          }
 
-         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_UPDATE, _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
+         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_UPDATE, (uint16) _whichDatabase, _localDatabaseStateID+1, fromPeerID, _dbChecksum);
          MRETURN_OOM_ON_NULL(dbUp());
          MRETURN_ON_ERROR(AddDatabaseUpdateToUpdateLog(dbUp));
 
@@ -295,8 +295,7 @@ void PZGDatabaseState :: RescanUpdateLog()
                   else
                   {
                      LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to execute junior update #" UINT64_FORMAT_SPEC " (%s), will try to recover by requesting full database resend.\n", _whichDatabase, nextStateID, ret());
-                     const status_t ret = RequestFullDatabaseResendFromSeniorPeer(true);
-                     if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
+                     if (RequestFullDatabaseResendFromSeniorPeer(true).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Request for full database resend failed! [%s]\n", ret());
                      break;
                   }
                }
@@ -577,7 +576,7 @@ ConstPZGDatabaseUpdateRef PZGDatabaseState :: GetDatabaseUpdateByID(uint64 updat
       MessageRef savedDBMsg = _master->SaveLocalDatabaseToMessage(_whichDatabase);
       if (savedDBMsg())
       {
-         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, _whichDatabase, _localDatabaseStateID, _master->GetLocalPeerID(), _dbChecksum);
+         PZGDatabaseUpdateRef dbUp = GetPZGDatabaseUpdateFromPool(PZG_DATABASE_UPDATE_TYPE_REPLACE, (uint16) _whichDatabase, _localDatabaseStateID, _master->GetLocalPeerID(), _dbChecksum);
          MRETURN_ON_ERROR(dbUp);
 
          dbUp()->SetSeniorStartTimeMicros(networkTimeProvider.GetNetworkTime64ForRunTime64(startTime));

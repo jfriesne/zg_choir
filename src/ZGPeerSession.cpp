@@ -181,8 +181,8 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
    else if (s.StartsWith("print network interfaces"))
    {
       const PZGNetworkIOSession * nios = static_cast<const PZGNetworkIOSession *>(_networkIOSession());
-      const PZGHeartbeatSettings * s = nios ? nios->GetPZGHeartbeatSettings()() : NULL;
-      Queue<NetworkInterfaceInfo> niis; if (s) niis = s->GetNetworkInterfaceInfos();
+      const PZGHeartbeatSettings * hbs = nios ? nios->GetPZGHeartbeatSettings()() : NULL;
+      Queue<NetworkInterfaceInfo> niis; if (hbs) niis = hbs->GetNetworkInterfaceInfos();
 
       printf("Network interfaces currently in use by this ZG peer are:\n");
       for (uint32 i=0; i<niis.GetNumItems(); i++)

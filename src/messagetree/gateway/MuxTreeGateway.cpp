@@ -19,7 +19,7 @@ String MuxTreeGateway :: PrependRegistrationIDPrefix(ITreeGatewaySubscriber * su
 
 ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationID(const String & ascii, char markerChar) const
 {
-   return ((ascii.StartsWith(markerChar))&&(ascii.EndsWith(markerChar))) ? GetRegistrationIDs()[atol(ascii()+1)] : NULL;
+   return ((ascii.StartsWith(markerChar))&&(ascii.EndsWith(markerChar))) ? GetRegistrationIDs()[(uint32) atol(ascii()+1)] : NULL;
 }
 
 ITreeGatewaySubscriber * MuxTreeGateway :: ParseRegistrationIDPrefix(const String & s, String & retSuffix, char markerChar) const

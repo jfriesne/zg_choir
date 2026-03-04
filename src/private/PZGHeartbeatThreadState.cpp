@@ -85,7 +85,7 @@ void PZGHeartbeatThreadState :: EnsureHeartbeatSourceTagsTableUpdated()
       if (dests.Contains(iap) == false)
       {
          // Let's get rid of any time-averagers that were keyed to this IP address, since they won't get used anymore
-         for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> iter(_onlineSources); iter.HasData(); iter++) (void) iter.GetValue()()->DiscardRoundTripTimeAverager(iap);
+         for (ConstHashtableIterator<PZGHeartbeatSourceKey, PZGHeartbeatSourceStateRef> subIter(_onlineSources); subIter.HasData(); subIter++) (void) subIter.GetValue()()->DiscardRoundTripTimeAverager(iap);
 
          uint16 tag = 0;
          if (_heartbeatSourceDestToTag.Remove(iap, tag).IsOK()) (void) _heartbeatSourceTagToDest.Remove(tag);
@@ -113,6 +113,7 @@ void PZGHeartbeatThreadState :: EnsureHeartbeatSourceTagsTableUpdated()
 static const uint32 HB_HEADER_SIZE  = sizeof(uint16) + sizeof(uint16) + sizeof(uint64) + sizeof(uint32);  // HB_HEADER_MAGIC, heartbeatSourceTag, networkSendTimeMicros, payload checksum
 static const uint16 HB_HEADER_MAGIC = 25874;  // a completely arbitrary 16-bit value
 static bool _printTimeSynchronizationDeltas = false;
+void SetEnableTimeSynchronizationDebugging(bool e);  // just to avoid a -Wmissing-prototype warning
 void SetEnableTimeSynchronizationDebugging(bool e) {_printTimeSynchronizationDeltas = e;}
 
 void PZGHeartbeatThreadState :: Pulse(Queue<MessageRef> & messagesForOwnerThread)

@@ -148,7 +148,7 @@ bool TestTreeGatewaySubscriber :: TextCommandReceived(const String & textStr)
          const String tag         = tok();
          const String maxDepthStr = tok();
 
-         const uint32 maxDepth = ((maxDepthStr.HasChars())&&(muscleInRange(maxDepthStr[0], '0', '9'))) ? atol(maxDepthStr()) : MUSCLE_NO_LIMIT;
+         const uint32 maxDepth = ((maxDepthStr.HasChars())&&(muscleInRange(maxDepthStr[0], '0', '9'))) ? (uint32) atol(maxDepthStr()) : MUSCLE_NO_LIMIT;
 
          Queue<String> paths; (void) paths.AddTail(path);
          if (RequestTreeNodeSubtrees(paths, Queue<ConstQueryFilterRef>(), tag, maxDepth).IsOK(ret))

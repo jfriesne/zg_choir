@@ -185,7 +185,7 @@ public:
 
          if ((_inactivityPingTimeMicroseconds > 0)&&(_timeSyncSession()))
          {
-            const uint32 overdueCount = (args.GetScheduledTime()-_lastDataReadTime)/_inactivityPingTimeMicroseconds;
+            const uint32 overdueCount = (uint32) ((args.GetScheduledTime()-_lastDataReadTime)/_inactivityPingTimeMicroseconds);
                  if (overdueCount >= 5) (void) DisconnectSession();                                // connectivity lost, force a failover
             else if (overdueCount >= 2) _timeSyncSession()->SchedulePing(args.GetCallbackTime());  // to check up on the server's health ASAP
          }
@@ -517,7 +517,6 @@ private:
        && (eventLoop.AddNewConnectSession(DummyAbstractReflectSessionRef(tcs), iap).IsOK(ret)))
       {
          _tcpSession = &tcs;
-            status_t ret;
             if (eventLoop.ServerProcessLoop().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "ClientConnector:  ServerProcessLoop() returned [%s]\n", ret());
          _tcpSession = NULL;
       }

@@ -242,7 +242,7 @@ private:
       {
          const MessageRef & result = iter.GetValue().GetData();
 
-         const String * systemName;
+         const String * systemName = NULL;  // initialized solely to avoid a compiler warning
          ZGPeerID peerID;
          if ((result()->FindFlat(ZG_DISCOVERY_NAME_PEERID, peerID).IsOK())&&(result()->FindString(ZG_DISCOVERY_NAME_SYSTEMNAME, &systemName).IsOK()))
          {

@@ -179,7 +179,7 @@ void ClientDataMessageTreeDatabaseObject :: MessageReceivedFromMessageTreeDataba
                      if (replyMsg() == NULL) replyMsg = GetMessageFromPool(CLIENTDATA_COMMAND_LOCALDATA);
                      if (replyMsg())
                      {
-                        const status_t ret = replyMsg()->AddString(CLIENTDATA_NAME_PATH, sharedPath) | replyMsg()->AddMessage(CLIENTDATA_NAME_PAYLOAD, subtreeMsg);
+                        ret = replyMsg()->AddString(CLIENTDATA_NAME_PATH, sharedPath) | replyMsg()->AddMessage(CLIENTDATA_NAME_PAYLOAD, subtreeMsg);
                         if (ret.IsError())
                         {
                            LogTime(MUSCLE_LOG_ERROR, "ClientDataMessageTreeDatabaseObject:  Unable to populate CLIENTDATA_COMMAND_LOCALDATA Message!  [%s]\n", ret());

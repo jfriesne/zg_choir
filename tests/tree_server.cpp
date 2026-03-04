@@ -66,7 +66,7 @@ static ZGPeerSettings GetTestTreeZGPeerSettings(const Message & args)
    String maxLogSizeBytesStr;
    if (args.FindString("maxlogsizebytes", maxLogSizeBytesStr).IsOK())
    {
-      uint32 maxBytes = atol(maxLogSizeBytesStr());
+      const uint32 maxBytes = (uint32) atol(maxLogSizeBytesStr());
       if (maxBytes > 0)
       {
          LogTime(MUSCLE_LOG_INFO, "Setting maximum log size for database #0 to " UINT32_FORMAT_SPEC " bytes.\n", maxBytes);

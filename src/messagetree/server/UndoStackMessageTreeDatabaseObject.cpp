@@ -237,13 +237,13 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                   for (uint64 transID=seqEndID; transID>=seqStartID; transID--)
                   {
                      NestCountGuard ncg(_inUndoRedoContextNestCount);
-                     ConstMessageRef payload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
-                     if (payload())
+                     ConstMessageRef updatePayload = GetUpdatePayload(isRedo ? (seqStartID+(seqEndID-transID)) : transID);
+                     if (updatePayload())
                      {
-                        if (payload()->GetStringReference(UNDOSTACK_NAME_UNDOKEY) == clientKey)  // only undo or redo actions that were uploaded by our own client!
+                        if (updatePayload()->GetStringReference(UNDOSTACK_NAME_UNDOKEY) == clientKey)  // only undo or redo actions that were uploaded by our own client!
                         {
                            ConstMessageRef subMsg;
-                           if (payload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK()) MRETURN_ON_ERROR(SeniorMessageTreeUpdateAux(subMsg));
+                           if (updatePayload()->FindMessage(isRedo ? UNDOSTACK_NAME_DOMESSAGE : UNDOSTACK_NAME_UNDOMESSAGE, subMsg).IsOK()) MRETURN_ON_ERROR(SeniorMessageTreeUpdateAux(subMsg));
                         }
                      }
                      else
