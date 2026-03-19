@@ -14,7 +14,7 @@ namespace zg
 class INetworkTimeProvider;
 class ZGPeerID;
 class ZGPeerSession;
-};
+}
 
 namespace zg_private
 {
@@ -103,6 +103,6 @@ private:
    uint64 _seniorUpdateTimeForJuniorUpdate;  // only meaningful when we're inside JuniorExecuteDatabaseUpdateAux()
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

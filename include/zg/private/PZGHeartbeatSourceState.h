@@ -74,6 +74,6 @@ private:
 };
 DECLARE_REFTYPES(PZGHeartbeatSourceState);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

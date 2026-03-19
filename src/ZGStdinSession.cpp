@@ -184,4 +184,4 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    return true;
 }
 
-};  // end namespace zg
+}  // end namespace zg

@@ -72,4 +72,4 @@ void MessageTreeClientConnector :: SessionParametersReceived(const MessageRef & 
    msg()->Print(stdout);
 }
 
-};
+}  // end namespace zg

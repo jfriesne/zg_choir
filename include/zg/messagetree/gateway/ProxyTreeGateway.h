@@ -68,6 +68,6 @@ protected:
    virtual ConstMessageRef TreeGateway_GetGestaltMessage() const;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

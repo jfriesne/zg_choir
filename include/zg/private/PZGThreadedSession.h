@@ -52,6 +52,6 @@ protected:
    virtual void MessageReceivedFromInternalThread(const MessageRef & msgFromInternalThread, uint32 numLeft) = 0;
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

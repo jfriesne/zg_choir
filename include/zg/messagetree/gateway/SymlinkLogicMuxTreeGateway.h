@@ -44,6 +44,6 @@ private:
    NestCount _inFlushSymlinkPaths;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

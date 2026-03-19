@@ -90,6 +90,6 @@ private:
 };
 DECLARE_REFTYPES(ServerSideMessageTreeSessionFactory);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

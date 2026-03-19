@@ -41,6 +41,6 @@ protected:
    MUSCLE_NODISCARD bool ParseGenericTextCommand(const String & cmd);
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

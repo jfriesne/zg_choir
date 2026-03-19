@@ -231,4 +231,4 @@ uint64 PZGHeartbeatSession :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID)
    return _hbtState.GetEstimatedLatencyToPeer(peerID);
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

@@ -45,6 +45,6 @@ private:
    INetworkMessageSender * _messageSender;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

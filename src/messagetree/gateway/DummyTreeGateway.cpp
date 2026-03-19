@@ -5,5 +5,4 @@ namespace zg {
 static DummyTreeGateway _dummyTreeGateway;
 ITreeGateway * GetDummyTreeGateway() {return &_dummyTreeGateway;}
 
-};
-
+}  // end namespace zg

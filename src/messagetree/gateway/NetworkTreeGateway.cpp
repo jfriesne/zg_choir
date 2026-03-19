@@ -608,4 +608,4 @@ MessageRef GetPongForLocalSyncPing(const Message & maybeSyncPingMsg)
    return MessageRef();
 }
 
-}; // end namespace zg
+} // end namespace zg

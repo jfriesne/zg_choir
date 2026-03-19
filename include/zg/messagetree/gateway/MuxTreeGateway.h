@@ -141,6 +141,6 @@ private:
    ITreeGatewaySubscriber _dummySubscriber;  // here solely so that we can place it into (_allowedCallbacks) if necessary
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

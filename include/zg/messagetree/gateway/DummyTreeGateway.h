@@ -43,6 +43,6 @@ private:
    const status_t _returnValue;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

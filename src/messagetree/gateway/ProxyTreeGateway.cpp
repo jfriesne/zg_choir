@@ -198,4 +198,4 @@ void ProxyTreeGateway :: TreeGatewayShuttingDown()
    }
 }
 
-};
+}  // end namespace zg

@@ -63,6 +63,6 @@ private:
    UDPMulticastTransceiver * _multicastTransceiver;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

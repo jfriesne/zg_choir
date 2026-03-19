@@ -98,4 +98,4 @@ bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii)
    return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
 }
 
-};  // end namespace zg
+}  // end namespace zg

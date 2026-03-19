@@ -91,6 +91,6 @@ private:
 };
 DECLARE_REFTYPES(DiscoveryServerSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

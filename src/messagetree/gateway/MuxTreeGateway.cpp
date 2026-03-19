@@ -600,4 +600,4 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ProxyTreeGateway::UnregisterSubscriber(s);
 }
 
-};
+}  // end namespace zg

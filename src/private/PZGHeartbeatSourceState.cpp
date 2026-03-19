@@ -66,4 +66,4 @@ String PZGHeartbeatSourceState :: ToString(const INetworkTimeProvider & ntp) con
    return ret;
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

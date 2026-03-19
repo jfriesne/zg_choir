@@ -592,4 +592,4 @@ status_t IUDPMulticastNotificationTarget :: SendUnicastPacket(const IPAddressAnd
    return _multicastTransceiver ? _multicastTransceiver->SendUnicastPacket(targetAddress, payloadBytes) : B_BAD_OBJECT;
 }
 
-};  // end namespace zg
+}  // end namespace zg

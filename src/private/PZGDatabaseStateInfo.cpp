@@ -71,4 +71,4 @@ bool PZGDatabaseStateInfo :: operator == (const PZGDatabaseStateInfo & rhs) cons
    return ((_currentDatabaseStateID == rhs._currentDatabaseStateID)&&(_oldestDatabaseIDInLog == rhs._oldestDatabaseIDInLog)&&(_dbChecksum == rhs._dbChecksum));
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

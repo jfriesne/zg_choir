@@ -353,7 +353,7 @@ private:
    const uint32 _whichDB;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #include "zg/messagetree/gateway/ITreeGateway.h"  // here to avoid linker issues with SetGateway()
 

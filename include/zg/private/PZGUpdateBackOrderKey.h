@@ -53,6 +53,6 @@ private:
    uint64 _updateID;
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

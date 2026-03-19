@@ -209,4 +209,4 @@ void PZGDatabaseUpdate :: SetPayloadMessage(const ConstMessageRef & updateMsg)
    _updateMsg = updateMsg;
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

@@ -20,6 +20,6 @@ public:
    virtual status_t SendOutgoingMessageToNetwork(const ConstMessageRef & msg) = 0;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

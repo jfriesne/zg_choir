@@ -147,6 +147,6 @@ private:
 };
 DECLARE_REFTYPES(ClientConnector);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

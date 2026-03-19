@@ -49,6 +49,6 @@ DECLARE_REFTYPES(PZGBeaconData);
 /** Returns a reference to an empty PZGBeaconData object from our object pool */
 PZGBeaconDataRef GetBeaconDataFromPool();
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

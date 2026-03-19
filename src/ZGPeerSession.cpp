@@ -10,7 +10,7 @@
 namespace zg_private
 {
    extern void SetEnableTimeSynchronizationDebugging(bool enable);  // defined inside PZGHeartbeatThreadState.cpp
-};
+}
 
 namespace zg
 {
@@ -649,4 +649,4 @@ bool ZGPeerSession :: IsOkayToUseNetworkInterface(const NetworkInterfaceInfo &) 
    return true;  // by default, use every network interface we can
 }
 
-};  // end namespace zg
+}  // end namespace zg

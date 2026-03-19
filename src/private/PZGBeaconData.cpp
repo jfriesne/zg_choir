@@ -59,4 +59,4 @@ bool PZGBeaconData :: operator == (const PZGBeaconData & rhs) const
    return (_dbis == rhs._dbis);
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

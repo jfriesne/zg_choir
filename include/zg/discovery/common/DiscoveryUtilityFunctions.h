@@ -40,6 +40,6 @@ status_t GetTransceiverMulticastAddresses(Hashtable<IPAddressAndPort, bool> & re
 /** Returns true iff (nii) is a Network interface we should actually try to use, or false if we should avoid it (because it's eg known to be a special-purpose thing) */
 MUSCLE_NODISCARD bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

@@ -87,6 +87,6 @@ PZGDatabaseUpdateRef GetPZGDatabaseUpdateFromPool();
 /** Returns a partially-populated reference to a newly allocated PZGDatabaseUpdate object */
 PZGDatabaseUpdateRef GetPZGDatabaseUpdateFromPool(uint8 updateType, uint16 databaseIndex, uint64 updateID, const ZGPeerID & sourcePeerID, uint32 preUpdateDBChecksum);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

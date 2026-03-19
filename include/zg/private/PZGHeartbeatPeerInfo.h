@@ -81,6 +81,6 @@ DECLARE_REFTYPES(PZGHeartbeatPeerInfo);
 /** Returns a reference to a new PZGHeartbeatPeerInfo object to use */
 PZGHeartbeatPeerInfoRef GetPZGHeartbeatPeerInfoFromPool();
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

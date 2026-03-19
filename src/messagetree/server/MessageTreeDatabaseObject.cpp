@@ -664,4 +664,4 @@ SetDataNodeFlags MessageTreeDatabaseObject :: ConvertTreeGatewayFlagsToSetDataNo
    return sdnf;
 }
 
-}; // end namespace zg
+}  // end namespace zg

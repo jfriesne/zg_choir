@@ -37,6 +37,6 @@ private:
    ZGPeerID _peerID;
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

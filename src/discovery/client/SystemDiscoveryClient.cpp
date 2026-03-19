@@ -611,4 +611,4 @@ void SystemDiscoveryClient :: UnregisterTarget(IDiscoveryNotificationTarget * ta
    (void) _targets.Remove(target);
 }
 
-};  // end namespace zg
+}  // end namespace zg

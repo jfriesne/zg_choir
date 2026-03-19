@@ -358,7 +358,7 @@ int PZGHeartbeatThreadState :: ComparePeerIDsBySeniority(const ZGPeerID & pid1, 
       LogTime(MUSCLE_LOG_ERROR, "ComparePeerIDsBySeniority:  Queue doesn't exist?  " UINT32_FORMAT_SPEC ", " UINT32_FORMAT_SPEC "\n", q1?q1->GetNumItems():666, q2?q2->GetNumItems():666);
       return 0;
    }
-};
+}
 
 Queue<ZGPeerID> PZGHeartbeatThreadState :: CalculateOrderedPeersList()
 {
@@ -650,4 +650,4 @@ uint64 PZGHeartbeatThreadState :: GetEstimatedLatencyToPeer(const ZGPeerID & pee
    return _mainThreadLatencies.GetWithDefault(peerID, MUSCLE_TIME_NEVER);
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

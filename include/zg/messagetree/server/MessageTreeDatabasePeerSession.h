@@ -157,6 +157,6 @@ private:
 };
 DECLARE_REFTYPES(MessageTreeDatabasePeerSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

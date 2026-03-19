@@ -110,4 +110,4 @@ ConstMessageRef ITreeGatewaySubscriber :: GetGestaltMessage() const
    return GetGateway()->TreeGateway_GetGestaltMessage();
 }
 
-};
+}  // end namespace zg

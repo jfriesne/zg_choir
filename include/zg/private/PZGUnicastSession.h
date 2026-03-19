@@ -41,6 +41,6 @@ private:
 };
 DECLARE_REFTYPES(PZGUnicastSession);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif // PZGUnicastSession_h

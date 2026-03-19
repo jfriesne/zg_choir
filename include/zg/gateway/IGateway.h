@@ -141,6 +141,6 @@ private:
    GatewayType * _gateway;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

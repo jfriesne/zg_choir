@@ -20,7 +20,7 @@
 namespace zg_private
 {
    class PZGNetworkIOSession;  // forward declaration
-};
+}
 
 namespace zg
 {
@@ -395,6 +395,6 @@ private:
 };
 DECLARE_REFTYPES(ZGPeerSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

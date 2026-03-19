@@ -57,4 +57,4 @@ status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrin
         | retMsg()->AddString(PR_NAME_TREE_REQUEST_ID, tag);
 }
 
-};  // end namespace zg
+}  // end namespace zg

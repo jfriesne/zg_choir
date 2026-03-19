@@ -87,4 +87,4 @@ status_t PZGHeartbeatPeerInfo :: PutTimingInfo(uint16 srcTag, uint32 sourceHeart
    return _timings.AddTail(PZGTimingInfo(srcTag, sourceHeartbeatPacketID, dwellTimeMicros));
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

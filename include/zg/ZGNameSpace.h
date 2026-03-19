@@ -9,7 +9,7 @@
 namespace zg
 {
    using namespace muscle;
-};
+}
 
 /*! \mainpage ZG Documentation Page
  *

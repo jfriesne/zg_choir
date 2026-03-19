@@ -60,6 +60,6 @@ private:
 };
 DECLARE_REFTYPES(ZGDatabasePeerSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

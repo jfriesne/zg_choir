@@ -67,6 +67,6 @@ private:
 };
 DECLARE_REFTYPES(ZGTimeAverager);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

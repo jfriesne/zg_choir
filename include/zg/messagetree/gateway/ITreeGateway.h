@@ -50,6 +50,6 @@ private:
    friend class ITreeGatewaySubscriber;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

@@ -38,4 +38,4 @@ void ClientSideMessageTreeSession :: MessageReceivedFromGateway(const MessageRef
    (void) _networkGateway.IncomingTreeMessageReceivedFromServer(msg);
 }
 
-};
+}  // end namespace zg

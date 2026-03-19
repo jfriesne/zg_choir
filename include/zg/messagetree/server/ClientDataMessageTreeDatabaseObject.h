@@ -56,6 +56,6 @@ private:
 };
 DECLARE_REFTYPES(MessageTreeDatabaseObject);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

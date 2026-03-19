@@ -73,6 +73,6 @@ MUSCLE_NODISCARD static inline int GetRandomNumber(unsigned int * seedp)
 #endif
 }
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

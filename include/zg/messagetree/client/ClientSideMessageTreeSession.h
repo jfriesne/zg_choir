@@ -32,6 +32,6 @@ private:
 };
 DECLARE_REFTYPES(ClientSideMessageTreeSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

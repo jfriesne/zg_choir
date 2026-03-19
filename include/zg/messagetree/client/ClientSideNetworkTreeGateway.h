@@ -85,6 +85,6 @@ private:
   */
 MessageRef GetPongForLocalSyncPing(const Message & maybeSyncPingMsg);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

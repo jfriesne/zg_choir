@@ -213,6 +213,6 @@ private:
 };
 DECLARE_REFTYPES(IDatabaseObject);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

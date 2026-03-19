@@ -600,4 +600,4 @@ ConstMessageRef PZGDatabaseState :: GetDatabaseUpdatePayloadByID(uint64 updateID
    return dbur ? dbur->GetItemPointer()->GetPayloadBufferAsMessage() : ConstMessageRef();
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

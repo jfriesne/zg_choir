@@ -38,6 +38,6 @@ public:
    MUSCLE_NODISCARD virtual int64 GetToNetworkTimeOffset() const = 0;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

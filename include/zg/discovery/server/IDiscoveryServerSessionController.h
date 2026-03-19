@@ -31,6 +31,6 @@ public:
    MUSCLE_NODISCARD virtual uint64 HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & pingSource) = 0;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

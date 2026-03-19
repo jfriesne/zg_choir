@@ -46,6 +46,6 @@ status_t CreateMuscleRequestNodeValuesMessage(const String & nodePath, const Con
   */
 status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, MessageRef & retMsg);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

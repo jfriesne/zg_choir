@@ -54,4 +54,4 @@ void ZGTimeAverager :: RemoveOldMeasurement()
    }
 }
 
-};  // end namespace zg
+}  // end namespace zg

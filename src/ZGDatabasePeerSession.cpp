@@ -242,4 +242,4 @@ ConstMessageRef IDatabaseObject :: GetUpdatePayload(uint64 transactionID) const
    return dbps ? dbps->GetUpdatePayload(_dbIndex, transactionID) : ConstMessageRef();
 }
 
-};  // end namespace zg
+}  // end namespace zg

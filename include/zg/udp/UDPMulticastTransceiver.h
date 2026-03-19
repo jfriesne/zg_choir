@@ -123,6 +123,6 @@ private:
 };
 DECLARE_REFTYPES(UDPMulticastTransceiver);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

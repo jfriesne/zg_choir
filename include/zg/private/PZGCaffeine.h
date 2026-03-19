@@ -27,6 +27,6 @@ private:
    void * _activityID;
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif // PZGCaffeine_h

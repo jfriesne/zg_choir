@@ -74,6 +74,6 @@ private:
 };
 DECLARE_REFTYPES(SystemDiscoveryClient);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

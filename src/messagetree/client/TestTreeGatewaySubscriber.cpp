@@ -279,4 +279,4 @@ void TestTreeGatewaySubscriber :: TreeGatewayShuttingDown()
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::TreeGatewayShuttingDown() (this=%p)\n", this);
 }
 
-};
+}  // end namespace zg

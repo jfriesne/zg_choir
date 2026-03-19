@@ -40,6 +40,6 @@ private:
 };
 DECLARE_REFTYPES(PZGRoundTripTimeAverager);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

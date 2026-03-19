@@ -8,7 +8,7 @@
 namespace zg_private
 {
    class PZGHeartbeatThreadState;  // forward declaration
-};
+}
 
 namespace zg
 {
@@ -190,6 +190,6 @@ private:
    mutable uint32 _outgoingHeartbeatPacketIDCounter;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

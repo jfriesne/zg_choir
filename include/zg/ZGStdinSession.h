@@ -71,6 +71,6 @@ private:
 };
 DECLARE_REFTYPES(ZGStdinSession);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

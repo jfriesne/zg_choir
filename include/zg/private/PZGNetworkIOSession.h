@@ -141,6 +141,6 @@ private:
 };
 DECLARE_REFTYPES(PZGNetworkIOSession);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

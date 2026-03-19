@@ -49,6 +49,6 @@ private:
    uint32 _dbChecksum;             // 32-bit checksum computed from the current state of the database
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

@@ -28,4 +28,4 @@ PZGCaffeine :: ~PZGCaffeine()
 #endif
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

@@ -349,4 +349,4 @@ bool UndoStackMessageTreeDatabaseObject :: IsOkayToHandleUpdateMessage(const Str
    return !((path.StartsWith(UNDOSTACK_NODENAME_UNDO_SLASH))||(path.StartsWith(UNDOSTACK_NODENAME_REDO_SLASH)));
 }
 
-}; // end namespace zg
+}  // end namespace zg

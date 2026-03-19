@@ -46,6 +46,6 @@ private:
    int _opTagCounter;
 };
 
-};
+}  // end namespace zg
 
 #endif

@@ -19,6 +19,6 @@ enum {
 #define ZG_PARAMETER_NAME_ATTRIBUTES "zgattrs"      /**< Message parameter: ZGPeerSettings attributes of the system our client is connected to */
 #define ZG_PARAMETER_NAME_NUMDBS     "zgnumdbs"     /**< int8 parameter:    Number of ZG databases in the system our client is connected to */
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

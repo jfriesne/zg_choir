@@ -50,6 +50,6 @@ private:
    SystemDiscoveryClient * _discoveryClient;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

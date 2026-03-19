@@ -90,7 +90,7 @@ public:
 
    // Time at which we received this packet (as reported by GetRunTime64())
    MUSCLE_NODISCARD uint64 GetLocalReceiveTimeMicros() const {return _localReceiveTimeMicros;}
-   void SetLocalReceiveTimeMicros(uint64 rTime) {_localReceiveTimeMicros = rTime;};
+   void SetLocalReceiveTimeMicros(uint64 rTime) {_localReceiveTimeMicros = rTime;}
 
    MUSCLE_NODISCARD const IPAddressAndPort & GetPacketSource() const {return _packetSource;}
    MUSCLE_NODISCARD uint16 GetSourceTag() const {return _sourceTag;}
@@ -107,6 +107,6 @@ private:
 };
 DECLARE_REFTYPES(PZGHeartbeatPacketWithMetaData);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

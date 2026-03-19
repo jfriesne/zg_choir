@@ -98,6 +98,6 @@ private:
    SubscriberType * _sub;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

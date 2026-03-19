@@ -111,4 +111,4 @@ private:
    Hashtable<ZGPeerID, uint64> _lastMismatchedVersionLogTimes;
 };
 
-};  // end namespace zg_private
+}  // end namespace zg_private

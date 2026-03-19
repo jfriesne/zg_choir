@@ -224,4 +224,4 @@ status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subs
    return StorageReflectSession::PruneSubscriptionMessage(subscriptionMessage, nodePath);
 }
 
-};
+}  // end namespace zg

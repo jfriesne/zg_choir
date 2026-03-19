@@ -38,6 +38,6 @@ MUSCLE_NODISCARD String PeerInfoToString(const ConstMessageRef & peerInfo);
   */
 MUSCLE_NODISCARD String CompatibilityVersionCodeToString(uint32 versionCode);
 
-};  // end namespace zg_private
+}  // end namespace zg_private
 
 #endif

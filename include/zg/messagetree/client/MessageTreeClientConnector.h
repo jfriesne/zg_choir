@@ -60,6 +60,6 @@ private:
 };
 DECLARE_REFTYPES(MessageTreeClientConnector);
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

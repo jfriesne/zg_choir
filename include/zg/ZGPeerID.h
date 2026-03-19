@@ -135,6 +135,6 @@ private:
    uint64 _lowBits;
 };
 
-};  // end namespace zg
+}  // end namespace zg
 
 #endif

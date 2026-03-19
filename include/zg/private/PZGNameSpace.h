@@ -10,6 +10,6 @@
 namespace zg_private
 {
    using namespace zg;
-};
+}
 
 #endif

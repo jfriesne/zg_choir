@@ -193,4 +193,4 @@ io_status_t DiscoveryServerSession :: DoOutput(uint32 maxBytes)
    return ret;
 }
 
-};  // end namespace zg
+}  // end namespace zg

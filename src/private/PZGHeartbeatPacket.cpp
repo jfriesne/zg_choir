@@ -231,4 +231,4 @@ PZGHeartbeatPacketWithMetaData :: PZGHeartbeatPacketWithMetaData(const PZGHeartb
    // empty
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

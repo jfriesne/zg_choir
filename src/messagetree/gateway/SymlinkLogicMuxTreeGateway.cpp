@@ -171,4 +171,4 @@ void SymlinkLogicMuxTreeGateway :: FlushDroppedSymlinkPaths()
    }
 }
 
-};
+}  // end namespace zg

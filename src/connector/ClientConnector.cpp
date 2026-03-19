@@ -713,4 +713,4 @@ void ClientConnector :: MessageReceivedFromIOThread(const MessageRef & msg)
    (void) _replyQueue.AddTail(msg);
 }
 
-};  // end namespace zg
+}  // end namespace zg

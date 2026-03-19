@@ -733,4 +733,4 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflec
    ZGDatabasePeerSession::MessageReceivedFromSession(from, msg, userData);
 }
 
-};  // end namespace zg
+}  // end namespace zg

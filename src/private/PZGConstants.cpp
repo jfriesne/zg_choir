@@ -49,4 +49,4 @@ String CompatibilityVersionCodeToString(uint32 versionCode)
    return buf;
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private

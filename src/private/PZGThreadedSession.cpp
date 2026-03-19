@@ -53,4 +53,4 @@ status_t PZGThreadedSession :: TellInternalThreadToRecreateMulticastSockets()
    return SendMessageToInternalThread(DummyMessageRef(_recreateSocketsMsg));
 }
 
-};  // end namespace zg_private
+}  // end namespace zg_private
