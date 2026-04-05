@@ -132,6 +132,23 @@ private:
 };
 DECLARE_REFTYPES(UDPTimeSyncSession);
 
+class FilterLocalPingMessageIOGateway : public MessageIOGateway
+{
+public:
+   FilterLocalPingMessageIOGateway(TCPConnectorSession * master, int32 outgoingEncoding = MUSCLE_MESSAGE_ENCODING_DEFAULT)
+      : MessageIOGateway(outgoingEncoding)
+      , _master(master)
+   {
+      // empty
+   }
+
+protected:
+   virtual status_t PopNextOutgoingMessage(MessageRef & ret);
+
+private:
+   TCPConnectorSession * _master;
+};
+
 static const String _inactivityPingIDField("tcp_cs");
 
 // This class handles TCP I/O to/from the ZG server
@@ -215,20 +232,16 @@ public:
       return ret;
    }
 
-   virtual AbstractMessageIOGatewayRef CreateGateway()
-   {
-      MessageIOGatewayRef ret(new MessageIOGateway());
-      ret()->SetAboutToFlattenMessageCallback(WatchForLocalPingMessagesCallbackFunc, this);
-      return ret;
-   }
+   virtual AbstractMessageIOGatewayRef CreateGateway() {return AbstractMessageIOGatewayRef(new FilterLocalPingMessageIOGateway(this));}
 
    virtual void AsyncConnectCompleted();
 
    void TimeSyncReceived(uint64 roundTripTime, uint64 serverNetworkTime, uint64 localReceiveTime);
 
 private:
-   static status_t WatchForLocalPingMessagesCallbackFunc(const MessageRef & msgRef, void * ud) {return ((TCPConnectorSession*)ud)->WatchForLocalPingMessagesCallback(msgRef);}
-   status_t WatchForLocalPingMessagesCallback(const MessageRef & msgRef)
+   friend class FilterLocalPingMessageIOGateway;
+
+   void FilterOutgoingLocalPingMessages(MessageRef & msgRef)
    {
       if (msgRef()->what == PR_COMMAND_BATCH)
       {
@@ -242,10 +255,9 @@ private:
          if (pongMsg())
          {
             CallMessageReceivedFromGateway(pongMsg, NULL);
-            return B_ERROR;  // don't send the sync-ping out over TCP
+            msgRef.Reset();  // don't let the MessageIOGateway send the sync-ping Message out over the TCP connection; sync-pings are intended for our internal use only
          }
       }
-      return B_NO_ERROR;
    }
 
    void StripBatchSyncPings(Message & batchMsg, Queue<MessageRef> & retPongMessages) const
@@ -288,6 +300,19 @@ private:
    Message _inactivityPingMsg;
    bool _inactivityPingResponsePending;  // true iff we've send a keepalive PR_COMMAND_PING over TCP and are currently waiting for the corresponding PR_RESULT_PONG to come back
 };
+
+status_t FilterLocalPingMessageIOGateway :: PopNextOutgoingMessage(MessageRef & ret)
+{
+   while(1)
+   {
+      MRETURN_ON_ERROR(MessageIOGateway::PopNextOutgoingMessage(ret));
+      if (ret())
+      {
+         _master->FilterOutgoingLocalPingMessages(ret);  // may set (ret) to a NULL Ref, if we don't want it to go out
+         if (ret()) return B_NO_ERROR;
+      }
+   }
+}
 
 void UDPTimeSyncSession :: MessageReceivedFromGateway(const MessageRef & msg, void *)
 {
