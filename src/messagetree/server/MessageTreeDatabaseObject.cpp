@@ -359,7 +359,7 @@ int32 MessageTreeDatabaseObject :: GetDatabaseSubpath(const String & path, Strin
       if (pathDepth < _rootNodeDepth) return -1;  // (path) is too short to reach our sub-tree anyway
 
       const SegmentedStringMatcher ssm(path, true, "/", _rootNodeDepth);
-      if (ssm.Match(_rootNodePathWithoutSlash))
+      if (ssm.Match(_rootNodePathWithoutSlash, true))
       {
          if (optRetRelativePath) *optRetRelativePath = GetPathClause(_rootNodeDepth, path());
          return (pathDepth-_rootNodeDepth);

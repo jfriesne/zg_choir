@@ -262,8 +262,8 @@ status_t ClientSideNetworkTreeGateway :: HandleBasicCommandAux(uint32 what, cons
 
    if (optFilterRef()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *optFilterRef()));
 
-   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_PATH,  subscriptionPath))
-   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   optOpTag))
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_PATH,  subscriptionPath));
+   MRETURN_ON_ERROR(msg()->CAddString(NTG_NAME_TAG,   optOpTag));
    MRETURN_ON_ERROR(msg()->CAddFlat(  NTG_NAME_FLAGS, flags));
    return SendOutgoingMessageToNetwork(msg);
 }

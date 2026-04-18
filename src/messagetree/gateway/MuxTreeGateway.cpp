@@ -399,7 +399,7 @@ void MuxTreeGateway :: MessageReceivedFromSubscriber(const String & nodePath, co
          {
             for (ConstHashtableIterator<String, uint32> subIter(subInfo->_receivedPaths); subIter.HasData(); subIter++)
             {
-               if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey()())))
+               if ((subIter.GetValue() == numPathSegments)&&(ssm.Match(subIter.GetKey(), true)))
                {
                   (void) matchingSubscribers.Put(iter.GetKey(), subIter.GetKey());
                   break;
