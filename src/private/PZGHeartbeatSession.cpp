@@ -30,7 +30,9 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
    {
       case PZG_HEARTBEAT_COMMAND_PEERS_UPDATE:
       {
-         uint32 numPeers = msgFromHeartbeatThread()->GetNumValuesInName(PZG_HEARTBEAT_NAME_PEERINFO, PZG_HEARTBEAT_PACKET_TYPE_CODE);
+         if (_master == NULL) return;
+
+         const uint32 numPeers = msgFromHeartbeatThread()->GetNumValuesInName(PZG_HEARTBEAT_NAME_PEERINFO, PZG_HEARTBEAT_PACKET_TYPE_CODE);
          Hashtable<ZGPeerID, Queue<ConstPZGHeartbeatPacketWithMetaDataRef> > newPeers; (void) newPeers.EnsureSize(numPeers);
          for (uint32 i=0; i<numPeers; i++)
          {
@@ -38,7 +40,7 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
             if (msgFromHeartbeatThread()->FindFlat(PZG_HEARTBEAT_NAME_PEERINFO, i, hbRef).IsOK())
             {
                Queue<ConstPZGHeartbeatPacketWithMetaDataRef> * q = newPeers.GetOrPut(hbRef()->GetSourcePeerID());
-               if (q) (void) q->AddTail(hbRef);
+               if (q) (void) q->AddTail(hbRef);  // guaranteed not to fail for the first SMALL_QUEUE_SIZE items in the Queue
             }
          }
 
@@ -71,8 +73,11 @@ void PZGHeartbeatSession :: MessageReceivedFromInternalThread(const MessageRef &
             {
                *optOldRefQ = newRefQ;  // might as well make sure we have the latest sources, even if we won't inform the user code about it
             }
-            else if ((_mainThreadPeers.Put(peerID, newRefQ).IsOK())&&((optPrevID?_mainThreadPeers.MoveToBehind(peerID, *optPrevID):_mainThreadPeers.MoveToFront(peerID))==B_NO_ERROR))
+            else if (_mainThreadPeers.Put(peerID, newRefQ).IsOK())
             {
+               if (optPrevID) (void) _mainThreadPeers.MoveToBehind(peerID, *optPrevID);
+                         else (void) _mainThreadPeers.MoveToFront(peerID);
+
                _master->PeerHasComeOnline(peerID, newRefQ.Head()()->GetPeerAttributesAsMessage());
             }
 
@@ -107,14 +112,14 @@ status_t PZGHeartbeatSession :: AttachedToServer()
 
 void PZGHeartbeatSession :: AboutToDetachFromServer()
 {
-   _master = NULL;
    PZGThreadedSession::AboutToDetachFromServer();
+   _master = NULL;
 }
 
 void PZGHeartbeatSession :: EndSession()
 {
-   _master = NULL;
    PZGThreadedSession::EndSession();
+   _master = NULL;
 }
 
 void PZGHeartbeatSession :: InternalThreadEntry()

@@ -69,10 +69,7 @@ PZGDatabaseUpdate & PZGDatabaseUpdate :: operator=(const PZGDatabaseUpdate & rhs
 
 uint32 PZGDatabaseUpdate :: CalculateChecksum() const
 {
-   uint32 ret = ((uint32)_updateType) + ((uint32)_databaseIndex) + ((uint32)_seniorElapsedTimeMillis) + CalculatePODChecksum(_seniorStartTimeMicros) + _sourcePeerID.CalculateChecksum() + CalculatePODChecksum(_updateID) + _preUpdateDBChecksum + (_postUpdateDBChecksum*3);
-   const ConstByteBufferRef & updateBuf = GetPayloadBuffer();  // we're deliberately using the buffer version here, not the Message version
-   if (updateBuf()) ret += updateBuf()->CalculateChecksum();
-   return ret;
+   return CalculatePODChecksums(_updateType, _databaseIndex, _seniorElapsedTimeMillis, _seniorStartTimeMicros, _sourcePeerID, _updateID, _preUpdateDBChecksum, _postUpdateDBChecksum, GetPayloadBuffer());  // we're deliberately using GetPayloadBuffer() version here, rather than the Message version
 }
 
 uint32 PZGDatabaseUpdate :: FlattenedSize() const
@@ -151,12 +148,13 @@ status_t PZGDatabaseUpdate :: Unflatten(DataUnflattener & unflat)
    {
       _updateBuf = GetByteBufferFromPool(dataSize, unflat.GetCurrentReadPointer());
       MRETURN_OOM_ON_NULL(_updateBuf());
+      MRETURN_ON_ERROR(unflat.SeekRelative(dataSize));  // just in case the caller decides to do more with (unflat) afterwards
    }
 
    const uint32 myChk = CalculateChecksum();
    if (chk != myChk)
    {
-      LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdate::Unflatten():  Bad checksum!  Expected " UINT32_FORMAT_SPEC", got " UINT32_FORMAT_SPEC "\n", myChk, chk);
+      LogTime(MUSCLE_LOG_ERROR, "PZGDatabaseUpdate::Unflatten():  Bad checksum!  Expected " UINT32_FORMAT_SPEC", got " UINT32_FORMAT_SPEC "\n", chk, myChk);
       return B_BAD_DATA;
    }
 

@@ -269,8 +269,8 @@ void PZGDatabaseState :: RescanUpdateLog()
             // download of the full current state of the database from the senior peer than to reconstuct it
             // locally by replaing the entire transaction-log, so we'll do that.
             const status_t ret = RequestFullDatabaseResendFromSeniorPeer(false);
-            if (ret.IsOK()) LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully requested the full/initial database stae from senior peer.\n", _whichDatabase);
-                       else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to request the full/initial database stae from senior peer. [%s]\n", _whichDatabase, ret());
+            if (ret.IsOK()) LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC " successfully requested the full/initial database state from senior peer.\n", _whichDatabase);
+                       else LogTime(MUSCLE_LOG_ERROR, "Database #" UINT32_FORMAT_SPEC " was unable to request the full/initial database state from senior peer. [%s]\n", _whichDatabase, ret());
          }
          else
          {
@@ -510,7 +510,7 @@ void PZGDatabaseState :: SeniorDatabaseStateInfoChanged(const PZGDatabaseStateIn
    const uint64 seniorOldestIDInLog = seniorDBInfo.GetOldestDatabaseIDInLog();
    if ((seniorState != _seniorDatabaseStateID)||(seniorOldestIDInLog != _seniorOldestIDInLog))
    {
-      _seniorDatabaseStateReceived = (_seniorDatabaseStateID != (uint64)-1);
+      _seniorDatabaseStateReceived = true;
       _seniorDatabaseStateID = seniorState;
       _seniorOldestIDInLog   = seniorOldestIDInLog;
       ScheduleLogContentsRescan();  // this will verify that we are up-to-date vis-a-vis the new senior state (or cause us to take steps to become so if we aren't)
@@ -534,15 +534,17 @@ void PZGDatabaseState :: BackOrderResultReceived(const PZGUpdateBackOrderKey & u
       }
       else
       {
-         if ((optUpdateData())&&(_updateLog.Put(ubok.GetDatabaseUpdateID(), optUpdateData).IsOK()))
+         status_t ret;
+         if ((optUpdateData())&&(AddDatabaseUpdateToUpdateLog(optUpdateData).IsOK(ret)))
          {
             LogTime(MUSCLE_LOG_DEBUG, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " received from senior peer (%s)\n", _whichDatabase, ubok.GetDatabaseUpdateID(), seniorPeerID.ToString()());
             ScheduleLogContentsRescan();
          }
          else
          {
-            LogTime(MUSCLE_LOG_WARNING, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " from senior peer (%s) failed, requesting full database to recover.\n", _whichDatabase, ubok.GetDatabaseUpdateID(), seniorPeerID.ToString()());
-            const status_t ret = RequestFullDatabaseResendFromSeniorPeer(false);
+            LogTime(MUSCLE_LOG_WARNING, "Database #" UINT32_FORMAT_SPEC ":  Back-order of database update #" UINT64_FORMAT_SPEC " from senior peer (%s) failed [%s], requesting full database to recover.\n", _whichDatabase, ubok.GetDatabaseUpdateID(), seniorPeerID.ToString()(), ret());
+
+            ret = RequestFullDatabaseResendFromSeniorPeer(false);
             if (ret.IsError()) LogTime(MUSCLE_LOG_ERROR, "Request to senior peer (%s) for full-database-resend failed! [%s]\n", seniorPeerID.ToString()(), ret());
          }
       }

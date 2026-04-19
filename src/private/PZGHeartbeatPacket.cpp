@@ -56,11 +56,11 @@ uint32 PZGHeartbeatPacket :: FlattenedSizeNotIncludingVariableLengthData() const
         // _networkSendTimeMicros is deliberately not part of our flattened-size as it will be sent separately for better accuracy
         + sizeof(_tcpAcceptPort)
         + sizeof(_peerUptimeSeconds)
-        + ZGPeerID::FlattenedSize()      // for _sourcePeerID
-        + sizeof(_peerType)
-        + sizeof(uint16)                 // for _peerType and _isFullyAttached
-        + sizeof(uint16)                 // for _orderedPeersList.GetNumItems()
-        + sizeof(uint16);                // reserved for now
+        + _sourcePeerID.FlattenedSize()
+        + sizeof(_peerType)              // also includes _isFullyAttached
+        + sizeof(uint16)                 // for _orderedPeersList.GetNumItems()  (sent as a uint16)
+        + sizeof(uint16)                 // for _peerAttributesBuf()->GetNumBytes() (sent as a uint16)
+        + sizeof(uint16);                // reserved, for now
 }
 
 uint32 PZGHeartbeatPacket :: FlattenedSize() const
@@ -89,7 +89,7 @@ void PZGHeartbeatPacket :: Flatten(DataFlattener flat) const
    flat.WriteInt16(_peerType|(_isFullyAttached?0x8000:0));
    flat.WriteInt16((uint16) opListItemCount);  // yes, 16 bits is correct!
    flat.WriteInt16((uint16) attribBufSize);    // yes, 16 bits is correct!
-   flat.WriteInt16(0); /* reserved for now */
+   flat.WriteInt16(0); /* reserved, for now */
    for (uint32 i=0; i<opListItemCount; i++) flat.WriteFlat(*_orderedPeersList[i]());  // receiver will figure out the lengths from the restored PeerInfo objects
    if (attribBufSize > 0) flat.WriteBytes(*_peerAttributesBuf());
    /** Deliberately not flattening _peerAttributesMsg as it is redundant with _peerAttributesBuf */
@@ -143,6 +143,7 @@ status_t PZGHeartbeatPacket :: Unflatten(DataUnflattener & unflat)
          return B_BAD_DATA;
       }
       _peerAttributesBuf = GetByteBufferFromPool(attribBufSize, unflat.GetCurrentReadPointer());
+      MRETURN_ON_ERROR(unflat.SeekRelative(attribBufSize));  // just in case someone wants to keep using (unflat) after this method returns
       MRETURN_OOM_ON_NULL(_peerAttributesBuf());
    }
    else _peerAttributesBuf.Reset();

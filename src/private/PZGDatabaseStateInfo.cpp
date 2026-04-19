@@ -63,7 +63,7 @@ String PZGDatabaseStateInfo :: ToString() const
 
 uint32 PZGDatabaseStateInfo :: CalculateChecksum() const
 {
-   return CalculatePODChecksum(_currentDatabaseStateID) + (CalculatePODChecksum(_oldestDatabaseIDInLog)*3) + _dbChecksum;
+   return CalculatePODChecksum(_currentDatabaseStateID) + (CalculatePODChecksum(_oldestDatabaseIDInLog)*3) + (_dbChecksum*7);
 }
 
 bool PZGDatabaseStateInfo :: operator == (const PZGDatabaseStateInfo & rhs) const

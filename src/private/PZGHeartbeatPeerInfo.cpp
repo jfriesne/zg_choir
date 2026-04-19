@@ -28,7 +28,7 @@ status_t PZGHeartbeatPeerInfo :: Unflatten(DataUnflattener & unflat)
    MRETURN_ON_ERROR(unflat.ReadFlat(_peerID));
 
    const uint32 numTimings = unflat.ReadInt32();
-   if (unflat.GetNumBytesAvailable() < (numTimings*PZGTimingInfo::FlattenedSize())) return B_BAD_DATA;
+   if (unflat.GetNumBytesAvailable() < SaturatingUnsignedMultiply(numTimings,PZGTimingInfo::FlattenedSize())) return B_BAD_DATA;
    MRETURN_ON_ERROR(_timings.EnsureSize(numTimings, true));
 
    for (uint32 i=0; i<numTimings; i++) MRETURN_ON_ERROR(unflat.ReadFlat(_timings[i]));

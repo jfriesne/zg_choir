@@ -69,7 +69,11 @@ void PZGUnicastSession :: MessageReceivedFromGateway(const MessageRef & msg, voi
          {
             RegisterMyself(); // re-register under our new ID, now that we know what it is
          }
-         else LogTime(MUSCLE_LOG_ERROR, "PZGUnicastSession:  Couldn't find peer ID in PZG_UNICAST_NAME_PEER_ID message!\n");
+         else
+         {
+            LogTime(MUSCLE_LOG_ERROR, "PZGUnicastSession:  Couldn't find peer ID in PZG_UNICAST_NAME_PEER_ID message!\n");
+            EndSession();
+         }
       }
       break;
 

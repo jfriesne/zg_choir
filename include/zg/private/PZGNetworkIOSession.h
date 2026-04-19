@@ -1,6 +1,8 @@
 #ifndef PZGNetworkIOSession_h
 #define PZGNetworkIOSession_h
 
+#include <atomic>
+
 #include "system/DetectNetworkConfigChangesSession.h"
 #include "zg/ZGPeerID.h"
 #include "zg/ZGPeerSession.h"
@@ -134,7 +136,7 @@ private:
    Hashtable<PZGUnicastSessionRef, Void> _registeredUnicastSessions;         // all unicast sessions (whether we know their endpoint or not)
    Queue<ConstMessageRef> _messagesSentToSelf;  // just because I think it's silly to serialize and then deserialize a MessageRef to myself
    ZGPeerID _seniorPeerID;
-   bool _computerIsAsleep;
+   std::atomic<bool> _computerIsAsleep;
 
    Mutex _hbSessionPtrMutex;
    PZGHeartbeatSession * _hbSessionPtr; // this separate pointer is maintained just so the main thread can access it without provoking the ThreadSanitizer

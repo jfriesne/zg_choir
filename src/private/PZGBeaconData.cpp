@@ -12,7 +12,7 @@ void PZGBeaconData :: Flatten(DataFlattener flat) const
 status_t PZGBeaconData :: Unflatten(DataUnflattener & unflat)
 {
    const uint32 newNumItems = unflat.ReadInt32();
-   if (unflat.GetNumBytesAvailable() < (newNumItems*PZGDatabaseStateInfo::FlattenedSize())) return B_BAD_DATA;
+   if (unflat.GetNumBytesAvailable() < SaturatingUnsignedMultiply(newNumItems, PZGDatabaseStateInfo::FlattenedSize())) return B_BAD_DATA;
 
    MRETURN_ON_ERROR(_dbis.EnsureSize(newNumItems, true));
    for (uint32 i=0; i<newNumItems; i++) MRETURN_ON_ERROR(unflat.ReadFlat(_dbis[i]));

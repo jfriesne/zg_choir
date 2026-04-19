@@ -1,6 +1,7 @@
 #ifndef PZGCaffeine_h
 #define PZGCaffeine_h
 
+#include "support/NotCopyable.h"
 #include "zg/private/PZGNameSpace.h"
 
 namespace zg_private
@@ -12,7 +13,7 @@ namespace zg_private
   * occur again (if no other PZGCaffeine objects still exist in the process)
   * Under other OS's, this class is currently a no-op.
   */
-class PZGCaffeine
+class PZGCaffeine : public NotCopyable
 {
 public:
    /** Constructor -- calls beginActivityWithOptions() when executing under MacOS/X, otherwise does nothing.

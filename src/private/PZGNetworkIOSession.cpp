@@ -248,6 +248,8 @@ void PZGNetworkIOSession :: ClearHeartbeatSession()
 
 void PZGNetworkIOSession :: ShutdownChildSessions()
 {
+   ShutdownInternalThread();   // avoid possible race condition vs InternalThreadEntry() for _master and _hbSettings
+
    if (_hbSettings())
    {
       (void) RemoveAcceptFactory(_hbSettings()->GetDataTCPPort());
@@ -449,7 +451,7 @@ void PZGNetworkIOSession :: InternalThreadEntry()
          if (outgoingBeaconData())
          {
             nextBeaconSendTime = now + _beaconIntervalMicros;
-            if ((_computerIsAsleep == false)&&(_master->IAmFullyAttached()))
+            if ((_computerIsAsleep.load() == false)&&(_master->IAmFullyAttached()))
             {
                // demand-construct a Beacon Message (and cache it so we don't have to do it again every time)
                // The tag will be handled specially by the receiver so it's okay that the tag ID isn't increasing with each send
@@ -622,8 +624,9 @@ void PZGNetworkIOSession :: ComputerIsAboutToSleep()
    // Since when we wake up we won't know who is online anymore
    for (ConstHashtableIterator<ZGPeerID, ConstMessageRef> iter(_master->GetOnlinePeers()); iter.HasData(); iter++)
    {
-      const ZGPeerID temp = iter.GetKey();  // copy this out first to avoid re-entrancy problems
-      PeerHasGoneOffline(temp, iter.GetValue());
+      const ZGPeerID tempKey        = iter.GetKey();   // copy this out first to avoid re-entrancy problems
+      const ConstMessageRef tempVal = iter.GetValue(); // ditto
+      PeerHasGoneOffline(tempKey, tempVal);
    }
 
    _computerIsAsleep = true;  // because apparently we stay awake for a while even when we're asleep!?  MacOS/X is weird
@@ -637,7 +640,7 @@ void PZGNetworkIOSession :: ComputerJustWokeUp()
 
 void PZGNetworkIOSession :: UnicastMessageReceivedFromPeer(const ZGPeerID & remotePeerID, const MessageRef & msg)
 {
-   _master->PrivateMessageReceivedFromPeer(remotePeerID, msg);
+   if (_master) _master->PrivateMessageReceivedFromPeer(remotePeerID, msg);
 }
 
 status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBackOrderKey & ubok, bool dueToChecksumError)
@@ -660,17 +663,17 @@ status_t PZGNetworkIOSession :: RequestBackOrderFromSeniorPeer(const PZGUpdateBa
 
 void PZGNetworkIOSession :: BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optDBUp)
 {
-   _master->BackOrderResultReceived(ubok, optDBUp);
+   if (_master) _master->BackOrderResultReceived(ubok, optDBUp);
 }
 
 ConstPZGDatabaseUpdateRef PZGNetworkIOSession :: GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const
 {
-   return _master->GetDatabaseUpdateByID(whichDB, updateID);
+   return _master ? _master->GetDatabaseUpdateByID(whichDB, updateID) : ConstPZGDatabaseUpdateRef();
 }
 
 void PZGNetworkIOSession :: VerifyOrFixLocalDatabaseChecksum(uint32 whichDB)
 {
-   return _master->VerifyOrFixLocalDatabaseChecksum(whichDB);
+   if (_master) _master->VerifyOrFixLocalDatabaseChecksum(whichDB);
 }
 
 uint64 PZGNetworkIOSession :: GetEstimatedLatencyToPeer(const ZGPeerID & peerID) const

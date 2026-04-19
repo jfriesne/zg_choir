@@ -7,7 +7,7 @@ void * begin_disable_app_nap(const char * reasonArg)
 {
    if ([[NSProcessInfo processInfo] respondsToSelector:@selector(beginActivityWithOptions:reason:)])
    {
-      return (__bridge void *) [[NSProcessInfo processInfo] beginActivityWithOptions:0x00FFFFFF reason:[NSString stringWithUTF8String:reasonArg]];
+      return (__bridge_retained void *) [[NSProcessInfo processInfo] beginActivityWithOptions:0x00FFFFFF reason:[NSString stringWithUTF8String:reasonArg]];
    }
    return NULL;
 }

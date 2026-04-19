@@ -25,6 +25,7 @@ PZGHeartbeatSettings :: PZGHeartbeatSettings(const ZGPeerSettings & peerSettings
       LogTime(MUSCLE_LOG_CRITICALERROR, "PZGHeartbeatSettings:  Peer Attributes buffer is too large at " UINT32_FORMAT_SPEC " bytes long!  It should be less than 65536 bytes after zlib-compression (and ideally less than ~800 bytes!)\n", _peerAttributesByteBuffer()->GetNumBytes());
       MCRASH("PZGHeartbeatSettings:  Peer Attributes buffer is too large");
    }
+   else if ((GetPeerAttributes()())&&(_peerAttributesByteBuffer() == NULL)) LogTime(MUSCLE_LOG_ERROR, "PZGHeartbeatSettings:  DeflateByteBuffer failed! [%s]\n", _peerAttributesByteBuffer.GetStatus()());
 }
 
 static IPAddress GetMulticastAddressForSystemAndPort(const String & signature, const String & systemName, uint16 udpPort)
@@ -72,11 +73,10 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
    {
       // This must be done before adding the socket to any multicast groups, otherwise Windows gets uncooperative
       status_t ret;
-      if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true).IsOK())
+      if (BindUDPSocket(udpSock, multicastIAP.GetPort(), NULL, invalidIP, true).IsOK(ret))
       {
          const uint8 dummyBuf = 0;  // doesn't matter what this is, I just want to make sure I can actually send on this socket
-         const io_status_t sr = SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort());
-         if (sr.IsOK())
+         if (SendDataUDP(udpSock, &dummyBuf, 0, true, multicastIAP.GetIPAddress(), multicastIAP.GetPort()).IsOK(ret))
          {
             if (AddSocketToMulticastGroup(udpSock, multicastIAP.GetIPAddress()).IsOK(ret))
             {
@@ -86,7 +86,7 @@ static UDPSocketDataIORef CreateMulticastDataIO(const IPAddressAndPort & multica
             }
             else {LogTime(MUSCLE_LOG_ERROR, "Unable to add UDP socket to multicast address [%s] [%s]\n", multicastIAP.GetIPAddress().ToString()(), ret()); return ret;}
          }
-         else {LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s] [%s]\n", multicastIAP.ToString()(), sr()); return sr.GetStatus();}
+         else {LogTime(MUSCLE_LOG_ERROR, "Unable to send test UDP packet to multicast destination [%s] [%s]\n", multicastIAP.ToString()(), ret()); return ret;}
       }
       else {LogTime(MUSCLE_LOG_ERROR, "Unable to bind multicast socket to UDP port %u! [%s]\n", multicastIAP.GetPort(), ret()); return ret;}
    }
@@ -159,7 +159,7 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
 
             case MULTICAST_MODE_STANDARD:
             {
-               UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, isForHeartbeats ? _hbUDPPort : _dataUDPPort));
+               UDPSocketDataIORef wiredIO = CreateMulticastDataIO(IPAddressAndPort(nextMulticastAddress, udpPort));
                if ((wiredIO())&&(ret.AddTail(wiredIO).IsOK()))
                {
                   LogTime(MUSCLE_LOG_DEBUG, "Using UDPSocketDataIO for %s on %s interface [%s]\n", dataDesc, ifTypeDesc, nii.ToString()());

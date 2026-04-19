@@ -23,7 +23,7 @@ public:
 
    MUSCLE_NODISCARD virtual bool IsFixedSize()     const   {return false;}
    MUSCLE_NODISCARD virtual uint32 TypeCode()      const   {return PZG_BEACON_DATA;}
-   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const   {return sizeof(uint32) + (_dbis.GetNumItems()*PZGDatabaseStateInfo::FlattenedSize());}
+   MUSCLE_NODISCARD virtual uint32 FlattenedSize() const   {return sizeof(uint32) + SaturatingUnsignedMultiply(_dbis.GetNumItems(),PZGDatabaseStateInfo::FlattenedSize());}
 
    virtual void Flatten(DataFlattener flat) const;
    virtual status_t Unflatten(DataUnflattener & unflat);
