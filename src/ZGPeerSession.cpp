@@ -116,6 +116,8 @@ void ZGPeerSession :: AboutToDetachFromServer()
 {
    ShutdownChildSessions();
    StorageReflectSession::AboutToDetachFromServer();
+   _iAmFullyAttached = false;
+   _onlinePeers.Clear();
 }
 
 void ZGPeerSession :: EndSession()
@@ -146,14 +148,15 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       // Take the remainder of the Message and send it to everybody, to save on typing
       const String cmd = s.Substring(10).Trimmed();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg).IsOK()))
+      status_t ret;
+      if ((msg())&&(SendUnicastInternalMessageToAllPeers(msg, false).IsOK(ret)))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to all peers.\n", cmd());
          return TextCommandReceived(cmd);
       }
       else
       {
-         LogTime(MUSCLE_LOG_INFO, "Sending message [%s] to all peers failed!\n", cmd());
+         LogTime(MUSCLE_LOG_INFO, "Sending message [%s] to all peers failed! [%s]\n", cmd(), ret());
          return true;
       }
    }
@@ -162,14 +165,15 @@ bool ZGPeerSession :: TextCommandReceived(const String & s)
       // Take the remainder of the Message and send it to the senior peer
       const String cmd = s.Substring(11).Trimmed();
       MessageRef msg = GetForwardedTextMessage(cmd);
-      if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg).IsOK()))
+      status_t ret;
+      if ((msg())&&(SendUnicastInternalMessageToPeer(GetSeniorPeerID(), msg).IsOK(ret)))
       {
          LogTime(MUSCLE_LOG_INFO, "Sending text command [%s] to senior peer [%s].\n", cmd(), GetSeniorPeerID().ToString()());
          return true;
       }
       else
       {
-         LogTime(MUSCLE_LOG_INFO, "Sending message [%s] to senior peer [%s] failed!\n", cmd(), GetSeniorPeerID().ToString()());
+         LogTime(MUSCLE_LOG_INFO, "Sending message [%s] to senior peer [%s] failed! [%s]\n", cmd(), GetSeniorPeerID().ToString()(), ret());
          return true;
       }
    }
@@ -395,7 +399,9 @@ status_t ZGPeerSession :: SendDatabaseUpdateViaMulticast(const ConstPZGDatabaseU
 static MessageRef WrapUserMessage(const ConstMessageRef & userMsg)
 {
    MessageRef wrapMsg = GetMessageFromPool(PZG_PEER_COMMAND_USER_MESSAGE);
-   return ((wrapMsg())&&(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, CastAwayConstFromRef(userMsg)).IsOK())) ? wrapMsg : MessageRef();
+   MRETURN_ON_ERROR(wrapMsg);
+   MRETURN_ON_ERROR(wrapMsg()->AddMessage(PZG_PEER_NAME_USER_MESSAGE, CastAwayConstFromRef(userMsg)));
+   return wrapMsg;
 }
 
 status_t ZGPeerSession :: SendMulticastUserMessageToAllPeers(const ConstMessageRef & userMsg)
@@ -439,7 +445,7 @@ status_t ZGPeerSession :: SendUnicastInternalMessageToPeer(const ZGPeerID & dest
 
 void ZGPeerSession :: PrintDatabaseStateInfo(int32 whichDatabase) const
 {
-   if ((whichDatabase > 0)&&((uint32)whichDatabase < _databases.GetNumItems())) _databases[whichDatabase].PrintDatabaseStateInfo();
+   if (_databases.IsIndexValid(whichDatabase)) _databases[whichDatabase].PrintDatabaseStateInfo();
    else
    {
       for (uint32 i=0; i<_databases.GetNumItems(); i++) _databases[i].PrintDatabaseStateInfo();
@@ -448,7 +454,7 @@ void ZGPeerSession :: PrintDatabaseStateInfo(int32 whichDatabase) const
 
 void ZGPeerSession :: PrintDatabaseUpdateLog(int32 whichDatabase) const
 {
-   if ((whichDatabase > 0)&&((uint32)whichDatabase < _databases.GetNumItems())) _databases[whichDatabase].PrintDatabaseUpdateLog();
+   if (_databases.IsIndexValid(whichDatabase)) _databases[whichDatabase].PrintDatabaseUpdateLog();
    else
    {
       for (uint32 i=0; i<_databases.GetNumItems(); i++) _databases[i].PrintDatabaseUpdateLog();
@@ -515,25 +521,25 @@ void ZGPeerSession :: BeaconDataChanged(const ConstPZGBeaconDataRef & beaconData
    {
       for (uint32 i=0; i<numDBIs; i++) _databases[i].SeniorDatabaseStateInfoChanged(beaconData()->GetDatabaseStateInfos()[i]);
    }
-   else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::DatabaseStateInfosChanged:  Wrong number of DBIs in update!  (Expected " UINT32_FORMAT_SPEC ", got " UINT32_FORMAT_SPEC ")\n", _databases.GetNumItems(),  numDBIs);
+   else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::BeaconDataChanged:  Wrong number of DBIs in update!  (Expected " UINT32_FORMAT_SPEC ", got " UINT32_FORMAT_SPEC ")\n", _databases.GetNumItems(),  numDBIs);
 }
 
 
 void ZGPeerSession :: BackOrderResultReceived(const PZGUpdateBackOrderKey & ubok, const ConstPZGDatabaseUpdateRef & optUpdateData)
 {
    const uint32 whichDB = ubok.GetDatabaseIndex();
-   if (whichDB < _databases.GetNumItems()) _databases[whichDB].BackOrderResultReceived(ubok, optUpdateData);
+   if (_databases.IsIndexValid(whichDB)) _databases[whichDB].BackOrderResultReceived(ubok, optUpdateData);
 }
 
 void ZGPeerSession :: VerifyOrFixLocalDatabaseChecksum(uint32 whichDB)
 {
-   if (whichDB < _databases.GetNumItems()) _databases[whichDB].VerifyOrFixLocalDatabaseChecksum();
-                                      else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::VerifyOrFixLocalDatabaseChecksum:  Unknown database ID #" UINT32_FORMAT_SPEC "\n", whichDB);
+   if (_databases.IsIndexValid(whichDB)) _databases[whichDB].VerifyOrFixLocalDatabaseChecksum();
+                                    else LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::VerifyOrFixLocalDatabaseChecksum:  Unknown database ID #" UINT32_FORMAT_SPEC "\n", whichDB);
 }
 
 ConstPZGDatabaseUpdateRef ZGPeerSession :: GetDatabaseUpdateByID(uint32 whichDB, uint64 updateID) const
 {
-   if (whichDB >= _databases.GetNumItems())
+   if (_databases.IsIndexValid(whichDB) == false)
    {
       LogTime(MUSCLE_LOG_ERROR, "ZGPeerSession::GetDatabaseUpdateByID:  Unknown database ID #" UINT32_FORMAT_SPEC "\n", whichDB);
       return ConstPZGDatabaseUpdateRef();
@@ -567,12 +573,12 @@ String ZGPeerSession :: GetLocalDatabaseContentsAsString(uint32 /*whichDatabase*
 
 bool ZGPeerSession :: IsInSeniorDatabaseUpdateContext(uint32 whichDB) const
 {
-   return _databases[whichDB].IsInSeniorDatabaseUpdateContext();
+   return _databases.IsIndexValid(whichDB) ? _databases[whichDB].IsInSeniorDatabaseUpdateContext() : false;
 }
 
 bool ZGPeerSession :: IsInJuniorDatabaseUpdateContext(uint32 whichDB, uint64 * optRetSeniorNetworkTime64) const
 {
-   return _databases[whichDB].IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64);
+   return _databases.IsIndexValid(whichDB) ? _databases[whichDB].IsInJuniorDatabaseUpdateContext(optRetSeniorNetworkTime64) : false;
 }
 
 String PeerInfoToString(const ConstMessageRef & peerInfo)
@@ -587,7 +593,7 @@ String CompatibilityVersionCodeToString(uint32 versionCode)
 
 uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddressAndPort & /*pingSource*/)
 {
-   if (pingMsg()->what != PR_COMMAND_PING) return MUSCLE_TIME_NEVER;
+   if ((pingMsg() == NULL)||(pingMsg()->what != PR_COMMAND_PING)) return MUSCLE_TIME_NEVER;
 
    const ZGPeerSettings & s = GetPeerSettings();
 
@@ -620,28 +626,34 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
 
 uint64 ZGPeerSession :: GetCurrentDatabaseStateID(uint32 whichDB) const
 {
-   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetCurrentDatabaseStateID() : 0;
+   return _databases.IsIndexValid(whichDB) ? _databases[whichDB].GetCurrentDatabaseStateID() : 0;
 }
 
 bool ZGPeerSession :: UpdateLogContainsUpdate(uint32 whichDB, uint64 transactionID) const
 {
-   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].UpdateLogContainsUpdate(transactionID) : 0;
+   return _databases.IsIndexValid(whichDB) ? _databases[whichDB].UpdateLogContainsUpdate(transactionID) : false;
 }
 
 ConstMessageRef ZGPeerSession :: GetUpdatePayload(uint32 whichDB, uint64 transactionID) const
 {
-   return (whichDB < _databases.GetNumItems()) ? _databases[whichDB].GetDatabaseUpdatePayloadByID(transactionID) : ConstMessageRef();
+   return _databases.IsIndexValid(whichDB) ? _databases[whichDB].GetDatabaseUpdatePayloadByID(transactionID) : ConstMessageRef();
 }
 
 Queue<IPAddressAndPort> ZGPeerSession :: GetUnicastIPAddressAndPortsForPeerID(const ZGPeerID & peerID) const
 {
    Queue<IPAddressAndPort> ret;
-   uint32 idx = 0;
-   while(1)
+
+   const PZGNetworkIOSession * nios = static_cast<const PZGNetworkIOSession *>(_networkIOSession());
+   if (nios)
    {
-      const IPAddressAndPort iap = static_cast<const PZGNetworkIOSession *>(_networkIOSession())->GetUnicastIPAddressAndPortForPeerID(peerID, idx++);
-      if ((iap.IsValid() == false)||(ret.AddTail(iap).IsError())) return ret;
+      uint32 idx = 0;
+      while(1)
+      {
+         const IPAddressAndPort iap = nios->GetUnicastIPAddressAndPortForPeerID(peerID, idx++);
+         if ((iap.IsValid() == false)||(ret.AddTail(iap).IsError())) break;
+      }
    }
+   return ret;
 }
 
 bool ZGPeerSession :: IsOkayToUseNetworkInterface(const NetworkInterfaceInfo &) const

@@ -102,7 +102,8 @@ status_t ITreeGatewaySubscriber :: RequestRedo(uint32 whichDB, const String & op
 
 bool ITreeGatewaySubscriber :: IsTreeGatewayConnected() const
 {
-   return GetGateway()->TreeGateway_IsGatewayConnected();
+   ITreeGateway * gw = GetGateway();  // could be NULL if TreeGatewayShutdown() was already called
+   return ((gw)&&(gw->TreeGateway_IsGatewayConnected()));
 }
 
 ConstMessageRef ITreeGatewaySubscriber :: GetGestaltMessage() const

@@ -52,7 +52,9 @@ void DiscoveryServerSession :: NetworkInterfacesChanged(const Hashtable<String, 
       {
          DataIORef dio = CreateDataIO(newSock);
          if (dio()) gw->SetDataIO(dio);
+               else LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::NetworkInterfacesChanged():  CreateDataIO failed [%s]\n", dio.GetStatus()());
       }
+      else LogTime(MUSCLE_LOG_ERROR, "DiscoveryServerSession::NetworkInterfacesChanged():  CreateDefaultSocket failed [%s]\n", newSock.GetStatus()());
    }
 }
 

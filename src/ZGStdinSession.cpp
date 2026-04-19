@@ -62,14 +62,14 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
             String nc = t; nc = nc.Trimmed();  // yes, the Trimmed() is necessary!
             if ((nc == "quit")||(nc == "exit"))
             {
-               if (IsReallyStdin()) printf("To close a stdin session, press Control-D.\n");
+               if (IsReallyStdin()) LogTime(MUSCLE_LOG_INFO, "To close a stdin session, press Control-D.\n");
                else
                {
-                  printf("Closing command session...\n");
+                  LogTime(MUSCLE_LOG_INFO, "Closing command session...\n");
                   EndSession();
                }
             }
-            else if ((_target.TextCommandReceived(nc) == false)&&(nc.HasChars())) printf("ZGStdinSession:  Could not parse stdin command string [%s] (cmdLen=" UINT32_FORMAT_SPEC ")\n", nc(), nc.Length());
+            else if ((_target.TextCommandReceived(nc) == false)&&(nc.HasChars())) LogTime(MUSCLE_LOG_INFO, "ZGStdinSession:  Could not parse stdin command string [%s] (cmdLen=" UINT32_FORMAT_SPEC ")\n", nc(), nc.Length());
          }
       }
    }
@@ -77,7 +77,8 @@ void ZGStdinSession :: MessageReceivedFromGateway(const MessageRef & msg, void *
 
 static void LogAux(const String & s, int sev)
 {
-   String logText = s.Substring(s.IndexOf(' ')+1);
+   const int spaceIdx = s.IndexOf(' ');
+   String logText = (spaceIdx >= 0) ? s.Substring(spaceIdx+1) : GetEmptyString();
    if ((logText.Length() >= 2)&&(logText.StartsWith("/")))
    {
       for (uint32 i=0; i<NUM_MUSCLE_LOGLEVELS; i++)
@@ -152,12 +153,12 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    else if (s == "print object counts") PrintCountedObjectInfo(stdout);
    else if (s == "print all network interfaces")
    {
-      printf("List of all network interfaces known to this host:\n");
+      LogTime(MUSCLE_LOG_INFO, "List of all network interfaces known to this host:\n");
       Queue<NetworkInterfaceInfo> niis; (void) GetNetworkInterfaceInfos(niis);
       for (uint32 i=0; i<niis.GetNumItems(); i++)
       {
          const NetworkInterfaceInfo & nii = niis[i];
-         printf(UINT32_FORMAT_SPEC ". %s\n", i, nii.ToString()());
+         LogTime(MUSCLE_LOG_INFO, UINT32_FORMAT_SPEC ". %s\n", i, nii.ToString()());
       }
    }
    else if (s.StartsWith("set displaylevel")) return HandleSetLogLevelCommand(s()+16, true);
@@ -175,7 +176,7 @@ bool ITextCommandReceiver :: ParseGenericTextCommand(const String & s)
    }
    else if (s == "print build flags")
    {
-      printf("This executable was compiled using MUSCLE version %s.\n", MUSCLE_VERSION_STRING);
+      LogTime(MUSCLE_LOG_INFO, "This executable was compiled using MUSCLE version %s.\n", MUSCLE_VERSION_STRING);
       PrintBuildFlags(stdout);
    }
    else if (s == "print stack trace") (void) PrintStackTrace(stdout);

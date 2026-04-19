@@ -235,17 +235,20 @@ private:
             }
             if (useSimulatedMulticast) iap.SetPort(iap.GetPort()+100);  // just to keep SimulatedMulticastDataIO control-packets from leaking into the user's standard-multicast receivers
 
-            // Use a different socket for each IP address, to avoid Mac routing problems
-            MulticastUDPSessionRef msRef(new MulticastUDPSession(useSimulatedMulticast, iap, this));
-
-            status_t ret;
-            if (AddNewSession(msRef).IsOK(ret))
+            const int iidx = iap.GetIPAddress().GetInterfaceIndex();
+            if (_udpSessions.ContainsKey(iidx)) LogTime(MUSCLE_LOG_CRITICALERROR, "MulticastUDPClientManagerSession:  Multiple UDP sessions have the same interface index %i!\n", iidx);
+            else
             {
-               const int iidx = iap.GetIPAddress().GetInterfaceIndex();
-               if (_udpSessions.ContainsKey(iidx)) LogTime(MUSCLE_LOG_CRITICALERROR, "MulticastUDPClientManagerSession:  Multiple UDP sessions have the same interface index %i!\n", iidx);
-               (void) _udpSessions.Put(iidx, msRef);
+               // Use a different socket for each IP address, to avoid Mac routing problems
+               MulticastUDPSessionRef msRef(new MulticastUDPSession(useSimulatedMulticast, iap, this));
+
+               status_t ret;
+               if (AddNewSession(msRef).IsOK(ret))
+               {
+                  (void) _udpSessions.Put(iidx, msRef);
+               }
+               else LogTime(MUSCLE_LOG_ERROR, "Could not create %s-transceiver session for [%s] [%s]\n", useSimulatedMulticast?"simulated-multicast":"multicast", iap.ToString()(), ret());
             }
-            else LogTime(MUSCLE_LOG_ERROR, "Could not create %s-transceiver session for [%s] [%s]\n", useSimulatedMulticast?"simulated-multicast":"multicast", iap.ToString()(), ret());
          }
       }
    }
@@ -261,6 +264,8 @@ private:
 
 io_status_t MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uint32 maxBytes)
 {
+   if (_receiveBuffer() == NULL) return B_BAD_OBJECT;  // paranoia
+
    PacketDataIO * pUdpIO = dynamic_cast<PacketDataIO *>(GetGateway()()->GetDataIO()());
    if (pUdpIO == NULL) return B_BAD_OBJECT;  // paranoia
 
@@ -275,7 +280,7 @@ io_status_t MulticastUDPSession :: DoInput(AbstractGatewayMessageReceiver &, uin
       {
          if (GetMaxLogLevel() >= MUSCLE_LOG_TRACE) LogTime(MUSCLE_LOG_TRACE, "MulticastUDPSession %p read " INT32_FORMAT_SPEC " bytes of multicast-reply data from %s\n", this, bytesRead, sourceLoc.ToString()());
 
-         if (_manager->IsEnableReceive())  // this could return false, e.g. if we are using a SimulatedMulticastDataIO
+         if (_manager->IsEnableReceive())
          {
             ByteBufferRef newReceiveBuffer = GetByteBufferFromPool(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET);  // get ready for our next received-packet
             if (newReceiveBuffer())

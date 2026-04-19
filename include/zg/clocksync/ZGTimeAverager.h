@@ -17,7 +17,7 @@ public:
    /** Constructor
      * @param maxMeasurements The maximum number of measurements we should factor in to our running average.
      */
-   ZGTimeAverager(uint32 maxMeasurements) : _maxMeasurements(maxMeasurements), _totalMicros(0), _lastMeasurementTime(0), _cachedAverageWithoutOutliers(-1) {/* empty */}
+   ZGTimeAverager(uint32 maxMeasurements) : _maxMeasurements(maxMeasurements), _totalMicros(0), _lastMeasurementTime(0), _cachedAverageWithoutOutliers((uint64)-1) {/* empty */}
 
    /** Destructor */
    virtual ~ZGTimeAverager() {/* empty */}
@@ -41,7 +41,7 @@ public:
      */
    MUSCLE_NODISCARD uint64 GetAverageValueIgnoringOutliers() const
    {
-      if (_cachedAverageWithoutOutliers < 0) _cachedAverageWithoutOutliers = GetAverageValueIgnoringOutliersAux();
+      if (_cachedAverageWithoutOutliers == (uint64)-1) _cachedAverageWithoutOutliers = GetAverageValueIgnoringOutliersAux();
       return _cachedAverageWithoutOutliers;
    }
 
@@ -49,7 +49,7 @@ public:
    MUSCLE_NODISCARD uint64 GetLastMeasurementTime() const {return _lastMeasurementTime;}
 
    /** Clears our set of recorded measurements. */
-   void Clear() {_measurements.Clear(); _totalMicros = 0; _cachedAverageWithoutOutliers = -1;}
+   void Clear() {_measurements.Clear(); _totalMicros = 0; _cachedAverageWithoutOutliers = (uint64)-1; _lastMeasurementTime = 0;}
 
    /** Returns the current number of measurements we have stored */
    MUSCLE_NODISCARD uint32 GetNumMeasurements() const {return _measurements.GetNumItems();}
@@ -61,9 +61,9 @@ private:
    const uint32 _maxMeasurements;
    Queue<uint64> _measurements;
    uint64 _totalMicros;
-   uint64 _lastMeasurementTime;  // GetRunTime64()-clock value of when we last added a measurement
+   uint64 _lastMeasurementTime;  // GetRunTime64() clock-value of our most recent measurement, or 0 if we don't have any measurements on file
 
-   mutable int64 _cachedAverageWithoutOutliers;
+   mutable uint64 _cachedAverageWithoutOutliers;
 };
 DECLARE_REFTYPES(ZGTimeAverager);
 
