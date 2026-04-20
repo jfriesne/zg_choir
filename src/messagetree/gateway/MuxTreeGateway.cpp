@@ -74,7 +74,10 @@ status_t MuxTreeGateway :: TreeGateway_AddSubscription(ITreeGatewaySubscriber * 
    status_t ret;
    if (hisSubs())
    {
-      if ((hisSubs()->PutPathString(subscriptionPath.WithoutPrefix("/"), optFilterRef).IsOK(ret))&&((_isConnected == false)||(UpdateSubscription(subscriptionPath, calledBy, flags).IsOK(ret)))) return B_NO_ERROR;
+      const String ps = subscriptionPath.WithoutPrefix("/");
+      if ((hisSubs()->PutPathString(ps, optFilterRef).IsOK(ret))&&((_isConnected == false)||(UpdateSubscription(subscriptionPath, calledBy, flags).IsOK(ret)))) return B_NO_ERROR;
+
+      (void) hisSubs()->RemovePathString(ps); // roll back
    }
    else ret = B_OUT_OF_MEMORY;
 
@@ -126,17 +129,18 @@ status_t MuxTreeGateway :: TreeGateway_RemoveSubscription(ITreeGatewaySubscriber
       TreeSubscriberInfoRef hisSubs;
       if ((_subscriberInfos.Get(calledBy, hisSubs).IsOK())&&(hisSubs()))
       {
-         for (ConstHashtableIterator<String, uint32> iter(hisSubs()->_receivedPaths); iter.HasData(); iter++)
+         (void) hisSubs()->RemovePathString(subscriptionPath.WithoutPrefix("/"));
+
+         for (HashtableIterator<String, uint32> iter(hisSubs()->_receivedPaths); iter.HasData(); iter++)
          {
             const String & receivedPath = iter.GetKey();
-            if (hisSubs()->MatchesPath(receivedPath(), NULL, NULL))
+            if (hisSubs()->MatchesPath(receivedPath(), NULL, NULL) == false)
             {
                ReceivedPathDropped(calledBy, receivedPath);
                (void) hisSubs()->_receivedPaths.Remove(receivedPath);
             }
          }
 
-         (void) hisSubs()->RemovePathString(subscriptionPath.WithoutSuffix("/"));
          if (hisSubs()->GetEntries().IsEmpty()) (void) _subscriberInfos.Put(calledBy, TreeSubscriberInfoRef());
       }
    }
@@ -591,11 +595,11 @@ void MuxTreeGateway :: UnregisterSubscriber(void * s)
    ITreeGatewaySubscriber * sub = static_cast<ITreeGatewaySubscriber *>(s);
    if (_subscriberInfos.ContainsKey(sub))
    {
+      (void) TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
       if (_allowedCallbacks.Remove(sub).IsOK()) (void) _allowedCallbacks.PutWithDefault(&_dummySubscriber);  // _dummySubscriber so that if the requester has since unregistered we still won't let callbacks spill out to everyone else
       (void) _needsCallbackBatchEndsCall.Remove(sub);
       (void) _subscriberInfos.Remove(sub);
       (void) _requestedSubtrees.Remove(sub);
-      (void) TreeGateway_RemoveAllSubscriptions(sub, TreeGatewayFlags());
    }
    ProxyTreeGateway::UnregisterSubscriber(s);
 }
