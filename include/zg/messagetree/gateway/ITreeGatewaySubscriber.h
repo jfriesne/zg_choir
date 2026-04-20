@@ -10,6 +10,8 @@ namespace zg {
 
 class ITreeGateway;
 
+ITreeGateway * GetDummyTreeGateway();  // forward declaration
+
 /** Flags used to optionally modify the behavior of ITreeGateway commands */
 enum {
    TREE_GATEWAY_FLAG_INDEXED = 0,       /**< If set, the uploaded node should be added to it's parent's ordered-nodes index. */
@@ -304,7 +306,7 @@ protected:
      */
    virtual status_t RequestUndo(uint32 whichDB = 0, const String & optOpTag = GetEmptyString());
 
-   /** Request a "redo" of a previously un-dnoe database change.
+   /** Request a "redo" of a previously un-done database change.
      * @param whichDB index of the database to which should perform the redo.  This database must be implemented via a UndoStackMessageTreeDatabaseObject,
      *                or the redo request will be ignored.  Defaults to zero.
      * @param optOpTag An optional string to associate with this operation.  It can be anything you like; it will be passed on verbatim to the TreeNodeUpdated()
@@ -322,6 +324,12 @@ protected:
    virtual ConstMessageRef GetGestaltMessage() const;
 
 private:
+   ITreeGateway * GetGatewayOrDummyGateway() const
+   {
+      ITreeGateway * gw = GetGateway();
+      return gw ? gw : GetDummyTreeGateway();
+   }
+
    friend class ITreeGateway;
    friend class GatewaySubscriberUndoBatchGuard;
 };

@@ -18,6 +18,9 @@ public:
    DummyTreeGateway(status_t returnValue = B_UNIMPLEMENTED) : _returnValue(returnValue) {/* empty */}
 
 protected:
+   virtual void RegisterSubscriber(  void *) {/* deliberately overridden to be a no-op */}
+   virtual void UnregisterSubscriber(void *) {/* deliberately overridden to be a no-op */}
+
    // ITreeGateway function-call API
    virtual status_t TreeGateway_AddSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}
    virtual status_t TreeGateway_RemoveSubscription(ITreeGatewaySubscriber *, const String &, const ConstQueryFilterRef &, TreeGatewayFlags) {return _returnValue;}

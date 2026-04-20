@@ -194,7 +194,7 @@ void ProxyTreeGateway :: TreeGatewayShuttingDown()
    {
       ITreeGatewaySubscriber * sub = iter.GetKey();
       sub->TreeGatewayShuttingDown();
-      sub->SetGateway(NULL);  // unregister him now that we're going away, so we won't make any more calls on him in the future no matter what
+      sub->SetGateway(GetDummyTreeGateway());  // unregister him now that we're going away, so we won't make any more calls on him in the future no matter what
    }
 }
 

@@ -85,17 +85,17 @@ template<class SubscriberType> class GatewaySubscriberCommandBatchGuard : public
 {
 public:
    /** Constructor
-     * @param sub pointer to the subscriber object to call BeginCommandBatch() on
+     * @param optSub pointer to the subscriber object to call BeginCommandBatch() on
      */
-   MUSCLE_NODISCARD GatewaySubscriberCommandBatchGuard(SubscriberType * sub) : _sub(sub) {_sub->BeginCommandBatch();}
+   MUSCLE_NODISCARD GatewaySubscriberCommandBatchGuard(SubscriberType * optSub) : _optSub(optSub) {if (_optSub) _optSub->BeginCommandBatch();}
 
    /** Destructor
      * Calls EndCommandBatch() on the subscriber object
      */
-   ~GatewaySubscriberCommandBatchGuard() {_sub->EndCommandBatch();}
+   ~GatewaySubscriberCommandBatchGuard() {if (_optSub) _optSub->EndCommandBatch();}
 
 private:
-   SubscriberType * _sub;
+   SubscriberType * _optSub;
 };
 
 }  // end namespace zg

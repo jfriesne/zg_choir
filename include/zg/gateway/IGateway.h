@@ -34,10 +34,8 @@ public:
 
    virtual void ShutdownGateway()
    {
-      if (this != GetDummyTreeGateway())
-      {
-         while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());
-      }
+      // If (this) is the dummy gateway, then _registeredSubscribers will be empty
+      while(_registeredSubscribers.HasItems()) _registeredSubscribers.GetFirstKeyWithDefault()->SetGateway(GetDummyTreeGateway());
    }
 
 protected:

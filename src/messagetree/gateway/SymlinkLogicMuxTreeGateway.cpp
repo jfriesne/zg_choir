@@ -100,6 +100,7 @@ private:
       MRETURN_ON_ERROR(_symlinks.Put(nodePath, symDest));
 
       status_t ret;
+      const bool hadSymDest = _reverseSymlinks.ContainsKey(symDest);
       SymlinkState * sstate = _reverseSymlinks.GetOrPut(symDest);
       if (sstate)
       {
@@ -113,7 +114,8 @@ private:
       else ret = B_OUT_OF_MEMORY;
 
       // If we got here, something went wrong, so roll back any side-effects and return failure
-      if ((sstate)&&(sstate->_sourcePaths.Remove(nodePath).IsOK())&&(sstate->_sourcePaths.IsEmpty())) (void) _reverseSymlinks.Remove(symDest);
+      if (sstate) (void) sstate->_sourcePaths.Remove(nodePath);
+      if (hadSymDest == false) (void) _reverseSymlinks.Remove(symDest);
       (void) _symlinks.Remove(nodePath);
 
       return ret;
@@ -163,11 +165,11 @@ void SymlinkLogicMuxTreeGateway :: FlushDroppedSymlinkPaths()
 {
    // Let the SymlinkResolver know about any symlink-paths that nobody is subscribing too any longer, so it can stop supporting them
    NestCountGuard ncg(_inFlushSymlinkPaths);
-   while(_droppedSymlinkPaths.HasItems())
+
+   String droppedPath;
+   while(_droppedSymlinkPaths.RemoveFirst(droppedPath).IsOK())  // deliberately doing a String-copy here to avoid a potential dangling-reference
    {
-      const String & path = *_droppedSymlinkPaths.GetFirstKey();
-      if (IsAnyoneSubscribedToPath(path) == false) (void) _symlinkResolver->FilterTreeNodeUpdate(path, MessageRef(), GetEmptyString(), GetSubscribersInInitialResultsMode());
-      (void) _droppedSymlinkPaths.RemoveFirst();
+      if (IsAnyoneSubscribedToPath(droppedPath) == false) (void) _symlinkResolver->FilterTreeNodeUpdate(droppedPath, MessageRef(), GetEmptyString(), GetSubscribersInInitialResultsMode());
    }
 }
 
