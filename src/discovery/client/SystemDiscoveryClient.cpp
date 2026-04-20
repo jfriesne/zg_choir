@@ -163,7 +163,7 @@ public:
       {
          BroadcastToAllSessionsOfType<DiscoverySession>(_pingMsg);
 
-         for (ConstHashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
+         for (HashtableIterator<RawDiscoveryKey, RawDiscoveryResult> iter(_rawDiscoveryResults); iter.HasData(); iter++)
          {
             if (now >= iter.GetValue().GetExpirationTime())
             {

@@ -39,10 +39,11 @@ status_t UndoStackMessageTreeDatabaseObject :: UploadUndoRedoRequestToSeniorPeer
 ConstMessageRef UndoStackMessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef & seniorDoMsg)
 {
    MessageRef doMsg = CastAwayConstFromRef(MessageTreeDatabaseObject::SeniorUpdate(seniorDoMsg));
-   if (doMsg() == NULL) return ConstMessageRef();
 
-   MessageRef undoMsg = _assembledJuniorUndoMessage;  // _assembledJuniorUndoMessage will have been populated via callbacks to our methods that occurred insie MessageTreeDatabaseObject::SeniorUpdate()
+   MessageRef undoMsg = _assembledJuniorUndoMessage;  // _assembledJuniorUndoMessage will have been populated via callbacks to our methods that occurred inside MessageTreeDatabaseObject::SeniorUpdate()
    _assembledJuniorUndoMessage.Reset();
+
+   if (doMsg() == NULL) return ConstMessageRef();
 
    MessageRef pairMsg = GetMessageFromPool(UNDOSTACK_COMMAND_MESSAGE_PAIR);
    if ((pairMsg())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_DOMESSAGE, doMsg).IsOK())&&(pairMsg()->CAddMessage(UNDOSTACK_NAME_UNDOMESSAGE, undoMsg).IsOK())&&(pairMsg()->CAddString(UNDOSTACK_NAME_UNDOKEY, seniorDoMsg()->GetString(UNDOSTACK_NAME_UNDOKEY)).IsOK())) return AddConstToRef(pairMsg);
@@ -163,6 +164,8 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
          }
          else
          {
+            if (oldClientPayload.what == 0) return B_BAD_ARGUMENT;  // no active sequence to end
+
             const Queue<DataNodeRef> * seqIdx = clientNode->GetIndex();
             if ((seqIdx == NULL)||(seqIdx->IsEmpty())) return B_BAD_OBJECT;  // wtf?
 
@@ -231,6 +234,8 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                         LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (%s=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, fromNodePath(), desc, seqEndID, seqStartID);
                         return B_BAD_OBJECT;
                      }
+
+                     if (transID == 0) break;  // anti-underflow paranoia
                   }
 
                   // Do the actual undo (or redo)
@@ -251,11 +256,13 @@ status_t UndoStackMessageTreeDatabaseObject :: SeniorMessageTreeUpdateAux(const 
                         LogTime(MUSCLE_LOG_ERROR, "UndoStackMessageTreeDatabaseObject:  Can't find transaction " UINT64_FORMAT_SPEC " for client node at [%s]  (%s=" UINT64_FORMAT_SPEC " -> " UINT64_FORMAT_SPEC ")!\n", transID, fromNodePath(), desc, seqEndID, seqStartID);
                         return B_BAD_OBJECT;
                      }
+
+                     if (transID == 0) break;  // anti-underflow paranoia
                   }
 
                   // pop the operation off of the source-stack, and delete the source-client node if the source-stack is now empty
                   MRETURN_ON_ERROR(fromClientNode->RemoveChild(indexQ->Tail()()->GetNodeName(), mtdps, true, NULL));
-                  if (fromClientNode->GetNumChildren() > 0)
+                  if (indexQ->HasItems())
                   {
                      fromClientNode->SetData(indexQ->Tail()()->GetData(), mtdps);  // notify programs that are tracking the top of the source-stack
                   }

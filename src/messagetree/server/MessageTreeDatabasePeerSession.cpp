@@ -32,7 +32,8 @@ MessageTreeDatabasePeerSession :: MessageTreeDatabasePeerSession(const ZGPeerSet
 status_t MessageTreeDatabasePeerSession :: AttachedToServer()
 {
    NestCountGuard ncd(_inPeerSessionSetupOrTeardown);
-   status_t ret = ZGDatabasePeerSession::AttachedToServer();
+
+   MRETURN_ON_ERROR(ZGDatabasePeerSession::AttachedToServer());
 
    // Check for duplicate mount-points
    const uint32 numDBs = GetPeerSettings().GetNumDatabases();
@@ -51,7 +52,7 @@ status_t MessageTreeDatabasePeerSession :: AttachedToServer()
    }
 
    _gestaltMessage = GetEffectiveParameters();
-   return ret;
+   return B_NO_ERROR;
 }
 
 void MessageTreeDatabasePeerSession :: AboutToDetachFromServer()
@@ -85,6 +86,8 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveSubscription(ITreeG
 {
    MessageRef cmdMsg;
    MRETURN_ON_ERROR(CreateMuscleUnsubscribeMessage(subscriptionPath, cmdMsg));
+
+   NestCountGuard ncg(_inLocalRequestNestCount);
    MessageReceivedFromGateway(cmdMsg, NULL);
    return B_NO_ERROR;
 }
@@ -93,6 +96,8 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_RemoveAllSubscriptions(IT
 {
    MessageRef cmdMsg;
    MRETURN_ON_ERROR(CreateMuscleUnsubscribeAllMessage(cmdMsg));
+
+   NestCountGuard ncg(_inLocalRequestNestCount);
    MessageReceivedFromGateway(cmdMsg, NULL);
    return B_NO_ERROR;
 }
@@ -138,7 +143,7 @@ status_t MessageTreeDatabasePeerSession :: TreeGateway_UploadNodeSubtree(ITreeGa
       // I'm not sure if this is the correct logic to use, but it works for now --jaf
       status_t ret;
       ConstMessageRef effMsg = valuesMsg;
-      if (valuesMsg()->FindMessage(basePath, effMsg).IsError())
+      if (valuesMsg()->FindMessage(basePath, effMsg).IsError(ret))
       {
          LogTime(MUSCLE_LOG_ERROR, "Couldn't find basePath Message [%s] in subtree-upload! [%s]\n", basePath(), ret());
          return ret;
@@ -446,7 +451,6 @@ ConstMessageRef MessageTreeDatabasePeerSession :: SeniorUpdateLocalDatabase(uint
       case MTDPS_COMMAND_PINGSENIORPEER:
          HandleSeniorPeerPingMessage(whichDatabase, seniorDoMsg);
          return seniorDoMsg;
-      break;
 
       default:
          return ZGDatabasePeerSession::SeniorUpdateLocalDatabase(whichDatabase, dbChecksum, seniorDoMsg);
@@ -570,7 +574,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromPeer(const ZGPeerID & 
          {
             MessageReceivedFromTreeSeniorPeer(whichDB, tag, payload);
          }
-         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGETOSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()());
+         else LogTime(MUSCLE_LOG_ERROR, "Peer [%s] Received MTDPS_COMMAND_MESSAGEFROMSENIORPEER, but it has no payload!\n", GetLocalPeerID().ToString()());
       }
       break;
 
@@ -683,9 +687,8 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflec
 
             // Handle notifications of added/updated nodes
             {
-               uint32 currentFieldNameIndex = 0;
                MessageRef nodeRef;
-               for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++,currentFieldNameIndex++)
+               for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++)
                {
                   String nodePath = iter.GetFieldName();
                   if (ConvertPathToSessionRelative(nodePath).IsOK())
@@ -699,8 +702,7 @@ void MessageTreeDatabasePeerSession :: MessageReceivedFromSession(AbstractReflec
          case PR_RESULT_INDEXUPDATED:
          {
             // Handle notifications of node-index changes
-            uint32 currentFieldNameIndex = 0;
-            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++,currentFieldNameIndex++)
+            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(); iter.HasData(); iter++)
             {
                String sessionRelativePath = iter.GetFieldName();
                if (ConvertPathToSessionRelative(sessionRelativePath).IsOK())
