@@ -60,7 +60,7 @@ String PZGHeartbeatSourceState :: ToString(const INetworkTimeProvider & ntp) con
    {
       const uint64 raw    = iter.GetValue()()->GetRawAverageValue();
       const uint64 cooked = iter.GetValue()()->GetAverageValueIgnoringOutliers();
-      const  int64 delta  = computedNetTime-advertisedNetTime;
+      const  int64 delta  = (int64)computedNetTime-(int64)advertisedNetTime;
       ret += String(" {addr=[%1] rawRTT=[%2] cookedRTT=[%3] error=[%4]}").Arg(iter.GetKey().ToString()).Arg(GetHumanReadableSignedTimeIntervalString(raw, 1)).Arg(GetHumanReadableSignedTimeIntervalString(cooked, 1)).Arg(GetHumanReadableSignedTimeIntervalString(delta, 1));
    }
    return ret;

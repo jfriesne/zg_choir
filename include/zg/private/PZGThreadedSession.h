@@ -8,8 +8,6 @@
 namespace zg_private
 {
 
-class IThreadedMaster;
-
 enum {
    PZG_THREADED_SESSION_RECREATE_SOCKETS = 1887073384 // 'pzth'
 };

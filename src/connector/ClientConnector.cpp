@@ -361,7 +361,7 @@ private:
 static bool AreDiscoveryCriteriaEqual(const ConstQueryFilterRef & c1, const ConstQueryFilterRef & c2)
 {
    if ((c1() != NULL) != (c2() != NULL)) return false;
-   if (c1() == NULL)                     return false;
+   if (c1() == NULL)                     return true;
 
    // At this point we are guaranteed that both references are non-NULL.
    // Since I don't have any kind of IsEqualTo() methods defined for the QueryFilter
@@ -658,7 +658,7 @@ ClientConnector :: ClientConnector(ICallbackMechanism * mechanism)
    : ICallbackSubscriber(mechanism)
    , _timeAverager(20)
    , _mainThreadToNetworkTimeOffset(INVALID_TIME_OFFSET)
-   , _mainThreadLastTimeSyncPongTime(INVALID_TIME_OFFSET)
+   , _mainThreadLastTimeSyncPongTime(MUSCLE_TIME_NEVER)
 {
    _imp = new ClientConnectorImplementation(this);
 }

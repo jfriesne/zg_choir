@@ -37,13 +37,18 @@ status_t ZGDatabasePeerSession :: AttachedToServer()
 void ZGDatabasePeerSession :: ResetLocalDatabaseToDefault(uint32 whichDatabase, uint32 & dbChecksum)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
-   db->SetToDefaultState();
-   dbChecksum = db->GetCurrentChecksum();
+   if (db)
+   {
+      db->SetToDefaultState();
+      dbChecksum = db->GetCurrentChecksum();
+   }
 }
 
 ConstMessageRef ZGDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & seniorDoMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   if (db == NULL) return B_BAD_ARGUMENT;
+
    ConstMessageRef ret = db->SeniorUpdate(seniorDoMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
@@ -52,6 +57,8 @@ ConstMessageRef ZGDatabasePeerSession :: SeniorUpdateLocalDatabase(uint32 whichD
 status_t ZGDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & juniorDoMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   if (db == NULL) return B_BAD_ARGUMENT;
+
    const status_t ret = db->JuniorUpdate(juniorDoMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
@@ -59,14 +66,20 @@ status_t ZGDatabasePeerSession :: JuniorUpdateLocalDatabase(uint32 whichDatabase
 
 MessageRef ZGDatabasePeerSession :: SaveLocalDatabaseToMessage(uint32 whichDatabase) const
 {
+   IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   if (db == NULL) return B_BAD_ARGUMENT;
+
    MessageRef msg = GetMessageFromPool();
-   if ((msg())&&(GetDatabaseObject(whichDatabase)->SaveToArchive(msg).IsError())) msg.Reset();
+   MRETURN_ON_ERROR(msg);
+   MRETURN_ON_ERROR(db->SaveToArchive(msg));
    return msg;
 }
 
 status_t ZGDatabasePeerSession :: SetLocalDatabaseFromMessage(uint32 whichDatabase, uint32 & dbChecksum, const ConstMessageRef & newDBStateMsg)
 {
    IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   if (db == NULL) return B_BAD_ARGUMENT;
+
    const status_t ret = db->SetFromArchive(newDBStateMsg);
    dbChecksum = db->GetCurrentChecksum();
    return ret;
@@ -74,19 +87,21 @@ status_t ZGDatabasePeerSession :: SetLocalDatabaseFromMessage(uint32 whichDataba
 
 uint32 ZGDatabasePeerSession :: CalculateLocalDatabaseChecksum(uint32 whichDatabase) const
 {
-   return GetDatabaseObject(whichDatabase)->CalculateChecksum();
+   IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   return db ? db->CalculateChecksum() : 0;
 }
 
 String ZGDatabasePeerSession :: GetLocalDatabaseContentsAsString(uint32 whichDatabase) const
 {
-   return GetDatabaseObject(whichDatabase)->ToString();
+   IDatabaseObject * db = GetDatabaseObject(whichDatabase);
+   return db ? db->ToString() : GetEmptyString();
 }
 
 void ZGDatabasePeerSession :: PeerHasGoneOffline(const ZGPeerID & peerID, const ConstMessageRef & peerInfo)
 {
    ZGPeerSession::PeerHasGoneOffline(peerID, peerInfo);
 
-   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   const uint32 numDBs = _databaseObjects.GetNumItems();
    for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->PeerHasGoneOffline(peerID, peerInfo);
 }
 
@@ -94,7 +109,7 @@ void ZGDatabasePeerSession :: PeerHasComeOnline(const ZGPeerID & peerID, const C
 {
    ZGPeerSession::PeerHasComeOnline(peerID, peerInfo);
 
-   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   const uint32 numDBs = _databaseObjects.GetNumItems();
    for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->PeerHasComeOnline(peerID, peerInfo);
 }
 
@@ -102,7 +117,7 @@ void ZGDatabasePeerSession :: LocalSeniorPeerStatusChanged()
 {
    ZGPeerSession::LocalSeniorPeerStatusChanged();
 
-   const uint32 numDBs = GetPeerSettings().GetNumDatabases();
+   const uint32 numDBs = _databaseObjects.GetNumItems();
    for (uint32 i=0; i<numDBs; i++) _databaseObjects[i]()->LocalSeniorPeerStatusChanged();
 }
 
@@ -233,7 +248,7 @@ uint64 IDatabaseObject :: GetCurrentDatabaseStateID() const
 bool IDatabaseObject :: UpdateLogContainsUpdate(uint64 transactionID) const
 {
    const ZGDatabasePeerSession * dbps = GetDatabasePeerSession();
-   return dbps ? dbps->UpdateLogContainsUpdate(_dbIndex, transactionID) : 0;
+   return dbps ? dbps->UpdateLogContainsUpdate(_dbIndex, transactionID) : false;
 }
 
 ConstMessageRef IDatabaseObject :: GetUpdatePayload(uint64 transactionID) const
