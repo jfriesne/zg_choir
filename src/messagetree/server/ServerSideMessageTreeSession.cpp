@@ -35,6 +35,8 @@ status_t ServerSideMessageTreeSession :: AttachedToServer()
 
 void ServerSideMessageTreeSession :: AboutToDetachFromServer()
 {
+   _dbSession = NULL;  // in case StorageReflectSession::AboutToDetachFromServer() causes our virtual methods to be called
+
    if (_logOnAttachAndDetach) LogTime(MUSCLE_LOG_INFO, "ServerSideMessageTreeSession %p:  Client at [%s] has disconnected from this server.\n", this, GetSessionRootPath()());
 
    MessageTreeDatabasePeerSession * peerSession = FindFirstSessionOfType<MessageTreeDatabasePeerSession>();  // doing a fresh lookup to avoid shutdown-order-of-operations problems
@@ -167,7 +169,7 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionMessage(Message & sub
 
          // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
          const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionMessage.IndexOfName(nodePath) : (subscriptionMessage.GetNumNames()-1);
-         MRETURN_ON_ERROR(subscriptionMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
+         MRETURN_ON_ERROR(subscriptionMessage.AddInt32(_opTagPutMap, (((uint32)opTagIndex)<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
       }
       else
       {
@@ -198,7 +200,7 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message 
 
       // if there's just 1 value in our field, then the field must have just been created just now, and therefore it's the last field-name in the list
       const uint32 fieldNameIndex = (numValuesInField > 1) ? subscriptionIndexMessage.IndexOfName(nodePath) : (subscriptionIndexMessage.GetNumNames()-1);
-      MRETURN_ON_ERROR(subscriptionIndexMessage.AddInt32(_opTagPutMap, (opTagIndex<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
+      MRETURN_ON_ERROR(subscriptionIndexMessage.AddInt32(_opTagPutMap, (((uint32)opTagIndex)<<24)|(fieldNameIndex<<12)|(numValuesInField-1)));
    }
 
    return B_NO_ERROR;
@@ -206,7 +208,7 @@ status_t ServerSideMessageTreeSession :: UpdateSubscriptionIndexMessage(Message 
 
 status_t ServerSideMessageTreeSession :: PruneSubscriptionMessage(Message & subscriptionMessage, const String & nodePath)
 {
-   const int32 nodePathIndex = subscriptionMessage.HasName(_opTagPutMap, B_STRING_TYPE) ? subscriptionMessage.IndexOfName(nodePath) : -1;
+   const int32 nodePathIndex = subscriptionMessage.HasName(_opTagPutMap, B_INT32_TYPE) ? subscriptionMessage.IndexOfName(nodePath) : -1;
    if (nodePathIndex >= 0)
    {
       uint32 nextEntry = 0;

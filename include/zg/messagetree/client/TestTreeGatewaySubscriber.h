@@ -7,7 +7,7 @@
 
 namespace zg {
 
-/** A simple implementation of ITreeGatewaySubscriber used for testing from the command line (in tree_client.cpp and connetor_client.cpp)
+/** A simple implementation of ITreeGatewaySubscriber used for testing from the command line (in tree_client.cpp and connector_client.cpp)
   * Designed to parse the user's input on stdin, and to print debug-info (about what ITreeGatewaySubscriber callbacks were called) on stdout.
   */
 class TestTreeGatewaySubscriber : public ITreeGatewaySubscriber, public ITextCommandReceiver

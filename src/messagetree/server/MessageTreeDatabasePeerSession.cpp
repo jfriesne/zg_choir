@@ -649,7 +649,6 @@ ConstMessageRef MessageTreeDatabasePeerSession :: TreeGateway_GetGestaltMessage(
    return _gestaltMessage;
 }
 
-
 status_t MessageTreeDatabasePeerSession :: ConvertPathToSessionRelative(String & path) const
 {
    if (GetPathDepth(path()) >= NODE_DEPTH_USER)

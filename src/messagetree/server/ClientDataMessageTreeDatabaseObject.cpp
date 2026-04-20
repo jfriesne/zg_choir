@@ -33,6 +33,8 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeValue(const String & l
 
 status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String & localPath, const ConstMessageRef & valuesMsg, TreeGatewayFlags flags, const String & optOpTag)
 {
+   if (valuesMsg() == NULL) return B_BAD_ARGUMENT;
+
    ServerSideMessageTreeSession * ssmts = NULL;
    const String sharedPath = GetSharedPathFromLocalPath(localPath, ssmts);
    if (sharedPath.IsEmpty()) return B_BAD_OBJECT;  // Perhaps we weren't called from within anyone's MessageReceivedFromGateway() method?
@@ -42,7 +44,7 @@ status_t ClientDataMessageTreeDatabaseObject :: UploadNodeSubtree(const String &
    // Upload the subtree in our local MUSCLE database also, so that we can retransmit it later if we need to
    SetDataNodeFlags sdnFlags;
    if (flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)) sdnFlags.SetBit(SETDATANODE_FLAG_QUIET);
-   return ssmts->RestoreNodeTreeFromMessage(*valuesMsg(), localPath, true, sdnFlags);
+   return ssmts ? ssmts->RestoreNodeTreeFromMessage(*valuesMsg(), localPath, true, sdnFlags) : B_BAD_OBJECT;
 }
 
 status_t ClientDataMessageTreeDatabaseObject :: RequestDeleteNodes(const String & localPath, const ConstQueryFilterRef & optFilter, TreeGatewayFlags flags, const String & optOpTag)
@@ -121,7 +123,7 @@ void ClientDataMessageTreeDatabaseObject :: LocalSeniorPeerStatusChanged()
             for (DataNodeRefIterator iter = dn->GetChildIterator(); iter.HasData(); iter++)
             {
                ZGPeerID pid; pid.FromString(*iter.GetKey());
-               if (GetMessageTreeDatabasePeerSession()->IsPeerOnline(pid) == false) nodesToDelete = nodesToDelete.WithAppendedWord(*iter.GetKey(),",");
+               if (GetMessageTreeDatabasePeerSession()->IsPeerOnline(pid) == false) nodesToDelete = nodesToDelete.WithAppendedWord(*iter.GetKey(), ",");
             }
          }
       }

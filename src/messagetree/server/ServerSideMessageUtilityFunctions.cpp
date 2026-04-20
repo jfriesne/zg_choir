@@ -38,7 +38,7 @@ status_t CreateMuscleRequestNodeValuesMessage(const String & queryString, const 
 
    return retMsg()->AddString(         PR_NAME_KEYS,            queryString)
         | retMsg()->CAddArchiveMessage(PR_NAME_FILTERS,         optFilterRef)
-        | retMsg()->AddString(         PR_NAME_TREE_REQUEST_ID, tag);
+        | retMsg()->CAddString(        PR_NAME_TREE_REQUEST_ID, tag);
 }
 
 status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrings, const Queue<ConstQueryFilterRef> & queryFilters, const String & tag, uint32 maxDepth, MessageRef & retMsg)
@@ -53,8 +53,8 @@ status_t CreateMuscleRequestNodeSubtreesMessage(const Queue<String> & queryStrin
       if (i<queryFilters.GetNumItems()) MRETURN_ON_ERROR(retMsg()->CAddArchiveMessage(PR_NAME_FILTERS, queryFilters[i]));
    }
 
-   return retMsg()->CAddInt32(PR_NAME_MAXDEPTH,        maxDepth, MUSCLE_NO_LIMIT)
-        | retMsg()->AddString(PR_NAME_TREE_REQUEST_ID, tag);
+   return retMsg()->CAddInt32(PR_NAME_MAXDEPTH,         maxDepth, MUSCLE_NO_LIMIT)
+        | retMsg()->CAddString(PR_NAME_TREE_REQUEST_ID, tag);
 }
 
 }  // end namespace zg

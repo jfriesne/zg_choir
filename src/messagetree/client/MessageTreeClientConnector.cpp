@@ -8,7 +8,7 @@ namespace zg {
 MessageTreeClientConnector :: MessageTreeClientConnector(ICallbackMechanism * mechanism)
    : ClientConnector(mechanism)
    , MuxTreeGateway(NULL)  // gotta pass NULL here since _networkGateway hasn't been constructed yet
-   , _networkGateway(this)
+   , _networkGateway(this) // safe because ClientSideNetworkTreeGateway only stores the pointer, it doesn't try to call anything on it
    , _expectingParameters(false)
 {
    unsigned int seed = (unsigned int) time(NULL);
@@ -33,6 +33,7 @@ void MessageTreeClientConnector :: ConnectionStatusUpdated(const MessageRef & op
       {
          LogTime(MUSCLE_LOG_ERROR, "Couldn't send PR_COMMAND_GETPARAMETERS to server! [%s]\n", ret());
          ret = B_NO_ERROR;  // clear the error code
+         _networkGateway.SetNetworkConnected(true);  // since we won't get any PR_RESULT_PARAMETERS we might as well do this now
       }
 
       MessageRef setUndoKeyMsg = GetMessageFromPool(TREE_COMMAND_SETUNDOKEY);

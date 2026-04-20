@@ -253,14 +253,14 @@ void TestTreeGatewaySubscriber :: TreeSeniorPeerPonged(const String & tag, uint3
 
 void TestTreeGatewaySubscriber :: MessageReceivedFromTreeSeniorPeer(int32 whichDB, const String & tag, const MessageRef & payload)
 {
-   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromTreeSeniorPeer(" UINT32_FORMAT_SPEC ", %s) (this=%p)\n", whichDB, tag(), this);
-   payload()->Print(stdout);
+   LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromTreeSeniorPeer(" INT32_FORMAT_SPEC ", %s) (this=%p)\n", whichDB, tag(), this);
+   if (payload()) payload()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: MessageReceivedFromSubscriber(const String & nodePath, const MessageRef & payload, const String & returnAddress)
 {
    LogTime(MUSCLE_LOG_INFO, "TreeClientStdinSession::MessageReceivedFromSubscriber(nodePath=[%s] returnAddress=[%s]) (this=%p)\n", nodePath(), returnAddress(), this);
-   payload()->Print(stdout);
+   if (payload()) payload()->Print(stdout);
 }
 
 void TestTreeGatewaySubscriber :: SubtreesRequestResultReturned(const String & tag, const MessageRef & subtreeData)

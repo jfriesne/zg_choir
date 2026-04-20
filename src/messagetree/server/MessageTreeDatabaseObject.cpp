@@ -86,6 +86,7 @@ ConstMessageRef MessageTreeDatabaseObject :: SeniorUpdate(const ConstMessageRef 
    if (ret.IsError())
    {
       LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::SeniorUpdate():  SeniorMessageTreeUpdate() failed! [%s]\n", ret());
+      _assembledJuniorMessage.Reset();
       return ConstMessageRef();
    }
 
@@ -460,8 +461,6 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessage(const Message & ms
    return ret;
 }
 
-#define DECLARE_OP_TAG_GUARD const OpTagGuard tagGuard(optOpTag, this)
-
 status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message & msg, TreeGatewayFlags flags)
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
@@ -489,7 +488,6 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
       }
 
 //printf("   SetDataNode [%s] -> %p (%s) (flags=%s optBefore=[%s])\n", sessionRelativePath(), optPayload(), flags.ToHexString()(), flags.ToHexString()(), optBefore());
-      SetDataNodeFlags sdnFlags;
       const status_t ret = zsh->SetDataNode(sessionRelativePath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore.HasChars()?&optBefore:NULL);
       return ((ret.IsOK())||((ret == B_ACCESS_DENIED)&&(flags.AreAnyOfTheseBitsSet(TREE_GATEWAY_FLAG_DONTCREATENODE, TREE_GATEWAY_FLAG_DONTOVERWRITEDATA)))) ? B_NO_ERROR : ret;
    }

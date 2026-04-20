@@ -128,7 +128,11 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestNodeSubtrees(ITreeGa
    for (uint32 i=0; i<numQs; i++)
    {
       MRETURN_ON_ERROR(msg()->AddString(NTG_NAME_PATH, queryStrings[i]));
-      if ((i<queryFilters.GetNumItems())&&(queryFilters[i]())) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *queryFilters[i]()));
+      if (i<queryFilters.GetNumItems())
+      {
+         if (queryFilters[i]()) MRETURN_ON_ERROR(msg()->AddArchiveMessage(NTG_NAME_QUERYFILTER, *queryFilters[i]()));
+                           else return B_BAD_ARGUMENT;  // we don't support "holes" in the QueryFilter-list
+      }
    }
 
    MRETURN_ON_ERROR(msg()->CAddInt32(NTG_NAME_MAXDEPTH, maxDepth, MUSCLE_NO_LIMIT));
@@ -293,6 +297,8 @@ QueryFilterRef ServerSideNetworkTreeGatewaySubscriber :: InstantiateQueryFilterA
 
 status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFromClient(const MessageRef & msg)
 {
+   if (msg() == NULL) return B_BAD_ARGUMENT;
+
    GatewaySubscriberCommandBatchGuard<ITreeGatewaySubscriber> cbg(this);  // let everyone know when this Message's processing begins and ends
 
    TreeGatewayFlags flags = msg()->GetFlat<TreeGatewayFlags>(NTG_NAME_FLAGS);
@@ -305,13 +311,14 @@ status_t ServerSideNetworkTreeGatewaySubscriber :: IncomingTreeMessageReceivedFr
 
    switch(msg()->what)
    {
-      case NTG_COMMAND_ADDSUBSCRIPTION:    (void) AddTreeSubscription(      path, qfRef,   flags);             break;
-      case NTG_COMMAND_REMOVESUBSCRIPTION: (void) RemoveTreeSubscription(   path, qfRef,   flags);             break;
-      case NTG_COMMAND_REQUESTNODEVALUES:  (void) RequestTreeNodeValues(    path, qfRef,   flags, tag);        break;
-      case NTG_COMMAND_REMOVENODES:        (void) RequestDeleteTreeNodes(   path, qfRef,   flags, tag);        break;
-      case NTG_COMMAND_UPLOADNODESUBTREE:  (void) UploadTreeNodeSubtree(    path, payload, flags, tag);        break;
-      case NTG_COMMAND_MOVEINDEXENTRIES:   (void) RequestMoveTreeIndexEntry(path, optB4,   qfRef, flags, tag); break;
-      case NTG_COMMAND_UPLOADNODEVALUE:    (void) UploadTreeNodeValue(      path, payload, flags, optB4, tag); break;
+      case NTG_COMMAND_ADDSUBSCRIPTION:        (void) AddTreeSubscription(       path, qfRef,   flags);             break;
+      case NTG_COMMAND_REMOVESUBSCRIPTION:     (void) RemoveTreeSubscription(    path, qfRef,   flags);             break;
+      case NTG_COMMAND_REMOVEALLSUBSCRIPTIONS: (void) RemoveAllTreeSubscriptions(               flags);             break;
+      case NTG_COMMAND_REQUESTNODEVALUES:      (void) RequestTreeNodeValues(     path, qfRef,   flags, tag);        break;
+      case NTG_COMMAND_REMOVENODES:            (void) RequestDeleteTreeNodes(    path, qfRef,   flags, tag);        break;
+      case NTG_COMMAND_UPLOADNODESUBTREE:      (void) UploadTreeNodeSubtree(     path, payload, flags, tag);        break;
+      case NTG_COMMAND_MOVEINDEXENTRIES:       (void) RequestMoveTreeIndexEntry( path, optB4,   qfRef, flags, tag); break;
+      case NTG_COMMAND_UPLOADNODEVALUE:        (void) UploadTreeNodeValue(       path, payload, flags, optB4, tag); break;
 
       case NTG_COMMAND_PING:
       {
@@ -426,6 +433,8 @@ void ServerSideNetworkTreeGatewaySubscriber :: SubtreesRequestResultReturned(con
 
 status_t ClientSideNetworkTreeGateway :: IncomingTreeMessageReceivedFromServer(const MessageRef & msg)
 {
+   if (msg() == NULL) return B_BAD_ARGUMENT;
+
    GatewayCallbackBatchGuard<ITreeGateway> cbg(this);  // let everyone know when this Message's processing begins and ends
    if (muscleInRange(msg()->what, (uint32)BEGIN_PR_RESULTS, (uint32)END_PR_RESULTS)) return IncomingMuscledMessageReceivedFromServer(msg);
 
@@ -500,20 +509,17 @@ status_t ClientSideNetworkTreeGateway :: IncomingMuscledMessageReceivedFromServe
    {
       case PR_RESULT_DATATREES:
       {
-         String tag;
-         if (msg()->FindString(PR_NAME_TREE_REQUEST_ID, tag).IsOK())
+         MessageRef sessionRelativeMsg = GetMessageFromPool();
+         if (sessionRelativeMsg())
          {
-            MessageRef sessionRelativeMsg = GetMessageFromPool();
-            if (sessionRelativeMsg())
+            // Convert the absolute paths back into user-friendly relative paths
+            for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
             {
-               // Convert the absolute paths back into user-friendly relative paths
-               for (MessageFieldNameIterator iter = msg()->GetFieldNameIterator(B_MESSAGE_TYPE); iter.HasData(); iter++)
-               {
-                  String sessionRelativeString = iter.GetFieldName();
-                  if (ConvertPathToSessionRelative(sessionRelativeString).IsOK()) (void) msg()->ShareName(iter.GetFieldName(), *sessionRelativeMsg(), sessionRelativeString);
-               }
-               SubtreesRequestResultReturned(tag, sessionRelativeMsg);
+               String sessionRelativeString = iter.GetFieldName();
+               if (ConvertPathToSessionRelative(sessionRelativeString).IsOK()) (void) msg()->ShareName(iter.GetFieldName(), *sessionRelativeMsg(), sessionRelativeString);
             }
+
+            SubtreesRequestResultReturned(msg()->GetString(PR_NAME_TREE_REQUEST_ID), sessionRelativeMsg);
          }
       }
       break;

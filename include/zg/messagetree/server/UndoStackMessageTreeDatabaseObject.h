@@ -75,7 +75,7 @@ private:
 
    NestCount _inUndoRedoContextNestCount;
 };
-DECLARE_REFTYPES(MessageTreeDatabaseObject);
+DECLARE_REFTYPES(UndoStackMessageTreeDatabaseObject);
 
 }  // end namespace zg
 
