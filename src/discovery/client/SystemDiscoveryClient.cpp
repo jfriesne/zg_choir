@@ -38,7 +38,11 @@ public:
          uint16 retPort;
          if ((udpSocket())&&(BindUDPSocket(udpSocket, 0, &retPort).IsOK())&&(SetSocketBlockingEnabled(udpSocket, false).IsOK()))
          {
-            if (AddSocketToMulticastGroup(udpSocket, _multicastIAP.GetIPAddress()).IsError()) return ConstSocketRef();
+            const IPAddress & destAddr = _multicastIAP.GetIPAddress();
+
+            status_t ret;
+            if ((destAddr.IsMulticast())&&(AddSocketToMulticastGroup(udpSocket, destAddr).IsError(ret))) return ret;
+
             return udpSocket;
          }
       }
@@ -216,22 +220,7 @@ private:
       }
    }
 
-   void AddNewDiscoverySessions()
-   {
-      // Now set up new DiscoverySessions based on our current network config
-      Hashtable<IPAddressAndPort, bool> q;
-      if (GetDiscoveryMulticastAddresses(q).IsOK())
-      {
-         for (ConstHashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
-         {
-            // Use a different socket for each IP address, to avoid Mac routing problems
-            const IPAddressAndPort & iap = iter.GetKey();
-            DiscoverySessionRef ldsRef(new DiscoverySession(iap, this));
-            status_t ret;
-            if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
-         }
-      }
-   }
+   void AddNewDiscoverySessions();
 
    Hashtable<String, MessageRef> CalculateCookedResults() const
    {
@@ -374,7 +363,7 @@ enum {
 class DiscoveryImplementation : private Thread
 {
 public:
-   DiscoveryImplementation(SystemDiscoveryClient & master) : _master(master)
+   DiscoveryImplementation(SystemDiscoveryClient & master) : _master(master), _areMulticastPingsEnabled(true)
    {
       // empty
    }
@@ -384,9 +373,13 @@ public:
       Stop();  // paranoia
    }
 
-   status_t Start()
+   status_t Start(const Hashtable<IPAddressAndPort, Void> & unicastDestinationIAPs, bool areMulticastPingsEnabled)
    {
       Stop();  // paranoia
+
+      _areMulticastPingsEnabled = areMulticastPingsEnabled;
+      _unicastDestinationIAPs   = unicastDestinationIAPs;
+
       return StartInternalThread();
    }
 
@@ -471,11 +464,33 @@ private:
 
    Mutex _mutex;
    Hashtable<String, MessageRef> _pendingUpdates; // access to this must be serialized via _mutex
+
+   bool _areMulticastPingsEnabled;
+   Hashtable<IPAddressAndPort, Void> _unicastDestinationIAPs;
 };
 
 void DiscoveryClientManagerSession :: MessageReceivedFromGateway(const MessageRef &, void *)
 {
    if (_imp->HandleMessagesFromOwner().IsError()) EndServer();
+}
+
+void DiscoveryClientManagerSession :: AddNewDiscoverySessions()
+{
+   // Now set up new DiscoverySessions based on our current network config
+   Hashtable<IPAddressAndPort, bool> q;
+   if ((_imp->_areMulticastPingsEnabled == false)||(GetDiscoveryMulticastAddresses(q).IsOK()))
+   {
+      for (HashtableIterator<IPAddressAndPort, Void> iter(_imp->_unicastDestinationIAPs); iter.HasData(); iter++) (void) q.PutWithDefault(iter.GetKey());
+
+      for (ConstHashtableIterator<IPAddressAndPort, bool> iter(q); iter.HasData(); iter++)
+      {
+         // Use a different socket for each IP address, to avoid Mac routing problems
+         const IPAddressAndPort & iap = iter.GetKey();
+         DiscoverySessionRef ldsRef(new DiscoverySession(iap, this));
+         status_t ret;
+         if (AddNewSession(ldsRef).IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "Could not create discovery session for [%s] [%s]\n", iap.ToString()(), ret());
+      }
+   }
 }
 
 void DiscoveryClientManagerSession :: ComputerIsAboutToSleep() {_imp->ReportSleepNotification(true);}
@@ -523,7 +538,7 @@ SystemDiscoveryClient :: ~SystemDiscoveryClient()
    delete _imp;
 }
 
-status_t SystemDiscoveryClient :: Start(uint64 micros)
+status_t SystemDiscoveryClient :: Start(uint64 micros, const Hashtable<IPAddressAndPort, Void> & unicastDestinationIAPs, bool areMulticastPingsEnabled)
 {
    const uint64 opi = _pingInterval;
 
@@ -531,7 +546,7 @@ status_t SystemDiscoveryClient :: Start(uint64 micros)
 
    status_t ret;
    _pingInterval = micros;
-   if (_imp->Start().IsOK(ret)) return B_NO_ERROR;
+   if (_imp->Start(unicastDestinationIAPs, areMulticastPingsEnabled).IsOK(ret)) return B_NO_ERROR;
 
    _pingInterval = opi;  // roll back!
    return ret;

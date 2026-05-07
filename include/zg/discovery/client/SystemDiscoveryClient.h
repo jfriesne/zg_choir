@@ -4,6 +4,7 @@
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 #include "util/ICallbackSubscriber.h"
+#include "util/IPAddress.h"
 #include "util/TimeUtilityFunctions.h"
 #include "zg/ZGNameSpace.h"
 
@@ -38,10 +39,12 @@ public:
    /** Starts the discovery thread going.
      * @param pingIntervalMicroseconds how many microseconds should elapse between successive pings.
      *                                 Defaults to 500 milliseconds' worth.
+     * @param optUnicastDestinationIAPs optional table of unicast IPAddressAndPorts to send pings to as well.  Defaults to an empty table.
+     * @param enableMulticastPings true iff we should be sending out multicast pings.  Defaults to true.
      * @returns B_NO_ERROR on success, or an error code if setup failed.
      * @note if called while the thread is already running, the thread will be stopped and then restarted.
      */
-   status_t Start(uint64 pingIntervalMicroseconds = MillisToMicros(500));
+   status_t Start(uint64 pingIntervalMicroseconds = MillisToMicros(500), const Hashtable<IPAddressAndPort, Void> & optUnicastDestinationIAPs = Hashtable<IPAddressAndPort, Void>(), bool enableMulticastPings = true);
 
    /** Stops the discovery thread, if it is currently running. */
    void Stop();
