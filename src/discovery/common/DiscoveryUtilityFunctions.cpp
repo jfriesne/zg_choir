@@ -95,7 +95,8 @@ bool IsNetworkInterfaceUsableForMulticast(const NetworkInterfaceInfo & nii)
    (void) nii;  // avoid compiler warning
 #endif
 
-   return nii.GetLocalAddress().IsSelfAssigned();  // fe80::blah addresses (or similar) only, please!
+   const IPAddress & ip = nii.GetLocalAddress();
+   return ((ip.IsSelfAssigned())||(ip.IsStandardLoopbackDeviceAddress()));  // loopback or fe80::blah addresses (or similar) only, please!
 }
 
 }  // end namespace zg
