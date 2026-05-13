@@ -51,7 +51,11 @@ int main(int /*argc*/, char ** /*argv*/)
 
    status_t ret;
    SystemDiscoveryClient discoveryClient(&scm, "*", discoFilter);
-   if (discoveryClient.Start().IsOK(ret))
+
+Hashtable<IPAddressAndPort, Void> unicastAddresses;
+(void) unicastAddresses.PutWithDefault(IPAddressAndPort(localhostIP, 25672));
+
+   if (discoveryClient.Start(MillisToMicros(500), unicastAddresses, false).IsOK(ret))
    {
       TestDiscoveryNotificationTarget testTarget(&discoveryClient);
 

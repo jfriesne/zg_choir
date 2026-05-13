@@ -5,6 +5,7 @@
 #include "message/Message.h"
 #include "regex/QueryFilter.h"
 #include "util/ICallbackSubscriber.h"
+#include "util/IPAddress.h"
 #include "util/TimeUtilityFunctions.h"
 #include "zg/clocksync/ZGTimeAverager.h"
 #include "zg/gateway/INetworkMessageSender.h"
@@ -46,11 +47,13 @@ public:
      *                                       Pass MUSCLE_TIME_NEVER to disable.
      * @param inactivityPingTimeMicroseconds how often to send a TCP keepalive ping on an otherwise idle connection, to detect connectivity problems.  Defaults to 250 milliseconds.
      *                                       Pass MUSCLE_TIME_NEVER to disable.
+     * @param optUnicastDiscoveryDestinationIAPs optional table of unicast IPAddressAndPorts to send discovery pings to as well.  Defaults to an empty table.
+     * @param enableDiscoveryMulticastPings true iff we should be sending out multicast discovery pings.  Defaults to true.
      * @returns B_NO_ERROR on success, or an error code if setup failed.
      * @note If called with with the same arguments that are already in use, this method will just return B_NO_ERROR without doing anything else.
      *       Otherwise, this method will call Stop() and then set up the ClientConnector to connect using the new arguments.
      */
-   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria = ConstQueryFilterRef(), uint64 autoReconnectTimeMicroseconds = MillisToMicros(250), uint64 inactivityPingTimeMicroseconds = MillisToMicros(250));
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria = ConstQueryFilterRef(), uint64 autoReconnectTimeMicroseconds = MillisToMicros(250), uint64 inactivityPingTimeMicroseconds = MillisToMicros(250), const Hashtable<IPAddressAndPort, Void> & optUnicastDiscoveryDestinationIAPs = Hashtable<IPAddressAndPort, Void>(), bool enableDiscoveryMulticastPings = true);
 
    /** Stops the network I/O thread, if it is currently running. */
    void Stop();

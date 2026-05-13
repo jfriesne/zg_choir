@@ -379,6 +379,7 @@ public:
       , _master(master)
       , _reconnectTimeMicroseconds(0)
       , _inactivityPingTimeMicroseconds(0)
+      , _enableDiscoveryMulticastPings(true)
       , _isActive(false)
       , _tcpSession(NULL)
       , _keepGoing(true)
@@ -388,21 +389,33 @@ public:
 
    bool IsActive() const {return _isActive;}
 
-   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds)
+   status_t Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds, const Hashtable<IPAddressAndPort, Void> & optUnicastDiscoveryDestinationIAPs, bool enableDiscoveryMulticastPings)
    {
       // If we're already in the desired state, then there's no point in tearing everything down only to set it up again, so instead just smile and nod
-      if ((_isActive)&&(signaturePattern == _signaturePattern)&&(systemNamePattern == _systemNamePattern)&&(AreDiscoveryCriteriaEqual(optAdditionalDiscoveryCriteria,_optAdditionalDiscoveryCriteria))&&(_reconnectTimeMicroseconds == reconnectTimeMicroseconds)&&(_inactivityPingTimeMicroseconds == inactivityPingTimeMicroseconds)) return B_NO_ERROR;
+      if ((_isActive)
+        &&(signaturePattern                   == _signaturePattern)
+        &&(systemNamePattern                  == _systemNamePattern)
+        &&(reconnectTimeMicroseconds          == _reconnectTimeMicroseconds)
+        &&(inactivityPingTimeMicroseconds     == _inactivityPingTimeMicroseconds)
+        &&(optUnicastDiscoveryDestinationIAPs == _optUnicastDiscoveryDestinationIAPs)
+        &&(enableDiscoveryMulticastPings      == _enableDiscoveryMulticastPings)
+        &&(AreDiscoveryCriteriaEqual(optAdditionalDiscoveryCriteria,_optAdditionalDiscoveryCriteria)))
+      {
+         return B_NO_ERROR;
+      }
       else
       {
          Stop();
 
          // Set these before starting the internal thread, just to avoid potential race conditions should it want to access them
-         _signaturePattern               = signaturePattern;
-         _systemNamePattern              = systemNamePattern;
-         _optAdditionalDiscoveryCriteria = optAdditionalDiscoveryCriteria;
-         _reconnectTimeMicroseconds      = reconnectTimeMicroseconds;
-         _inactivityPingTimeMicroseconds = inactivityPingTimeMicroseconds;
-         _isActive                       = true;
+         _signaturePattern                   = signaturePattern;
+         _systemNamePattern                  = systemNamePattern;
+         _optAdditionalDiscoveryCriteria     = optAdditionalDiscoveryCriteria;
+         _reconnectTimeMicroseconds          = reconnectTimeMicroseconds;
+         _inactivityPingTimeMicroseconds     = inactivityPingTimeMicroseconds;
+         _optUnicastDiscoveryDestinationIAPs = optUnicastDiscoveryDestinationIAPs;
+         _enableDiscoveryMulticastPings      = enableDiscoveryMulticastPings;
+         _isActive                           = true;
 
          // This is the filter the DiscoveryModule will actually use (it's a superset of the _optAdditionalDiscoveryCriteria because it also specifies what system name(s) we will accept)
          _discoFilterRef.SetRef(new StringQueryFilter(ZG_DISCOVERY_NAME_SYSTEMNAME, StringQueryFilter::OP_SIMPLE_WILDCARD_MATCH, _systemNamePattern));
@@ -486,7 +499,7 @@ private:
       SystemDiscoveryClient discoClient(&threadMechanism, _signaturePattern, _discoFilterRef);
       SetDiscoveryClient(&discoClient);
 
-      MRETURN_ON_ERROR(discoClient.Start());
+      MRETURN_ON_ERROR(discoClient.Start(MillisToMicros(500), _optUnicastDiscoveryDestinationIAPs, _enableDiscoveryMulticastPings));
 
       // Wait until we either discovered something or the calling thread wants us to go away
       SocketMultiplexer sm;
@@ -616,6 +629,9 @@ private:
    ConstQueryFilterRef _optAdditionalDiscoveryCriteria;  // additional restrictions that the calling code specified (if any)
    uint64 _reconnectTimeMicroseconds;
    uint64 _inactivityPingTimeMicroseconds;
+   Hashtable<IPAddressAndPort, Void> _optUnicastDiscoveryDestinationIAPs;
+   bool _enableDiscoveryMulticastPings;
+
    bool _isActive;
    ConstQueryFilterRef _discoFilterRef;  // cached superset of _optAdditionalDiscoveryCriteria
 
@@ -686,7 +702,7 @@ void ClientConnector :: TimeSyncReceived(uint64 roundTripTime, uint64 serverNetw
 }
 
 status_t ClientConnector :: ParseTCPPortFromMessage(const Message & msg, uint16 & retPort) const {return msg.FindInt16("port", retPort);}
-status_t ClientConnector :: Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds) {return _imp->Start(signaturePattern, systemNamePattern, optAdditionalDiscoveryCriteria, reconnectTimeMicroseconds, inactivityPingTimeMicroseconds);}
+status_t ClientConnector :: Start(const String & signaturePattern, const String & systemNamePattern, const ConstQueryFilterRef & optAdditionalDiscoveryCriteria, uint64 reconnectTimeMicroseconds, uint64 inactivityPingTimeMicroseconds, const Hashtable<IPAddressAndPort, Void> & optUnicastDiscoveryDestinationIAPs, bool enableDiscoveryMulticastPings) {return _imp->Start(signaturePattern, systemNamePattern, optAdditionalDiscoveryCriteria, reconnectTimeMicroseconds, inactivityPingTimeMicroseconds, optUnicastDiscoveryDestinationIAPs, enableDiscoveryMulticastPings);}
 const String & ClientConnector :: GetSignaturePattern()  const {return _imp->GetSignaturePattern();}
 const String & ClientConnector :: GetSystemNamePattern() const {return _imp->GetSystemNamePattern();}
 const ConstQueryFilterRef & ClientConnector :: GetAdditionalDiscoveryCriteria() const {return _imp->GetAdditionalDiscoveryCriteria();}
