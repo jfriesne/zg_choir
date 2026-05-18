@@ -175,6 +175,27 @@ Queue<PacketDataIORef> PZGHeartbeatSettings :: CreateMulticastDataIOs(bool isFor
          }
       }
    }
+
+   if (ret.IsEmpty())
+   {
+      LogTime(MUSCLE_LOG_WARNING,"  CreateMulticastDataIOs():  Couldn't create any multicast %s DataIOs, falling back to unicast-loopback instead!\n", isForHeartbeats?"heartbeat":"payload");
+
+      ConstSocketRef udpSock = CreateUDPSocket();
+      if (udpSock())
+      {
+         uint16 udpPort = 0;
+         const status_t r = BindUDPSocket(udpSock, 0, &udpPort);
+         if (r.IsOK())
+         {
+            UDPSocketDataIORef udpIORef(new UDPSocketDataIO(udpSock, false));
+            udpIORef()->SetPacketSendDestination(IPAddressAndPort(localhostIP, udpPort));  // hack: just send our packets back to ourself so we know we're online even when multicast isn't available
+            MLOG_ON_ERROR("AddTail", ret.AddTail(udpIORef));
+         }
+         else LogTime(MUSCLE_LOG_ERROR, "Couldn't create loopback DataIO, BindUDPSocket() failed [%s]\n", r());
+      }
+      else LogTime(MUSCLE_LOG_ERROR, "Couldn't create loopback DataIO, CreateUDPSocket() failed [%s]\n", udpSock.GetStatus()());
+   }
+
    return ret;
 }
 

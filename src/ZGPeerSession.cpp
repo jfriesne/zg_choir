@@ -616,7 +616,7 @@ uint64 ZGPeerSession :: HandleDiscoveryPing(MessageRef & pingMsg, const IPAddres
    MessageRef qfMsg = pingMsg()->GetMessage(ZG_DISCOVERY_NAME_FILTER);
    if (qfMsg())
    {
-      QueryFilterRef qfRef = GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg());
+      ConstQueryFilterRef qfRef = GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg());
       if ((qfRef())&&(qfRef()->Matches(pongMsg, NULL) == false)) return MUSCLE_TIME_NEVER;  // Nope!  We're not his type
    }
 
