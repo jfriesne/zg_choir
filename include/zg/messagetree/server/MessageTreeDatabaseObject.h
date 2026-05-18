@@ -64,7 +64,7 @@ public:
      * @param optPayload reference to the Message payload you want added/updated at the given path, or a NULL reference if you want
      *                   node(s) matching the given path to be deleted.
      * @param flags optional TREE_GATEWAY_* flags to modify the behavior of the upload.
-     * @param optBefore if non-mpety, the name of the sibling node that this node should be placed before, or empty if you want the
+     * @param optBefore if non-empty, the name of the sibling node that this node should be placed before, or empty if you want the
      *                  uploaded node to be placed at the end of the index.  Only used if TREE_GATEWAY_FLAG_INDEXED was specified.
      * @param optOpTag if non-empty, a String provided by the client-side ITreeGatewaySubscriber to be associated with this operation.
      *                 Subscribers will receive this tag as part of their TreeNodeUpdated() callbacks.  This string can be whatever the caller likes.
