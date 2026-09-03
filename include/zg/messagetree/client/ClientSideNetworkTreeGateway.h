@@ -2,6 +2,7 @@
 #define ClientSideNetworkTreeGateway_h
 
 #include "zg/messagetree/gateway/ProxyTreeGateway.h"
+#include "util/NestCount.h"
 
 namespace zg {
 
@@ -77,6 +78,8 @@ private:
    bool _isConnected;
    MessageRef _outgoingBatchMsg;  // non-NULL iff we are in a command-batch and assembling a batch-Message to send
    ConstMessageRef _parameters;
+
+   Hashtable<uint32, NestCount> _undoSequenceNestCounts;  // whichDB -> undo-nesting-count
 };
 
 /** If (maybeSyncPingMsg) is a local-sync-ping Message, return the corresponding local-sync-pong Message.

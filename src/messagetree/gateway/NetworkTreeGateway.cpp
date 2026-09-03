@@ -75,7 +75,11 @@ void ClientSideNetworkTreeGateway :: SetNetworkConnected(bool isConnected)
       _isConnected = isConnected;
       GatewayCallbackBatchGuard<ITreeGateway> gcbg(this);
       TreeGatewayConnectionStateChanged();
-      if (_isConnected == false) SetParameters(MessageRef());  // no sense keeping parameters around from a TCP connection we no longer have
+      if (_isConnected == false)
+      {
+         SetParameters(MessageRef());     // no sense keeping parameters around from a TCP connection we no longer have
+         _undoSequenceNestCounts.Clear(); // the next server won't know about our undo-sequence state, so we shouldn't expect it to
+      }
    }
 }
 
@@ -231,12 +235,31 @@ status_t ClientSideNetworkTreeGateway  :: TreeGateway_SendMessageToSubscriber(IT
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
+   NestCount * nestCount = _undoSequenceNestCounts.GetOrPut(whichDB);
+   MRETURN_OOM_ON_NULL(nestCount);
+
+   if (nestCount->Increment())
+   {
+      const status_t ret = SendUndoRedoMessage(NTG_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
+      if (ret.IsError()) (void) nestCount->Decrement();  // roll back!
+      return ret;
+   }
+   else return B_NO_ERROR;  // no need to tell the server about deeper nesting
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_EndUndoSequence(ITreeGatewaySubscriber * /*calledBy*/, const String & optSequenceLabel, uint32 whichDB)
 {
-   return SendUndoRedoMessage(NTG_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
+   NestCount * nestCount = _undoSequenceNestCounts.Get(whichDB);
+   if (nestCount == NULL) return B_DATA_NOT_FOUND;
+
+   if (nestCount->Decrement())
+   {
+      const status_t ret = SendUndoRedoMessage(NTG_COMMAND_ENDSEQUENCE, optSequenceLabel, whichDB);
+      if (ret.IsOK()) (void) _undoSequenceNestCounts.Remove(whichDB);
+                 else (void) nestCount->Increment();  // roll back!
+      return ret;
+   }
+   else return B_NO_ERROR;  // no need to tell the server about deeper nesting
 }
 
 status_t ClientSideNetworkTreeGateway :: TreeGateway_RequestUndo(ITreeGatewaySubscriber * /*calledBy*/, uint32 whichDB, const String & optOpTag)
