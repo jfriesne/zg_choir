@@ -9,3 +9,4 @@ demos/choir/qrc_samples.cpp
 .qmake.stash
 tests/*.o
 tests/test_peer
+.idea/
