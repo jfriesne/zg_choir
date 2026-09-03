@@ -241,7 +241,7 @@ status_t ClientSideNetworkTreeGateway :: TreeGateway_BeginUndoSequence(ITreeGate
    if (nestCount->Increment())
    {
       const status_t ret = SendUndoRedoMessage(NTG_COMMAND_BEGINSEQUENCE, optSequenceLabel, whichDB);
-      if (ret.IsError()) (void) nestCount->Decrement();  // roll back!
+      if ((ret.IsError())&&(nestCount->Decrement())) (void) _undoSequenceNestCounts.Remove(whichDB);  // roll back!
       return ret;
    }
    else return B_NO_ERROR;  // no need to tell the server about deeper nesting
