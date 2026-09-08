@@ -112,6 +112,12 @@ win32:MUSCLE_SOURCES += $$MUSCLE_DIR/regex/regex/regcomp.c      \
 
 !win32:MUSCLE_SOURCES += $$MUSCLE_DIR/dataio/FileDescriptorDataIO.cpp
 
+# MacOS 15+ requires user consent before an app may send multicast/broadcast
+# traffic on the LAN, which is exactly what ZG's discovery pings are.  Without
+# the NSLocalNetworkUsageDescription key in the bundle's Info.plist the OS
+# denies them silently and the systems list stays empty.
+mac:QMAKE_INFO_PLIST   = ./Info.plist
+
 mac:LIBS              += -framework Foundation
 
 FRIDGE_SOURCES  = FridgeClientWindow.cpp FridgeClientCanvas.cpp FridgeChatView.cpp ClientRosterList.cpp TimeSyncWidget.cpp main.cpp

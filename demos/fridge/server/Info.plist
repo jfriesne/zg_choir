@@ -7,7 +7,7 @@
    <key>CFBundleExecutable</key>
    <string>@EXECUTABLE@</string>
    <key>CFBundleIdentifier</key>
-   <string>org.zgchoir.zgbrowser</string>
+   <string>org.zgchoir.fridgeserver</string>
    <key>CFBundleInfoDictionaryVersion</key>
    <string>6.0</string>
    <key>CFBundleName</key>
@@ -23,6 +23,6 @@
    <!-- macOS 15+ requires user consent before an app may send multicast/broadcast
         traffic on the LAN, which is exactly what ZG's discovery pings are. -->
    <key>NSLocalNetworkUsageDescription</key>
-   <string>ZG Browser uses multicast to discover ZG servers on your local network.</string>
+   <string>FridgeServer uses multicast to discovery other instances of FridgeServer on your local network.</string>
 </dict>
 </plist>
