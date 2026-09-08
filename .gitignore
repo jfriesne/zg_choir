@@ -6,7 +6,12 @@ demos/choir/moc
 demos/choir/ZGChoir.app
 demos/choir/qrc_images.cpp
 demos/choir/qrc_samples.cpp
+demos/zg_browser/objects
+demos/zg_browser/Makefile
+demos/zg_browser/moc
+demos/zg_browser/ZGBrowser.app
 .qmake.stash
 tests/*.o
 tests/test_peer
 .idea/
+.DS_Store

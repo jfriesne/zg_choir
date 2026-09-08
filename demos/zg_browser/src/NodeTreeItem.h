@@ -1,0 +1,51 @@
+#pragma once
+
+#include <QTreeWidgetItem>
+
+#include "MuscleQt.h"
+
+/** One node of the server's database tree.
+  *
+  * Every item claims that it might contain sub-items (ShowIndicator), because
+  * the only way to find out whether a node has children is to subscribe to
+  * them -- which is exactly what opening the item does.
+  */
+class NodeTreeItem final : public QTreeWidgetItem
+{
+public:
+   /** Creates the root item ("/"), owned by the tree widget. */
+   explicit NodeTreeItem(QTreeWidget * parent);
+
+   /** Creates a parentless item named (name); addChildNode() puts it in its place. */
+   explicit NodeTreeItem(const muscle::String & name);
+
+   /** This node's name within its parent ("" for the root node). */
+   const muscle::String & getNodeName() const {return _name;}
+
+   /** This node's session-relative path ("" for the root, "srv/foo" for a grandchild). */
+   muscle::String getNodePath() const;
+
+   NodeTreeItem * getChildByName(const muscle::String & name) const;
+
+   /** Creates a child item, inserted so that children stay in natural name order. */
+   NodeTreeItem * addChildNode(const muscle::String & name);
+
+   /** Deletes the named child item (and its descendants), if present. */
+   void removeChildNode(const muscle::String & name);
+
+   /** Deletes every child item (and their descendants). */
+   void clearChildren();
+
+   /** Sets the dim right-hand annotation shown in column 1 (eg "3 fields"). */
+   void setSummary(const QString & summary);
+
+   /** True iff we currently hold a subscription to this node's children. */
+   bool isSubscribed() const {return _subscribed;}
+   void setSubscribed(bool subscribed) {_subscribed = subscribed;}
+
+private:
+   void initCommon();
+
+   const muscle::String _name;
+   bool _subscribed = false;
+};
