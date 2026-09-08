@@ -1,8 +1,3 @@
-#include "DiscoveryWidget.h"
-
-#include <algorithm>
-
-#include <QCollator>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -12,9 +7,10 @@
 #include <QStyledItemDelegate>
 #include <QVBoxLayout>
 
-#include "Theme.h"
-
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"
+
+#include "ColorUtilityFunctions.h"
+#include "DiscoveryWidget.h"
 
 namespace zg_browser {
 
@@ -34,7 +30,7 @@ public:
    void paint(QPainter * p, const QStyleOptionViewItem & opt, const QModelIndex & idx) const override
    {
       const bool selected = opt.state & QStyle::State_Selected;
-      if (selected) p->fillRect(opt.rect, zg_browser::theme::accent);
+      if (selected) p->fillRect(opt.rect, GetZGBrowserSelectColor());
 
       const QRect r = opt.rect.adjusted(12, 0, -12, 0);
 
@@ -42,18 +38,21 @@ public:
       nameFont.setBold(true);
       nameFont.setPointSizeF(nameFont.pointSizeF() + 1.0);
       p->setFont(nameFont);
-      p->setPen(zg_browser::theme::text);
-      p->drawText(QRect(r.left(), r.top()+5, r.width(), 20), Qt::AlignLeft | Qt::AlignVCenter,
-                  QFontMetrics(nameFont).elidedText(idx.data(ROLE_NAME).toString(), Qt::ElideRight, r.width()));
+      p->setPen(opt.palette.color(QPalette::WindowText));
+      p->drawText(QRect(r.left(), r.top()+5, r.width(), 20), Qt::AlignLeft | Qt::AlignVCenter, QFontMetrics(nameFont).elidedText(idx.data(ROLE_NAME).toString(), Qt::ElideRight, r.width()));
 
       QFont detailFont = opt.font;
       detailFont.setPointSizeF(detailFont.pointSizeF() - 1.0);
       p->setFont(detailFont);
-      p->setPen(selected ? QColor(255, 255, 255, 204) : zg_browser::theme::textDim);
+
+      QColor c = opt.palette.color(QPalette::WindowText);
+      c.setAlpha(204);
+      p->setPen(c);
+
       p->drawText(QRect(r.left(), r.top()+24, r.width(), 17), Qt::AlignLeft | Qt::AlignVCenter,
                   QFontMetrics(detailFont).elidedText(idx.data(ROLE_DETAIL).toString(), Qt::ElideRight, r.width()));
 
-      p->setPen(zg_browser::theme::header);
+      p->setPen(opt.palette.color(QPalette::WindowText));
       p->drawLine(opt.rect.left(), opt.rect.bottom(), opt.rect.right(), opt.rect.bottom());
    }
 };

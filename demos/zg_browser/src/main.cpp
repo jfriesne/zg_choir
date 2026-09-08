@@ -2,10 +2,9 @@
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 
-#include "MainWindow.h"
-#include "Theme.h"
-
 #include "system/SetupSystem.h"
+
+#include "MainWindow.h"
 
 using namespace zg_browser;
 
@@ -19,7 +18,6 @@ int main(int argc, char ** argv)
    QApplication app(argc, argv);
    QApplication::setApplicationName("ZG Browser");
    QApplication::setApplicationVersion("0.1.0");
-   app.setStyleSheet(zg_browser::theme::appStyleSheet());
 
    QCommandLineParser parser;
    parser.setApplicationDescription(QCoreApplication::translate("main", "Browses the database of a ZG system on the local network."));

@@ -1,9 +1,8 @@
-#include "MainWindow.h"
-
 #include <QStackedWidget>
 
 #include "BrowserWidget.h"
 #include "DiscoveryWidget.h"
+#include "MainWindow.h"
 
 namespace zg_browser {
 

@@ -12,12 +12,33 @@
 
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"   // for ZG_DISCOVERY_NAME_*
 
+#include "ColorUtilityFunctions.h"
 #include "MessagePanel.h"
-#include "NodePathUtilityFunctions.h"
 #include "NodeTreeItem.h"
-#include "Theme.h"
 
 namespace zg_browser {
+
+/** Returns the parent path of a session-relative node path ("a/b/c" -> "a/b", "a" -> ""). */
+static String ParentPathOf(const String & nodePath)
+{
+   const int lastSlash = nodePath.LastIndexOf('/');
+   return (lastSlash >= 0) ? nodePath.Substring(0, (uint32) lastSlash) : String();
+}
+
+/** Returns the final component of a session-relative node path ("a/b/c" -> "c"). */
+static String LeafNameOf(const String & nodePath)
+{
+   const int lastSlash = nodePath.LastIndexOf('/');
+   return (lastSlash >= 0) ? nodePath.Substring((uint32) lastSlash + 1) : nodePath;
+}
+
+/** Returns the subscription-string that asks for the direct children of (nodePath).
+  * The root of the tree is the empty path, whose children are matched by "*".
+  */
+static String ChildrenSubscriptionString(const String & nodePath)
+{
+   return nodePath.IsEmpty() ? String("*") : (nodePath + "/*");
+}
 
 BrowserWidget :: BrowserWidget(ICallbackMechanism & callbackMechanism,
                                const String & signaturePattern,
@@ -37,8 +58,6 @@ BrowserWidget :: BrowserWidget(ICallbackMechanism & callbackMechanism,
    // ---- header ----------------------------------------------------------
    QWidget * header = new QWidget;
    header->setFixedHeight(38);
-   header->setStyleSheet(QString("QWidget { background: %1; border-bottom: 1px solid %2; }")
-                            .arg(zg_browser::theme::header.name(), zg_browser::theme::border.name()));
    {
       QHBoxLayout * headerLayout = new QHBoxLayout(header);
       headerLayout->setContentsMargins(6, 5, 6, 5);
@@ -76,10 +95,16 @@ BrowserWidget :: BrowserWidget(ICallbackMechanism & callbackMechanism,
       _treeView->setIndentation(16);
       _treeView->setSelectionMode(QAbstractItemView::SingleSelection);
       _treeView->setUniformRowHeights(true);
+
+      // Qt's default highlight-blue color is a little too dark for my taste, so
+      QPalette p = _treeView->palette();
+      p.setColor(QPalette::Highlight, GetZGBrowserSelectColor());
+      p.setColor(QPalette::HighlightedText, p.color(QPalette::Text));
+      _treeView->setPalette(p);
+
       connect(_treeView, &QTreeWidget::itemExpanded,  this, &BrowserWidget::nodeItemExpanded);
       connect(_treeView, &QTreeWidget::itemCollapsed, this, &BrowserWidget::nodeItemCollapsed);
-      connect(_treeView, &QTreeWidget::currentItemChanged, this,
-              [this](QTreeWidgetItem * cur, QTreeWidgetItem *) {nodeItemSelected(cur);});
+      connect(_treeView, &QTreeWidget::currentItemChanged, this, [this](QTreeWidgetItem * cur, QTreeWidgetItem *) {nodeItemSelected(cur);});
       _splitter->addWidget(_treeView);
 
       _messagePanel = new MessagePanel;
@@ -104,12 +129,6 @@ BrowserWidget :: BrowserWidget(ICallbackMechanism & callbackMechanism,
       f.setPointSizeF(f.pointSizeF() + 6.0);
       _overlay->setFont(f);
    }
-   _overlay->setStyleSheet(QString("QLabel { background: rgba(%1,%2,%3,%4); color: %5; padding: 30px; }")
-                              .arg(zg_browser::theme::overlay.red())
-                              .arg(zg_browser::theme::overlay.green())
-                              .arg(zg_browser::theme::overlay.blue())
-                              .arg(zg_browser::theme::overlay.alpha())
-                              .arg(zg_browser::theme::text.name()));
 
    _rootItem = new NodeTreeItem(_treeView);
 
@@ -141,7 +160,7 @@ void BrowserWidget :: subscribeToChildrenOf(const String & nodePath, NodeTreeIte
 {
    if (item.isSubscribed()) return;
 
-   const String subPath = zg_browser::childrenSubscriptionString(nodePath);
+   const String subPath = ChildrenSubscriptionString(nodePath);
 
    status_t ret;
    if (AddTreeSubscription(subPath).IsOK(ret))
@@ -156,7 +175,7 @@ void BrowserWidget :: unsubscribeFromChildrenOf(const String & nodePath, NodeTre
 {
    if (item.isSubscribed() == false) return;
 
-   const String subPath = zg_browser::childrenSubscriptionString(nodePath);
+   const String subPath = ChildrenSubscriptionString(nodePath);
    (void) RemoveTreeSubscription(subPath);
    (void) _subscriptions.Remove(subPath);
    item.setSubscribed(false);
@@ -164,7 +183,7 @@ void BrowserWidget :: unsubscribeFromChildrenOf(const String & nodePath, NodeTre
 
 void BrowserWidget :: unsubscribeFromDescendantsOf(const String & nodePath, bool includeSelf)
 {
-   const String ownSubPath = zg_browser::childrenSubscriptionString(nodePath);
+   const String ownSubPath = ChildrenSubscriptionString(nodePath);
    const String prefix     = nodePath.IsEmpty() ? GetEmptyString() : (nodePath + "/");
 
    for (HashtableIterator<String, Void> iter(_subscriptions); iter.HasData(); iter++)
@@ -220,7 +239,7 @@ NodeTreeItem * BrowserWidget :: createChildItem(NodeTreeItem & parentItem, const
    // re-subscribing:  the gateway still holds (and has re-sent) that subscription.
    // Note setSubscribed() must come first -- setExpanded() calls us back through
    // nodeItemExpanded(), which would otherwise re-issue the subscription.
-   if (_subscriptions.ContainsKey(zg_browser::childrenSubscriptionString(newItem->getNodePath())))
+   if (_subscriptions.ContainsKey(ChildrenSubscriptionString(newItem->getNodePath())))
    {
       newItem->setSubscribed(true);
       newItem->setExpanded(true);
@@ -288,10 +307,10 @@ void BrowserWidget :: TreeNodeUpdated(const String & nodePath, const ConstMessag
 
 void BrowserWidget :: handleNodeAddedOrUpdated(const String & nodePath)
 {
-   NodeTreeItem * parentItem = findItemForPath(zg_browser::parentPathOf(nodePath));
+   NodeTreeItem * parentItem = findItemForPath(ParentPathOf(nodePath));
    if ((parentItem == NULL)||(parentItem->isExpanded() == false)) return;   // we're not showing this part of the tree
 
-   const String childName = zg_browser::leafNameOf(nodePath);
+   const String childName = LeafNameOf(nodePath);
    NodeTreeItem * item = parentItem->getChildByName(childName);
    if (item == NULL) (void) createChildItem(*parentItem, childName);
               else updateSummaryFor(*item);
@@ -302,8 +321,8 @@ void BrowserWidget :: handleNodeRemoved(const String & nodePath)
    forgetCachedDataUnder(nodePath, false);
    unsubscribeFromDescendantsOf(nodePath, true);
 
-   NodeTreeItem * parentItem = findItemForPath(zg_browser::parentPathOf(nodePath));
-   if (parentItem) parentItem->removeChildNode(zg_browser::leafNameOf(nodePath));
+   NodeTreeItem * parentItem = findItemForPath(ParentPathOf(nodePath));
+   if (parentItem) parentItem->removeChildNode(LeafNameOf(nodePath));
 }
 
 void BrowserWidget :: CallbackBatchEnds()
@@ -364,8 +383,10 @@ void BrowserWidget :: updateConnectionStateUI()
    }
    else status = tr("Not connected");
 
-   _statusLabel->setStyleSheet(QString("QLabel { color: %1; }")
-                                  .arg((isConnected ? zg_browser::theme::connected : zg_browser::theme::disconnected).name()));
+   QPalette p = _statusLabel->palette();
+   p.setColor(QPalette::WindowText, isConnected ? palette().color(QPalette::WindowText) : Qt::red);
+   _statusLabel->setPalette(p);
+
    _statusLabel->setText(status);
 
    if (isConnected == false)

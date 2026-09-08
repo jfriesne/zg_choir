@@ -4,6 +4,7 @@ v1.20 -
      versions of ZGChoir will be ignored.
    - Updated the included .WAV files to 44100Hz to keep macOS happy.
    - Added arguments to Start() method to support unicast discovery targets.
+   - Added Ruurd Adema's ZG_Browser app/utility to the demos folder.
    * Fixed various minor issues detected by Claude Code.
 
 v1.10 -

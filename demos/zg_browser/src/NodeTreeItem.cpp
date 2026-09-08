@@ -1,10 +1,5 @@
 #include "NodeTreeItem.h"
 
-#include <QCollator>
-#include <QTreeWidget>
-
-#include "Theme.h"
-
 namespace zg_browser {
 
 NodeTreeItem :: NodeTreeItem(QTreeWidget * parent)
@@ -26,7 +21,10 @@ void NodeTreeItem :: initCommon()
    setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
 
    setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
-   setForeground(1, zg_browser::theme::textDim);
+
+   QColor c = foreground(0).color();
+   c.setAlpha(200);
+   setForeground(1, c);
 }
 
 String NodeTreeItem :: getNodePath() const

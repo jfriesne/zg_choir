@@ -1,21 +1,18 @@
-#include "MessagePanel.h"
-
 #include <QFontDatabase>
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QScrollBar>
 #include <QVBoxLayout>
 
-#include "Theme.h"
-
 #include "zlib/ZLibUtilityFunctions.h"   // for IsMessageDeflated()/InflateMessage()
+
+#include "MessagePanel.h"
 
 namespace zg_browser {
 
 MessagePanel :: MessagePanel(QWidget * parent) : QWidget(parent)
 {
    setAutoFillBackground(true);
-   setStyleSheet(QString("MessagePanel { background: %1; }").arg(zg_browser::theme::contentBackground.name()));
 
    QVBoxLayout * layout = new QVBoxLayout(this);
    layout->setContentsMargins(8, 6, 8, 6);
