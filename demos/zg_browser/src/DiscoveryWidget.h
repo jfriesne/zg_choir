@@ -28,12 +28,12 @@ public:
    /** Keeps the "listening..." placeholder covering the list box. */
    bool eventFilter(QObject * watched, QEvent * event) override;
 
+   // IDiscoveryNotificationTarget
+   void DiscoveryUpdate(const muscle::String & systemName, const muscle::MessageRef & optSystemInfo) override;
+
 signals:
    /** Emitted with (signaturePattern, systemName) when the user picks a system to browse. */
    void systemChosen(const muscle::String & signaturePattern, const muscle::String & systemName);
-
-   // IDiscoveryNotificationTarget
-   void DiscoveryUpdate(const muscle::String & systemName, const muscle::MessageRef & optSystemInfo) override;
 
 private slots:
    void chooseRow(int rowNumber);

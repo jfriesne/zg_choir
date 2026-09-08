@@ -40,13 +40,13 @@ public:
 
    ~BrowserWidget() override;
 
-signals:
-   /** Emitted when the user wants to go back to the discovery list. */
-   void backRequested();
-
    // ITreeGatewaySubscriber
    void TreeNodeUpdated(const muscle::String & nodePath, const muscle::ConstMessageRef & optPayloadMsg, const muscle::String & optOpTag) override;
    void TreeGatewayConnectionStateChanged() override;
+
+signals:
+   /** Emitted when the user wants to go back to the discovery list. */
+   void backRequested();
 
 protected:
    void resizeEvent(QResizeEvent * event) override;
