@@ -115,7 +115,7 @@ mac:LIBS              += -framework Foundation
 mac:QMAKE_INFO_PLIST   = ./qmake/Info.plist
 
 BROWSER_SOURCES  = src/main.cpp src/MainWindow.cpp src/DiscoveryWidget.cpp src/BrowserWidget.cpp src/NodeTreeItem.cpp src/MessagePanel.cpp
-BROWSER_INCLUDES = src/MainWindow.h src/DiscoveryWidget.h src/BrowserWidget.h src/NodeTreeItem.h src/MessagePanel.h src/MuscleQt.h src/Theme.h
+BROWSER_INCLUDES = src/MainWindow.h src/DiscoveryWidget.h src/BrowserWidget.h src/NodeTreeItem.h src/MessagePanel.h src/NodePathUtilityFunctions.h src/Theme.h
 
 SOURCES = $$BROWSER_SOURCES $$MUSCLE_SOURCES $$CLIENT_SOURCES
 HEADERS = $$BROWSER_INCLUDES $$MUSCLE_DIR/platform/qt/QPostEventCallbackMechanism.h

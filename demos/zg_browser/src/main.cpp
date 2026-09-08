@@ -7,17 +7,19 @@
 
 #include "system/SetupSystem.h"
 
+using namespace zg_browser;
+
 /** A browser for ZG (zg_choir) systems, in the spirit of muscle's qt_muscled_browser. */
 int main(int argc, char ** argv)
 {
    // MUSCLE requires this object to exist for as long as any muscle/zg code runs,
    // so it is declared first and destroyed last.
-   muscle::CompleteSetupSystem setupSystem;
+   CompleteSetupSystem setupSystem;
 
    QApplication app(argc, argv);
    QApplication::setApplicationName("ZG Browser");
    QApplication::setApplicationVersion("0.1.0");
-   app.setStyleSheet(zgb::theme::appStyleSheet());
+   app.setStyleSheet(zg_browser::theme::appStyleSheet());
 
    QCommandLineParser parser;
    parser.setApplicationDescription(QCoreApplication::translate("main", "Browses the database of a ZG system on the local network."));
@@ -30,7 +32,7 @@ int main(int argc, char ** argv)
    parser.addOption(systemNameOption);
    parser.process(app);
 
-   MainWindow window(zgb::toMuscle(parser.value(systemNameOption)));
+   MainWindow window(FromQ(parser.value(systemNameOption)));
    window.show();
 
    return QApplication::exec();

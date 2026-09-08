@@ -1,4 +1,5 @@
-#pragma once
+#ifndef Theme_h
+#define Theme_h
 
 #include <QColor>
 #include <QString>
@@ -6,7 +7,7 @@
 /** The app's colour palette, in one place so the widgets and the stylesheet
   * can't drift apart.
   */
-namespace zgb::theme
+namespace zg_browser::theme
 {
 
 inline const QColor background        {0x1e, 0x1e, 0x22};   ///< window / tree background
@@ -87,4 +88,6 @@ inline QString appStyleSheet()
    ).arg(bg, content, hdr, brd, ctl, acc, txt, body, dim);
 }
 
-}  // namespace zgb::theme
+}  // namespace zg_browser::theme
+
+#endif // Theme_h

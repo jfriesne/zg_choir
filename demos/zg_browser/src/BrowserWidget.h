@@ -1,19 +1,23 @@
-#pragma once
+#ifndef BrowserWidget_h
+#define BrowserWidget_h
 
 #include <QWidget>
-
-#include "MuscleQt.h"
 
 #include "util/Hashtable.h"
 #include "zg/messagetree/client/MessageTreeClientConnector.h"
 #include "zg/messagetree/gateway/ITreeGatewaySubscriber.h"
 
-class MessagePanel;
-class NodeTreeItem;
+#include "ZGBrowserNameSpace.h"
+
 class QLabel;
 class QSplitter;
 class QTreeWidget;
 class QTreeWidgetItem;
+
+namespace zg_browser {
+
+class MessagePanel;
+class NodeTreeItem;
 
 /** Browses the database of one ZG system.
   *
@@ -23,25 +27,24 @@ class QTreeWidgetItem;
   * is closed, so the client only ever holds the part of the database that is
   * actually on screen -- and that part is always live.
   */
-class BrowserWidget final : public QWidget,
-                            private zg::ITreeGatewaySubscriber
+class BrowserWidget MUSCLE_FINAL_CLASS : public QWidget, private ITreeGatewaySubscriber
 {
-   Q_OBJECT
+Q_OBJECT
 
 public:
    /** @param callbackMechanism marshals the network thread's callbacks onto the GUI thread
      * @param signaturePattern the kind of ZG server to connect to (may be wildcarded, eg "*")
      * @param systemNamePattern the ZG system to connect to (may be wildcarded)
      */
-   BrowserWidget(muscle::ICallbackMechanism & callbackMechanism,
-                 const muscle::String & signaturePattern,
-                 const muscle::String & systemNamePattern,
+   BrowserWidget(ICallbackMechanism & callbackMechanism,
+                 const String & signaturePattern,
+                 const String & systemNamePattern,
                  QWidget * parent = NULL);
 
    ~BrowserWidget() override;
 
    // ITreeGatewaySubscriber
-   void TreeNodeUpdated(const muscle::String & nodePath, const muscle::ConstMessageRef & optPayloadMsg, const muscle::String & optOpTag) override;
+   void TreeNodeUpdated(const String & nodePath, const ConstMessageRef & optPayloadMsg, const String & optOpTag) override;
    void TreeGatewayConnectionStateChanged() override;
 
 signals:
@@ -59,32 +62,32 @@ private slots:
    void nodeItemSelected(QTreeWidgetItem * item);
 
 private:
-   void subscribeToChildrenOf(const muscle::String & nodePath, NodeTreeItem & item);
-   void unsubscribeFromChildrenOf(const muscle::String & nodePath, NodeTreeItem & item);
-   void unsubscribeFromDescendantsOf(const muscle::String & nodePath, bool includeSelf);
-   void forgetCachedDataUnder(const muscle::String & nodePath, bool includeSelf);
+   void subscribeToChildrenOf(const String & nodePath, NodeTreeItem & item);
+   void unsubscribeFromChildrenOf(const String & nodePath, NodeTreeItem & item);
+   void unsubscribeFromDescendantsOf(const String & nodePath, bool includeSelf);
+   void forgetCachedDataUnder(const String & nodePath, bool includeSelf);
 
-   NodeTreeItem * findItemForPath(const muscle::String & nodePath) const;
-   NodeTreeItem * createChildItem(NodeTreeItem & parentItem, const muscle::String & childName);
+   NodeTreeItem * findItemForPath(const String & nodePath) const;
+   NodeTreeItem * createChildItem(NodeTreeItem & parentItem, const String & childName);
 
-   void handleNodeAddedOrUpdated(const muscle::String & nodePath);
-   void handleNodeRemoved(const muscle::String & nodePath);
+   void handleNodeAddedOrUpdated(const String & nodePath);
+   void handleNodeRemoved(const String & nodePath);
    void refreshMessagePanel();
    void updateConnectionStateUI();
    void updateSummaryFor(NodeTreeItem & item);
    void layOutOverlay();
 
-   const muscle::String _systemName;
+   const String _systemName;
 
-   zg::MessageTreeClientConnector _connector;
+   MessageTreeClientConnector _connector;
 
    // The part of the server's database we're currently holding, by session-relative path
-   muscle::Hashtable<muscle::String, muscle::ConstMessageRef> _pathToMessage;
+   Hashtable<String, ConstMessageRef> _pathToMessage;
 
    // The subscription-strings (eg "srv/*") we currently hold, one per open tree node
-   muscle::Hashtable<muscle::String, muscle::Void> _subscriptions;
+   Hashtable<String, Void> _subscriptions;
 
-   muscle::String _selectedPath;
+   String _selectedPath;
    bool _hasSelection = false;
    bool _messagePanelNeedsRefresh = false;
    bool _wasConnected = false;
@@ -99,3 +102,7 @@ private:
    /** Semi-transparent "we're not connected right now" cover over the splitter. */
    QLabel * _overlay;
 };
+
+}  // end namespace zg_browser
+
+#endif  // BrowserWidget_h

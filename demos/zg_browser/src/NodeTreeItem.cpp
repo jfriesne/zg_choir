@@ -5,24 +5,7 @@
 
 #include "Theme.h"
 
-using namespace muscle;
-
-namespace {
-
-/** Natural ("srv2" before "srv10") comparison, so node names sort the way a user expects. */
-int compareNatural(const QString & a, const QString & b)
-{
-   static const QCollator collator = []
-   {
-      QCollator c;
-      c.setNumericMode(true);
-      c.setCaseSensitivity(Qt::CaseInsensitive);
-      return c;
-   }();
-   return collator.compare(a, b);
-}
-
-}  // anonymous namespace
+namespace zg_browser {
 
 NodeTreeItem :: NodeTreeItem(QTreeWidget * parent)
    : QTreeWidgetItem(parent, QStringList("/"))
@@ -31,7 +14,7 @@ NodeTreeItem :: NodeTreeItem(QTreeWidget * parent)
 }
 
 NodeTreeItem :: NodeTreeItem(const String & name)
-   : QTreeWidgetItem(QStringList(zgb::toQt(name)))
+   : QTreeWidgetItem(QStringList(ToQ(name)))
    , _name(name)
 {
    initCommon();
@@ -43,7 +26,7 @@ void NodeTreeItem :: initCommon()
    setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
 
    setTextAlignment(1, Qt::AlignRight | Qt::AlignVCenter);
-   setForeground(1, zgb::theme::textDim);
+   setForeground(1, zg_browser::theme::textDim);
 }
 
 String NodeTreeItem :: getNodePath() const
@@ -67,13 +50,11 @@ NodeTreeItem * NodeTreeItem :: getChildByName(const String & name) const
 
 NodeTreeItem * NodeTreeItem :: addChildNode(const String & name)
 {
-   const QString newName = zgb::toQt(name);
-
    int insertAt = childCount();
    for (int i=0; i<childCount(); i++)
    {
       const NodeTreeItem * ch = dynamic_cast<const NodeTreeItem *>(child(i));
-      if (compareNatural(newName, zgb::toQt(ch->getNodeName())) < 0) {insertAt = i; break;}
+      if (name.NumericAwareCompareToIgnoreCase(ch->getNodeName()) < 0) {insertAt = i; break;}
    }
 
    NodeTreeItem * newItem = new NodeTreeItem(name);   // parentless, so we can insert it where we want
@@ -99,3 +80,5 @@ void NodeTreeItem :: setSummary(const QString & summary)
 {
    setText(1, summary);
 }
+
+}  // end namespace zg_browser

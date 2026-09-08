@@ -5,7 +5,7 @@
 #include "BrowserWidget.h"
 #include "DiscoveryWidget.h"
 
-using namespace muscle;
+namespace zg_browser {
 
 MainWindow :: MainWindow(const String & optSystemName, QWidget * parent)
    : QMainWindow(parent)
@@ -66,3 +66,5 @@ void MainWindow :: showDiscovery()
 
    _discoveryView->setFocus();
 }
+
+}  // end namespace zg_browser

@@ -16,14 +16,12 @@
 
 #include "zg/discovery/common/DiscoveryUtilityFunctions.h"
 
-using namespace muscle;
-
-namespace {
+namespace zg_browser {
 
 enum {ROLE_NAME = Qt::UserRole, ROLE_DETAIL};
 
 /** Draws a system as two lines:  its name, and a dim summary line under it. */
-class SystemRowDelegate final : public QStyledItemDelegate
+class SystemRowDelegate MUSCLE_FINAL_CLASS : public QStyledItemDelegate
 {
 public:
    explicit SystemRowDelegate(QObject * parent) : QStyledItemDelegate(parent) {/* empty */}
@@ -36,7 +34,7 @@ public:
    void paint(QPainter * p, const QStyleOptionViewItem & opt, const QModelIndex & idx) const override
    {
       const bool selected = opt.state & QStyle::State_Selected;
-      if (selected) p->fillRect(opt.rect, zgb::theme::accent);
+      if (selected) p->fillRect(opt.rect, zg_browser::theme::accent);
 
       const QRect r = opt.rect.adjusted(12, 0, -12, 0);
 
@@ -44,40 +42,25 @@ public:
       nameFont.setBold(true);
       nameFont.setPointSizeF(nameFont.pointSizeF() + 1.0);
       p->setFont(nameFont);
-      p->setPen(zgb::theme::text);
+      p->setPen(zg_browser::theme::text);
       p->drawText(QRect(r.left(), r.top()+5, r.width(), 20), Qt::AlignLeft | Qt::AlignVCenter,
                   QFontMetrics(nameFont).elidedText(idx.data(ROLE_NAME).toString(), Qt::ElideRight, r.width()));
 
       QFont detailFont = opt.font;
       detailFont.setPointSizeF(detailFont.pointSizeF() - 1.0);
       p->setFont(detailFont);
-      p->setPen(selected ? QColor(255, 255, 255, 204) : zgb::theme::textDim);
+      p->setPen(selected ? QColor(255, 255, 255, 204) : zg_browser::theme::textDim);
       p->drawText(QRect(r.left(), r.top()+24, r.width(), 17), Qt::AlignLeft | Qt::AlignVCenter,
                   QFontMetrics(detailFont).elidedText(idx.data(ROLE_DETAIL).toString(), Qt::ElideRight, r.width()));
 
-      p->setPen(zgb::theme::header);
+      p->setPen(zg_browser::theme::header);
       p->drawLine(opt.rect.left(), opt.rect.bottom(), opt.rect.right(), opt.rect.bottom());
    }
 };
 
-/** Natural ("srv2" before "srv10") comparison. */
-int compareNatural(const QString & a, const QString & b)
-{
-   static const QCollator collator = []
-   {
-      QCollator c;
-      c.setNumericMode(true);
-      c.setCaseSensitivity(Qt::CaseInsensitive);
-      return c;
-   }();
-   return collator.compare(a, b);
-}
-
-}  // anonymous namespace
-
-DiscoveryWidget :: DiscoveryWidget(zg::SystemDiscoveryClient & discoveryClient, QWidget * parent)
+DiscoveryWidget :: DiscoveryWidget(SystemDiscoveryClient & discoveryClient, QWidget * parent)
    : QWidget(parent)
-   , zg::IDiscoveryNotificationTarget(&discoveryClient)
+   , IDiscoveryNotificationTarget(&discoveryClient)
 {
    QVBoxLayout * layout = new QVBoxLayout(this);
    layout->setContentsMargins(16, 16, 16, 16);
@@ -160,11 +143,10 @@ void DiscoveryWidget :: rebuildRows()
 {
    // Remember the selection by name, so it survives the list being reordered.
    const int previousRow = _listBox->currentRow();
-   const String previousName = ((previousRow >= 0)&&(previousRow < (int) _rows.size()))
-                             ? _rows[(size_t) previousRow]._systemName : GetEmptyString();
+   const String previousName = _rows.IsIndexValid(previousRow) ? _rows[(uint32) previousRow]._systemName : GetEmptyString();
 
-   _rows.clear();
-   _rows.reserve(_systems.GetNumItems());
+   _rows.Clear();
+   (void) _rows.EnsureSize(_systems.GetNumItems());
 
    for (ConstHashtableIterator<String, MessageRef> iter(_systems); iter.HasData(); iter++)
    {
@@ -183,54 +165,55 @@ void DiscoveryWidget :: rebuildRows()
          const String source = peerInfo()->GetString(ZG_DISCOVERY_NAME_SOURCE);
          if (source.HasChars())
          {
-            const QString address = zgb::toQt(source);
+            const QString address = ToQ(source);
             if (addresses.contains(address) == false) addresses << address;
          }
       }
 
-      row._detail = zgb::toQt(row._signature.IsEmpty() ? String("(unknown signature)") : row._signature)
+      row._detail = ToQ(row._signature.IsEmpty() ? String("(unknown signature)") : row._signature)
                   + QString("  |  ") + QString::number(numPeers) + (numPeers == 1 ? tr(" peer") : tr(" peers"))
                   + (addresses.isEmpty() ? QString() : ("  |  " + addresses.join(", ")));
-
-      _rows.push_back(row);
+      (void) _rows.AddTail(row);
    }
-
-   std::sort(_rows.begin(), _rows.end(), [](const SystemRow & a, const SystemRow & b)
-   {
-      return compareNatural(zgb::toQt(a._systemName), zgb::toQt(b._systemName)) < 0;
-   });
+   _rows.Sort();
 
    _listBox->clear();
-   for (const SystemRow & row : _rows)
+   for (uint32 i=0; i<_rows.GetNumItems(); i++)
    {
+      const SystemRow & row = _rows[i];
       QListWidgetItem * item = new QListWidgetItem(_listBox);
-      item->setData(ROLE_NAME,   zgb::toQt(row._systemName));
+      item->setData(ROLE_NAME,   ToQ(row._systemName));
       item->setData(ROLE_DETAIL, row._detail);
    }
 
    if (previousName.HasChars())
    {
-      for (size_t i=0; i<_rows.size(); i++) if (_rows[i]._systemName == previousName)
+      for (uint32 i=0; i<_rows.GetNumItems(); i++)
       {
-         _listBox->setCurrentRow((int) i);
-         break;
+         if (_rows[i]._systemName == previousName)
+         {
+            _listBox->setCurrentRow((int) i);
+            break;
+         }
       }
    }
 
-   _emptyLabel->setVisible(_rows.empty());
+   _emptyLabel->setVisible(_rows.IsEmpty());
    _emptyLabel->setGeometry(_listBox->rect());
 }
 
 void DiscoveryWidget :: chooseRow(int rowNumber)
 {
-   if ((rowNumber < 0)||(rowNumber >= (int) _rows.size())) return;
+   if (_rows.IsIndexValid(rowNumber) == false) return;
 
-   const SystemRow & row = _rows[(size_t) rowNumber];
+   const SystemRow & row = _rows[(uint32) rowNumber];
    emit systemChosen(row._signature.IsEmpty() ? String("*") : row._signature, row._systemName);
 }
 
 void DiscoveryWidget :: connectToTypedSystemName()
 {
    const QString typed = _manualName->text().trimmed();
-   if (typed.isEmpty() == false) emit systemChosen(String("*"), zgb::toMuscle(typed));
+   if (typed.isEmpty() == false) emit systemChosen(String("*"), FromQ(typed));
 }
+
+}  // end namespace zg_browser

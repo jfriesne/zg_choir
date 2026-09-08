@@ -10,13 +10,12 @@
 
 #include "zlib/ZLibUtilityFunctions.h"   // for IsMessageDeflated()/InflateMessage()
 
-using namespace muscle;
+namespace zg_browser {
 
-MessagePanel :: MessagePanel(QWidget * parent)
-   : QWidget(parent)
+MessagePanel :: MessagePanel(QWidget * parent) : QWidget(parent)
 {
    setAutoFillBackground(true);
-   setStyleSheet(QString("MessagePanel { background: %1; }").arg(zgb::theme::contentBackground.name()));
+   setStyleSheet(QString("MessagePanel { background: %1; }").arg(zg_browser::theme::contentBackground.name()));
 
    QVBoxLayout * layout = new QVBoxLayout(this);
    layout->setContentsMargins(8, 6, 8, 6);
@@ -49,18 +48,18 @@ void MessagePanel :: clear()
 
 void MessagePanel :: showNode(const String & nodePath, const ConstMessageRef & optPayload)
 {
-   _pathLabel->setText(zgb::toQt(nodePath.WithPrepend("/")));
+   _pathLabel->setText(ToQ(nodePath.WithPrepend("/")));
 
    QString text;
    if (optPayload())
    {
-      text += zgb::toQt(optPayload()->ToString());
+      text += ToQ(optPayload()->ToString());
 
       if (IsMessageDeflated(optPayload))
       {
          const ConstMessageRef inflated = InflateMessage(optPayload);
          text += "\n\n--- inflates to: ---\n\n";
-         if (inflated()) text += zgb::toQt(inflated()->ToString());
+         if (inflated()) text += ToQ(inflated()->ToString());
                     else text += QString("[inflate error: %1]").arg(inflated.GetStatus()());
       }
    }
@@ -71,3 +70,5 @@ void MessagePanel :: showNode(const String & nodePath, const ConstMessageRef & o
    _contents->verticalScrollBar()->setValue(0);
    _contents->horizontalScrollBar()->setValue(0);
 }
+
+}  // end namespace zg_browser

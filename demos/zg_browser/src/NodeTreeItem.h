@@ -1,8 +1,11 @@
-#pragma once
+#ifndef NodeTreeItem_h
+#define NodeTreeItem_h
 
 #include <QTreeWidgetItem>
 
-#include "MuscleQt.h"
+#include "ZGBrowserNameSpace.h"
+
+namespace zg_browser {
 
 /** One node of the server's database tree.
   *
@@ -10,28 +13,28 @@
   * the only way to find out whether a node has children is to subscribe to
   * them -- which is exactly what opening the item does.
   */
-class NodeTreeItem final : public QTreeWidgetItem
+class NodeTreeItem MUSCLE_FINAL_CLASS : public QTreeWidgetItem
 {
 public:
    /** Creates the root item ("/"), owned by the tree widget. */
    explicit NodeTreeItem(QTreeWidget * parent);
 
    /** Creates a parentless item named (name); addChildNode() puts it in its place. */
-   explicit NodeTreeItem(const muscle::String & name);
+   explicit NodeTreeItem(const String & name);
 
    /** This node's name within its parent ("" for the root node). */
-   MUSCLE_NODISCARD const muscle::String & getNodeName() const {return _name;}
+   MUSCLE_NODISCARD const String & getNodeName() const {return _name;}
 
    /** This node's session-relative path ("" for the root, "srv/foo" for a grandchild). */
-   muscle::String getNodePath() const;
+   String getNodePath() const;
 
-   MUSCLE_NODISCARD NodeTreeItem * getChildByName(const muscle::String & name) const;
+   MUSCLE_NODISCARD NodeTreeItem * getChildByName(const String & name) const;
 
    /** Creates a child item, inserted so that children stay in natural name order. */
-   NodeTreeItem * addChildNode(const muscle::String & name);
+   NodeTreeItem * addChildNode(const String & name);
 
    /** Deletes the named child item (and its descendants), if present. */
-   void removeChildNode(const muscle::String & name);
+   void removeChildNode(const String & name);
 
    /** Deletes every child item (and their descendants). */
    void clearChildren();
@@ -46,6 +49,10 @@ public:
 private:
    void initCommon();
 
-   const muscle::String _name;
+   const String _name;
    bool _subscribed = false;
 };
+
+}  // end zg_browser namespace
+
+#endif  // NodeTreeItem_h
