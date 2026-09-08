@@ -1,5 +1,4 @@
-# Specify the minimum version for CMake
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Project's name
 project(zg)
@@ -8,9 +7,6 @@ option(WITH_CPLUSPLUS17 "Enable C++17 support" ON)
 if (WITH_CPLUSPLUS17)
    set (CMAKE_CXX_STANDARD 17)
    add_definitions(-DMUSCLE_USE_CPLUSPLUS17)
-   if(${CMAKE_VERSION} VERSION_LESS "3.1.0")
-      add_definitions(-std=c++17)   # fallback for older versions of CMake that don't know about CMAKE_CXX_STANDARD
-   endif ()
    if (WIN32)
       add_definitions(-D_SILENCE_CXX17_IS_LITERAL_TYPE_DEPRECATION_WARNING)  # avoid getting spammed, I know
    endif()
