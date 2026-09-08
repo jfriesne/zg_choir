@@ -48,7 +48,7 @@ void NodeTreeItem :: initCommon()
 
 String NodeTreeItem :: getNodePath() const
 {
-   const NodeTreeItem * p = static_cast<const NodeTreeItem *>(parent());
+   const NodeTreeItem * p = dynamic_cast<const NodeTreeItem *>(parent());
    if (p == NULL) return GetEmptyString();   // we're the root node
 
    const String parentPath = p->getNodePath();
@@ -59,7 +59,7 @@ NodeTreeItem * NodeTreeItem :: getChildByName(const String & name) const
 {
    for (int i=0; i<childCount(); i++)
    {
-      NodeTreeItem * ch = static_cast<NodeTreeItem *>(child(i));
+      NodeTreeItem * ch = dynamic_cast<NodeTreeItem *>(child(i));
       if (ch->getNodeName() == name) return ch;
    }
    return NULL;
@@ -72,7 +72,7 @@ NodeTreeItem * NodeTreeItem :: addChildNode(const String & name)
    int insertAt = childCount();
    for (int i=0; i<childCount(); i++)
    {
-      const NodeTreeItem * ch = static_cast<const NodeTreeItem *>(child(i));
+      const NodeTreeItem * ch = dynamic_cast<const NodeTreeItem *>(child(i));
       if (compareNatural(newName, zgb::toQt(ch->getNodeName())) < 0) {insertAt = i; break;}
    }
 
@@ -85,7 +85,7 @@ void NodeTreeItem :: removeChildNode(const String & name)
 {
    for (int i=0; i<childCount(); i++)
    {
-      const NodeTreeItem * ch = static_cast<const NodeTreeItem *>(child(i));
+      const NodeTreeItem * ch = dynamic_cast<const NodeTreeItem *>(child(i));
       if (ch->getNodeName() == name) {delete takeChild(i); return;}
    }
 }

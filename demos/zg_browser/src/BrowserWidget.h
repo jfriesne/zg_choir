@@ -44,9 +44,14 @@ signals:
    /** Emitted when the user wants to go back to the discovery list. */
    void backRequested();
 
+   // ITreeGatewaySubscriber
+   void TreeNodeUpdated(const muscle::String & nodePath, const muscle::ConstMessageRef & optPayloadMsg, const muscle::String & optOpTag) override;
+   void TreeGatewayConnectionStateChanged() override;
+
 protected:
    void resizeEvent(QResizeEvent * event) override;
    void showEvent(QShowEvent * event) override;
+   void CallbackBatchEnds() override;
 
 private slots:
    void nodeItemExpanded(QTreeWidgetItem * item);
@@ -54,11 +59,6 @@ private slots:
    void nodeItemSelected(QTreeWidgetItem * item);
 
 private:
-   // ITreeGatewaySubscriber
-   void TreeNodeUpdated(const muscle::String & nodePath, const muscle::ConstMessageRef & optPayloadMsg, const muscle::String & optOpTag) override;
-   void TreeGatewayConnectionStateChanged() override;
-   void CallbackBatchEnds() override;
-
    void subscribeToChildrenOf(const muscle::String & nodePath, NodeTreeItem & item);
    void unsubscribeFromChildrenOf(const muscle::String & nodePath, NodeTreeItem & item);
    void unsubscribeFromDescendantsOf(const muscle::String & nodePath, bool includeSelf);

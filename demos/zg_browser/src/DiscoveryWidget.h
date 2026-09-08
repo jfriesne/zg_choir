@@ -25,7 +25,6 @@ public:
    explicit DiscoveryWidget(zg::SystemDiscoveryClient & discoveryClient, QWidget * parent = NULL);
    ~DiscoveryWidget() override;
 
-protected:
    /** Keeps the "listening..." placeholder covering the list box. */
    bool eventFilter(QObject * watched, QEvent * event) override;
 
@@ -33,13 +32,14 @@ signals:
    /** Emitted with (signaturePattern, systemName) when the user picks a system to browse. */
    void systemChosen(const muscle::String & signaturePattern, const muscle::String & systemName);
 
+   // IDiscoveryNotificationTarget
+   void DiscoveryUpdate(const muscle::String & systemName, const muscle::MessageRef & optSystemInfo) override;
+
 private slots:
    void chooseRow(int rowNumber);
    void connectToTypedSystemName();
 
 private:
-   // IDiscoveryNotificationTarget
-   void DiscoveryUpdate(const muscle::String & systemName, const muscle::MessageRef & optSystemInfo) override;
 
    void rebuildRows();
 
