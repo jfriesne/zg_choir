@@ -7,6 +7,8 @@
 
 #include "FridgeServerWindow.h"
 
+extern bool is_in_dark_mode();
+
 namespace fridge {
 
 FridgeServerWindow :: FridgeServerWindow(const String & argv0)
@@ -140,7 +142,7 @@ void FridgeServerWindow :: UpdateStatus()
    _peerIDLabel->setText(isRunning ? (_peerID.IsValid() ? tr("Peer ID:  %1").arg(_peerID.ToString()()) : QString()) : tr("Server stopped"));
 
    QPalette p = _serverOutput->palette();
-   p.setColor(QPalette::Base, _childProcess()?MixColors(Qt::green,Qt::white,isSeniorPeer?0.90f:1.00f):QColor(Qt::lightGray));
+   p.setColor(QPalette::Base, _childProcess()?MixColors(Qt::green,is_in_dark_mode()?Qt::black:Qt::white,isSeniorPeer?0.90f:1.00f):QColor(Qt::lightGray));
    _serverOutput->setPalette(p);
 }
 

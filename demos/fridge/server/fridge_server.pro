@@ -102,7 +102,7 @@ PZG_SOURCES = $$ZG_DIR/src/private/PZGCaffeine.cpp              \
               $$ZG_DIR/src/private/PZGHeartbeatSourceState.cpp  \
               $$ZG_DIR/src/private/PZGHeartbeatThreadState.cpp
 
-mac:OBJECTIVE_SOURCES += $$ZG_DIR/src/private/disable_app_nap.mm
+mac:OBJECTIVE_SOURCES += $$ZG_DIR/src/private/disable_app_nap.mm  $$ZG_DIR/src/private/disable_dark_mode.mm
 
 SERVER_SOURCES = $$ZG_DIR/src/discovery/common/DiscoveryUtilityFunctions.cpp        \
                  $$ZG_DIR/src/discovery/server/DiscoveryServerSession.cpp           \
