@@ -7,7 +7,11 @@
 
 #include "FridgeServerWindow.h"
 
+#ifdef __APPLE__
 extern bool is_in_dark_mode();
+#else
+static bool is_in_dark_mode() {return false;}
+#endif
 
 namespace fridge {
 
