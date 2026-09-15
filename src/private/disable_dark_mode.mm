@@ -1,3 +1,5 @@
+#if TARGET_OS_OSX
+
 #import <AppKit/NSAppearance.h>
 #import <AppKit/NSApplication.h>
 
@@ -13,3 +15,5 @@ bool is_in_dark_mode()
     auto appearance = [NSApp.effectiveAppearance bestMatchFromAppearancesWithNames: @[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]];
     return [appearance isEqualToString:NSAppearanceNameDarkAqua];
 }
+
+#endif  // TARGET_OS_OSX
