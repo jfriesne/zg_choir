@@ -241,7 +241,14 @@ void PZGHeartbeatThreadState :: UpdateToNetworkTimeOffset()
    _updateToNetworkTimeOffsetPending = false;
    if (IsAtLeastHalfAttached())
    {
-      if (IAmTheSeniorPeer()) _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = 0; // senior peer is always exactly synced with itself, by definition
+      if (IAmTheSeniorPeer()) 
+      {
+# if defined(ZG_USE_REALTIME_CLOCK_AS_START_OFFSET)
+         _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = GetCurrentTime64() - GetRunTime64();
+#else
+         _mainThreadToNetworkTimeOffset = _toNetworkTimeOffset = 0; // senior peer is always exactly synced with itself, by definition
+#endif
+      }
       else
       {
          const ZGPeerID & seniorPID = GetSeniorPeerID();
