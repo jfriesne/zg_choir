@@ -7,7 +7,7 @@
 
 #include "FridgeServerWindow.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && TARGET_OS_OSX 
 extern bool is_in_dark_mode();
 #else
 static bool is_in_dark_mode() {return false;}
