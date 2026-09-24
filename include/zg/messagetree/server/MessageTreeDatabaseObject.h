@@ -200,6 +200,20 @@ protected:
      */
    MUSCLE_NODISCARD virtual bool IsOkayToHandleUpdateMessage(const String & path, TreeGatewayFlags flags) const {(void) path; (void) flags; return true;}
 
+   /** Called on the senior peer just before a node-value update is written into the database, giving subclasses
+     * a chance to modify or drop the payload.  Since this is only called in the senior-update context, it sees
+     * every node-value update regardless of which peer it originated from, and junior peers will receive
+     * whatever payload this method leaves in (payload).  Default implementation leaves (payload) unchanged.
+     * @param path the database-relative node-path specified by the update-message (may end in a slash if the
+     *             senior peer is being asked to choose a new node ID)
+     * @param payload on entry, the (non-NULL) payload that is about to be stored at (path).  Subclasses may replace
+     *                it with a modified copy, or reset it to a NULL reference to silently drop the update.
+     * @param flags the TreeGatewayFlags specified by the update-message
+     * @returns B_NO_ERROR on success, or another error code to log an error and abort the senior-transaction.
+     * @note this is not called for node-deletions, nor for subtree-uploads.
+     */
+   virtual status_t SeniorFilterNodeUpdatePayload(const String & path, ConstMessageRef & payload, TreeGatewayFlags flags) {(void) path; (void) payload; (void) flags; return B_NO_ERROR;}
+
    /** When called from within a SeniorUpdate() or JuniorUpdate() context, returns true iff the update we're currently
      * handling was tagged with the TREE_GATEWAY_FLAG_INTERIM (and can therefore be skipped when performing an undo or redo)
      */
