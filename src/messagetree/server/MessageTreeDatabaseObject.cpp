@@ -460,7 +460,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 {
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
 
-   MessageRef optPayload        = msg.GetMessage(MTDO_NAME_PAYLOAD);
+   ConstMessageRef optPayload   = msg.GetMessage(MTDO_NAME_PAYLOAD);
    const String & path          = msg.GetStringReference(MTDO_NAME_PATH);
    const String & optOpTag      = msg.GetStringReference(MTDO_NAME_TAG);
 
@@ -468,6 +468,17 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
 
    if (optPayload())
    {
+      if (IsInSeniorDatabaseUpdateContext())
+      {
+         status_t ret;
+         if (SeniorFilterNodeUpdatePayload(path, optPayload, flags).IsError(ret))
+         {
+            LogTime(MUSCLE_LOG_ERROR, "MessageTreeDatabaseObject::HandleNodeUpdateMessageAux():  SeniorFilterNodeUpdatePayload() failed for path [%s]!  [%s]\n", path(), ret());
+            return ret;
+         }
+         if (optPayload() == NULL) return B_NO_ERROR;  // subclass chose to drop this update
+      }
+
       const String & optBefore   = msg.GetStringReference(MTDO_NAME_BEFORE);
       String sessionRelativePath = DatabaseSubpathToSessionRelativePath(path, flags);
       if ((IsInSeniorDatabaseUpdateContext())&&(sessionRelativePath.EndsWith('/')))
