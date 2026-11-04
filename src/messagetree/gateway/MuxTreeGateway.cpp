@@ -216,6 +216,11 @@ status_t MuxTreeGateway :: TreeGateway_UploadNodeValue(ITreeGatewaySubscriber * 
    return ProxyTreeGateway::TreeGateway_UploadNodeValue(calledBy, path, optPayload, flags.WithoutBit(TREE_GATEWAY_FLAG_NOREPLY), optBefore, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)?TagToExcludeClientFromReplies(calledBy,optOpTag):optOpTag);
 }
 
+status_t MuxTreeGateway :: TreeGateway_RequestDeleteNodes(ITreeGatewaySubscriber * calledBy, const String & path, const ConstQueryFilterRef & optFilterRef, TreeGatewayFlags flags, const String & optOpTag)
+{
+   return ProxyTreeGateway::TreeGateway_RequestDeleteNodes(calledBy, path, optFilterRef, flags.WithoutBit(TREE_GATEWAY_FLAG_NOREPLY), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY)?TagToExcludeClientFromReplies(calledBy,optOpTag):optOpTag);
+}
+
 status_t MuxTreeGateway :: TreeGateway_PingLocalPeer(ITreeGatewaySubscriber * calledBy, const String & tag, TreeGatewayFlags flags)
 {
    return _isConnected ? ITreeGatewaySubscriber::PingTreeLocalPeer(PrependRegistrationIDPrefix(calledBy, tag), flags) : B_BAD_OBJECT;

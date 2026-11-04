@@ -153,7 +153,7 @@ status_t MessageTreeDatabaseObject :: SeniorMessageTreeUpdate(const ConstMessage
          const String & optOpTag      = msg()->GetStringReference(MTDO_NAME_TAG);
          ConstQueryFilterRef qfRef    = msg()->FindMessage(MTDO_NAME_FILTER, qfMsg).IsOK() ? GetGlobalQueryFilterFactory()()->CreateQueryFilter(*qfMsg()) : QueryFilterRef();
 
-         return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), qfRef, flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY), optOpTag);
+         return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), qfRef, false, optOpTag);  // never quiet:  the junior update is recorded from the subscriber notifications (MessageTreeNodeUpdated()), which a quiet removal skips
       }
       break;
 
@@ -502,7 +502,7 @@ status_t MessageTreeDatabaseObject :: HandleNodeUpdateMessageAux(const Message &
       const status_t ret = zsh->SetDataNode(sessionRelativePath, optPayload, ConvertTreeGatewayFlagsToSetDataNodeFlags(flags), optBefore);
       return ((ret.IsOK())||((ret == B_ACCESS_DENIED)&&(flags.AreAnyOfTheseBitsSet(TREE_GATEWAY_FLAG_DONTCREATENODE, TREE_GATEWAY_FLAG_DONTOVERWRITEDATA)))) ? B_NO_ERROR : ret;
    }
-   else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), ConstQueryFilterRef(), flags.IsBitSet(TREE_GATEWAY_FLAG_NOREPLY));
+   else return RemoveDataNodes(DatabaseSubpathToSessionRelativePath(path, flags), ConstQueryFilterRef(), false);  // never quiet, for the same reason as above
 }
 
 // Handles MTDO_COMMAND_INSERTINDEXENTRY and MTDO_COMMAND_REMOVEINDEXENTRY Messages
