@@ -57,6 +57,11 @@ status_t MessageTreeDatabaseObject :: SetFromArchive(const ConstMessageRef & arc
    MessageTreeDatabasePeerSession * zsh = GetMessageTreeDatabasePeerSession();
    if (zsh == NULL) return B_BAD_OBJECT;
 
+   // RestoreNodeTreeFromMessage() only adds and overwrites nodes, so we need to clear out our existing
+   // nodes first; otherwise any nodes not present in (archive) would survive the replace.  (Not calling
+   // SetToDefaultState() here, since subclasses override it to re-create default nodes that (archive)
+   // may no longer contain)
+   MRETURN_ON_ERROR(RemoveDataNodes(_rootNodePathWithoutSlash));
    return zsh->RestoreNodeTreeFromMessage(*archive(), _rootNodePathWithoutSlash, true);
 }
 
