@@ -494,6 +494,9 @@ private:
    {
       _discoveries.Reset();  // paranoia
 
+      // Handle anything our owner thread has already sent us (e.g. a quit-request) before we block, since its wakeup-signal may have been consumed already
+      MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
+
       SocketCallbackMechanism threadMechanism;  // so we can get callbacks in this thread from our SystemDiscoveryClient
 
       SystemDiscoveryClient discoClient(&threadMechanism, _signaturePattern, _discoFilterRef);
@@ -555,7 +558,8 @@ private:
        && (eventLoop.AddNewConnectSession(DummyAbstractReflectSessionRef(tcs), iap).IsOK(ret)))
       {
          _tcpSession = &tcs;
-            if (eventLoop.ServerProcessLoop().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "ClientConnector:  ServerProcessLoop() returned [%s]\n", ret());
+                 if (HandleIncomingMessagesFromOwnerThread().IsError(ret)) {/* empty */}  // e.g. our owner thread asked us to quit before we got here; its wakeup-signal may have been consumed already
+            else if (eventLoop.ServerProcessLoop().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "ClientConnector:  ServerProcessLoop() returned [%s]\n", ret());
          _tcpSession = NULL;
       }
 
@@ -567,6 +571,9 @@ private:
    status_t DoDelayStage()
    {
       if (_reconnectTimeMicroseconds == 0) return B_NO_ERROR;  // nothing to do!
+
+      // Handle anything our owner thread has already sent us (e.g. a quit-request) before we block, since its wakeup-signal may have been consumed already
+      MRETURN_ON_ERROR(HandleIncomingMessagesFromOwnerThread());
 
       SocketMultiplexer sm;
       const uint64 waitUntil = (_reconnectTimeMicroseconds == MUSCLE_TIME_NEVER) ? MUSCLE_TIME_NEVER : (GetRunTime64()+_reconnectTimeMicroseconds);
@@ -594,7 +601,14 @@ private:
          const status_t ret = WaitForNextMessageFromOwner(msgRef, 0, &numLeft);
          if (ret.IsOK())
          {
-            MRETURN_ON_ERROR(MessageReceivedFromOwner(msgRef, numLeft));
+            const status_t mret = MessageReceivedFromOwner(msgRef, numLeft);
+            if (mret.IsError())
+            {
+               // We couldn't forward that Message, so drop any remaining ones too.  Our owner thread only signals us when its queue goes from
+               // empty to non-empty, so we mustn't leave any Messages in the queue -- but a quit-request (as sent by Stop()) must still be honored
+               if (mret != B_SHUTTING_DOWN) while(WaitForNextMessageFromOwner(msgRef, 0).IsOK()) if (msgRef() == NULL) return MessageReceivedFromOwner(msgRef, 0);  // B_SHUTTING_DOWN
+               return mret;
+            }
          }
          else return (ret == B_TIMED_OUT) ? B_NO_ERROR : ret;  // B_TIMED_OUT just means there are no more Messages left to receive, for now
       }
