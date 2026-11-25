@@ -594,7 +594,6 @@ private:
 
    status_t HandleIncomingMessagesFromOwnerThread()
    {
-      status_t forwardRet;  // the first error (if any) we got while forwarding a Message to our TCP session
       while(1)
       {
          MessageRef msgRef;
@@ -603,14 +602,15 @@ private:
          if (ret.IsOK())
          {
             const status_t mret = MessageReceivedFromOwner(msgRef, numLeft);
-            if (mret == B_SHUTTING_DOWN) return mret;  // our owner thread wants us to go away
-
-            // Otherwise keep draining even if that Message couldn't be forwarded (it gets dropped, same as when we have no TCP session).
-            // Our owner thread only signals us when its queue goes from empty to non-empty, so if we left any Messages
-            // in the queue, we'd never be woken up again (not even by the quit-request that Stop() sends us)
-            forwardRet |= mret;
+            if (mret.IsError())
+            {
+               // We couldn't forward that Message, so drop any remaining ones too.  Our owner thread only signals us when its queue goes from
+               // empty to non-empty, so we mustn't leave any Messages in the queue -- but a quit-request (as sent by Stop()) must still be honored
+               if (mret != B_SHUTTING_DOWN) while(WaitForNextMessageFromOwner(msgRef, 0).IsOK()) if (msgRef() == NULL) return MessageReceivedFromOwner(msgRef, 0);  // B_SHUTTING_DOWN
+               return mret;
+            }
          }
-         else return (ret == B_TIMED_OUT) ? forwardRet : ret;  // B_TIMED_OUT just means there are no more Messages left to receive, for now
+         else return (ret == B_TIMED_OUT) ? B_NO_ERROR : ret;  // B_TIMED_OUT just means there are no more Messages left to receive, for now
       }
    }
 
